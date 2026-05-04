@@ -1,0 +1,11 @@
+.home__lead {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: var(--space-5);
+}
+
+.home__menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

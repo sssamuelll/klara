@@ -1,0 +1,14 @@
+.venv
+__pycache__
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.egg-info
+dist
+.env
+.env.local
+*.pyc
+.git
+.gitignore
+README.md
+uv.lock

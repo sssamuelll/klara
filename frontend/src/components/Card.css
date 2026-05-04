@@ -1,0 +1,69 @@
+.menu-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--duration-fast) var(--ease),
+    transform var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
+}
+
+.menu-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.menu-card:active {
+  transform: translateY(0);
+}
+
+.menu-card--primary {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.18), rgba(255, 184, 77, 0.06));
+  border-color: rgba(255, 209, 102, 0.5);
+}
+
+.menu-card--primary:hover {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.25), rgba(255, 184, 77, 0.1));
+}
+
+.menu-card__icon {
+  font-size: 2rem;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-elev);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.menu-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-card__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.menu-card__sub {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.menu-card__duration {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}

@@ -1,0 +1,106 @@
+.word-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: end center;
+  z-index: 50;
+  animation: fade-in var(--duration) var(--ease);
+}
+
+@media (min-width: 600px) {
+  .word-popover-backdrop {
+    place-items: center;
+  }
+}
+
+.word-popover {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-5);
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 600px) {
+  .word-popover {
+    border-radius: var(--radius-xl);
+  }
+}
+
+.word-popover__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+}
+
+.word-popover__close:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.word-popover__lemma {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.word-popover__speak,
+.word-popover__example-speak {
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+}
+
+.word-popover__speak:hover,
+.word-popover__example-speak:hover {
+  background: var(--surface-hover);
+}
+
+.word-popover__translation {
+  color: var(--accent);
+  font-size: 1.05rem;
+  margin-bottom: var(--space-3);
+}
+
+.word-popover__example {
+  background: var(--surface);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.word-popover__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.word-popover__added {
+  padding: var(--space-2) var(--space-4);
+  background: rgba(6, 214, 160, 0.15);
+  border: 1px solid rgba(6, 214, 160, 0.4);
+  color: var(--success);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}

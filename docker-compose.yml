@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: german_app_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-german}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-german_dev_pw}
+      POSTGRES_DB: ${POSTGRES_DB:-german_app}
+    ports:
+      - "5432:5432"
+    volumes:
+      - german_app_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-german} -d ${POSTGRES_DB:-german_app}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: german_app_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: development
+      APP_LOG_LEVEL: INFO
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-german}:${POSTGRES_PASSWORD:-german_dev_pw}@postgres:5432/${POSTGRES_DB:-german_app}
+      LLM_PROVIDER: anthropic
+      LLM_STORY_MODEL: ${LLM_STORY_MODEL:-anthropic/claude-haiku-4-5-20251001}
+      LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-anthropic/claude-sonnet-4-6}
+      LLM_CORRECTION_MODEL: ${LLM_CORRECTION_MODEL:-anthropic/claude-haiku-4-5-20251001}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      TTS_PROVIDER: ${TTS_PROVIDER:-elevenlabs}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-EXAVITQu4vr4xnSDxMaL}
+      ELEVENLABS_MODEL: ${ELEVENLABS_MODEL:-eleven_turbo_v2_5}
+      DEFAULT_USER_DISPLAY_NAME: Samuel
+      DEFAULT_USER_LEVEL: A0
+      DEFAULT_USER_NATIVE_LANGUAGE: es
+      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/alembic:/app/alembic
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: german_app_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: http://backend:8000
+      VITE_USE_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tsconfig.node.json:/app/tsconfig.node.json
+
+volumes:
+  german_app_pgdata:
