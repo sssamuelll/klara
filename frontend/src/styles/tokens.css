@@ -1,28 +1,62 @@
+/* ============================================================
+   KLARA — DESIGN TOKENS
+   Editorial-print, warm analog, anti-Duolingo.
+   ============================================================ */
+
 :root {
-  --bg: #0e1116;
-  --bg-elev: #161b22;
-  --surface: #1c232d;
-  --surface-hover: #232b37;
-  --border: #2a3340;
-  --border-strong: #3a4554;
+  /* ---------- Type ---------- */
+  --font-serif: "Source Serif 4", "GT Sectra", "Newsreader", Georgia, serif;
+  --font-sans: "Inter Tight", "Söhne", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  --text: #f0f4f8;
-  --text-muted: #a3aab5;
-  --text-dim: #6c7682;
+  /* Editorial type scale — generous, slow */
+  --t-mark: 14px;          /* metadata, badges */
+  --t-meta: 13px;          /* marginalia */
+  --t-body: 17px;          /* spanish secondary */
+  --t-read: 22px;          /* german body sentence */
+  --t-read-lg: 26px;       /* german large */
+  --t-h3: 28px;
+  --t-h2: 40px;
+  --t-h1: 56px;            /* portada */
+  --t-display: 88px;       /* fecha, monogramas */
 
-  --accent: #ffd166;
-  --accent-strong: #ffb84d;
-  --accent-on: #0e1116;
+  --lh-tight: 1.08;
+  --lh-snug: 1.25;
+  --lh-read: 1.5;
+  --lh-loose: 1.7;
 
-  --success: #06d6a0;
-  --warning: #f9a826;
-  --danger: #ef476f;
-  --info: #4cc9f0;
+  --tracking-tight: -0.02em;
+  --tracking-mark: 0.08em;
+  --tracking-display: -0.03em;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* ---------- Color — light (paper) ---------- */
+  --paper: #F4EFE6;
+  --paper-2: #EFE9DD;       /* card surface */
+  --paper-3: #E7E0D0;       /* hairline + hover */
+  --ink: #1A1814;
+  --ink-2: #423E36;         /* secondary text */
+  --ink-3: #6E6859;         /* tertiary, marginalia */
+  --ink-4: #9A9382;         /* placeholder */
+  --rule: #D9D2C0;          /* hairline rules */
+
+  /* Single accent — bermellón */
+  --accent: oklch(0.58 0.17 25);
+  --accent-ink: oklch(0.36 0.13 25);
+  --accent-wash: oklch(0.94 0.04 25);
+
+  /* Level badges (A0..B1) — tonal, not rainbow */
+  --lvl-bg: var(--paper-3);
+  --lvl-ink: var(--ink-2);
+
+  /* Focus ring — bold, editorial */
+  --focus: oklch(0.58 0.17 25);
+
+  /* ---------- Geometry ---------- */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-pill: 999px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -32,15 +66,52 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
+  --space-9: 96px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.5);
+  --maxw-read: 640px;       /* column width */
+  --maxw-page: 1180px;
 
-  --font-sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
-  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  /* ---------- Motion ---------- */
+  --ease-page: cubic-bezier(0.2, 0.7, 0.2, 1);   /* slow page-turn */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.6, 0, 0.4, 1);
+  --dur-fast: 140ms;
+  --dur-med: 260ms;
+  --dur-slow: 480ms;
+  --dur-breath: 1600ms;     /* Klara's pulse */
 
-  --duration-fast: 120ms;
-  --duration: 200ms;
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* ---------- Shadows — almost none, ink-tinted ---------- */
+  --shadow-rest: 0 1px 0 rgba(26, 24, 20, 0.04), 0 0 0 1px rgba(26, 24, 20, 0.06);
+  --shadow-pop: 0 1px 1px rgba(26, 24, 20, 0.06), 0 12px 32px -8px rgba(26, 24, 20, 0.18), 0 0 0 1px rgba(26, 24, 20, 0.08);
+}
+
+/* ---------- Dark — night U-Bahn ---------- */
+:root[data-theme="dark"] {
+  --paper: #16181C;          /* slate-ink, not pure black */
+  --paper-2: #1C1F24;
+  --paper-3: #242830;
+  --ink: #ECE6D6;            /* warm off-white, not pure */
+  --ink-2: #B8B2A4;
+  --ink-3: #807B70;
+  --ink-4: #5A564E;
+  --rule: #2A2E36;
+
+  --accent: oklch(0.72 0.15 28);
+  --accent-ink: oklch(0.85 0.1 30);
+  --accent-wash: oklch(0.28 0.07 25);
+
+  --lvl-bg: var(--paper-3);
+  --lvl-ink: var(--ink-2);
+
+  --shadow-rest: 0 1px 0 rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-pop: 0 1px 1px rgba(0, 0, 0, 0.5), 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-med: 0ms;
+    --dur-slow: 0ms;
+  }
 }

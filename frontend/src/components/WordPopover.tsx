@@ -1,84 +1,123 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { StoryWord } from "../api/types";
 import { api } from "../api/client";
 import { speakGerman } from "../lib/tts";
-import "./WordPopover.css";
 
 interface Props {
   word: StoryWord;
+  anchorRect: DOMRect;
+  alreadyAdded?: boolean;
   onClose: () => void;
+  onAdded?: (wordId: string) => void;
 }
 
-export default function WordPopover({ word, onClose }: Props) {
-  const [adding, setAdding] = useState(false);
-  const [added, setAdded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const POS_LABEL: Record<string, string> = {
+  noun: "sust.",
+  verb: "verbo",
+  adjective: "adj.",
+  adverb: "adv.",
+  pronoun: "pron.",
+  preposition: "prep.",
+  conjunction: "conj.",
+  article: "art.",
+  phrase: "frase",
+  other: "",
+};
 
-  async function addToDeck() {
+const ARTICLE_COLOR: Record<string, string> = {
+  der: "oklch(0.55 0.13 245)",
+  die: "oklch(0.55 0.15 15)",
+  das: "oklch(0.55 0.13 145)",
+};
+
+export default function WordPopover({ word, anchorRect, alreadyAdded, onClose, onAdded }: Props) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(!!alreadyAdded);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onClick);
+    };
+  }, [onClose]);
+
+  async function handleAdd() {
+    if (added || adding) return;
     setAdding(true);
-    setError(null);
     try {
       await api.addCard(word.id);
       setAdded(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      onAdded?.(word.id);
+    } catch {
+      // swallow — UI already shows non-added state; optional toast later
     } finally {
       setAdding(false);
     }
   }
 
-  const display =
-    word.gender && word.pos === "noun"
-      ? `${word.gender} ${word.lemma}${word.plural ? `, –${word.plural}` : ""}`
-      : word.lemma;
+  const article = word.gender && ARTICLE_COLOR[word.gender] ? word.gender : null;
+  const articleColor = article ? ARTICLE_COLOR[article] : "var(--ink-3)";
+  const top = anchorRect.top + window.scrollY - 12;
+  const left = anchorRect.left + anchorRect.width / 2 + window.scrollX;
+  const posLabel = POS_LABEL[word.pos] ?? word.pos;
 
   return (
-    <div className="word-popover-backdrop" onClick={onClose}>
-      <div className="word-popover" onClick={(e) => e.stopPropagation()}>
-        <button className="word-popover__close" onClick={onClose} aria-label="Cerrar">
-          ✕
+    <div
+      ref={ref}
+      className="wpop"
+      role="dialog"
+      style={{ top, left, transform: "translate(-50%, -100%)" }}
+    >
+      <div className="wpop__head">
+        {article && (
+          <span className="wpop__article" style={{ color: articleColor }}>
+            {article}
+          </span>
+        )}
+        <span className="wpop__lemma">{word.lemma}</span>
+        <button
+          className="wpop__audio"
+          aria-label="Escuchar palabra"
+          onClick={(e) => {
+            e.stopPropagation();
+            speakGerman(word.lemma);
+          }}
+        >
+          <span className="wpop__audio-icon" />
         </button>
-
-        <div className="word-popover__lemma">
-          <span>{display}</span>
-          <button
-            className="word-popover__speak"
-            onClick={() => speakGerman(word.lemma)}
-            aria-label="Escuchar"
-          >
-            🔊
-          </button>
-        </div>
-
-        {word.translation_es && (
-          <div className="word-popover__translation">{word.translation_es}</div>
-        )}
-
-        {word.example_de && (
-          <div className="word-popover__example">
-            <span className="dim">Ej:</span> {word.example_de}{" "}
-            <button
-              className="word-popover__example-speak"
-              onClick={() => speakGerman(word.example_de!)}
-              aria-label="Escuchar ejemplo"
-            >
-              🔊
-            </button>
-          </div>
-        )}
-
-        {error && <div className="error-banner">{error}</div>}
-
-        <div className="word-popover__actions">
-          {added ? (
-            <div className="word-popover__added">✓ Añadida al SRS</div>
-          ) : (
-            <button className="btn btn-primary" disabled={adding} onClick={addToDeck}>
-              {adding ? <span className="spinner" /> : "+ Agregar al SRS"}
-            </button>
-          )}
-        </div>
       </div>
+
+      {word.translation_es && (
+        <div className="wpop__translation">{word.translation_es}</div>
+      )}
+
+      {word.example_de && (
+        <div className="wpop__example">
+          <span className="wpop__example-de">{word.example_de}</span>
+        </div>
+      )}
+
+      <div className="wpop__foot">
+        <button
+          className="wpop__add"
+          data-added={added}
+          disabled={adding}
+          onClick={handleAdd}
+        >
+          {added ? "✓ En repaso" : adding ? "Añadiendo…" : "+ Repaso"}
+        </button>
+        {posLabel && <span className="k-mono wpop__pos">{posLabel}</span>}
+      </div>
+      <span className="wpop__tail" />
     </div>
   );
 }

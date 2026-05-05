@@ -1,28 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import "./NewStory.css";
+import KlaraMark from "../components/KlaraMark";
 
 const SUGGESTIONS = [
-  "panadería en Nürnberg",
-  "primer día en el supermarkt",
-  "viaje en U-Bahn",
-  "café en Hauptmarkt",
-  "trámite en el Bürgeramt",
-  "domingo lluvioso",
+  "Panadería un sábado",
+  "Cita en el Bürgeramt",
+  "U-Bahn averiada",
+  "Comprando un Deutschlandticket",
+  "Vecino que toca timbre",
+  "Médico de cabecera",
 ];
 
 export default function NewStory() {
   const navigate = useNavigate();
   const [topic, setTopic] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generate(t?: string) {
+  async function generate(t: string) {
+    if (loading) return;
     setLoading(true);
     setError(null);
     try {
-      const story = await api.createStory(t || topic || undefined);
+      const story = await api.createStory(t.trim() || undefined);
       navigate(`/story/${story.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error desconocido");
@@ -32,52 +34,92 @@ export default function NewStory() {
   }
 
   return (
-    <div className="new-story fade-in">
-      <h2>Nueva historia</h2>
-      <p className="muted">
-        Elige un tema o déjalo en blanco para que Klara improvise algo cotidiano de Nürnberg.
-      </p>
+    <main className="k-page snew">
+      <button className="snew__back k-mono" onClick={() => navigate("/")}>
+        ← Volver
+      </button>
 
-      {error && <div className="error-banner">{error}</div>}
+      <div className="snew__head">
+        <span className="k-mono">Pedido a Klara</span>
+        <h1 className="snew__title">¿De qué hablamos hoy?</h1>
+        <p className="snew__sub">Una palabra alcanza. O dejá que Klara elija.</p>
+      </div>
+
+      {error && <div className="k-error" role="alert">{error}</div>}
 
       <form
-        className="new-story__form"
+        className="snew__input-wrap"
         onSubmit={(e) => {
           e.preventDefault();
-          generate();
+          generate(topic);
         }}
       >
         <input
-          className="new-story__input"
-          type="text"
-          placeholder="Tema (opcional)…"
+          className="snew__input"
+          placeholder="Una panadería un sábado a las 8…"
           value={topic}
-          onChange={(e) => setTopic(e.target.value)}
+          onChange={(e) => {
+            setTopic(e.target.value);
+            setSelected(null);
+          }}
           disabled={loading}
           autoFocus
         />
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? <span className="spinner" /> : "Generar"}
-        </button>
+        <span className="snew__input-rule" />
       </form>
 
-      <div className="new-story__suggestions">
-        <span className="dim">Sugerencias:</span>
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s}
-            type="button"
-            className="chip"
-            onClick={() => {
-              setTopic(s);
-              generate(s);
-            }}
-            disabled={loading}
-          >
-            {s}
-          </button>
-        ))}
+      <div className="snew__chips-block">
+        <div className="k-mono">O elegí un tema</div>
+        <div className="snew__chips">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="k-chip"
+              data-selected={selected === s}
+              onClick={() => {
+                setSelected(s);
+                setTopic(s);
+              }}
+              disabled={loading}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <div className="snew__actions">
+        <button
+          type="button"
+          className="k-btn"
+          onClick={() => generate(topic)}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="k-spinner" /> Klara está escribiendo…
+            </>
+          ) : (
+            <>
+              Generar historia <span className="arrow">→</span>
+            </>
+          )}
+        </button>
+        <button
+          type="button"
+          className="k-btn k-btn--ghost"
+          onClick={() => generate("")}
+          disabled={loading}
+        >
+          Sorprendeme
+        </button>
+      </div>
+
+      <div className="snew__klara">
+        <KlaraMark size={14} />
+        <span className="k-mono">Klara escribe a tu nivel</span>
+      </div>
+    </main>
   );
 }

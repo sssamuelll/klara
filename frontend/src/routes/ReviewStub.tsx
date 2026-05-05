@@ -1,16 +1,19 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function ReviewStub() {
+  const navigate = useNavigate();
   return (
-    <div className="fade-in">
-      <h2>Repaso SRS</h2>
-      <p className="muted">
-        Próximamente: las palabras que añadiste a tu deck volverán cuando tu cerebro esté a punto de
-        olvidarlas.
-      </p>
-      <Link to="/" className="btn btn-ghost">
+    <main className="k-page placeholder">
+      <button className="story__back k-mono" onClick={() => navigate("/")}>
         ← Volver
-      </Link>
-    </div>
+      </button>
+      <div className="ph__head">
+        <span className="k-mono">Repaso</span>
+        <h1 className="ph__title">Próximamente.</h1>
+        <p className="ph__dek">
+          Klara repasa contigo las palabras de las historias que ya leíste. Sin contadores. Sin presión.
+        </p>
+      </div>
+    </main>
   );
 }

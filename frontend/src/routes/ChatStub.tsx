@@ -1,15 +1,19 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function ChatStub() {
+  const navigate = useNavigate();
   return (
-    <div className="fade-in">
-      <h2>Hablar con Klara</h2>
-      <p className="muted">
-        Próximamente: conversación libre en alemán con Klara — corregida, sin juicio.
-      </p>
-      <Link to="/" className="btn btn-ghost">
+    <main className="k-page placeholder">
+      <button className="story__back k-mono" onClick={() => navigate("/")}>
         ← Volver
-      </Link>
-    </div>
+      </button>
+      <div className="ph__head">
+        <span className="k-mono">Hablar con Klara</span>
+        <h1 className="ph__title">Próximamente.</h1>
+        <p className="ph__dek">
+          Conversación libre. Voz a voz, cuando estés listo.
+        </p>
+      </div>
+    </main>
   );
 }
