@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       host: true,
-      port: 5173,
+      port: 5273,
       strictPort: true,
       watch: usePolling ? { usePolling: true, interval: 300 } : undefined,
       proxy: {

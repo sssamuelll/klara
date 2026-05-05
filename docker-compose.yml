@@ -43,7 +43,7 @@ services:
       DEFAULT_USER_DISPLAY_NAME: Samuel
       DEFAULT_USER_LEVEL: A0
       DEFAULT_USER_NATIVE_LANGUAGE: es
-      CORS_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
+      CORS_ORIGINS: "http://localhost:5273,http://127.0.0.1:5273"
     ports:
       - "8000:8000"
     volumes:
@@ -62,7 +62,7 @@ services:
       VITE_USE_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
     ports:
-      - "5173:5173"
+      - "5273:5273"
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
