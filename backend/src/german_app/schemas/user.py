@@ -42,6 +42,9 @@ class UserUpdate(BaseModel):
 
     @model_validator(mode="after")
     def _check_distinct(self) -> "UserUpdate":
+        # A locale-aware version of this check runs in routers/users.py update_me()
+        # and intercepts before this fires in practice. Keep that router-level
+        # intercept — if removed, this English ValueError surfaces to clients.
         if (
             self.native_language is not None
             and self.target_language is not None

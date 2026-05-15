@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { User, UserUpdate } from "../api/types";
+import { writeCachedNativeLang } from "./preferences";
 
 type Listener = (user: User | null) => void;
 
@@ -17,6 +18,7 @@ async function load(): Promise<User> {
   if (!inflight) {
     inflight = api.getMe().then((u) => {
       cached = u;
+      writeCachedNativeLang(u.native_language);
       emit();
       return u;
     });
@@ -36,6 +38,7 @@ export async function refreshUser(): Promise<User> {
 export async function patchUser(patch: UserUpdate): Promise<User> {
   const updated = await api.updateMe(patch);
   cached = updated;
+  writeCachedNativeLang(updated.native_language);
   emit();
   return updated;
 }
