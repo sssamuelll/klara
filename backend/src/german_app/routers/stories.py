@@ -99,9 +99,15 @@ async def list_stories(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
 ) -> list[StoryListItem]:
+    # Filter by current target_language so home / lists never surface stories
+    # the user can no longer practice. get_story() still serves any owned story
+    # by id, so direct URLs to old-target stories keep working.
     stmt = (
         select(Story)
-        .where(Story.user_id == user.id)
+        .where(
+            Story.user_id == user.id,
+            Story.target_language == user.target_language,
+        )
         .order_by(Story.created_at.desc())
         .limit(limit)
         .offset(offset)
