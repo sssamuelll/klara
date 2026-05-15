@@ -216,6 +216,65 @@
 .snew__chips-block { display: flex; flex-direction: column; gap: 12px; }
 .snew__chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
+/* Native <select> options popup — explicit colors so dark mode is readable.
+   color-scheme on :root handles most browsers, this is the belt-and-suspenders. */
+select.snew__input option {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* CEFR level slider — editorial, hairline track + ink thumb */
+.snew__level {
+  padding: 12px 0 4px;
+}
+.snew__range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--rule);
+  border-radius: 999px;
+  cursor: pointer;
+  outline: none;
+  margin: 0;
+}
+.snew__range:disabled { cursor: not-allowed; opacity: 0.5; }
+.snew__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--ink);
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.snew__range::-webkit-slider-thumb:hover { transform: scale(1.12); }
+.snew__range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--ink);
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.snew__range::-moz-range-thumb:hover { transform: scale(1.12); }
+.snew__level-marks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 0 2px;
+}
+.snew__level-marks span {
+  color: var(--ink-4);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.snew__level-marks span[data-active="true"] {
+  color: var(--ink);
+}
+
 .snew__actions {
   display: flex;
   flex-wrap: wrap;
