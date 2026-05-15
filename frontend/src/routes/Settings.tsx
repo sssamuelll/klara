@@ -112,8 +112,16 @@ export default function Settings() {
         </label>
         <select
           className="snew__input"
+          style={sameLang ? { borderColor: "var(--accent, currentColor)" } : undefined}
           value={nativeLang}
-          onChange={(e) => setNativeLang(e.target.value as LanguageCode)}
+          onChange={(e) => {
+            const next = e.target.value as LanguageCode;
+            setNativeLang(next);
+            if (next === targetLang) {
+              const fallback = LANGUAGE_CODES.find((c) => c !== next);
+              if (fallback) setTargetLang(fallback);
+            }
+          }}
           disabled={saving}
         >
           {LANGUAGE_CODES.map((c) => (
@@ -126,6 +134,7 @@ export default function Settings() {
         </label>
         <select
           className="snew__input"
+          style={sameLang ? { borderColor: "var(--accent, currentColor)" } : undefined}
           value={targetLang}
           onChange={(e) => setTargetLang(e.target.value as LanguageCode)}
           disabled={saving}

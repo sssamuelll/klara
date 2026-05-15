@@ -66,7 +66,12 @@ GERMAN_GENDER_RULE = (
     "lemma es \"Bäckerei\" y el gender es \"die\". El artículo va SIEMPRE en "
     "el campo `gender`, nunca dentro de `lemma`."
 )
-DEFAULT_GENDER_RULE = "Para sustantivos, el campo `gender` debe ser null."
+DEFAULT_GENDER_RULE = (
+    "Para sustantivos, el campo `gender` debe ser null. "
+    "El campo `lemma` NUNCA debe incluir artículos (le/la/les/l', the/a/an, "
+    "el/la/los/las/un/una, o/a/os/as/um/uma, etc.). Si la palabra es 'la maison', "
+    "el lemma es 'maison'; si es 'the house', el lemma es 'house'."
+)
 
 
 def build_story_system_prompt(

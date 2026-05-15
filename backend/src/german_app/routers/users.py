@@ -1,9 +1,15 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from german_app.dependencies import CurrentUser, DBSession
 from german_app.i18n import SUPPORTED_LANGUAGES
 from german_app.models import User
 from german_app.schemas.user import UserOut, UserUpdate
+
+
+class LanguageInfoOut(BaseModel):
+    label: str
+    speech_locale: str
 
 router = APIRouter(prefix="/me", tags=["users"])
 
@@ -54,6 +60,6 @@ async def update_me(payload: UserUpdate, db: DBSession, user: CurrentUser) -> Us
     return _to_out(user)
 
 
-@router.get("/languages")
+@router.get("/languages", response_model=dict[str, LanguageInfoOut])
 async def list_languages() -> dict[str, dict]:
     return SUPPORTED_LANGUAGES
