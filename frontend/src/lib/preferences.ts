@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LANGUAGE_CODES, type LanguageCode } from "./languages";
 
 export type Theme = "light" | "dark";
 export type ReadMode = "immersive" | "marginalia" | "parallel";
@@ -7,7 +8,28 @@ const KEYS = {
   theme: "klara.theme",
   readMode: "klara.readMode",
   fontScale: "klara.fontScale",
+  nativeLang: "klara.nativeLang",
 } as const;
+
+export function readCachedNativeLang(): LanguageCode | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(KEYS.nativeLang);
+    return v && (LANGUAGE_CODES as string[]).includes(v) ? (v as LanguageCode) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeCachedNativeLang(code: string | null | undefined): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (code) window.localStorage.setItem(KEYS.nativeLang, code);
+    else window.localStorage.removeItem(KEYS.nativeLang);
+  } catch {
+    /* SSR / quota — non-fatal */
+  }
+}
 
 function readLS<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
   if (typeof window === "undefined") return fallback;
