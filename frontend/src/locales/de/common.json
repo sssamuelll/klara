@@ -1,0 +1,225 @@
+{
+  "nav": {
+    "home": "Heute",
+    "review": "Wiederholung",
+    "chat": "Sprechen",
+    "settings": "Einstellungen",
+    "theme": {
+      "toLight": "Tag",
+      "toDark": "Nacht",
+      "aria": {
+        "toLight": "Zum hellen Modus wechseln",
+        "toDark": "Zum dunklen Modus wechseln"
+      }
+    },
+    "brand": {
+      "aria": "Klara — Start"
+    }
+  },
+  "common": {
+    "back": "← Zurück",
+    "backHome": "← Zurück zum Start",
+    "exit": "← Verlassen",
+    "loading": "Lädt…",
+    "klaraWriting": "Klara schreibt…",
+    "unknownError": "Unbekannter Fehler"
+  },
+  "home": {
+    "sub": "Drei Minuten. Ohne Eile.",
+    "greeting": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend"
+    },
+    "firstFeature": {
+      "kicker": "Erste Anfrage an Klara",
+      "title": "Du hast noch nichts gelesen.",
+      "dek": "Bitte Klara um eine kleine Geschichte. Fünf Minuten, ohne Eile.",
+      "cta": "Anfangen"
+    },
+    "latest": {
+      "kicker": "Letzte Geschichte",
+      "cta": "Lesen",
+      "minutes": "{{count}} Min.",
+      "words_one": "{{count}} Wort",
+      "words_other": "{{count}} Wörter",
+      "new_one": "{{count}} neu",
+      "new_other": "{{count}} neue",
+      "fallbackDek": "Eine kleine Szene aus dem Alltag."
+    },
+    "sec": {
+      "newStory": {
+        "title": "Eine andere Geschichte",
+        "dek": "Bitte Klara um ein anderes Thema."
+      },
+      "review": {
+        "title": "Wörter wiederholen",
+        "dek": {
+          "unknown": "Gespeicherte Wörter tauchen wieder auf, kurz bevor du sie vergisst.",
+          "none": "Im Moment nichts. Komm wieder, nachdem du gelesen hast.",
+          "due_one": "{{count}} bereit zur Wiederholung.",
+          "due_other": "{{count}} bereit zur Wiederholung."
+        }
+      },
+      "chat": {
+        "title": "Mit Klara sprechen",
+        "dek": "Freies Gespräch, was dich gerade beschäftigt."
+      }
+    },
+    "footer": {
+      "edition": "Klara — Ausgabe {{city}}",
+      "aria": "Klara — Ausgabe {{city}}"
+    }
+  },
+  "newstory": {
+    "kicker": "Anfrage an Klara",
+    "title": "Worüber sprechen wir heute?",
+    "sub": "Ein Wort reicht. Oder lass Klara wählen.",
+    "input": {
+      "placeholder": "Eine Bäckerei am Samstag um 8…"
+    },
+    "chips": {
+      "label": "Oder wähle ein Thema"
+    },
+    "chip": {
+      "supermarket": "Einkaufen im Supermarkt",
+      "doctorCall": "Anruf beim Arzt",
+      "publicTransport": "In öffentlichen Verkehrsmitteln",
+      "streetEncounter": "Zufällige Begegnung auf der Straße",
+      "orderCoffee": "Einen Kaffee bestellen",
+      "officeErrand": "Gang aufs Amt"
+    },
+    "generate": "Geschichte erzeugen",
+    "generating": "Klara schreibt…",
+    "surprise": "Überrasch mich",
+    "klaraAdapts": "Klara schreibt auf deinem Niveau"
+  },
+  "story": {
+    "step": {
+      "listen": "Anhören",
+      "pausing": "Pausiert…",
+      "listenAria": {
+        "play": "Anhören",
+        "pause": "Pausieren"
+      },
+      "klaraReads": "Klara liest",
+      "pronounce": "Aussprechen",
+      "listening": "Höre zu…",
+      "yourTurn": "Du bist dran",
+      "sayIn": "Sag es auf {{target}}",
+      "pronounceAria": {
+        "start": "Aussprechen",
+        "stop": "Aufnahme stoppen"
+      },
+      "prev": "Zurück",
+      "prevAria": "Vorheriger Satz",
+      "next": "Weiter",
+      "finish": "Beenden",
+      "nextAria": "Nächster Satz",
+      "finishAria": "Beenden"
+    },
+    "end": {
+      "kicker": "Ende der Geschichte",
+      "dek": {
+        "practiced_one": "Gut. Du hast deine Aussprache an {{count}} Satz geübt.",
+        "practiced_other": "Gut. Du hast deine Aussprache an {{count}} Sätzen geübt.",
+        "read": "Gut. Klara hat dir die Geschichte vorgelesen."
+      },
+      "stat": {
+        "clear": "klar",
+        "sentences": "Sätze"
+      },
+      "words": {
+        "title": "Wörter zum Wiederholen",
+        "added": "✓ In Wiederholung",
+        "adding": "Wird hinzugefügt…",
+        "add": "+ Wiederholung"
+      },
+      "cta": {
+        "another": "Eine andere Geschichte",
+        "reread": "Nochmal lesen"
+      }
+    }
+  },
+  "wpop": {
+    "audio": {
+      "aria": "Wort anhören"
+    },
+    "add": {
+      "added": "✓ In Wiederholung",
+      "adding": "Wird hinzugefügt…",
+      "add": "+ Wiederholung"
+    },
+    "pos": {
+      "noun": "Subst.",
+      "verb": "Verb",
+      "adjective": "Adj.",
+      "adverb": "Adv.",
+      "pronoun": "Pron.",
+      "preposition": "Präp.",
+      "conjunction": "Konj.",
+      "article": "Art.",
+      "phrase": "Phrase",
+      "other": ""
+    }
+  },
+  "recbar": {
+    "listening": "Höre zu…"
+  },
+  "pron": {
+    "verdict": {
+      "again": "Versuchen wir es noch einmal.",
+      "almost": "Fast.",
+      "good": "Sehr gut.",
+      "excellent": "Ausgezeichnet."
+    },
+    "pill": {
+      "clear_one": "{{count}} klar",
+      "clear_other": "{{count}} klar",
+      "approx_one": "{{count}} ungefähr",
+      "approx_other": "{{count}} ungefähr",
+      "review_one": "{{count}} zu überprüfen",
+      "review_other": "{{count}} zu überprüfen"
+    },
+    "btn": {
+      "listen": "Klara anhören",
+      "retry": "Noch einmal"
+    }
+  },
+  "settings": {
+    "kicker": "Einstellungen",
+    "title": "Dein Profil bei Klara",
+    "sub": "Klara passt die Geschichten an diese Angaben an.",
+    "field": {
+      "name": "Name",
+      "level": "GER-Niveau",
+      "levelAria": "GER-Niveau",
+      "nativeLang": "Muttersprache (was du sprichst)",
+      "targetLang": "Sprache, die du lernen willst",
+      "context": "Kontext (optional)",
+      "contextPlaceholder": "z. B. für die Arbeit, ich reise oft, ich koche gern…"
+    },
+    "sameLangWarn": "Wähle eine andere Sprache als deine Muttersprache.",
+    "saved": "Gespeichert ✓",
+    "button": {
+      "save": "Speichern",
+      "saving": "Speichert…",
+      "cancel": "Abbrechen"
+    },
+    "error": {
+      "sameLang": "Muttersprache und Lernsprache müssen unterschiedlich sein."
+    }
+  },
+  "stub": {
+    "review": {
+      "kicker": "Wiederholung",
+      "title": "Bald verfügbar.",
+      "dek": "Klara wiederholt mit dir die Wörter aus den Geschichten, die du gelesen hast. Keine Zähler. Kein Druck."
+    },
+    "chat": {
+      "kicker": "Mit Klara sprechen",
+      "title": "Bald verfügbar.",
+      "dek": "Freies Gespräch. Stimme zu Stimme, wenn du bereit bist."
+    }
+  }
+}

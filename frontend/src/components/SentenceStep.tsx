@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { StorySentence, StoryWord } from "../api/types";
 import { languageLabel } from "../lib/languages";
 import RecordingBar from "./RecordingBar";
@@ -78,6 +79,7 @@ export default function SentenceStep({
   canPrev,
   canNext,
 }: Props) {
+  const { t } = useTranslation();
   const tokens = tokenize(sentence.target);
   const targetLabel = languageLabel(targetLanguage);
 
@@ -144,14 +146,16 @@ export default function SentenceStep({
             className="step__action"
             data-on={playing}
             onClick={onPlay}
-            aria-label={playing ? "Pausar" : "Escuchar"}
+            aria-label={playing ? t("story.step.listenAria.pause") : t("story.step.listenAria.play")}
           >
             <span className="step__action-icon">
               {playing ? <span className="step__pause" /> : <span className="step__triangle" />}
             </span>
             <span className="step__action-label">
-              <span className="step__action-title">{playing ? "Pausando…" : "Escuchar"}</span>
-              <span className="step__action-sub k-mono">Klara lee</span>
+              <span className="step__action-title">
+                {playing ? t("story.step.pausing") : t("story.step.listen")}
+              </span>
+              <span className="step__action-sub k-mono">{t("story.step.klaraReads")}</span>
             </span>
           </button>
 
@@ -160,17 +164,17 @@ export default function SentenceStep({
             className="step__action step__action--mic"
             data-on={recording}
             onClick={onRecord}
-            aria-label={recording ? "Detener grabación" : "Pronunciar"}
+            aria-label={recording ? t("story.step.pronounceAria.stop") : t("story.step.pronounceAria.start")}
           >
             <span className="step__action-icon">
               <span className="step__mic" />
             </span>
             <span className="step__action-label">
               <span className="step__action-title">
-                {recording ? "Escuchando…" : "Pronunciar"}
+                {recording ? t("story.step.listening") : t("story.step.pronounce")}
               </span>
               <span className="step__action-sub k-mono">
-                {recording ? `Decí en ${targetLabel}` : "Tu turno"}
+                {recording ? t("story.step.sayIn", { target: targetLabel }) : t("story.step.yourTurn")}
               </span>
             </span>
           </button>
@@ -192,19 +196,19 @@ export default function SentenceStep({
           className="step__nav-btn step__nav-btn--prev"
           onClick={onPrev}
           disabled={!canPrev}
-          aria-label="Oración anterior"
+          aria-label={t("story.step.prevAria")}
         >
           <span className="k-serif step__nav-arrow">←</span>
-          <span className="k-mono">Anterior</span>
+          <span className="k-mono">{t("story.step.prev")}</span>
         </button>
 
         <button
           type="button"
           className="step__nav-btn step__nav-btn--next"
           onClick={onNext}
-          aria-label={canNext ? "Siguiente oración" : "Terminar"}
+          aria-label={canNext ? t("story.step.nextAria") : t("story.step.finishAria")}
         >
-          <span className="k-mono">{canNext ? "Continuar" : "Terminar"}</span>
+          <span className="k-mono">{canNext ? t("story.step.next") : t("story.step.finish")}</span>
           <span className="k-serif step__nav-arrow">→</span>
         </button>
       </nav>

@@ -1,3 +1,4 @@
+import i18n from "../i18n";
 import type { CardOut, Story, StoryListItem, User, UserUpdate } from "./types";
 
 const API_BASE = "/api/v1";
@@ -6,6 +7,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(`${API_BASE}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      "Accept-Language": i18n.language || "es",
       ...(init?.headers ?? {}),
     },
     ...init,

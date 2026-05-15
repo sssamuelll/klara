@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Query, Response
 from sqlalchemy import func, select
 
 from german_app.config import get_settings
-from german_app.dependencies import DBSession, SettingsDep
+from german_app.dependencies import DBSession, LocaleDep, SettingsDep
+from german_app.i18n import t
 from german_app.models import AudioCache
 from german_app.services.tts_service import get_or_synthesize
 from german_app.tts.elevenlabs_impl import ElevenLabsTTS, ElevenLabsTTSError
@@ -10,27 +11,31 @@ from german_app.tts.elevenlabs_impl import ElevenLabsTTS, ElevenLabsTTSError
 router = APIRouter(prefix="/tts", tags=["tts"])
 
 
-def _build_provider(settings):
+def _build_provider(settings, locale: str):
     if settings.tts_provider == "elevenlabs":
         return ElevenLabsTTS(settings)
-    raise HTTPException(status_code=503, detail=f"Unsupported TTS provider: {settings.tts_provider}")
+    raise HTTPException(
+        status_code=503,
+        detail=t("errors.tts_provider_unsupported", locale, provider=settings.tts_provider),
+    )
 
 
 @router.get("")
 async def synthesize(
     db: DBSession,
     settings: SettingsDep,
+    locale: LocaleDep,
     text: str = Query(..., min_length=1),
     voice: str | None = Query(None),
 ) -> Response:
     if len(text) > settings.tts_max_text_chars:
         raise HTTPException(
             status_code=413,
-            detail=f"Text too long (>{settings.tts_max_text_chars} chars)",
+            detail=t("errors.tts_text_too_long", locale, max=settings.tts_max_text_chars),
         )
 
     try:
-        provider = _build_provider(settings)
+        provider = _build_provider(settings, locale)
     except ElevenLabsTTSError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 

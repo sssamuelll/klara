@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from german_app.dependencies import CurrentUser, DBSession
-from german_app.i18n import SUPPORTED_LANGUAGES
+from german_app.dependencies import CurrentUser, DBSession, LocaleDep
+from german_app.i18n import SUPPORTED_LANGUAGES, t
 from german_app.models import User
 from german_app.schemas.user import UserOut, UserUpdate
 
@@ -31,7 +31,9 @@ async def get_me(user: CurrentUser) -> UserOut:
 
 
 @router.patch("", response_model=UserOut)
-async def update_me(payload: UserUpdate, db: DBSession, user: CurrentUser) -> UserOut:
+async def update_me(
+    payload: UserUpdate, db: DBSession, user: CurrentUser, locale: LocaleDep
+) -> UserOut:
     data = payload.model_dump(exclude_unset=True)
 
     # cross-check after merging with existing values
@@ -40,7 +42,7 @@ async def update_me(payload: UserUpdate, db: DBSession, user: CurrentUser) -> Us
     if new_native == new_target:
         raise HTTPException(
             status_code=422,
-            detail="native_language and target_language must be different",
+            detail=t("errors.languages_must_differ", locale),
         )
 
     if data.get("display_name"):

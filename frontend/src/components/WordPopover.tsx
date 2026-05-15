@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { LanguageCode, StoryWord } from "../api/types";
 import { api } from "../api/client";
 import { speak } from "../lib/tts";
@@ -11,19 +12,6 @@ interface Props {
   onClose: () => void;
   onAdded?: (wordId: string) => void;
 }
-
-const POS_LABEL: Record<string, string> = {
-  noun: "sust.",
-  verb: "verbo",
-  adjective: "adj.",
-  adverb: "adv.",
-  pronoun: "pron.",
-  preposition: "prep.",
-  conjunction: "conj.",
-  article: "art.",
-  phrase: "frase",
-  other: "",
-};
 
 const ARTICLE_COLOR: Record<string, string> = {
   der: "oklch(0.55 0.13 245)",
@@ -39,6 +27,7 @@ export default function WordPopover({
   onClose,
   onAdded,
 }: Props) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement | null>(null);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(!!alreadyAdded);
@@ -78,7 +67,8 @@ export default function WordPopover({
   const articleColor = article ? ARTICLE_COLOR[article] : "var(--ink-3)";
   const top = anchorRect.top + window.scrollY - 12;
   const left = anchorRect.left + anchorRect.width / 2 + window.scrollX;
-  const posLabel = POS_LABEL[word.pos] ?? word.pos;
+  const posKey = `wpop.pos.${word.pos}` as const;
+  const posLabel = t(posKey, { defaultValue: word.pos });
 
   return (
     <div
@@ -96,7 +86,7 @@ export default function WordPopover({
         <span className="wpop__lemma">{word.lemma}</span>
         <button
           className="wpop__audio"
-          aria-label="Escuchar palabra"
+          aria-label={t("wpop.audio.aria")}
           onClick={(e) => {
             e.stopPropagation();
             speak(word.lemma, targetLanguage);
@@ -123,7 +113,7 @@ export default function WordPopover({
           disabled={adding}
           onClick={handleAdd}
         >
-          {added ? "✓ En repaso" : adding ? "Añadiendo…" : "+ Repaso"}
+          {added ? t("wpop.add.added") : adding ? t("wpop.add.adding") : t("wpop.add.add")}
         </button>
         {posLabel && <span className="k-mono wpop__pos">{posLabel}</span>}
       </div>

@@ -3,7 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import select
 
-from german_app.dependencies import CurrentUser, DBSession, SettingsDep, StoryLLM
+from german_app.dependencies import CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
+from german_app.i18n import t
 from german_app.models import Story, VocabItem
 from german_app.schemas.story import (
     ComprehensionQuestionOut,
@@ -119,9 +120,11 @@ async def list_stories(
 
 
 @router.get("/{story_id}", response_model=StoryOut)
-async def get_story(story_id: UUID, db: DBSession, user: CurrentUser) -> StoryOut:
+async def get_story(
+    story_id: UUID, db: DBSession, user: CurrentUser, locale: LocaleDep
+) -> StoryOut:
     story = await db.get(Story, story_id)
     if story is None or story.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Story not found")
+        raise HTTPException(status_code=404, detail=t("errors.story_not_found", locale))
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
     return _serialize_story(story, words, user.native_language)

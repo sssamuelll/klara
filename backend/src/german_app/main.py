@@ -10,6 +10,7 @@ from starlette.requests import Request
 
 from german_app.config import get_settings
 from german_app.db import dispose_engine, get_session, init_engine
+from german_app.i18n.messages import DEFAULT_LOCALE, SUPPORTED
 from german_app.logging_setup import configure_logging
 from german_app.models import User
 from german_app.models.enums import CEFRLevel
@@ -62,6 +63,20 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         return response
 
 
+def _negotiate_locale(header: str) -> str:
+    for tag in header.split(","):
+        code = tag.split(";")[0].strip().split("-")[0].lower()
+        if code in SUPPORTED:
+            return code
+    return DEFAULT_LOCALE
+
+
+class LocaleMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        request.state.locale = _negotiate_locale(request.headers.get("accept-language", ""))
+        return await call_next(request)
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
@@ -78,6 +93,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(RequestIDMiddleware)
+    app.add_middleware(LocaleMiddleware)
 
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(users.router, prefix="/api/v1")

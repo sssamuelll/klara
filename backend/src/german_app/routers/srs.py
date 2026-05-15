@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from german_app.dependencies import CurrentUser, DBSession
+from german_app.dependencies import CurrentUser, DBSession, LocaleDep
+from german_app.i18n import t
 from german_app.models import Review, UserCard, VocabItem
 from german_app.schemas.srs import CardCreateRequest, CardOut, ReviewOut, ReviewSubmitRequest
 from german_app.services.srs_engine import schedule_next_review
@@ -29,10 +30,12 @@ def _card_to_out(card: UserCard, vocab: VocabItem, native_language: str) -> Card
 
 
 @router.post("/cards", response_model=CardOut, status_code=status.HTTP_201_CREATED)
-async def add_card(payload: CardCreateRequest, db: DBSession, user: CurrentUser) -> CardOut:
+async def add_card(
+    payload: CardCreateRequest, db: DBSession, user: CurrentUser, locale: LocaleDep
+) -> CardOut:
     vocab = await db.get(VocabItem, payload.vocab_item_id)
     if vocab is None:
-        raise HTTPException(status_code=404, detail="Vocab item not found")
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
 
     stmt = (
         pg_insert(UserCard)
@@ -86,10 +89,11 @@ async def submit_review(
     payload: ReviewSubmitRequest,
     db: DBSession,
     user: CurrentUser,
+    locale: LocaleDep,
 ) -> ReviewOut:
     card = await db.get(UserCard, card_id)
     if card is None or card.user_id != user.id:
-        raise HTTPException(status_code=404, detail="Card not found")
+        raise HTTPException(status_code=404, detail=t("errors.card_not_found", locale))
 
     prev_interval = card.interval_days
     new_interval, next_review, new_state = schedule_next_review(card, payload.rating)

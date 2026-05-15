@@ -1,0 +1,225 @@
+{
+  "nav": {
+    "home": "Hoje",
+    "review": "Revisão",
+    "chat": "Falar",
+    "settings": "Ajustes",
+    "theme": {
+      "toLight": "Dia",
+      "toDark": "Noite",
+      "aria": {
+        "toLight": "Mudar para o modo claro",
+        "toDark": "Mudar para o modo escuro"
+      }
+    },
+    "brand": {
+      "aria": "Klara — início"
+    }
+  },
+  "common": {
+    "back": "← Voltar",
+    "backHome": "← Voltar ao início",
+    "exit": "← Sair",
+    "loading": "Carregando…",
+    "klaraWriting": "A Klara está a escrever…",
+    "unknownError": "Erro desconhecido"
+  },
+  "home": {
+    "sub": "Três minutos. Sem pressa.",
+    "greeting": {
+      "morning": "Bom dia",
+      "afternoon": "Boa tarde",
+      "evening": "Boa noite"
+    },
+    "firstFeature": {
+      "kicker": "Primeiro pedido à Klara",
+      "title": "Ainda não leste nada.",
+      "dek": "Pede à Klara uma micro-história. Cinco minutos, sem pressa.",
+      "cta": "Começar"
+    },
+    "latest": {
+      "kicker": "Última história",
+      "cta": "Ler",
+      "minutes": "{{count}} min",
+      "words_one": "{{count}} palavra",
+      "words_other": "{{count}} palavras",
+      "new_one": "{{count}} nova",
+      "new_other": "{{count}} novas",
+      "fallbackDek": "Uma pequena cena do dia a dia."
+    },
+    "sec": {
+      "newStory": {
+        "title": "Outra história",
+        "dek": "Pede à Klara um tema diferente."
+      },
+      "review": {
+        "title": "Revisão de palavras",
+        "dek": {
+          "unknown": "As palavras que guardas voltam mesmo antes de as esqueceres.",
+          "none": "Nada por agora. Volta depois de ler algo.",
+          "due_one": "{{count}} pronta para rever.",
+          "due_other": "{{count}} prontas para rever."
+        }
+      },
+      "chat": {
+        "title": "Falar com a Klara",
+        "dek": "Conversa livre, o que tiveres na cabeça."
+      }
+    },
+    "footer": {
+      "edition": "Klara — Edição {{city}}",
+      "aria": "Klara — Edição {{city}}"
+    }
+  },
+  "newstory": {
+    "kicker": "Pedido à Klara",
+    "title": "Sobre o que falamos hoje?",
+    "sub": "Uma palavra basta. Ou deixa a Klara escolher.",
+    "input": {
+      "placeholder": "Uma padaria num sábado às 8…"
+    },
+    "chips": {
+      "label": "Ou escolhe um tema"
+    },
+    "chip": {
+      "supermarket": "Compras no supermercado",
+      "doctorCall": "Uma chamada para o médico",
+      "publicTransport": "Nos transportes públicos",
+      "streetEncounter": "Encontro inesperado na rua",
+      "orderCoffee": "A pedir um café",
+      "officeErrand": "Tratar de algo num balcão"
+    },
+    "generate": "Gerar história",
+    "generating": "A Klara está a escrever…",
+    "surprise": "Surpreende-me",
+    "klaraAdapts": "A Klara escreve ao teu nível"
+  },
+  "story": {
+    "step": {
+      "listen": "Ouvir",
+      "pausing": "A pausar…",
+      "listenAria": {
+        "play": "Ouvir",
+        "pause": "Pausar"
+      },
+      "klaraReads": "A Klara lê",
+      "pronounce": "Pronunciar",
+      "listening": "A ouvir…",
+      "yourTurn": "É a tua vez",
+      "sayIn": "Diz em {{target}}",
+      "pronounceAria": {
+        "start": "Pronunciar",
+        "stop": "Parar gravação"
+      },
+      "prev": "Anterior",
+      "prevAria": "Frase anterior",
+      "next": "Continuar",
+      "finish": "Terminar",
+      "nextAria": "Próxima frase",
+      "finishAria": "Terminar"
+    },
+    "end": {
+      "kicker": "Fim da história",
+      "dek": {
+        "practiced_one": "Boa. Treinaste a tua pronúncia em {{count}} frase.",
+        "practiced_other": "Boa. Treinaste a tua pronúncia em {{count}} frases.",
+        "read": "Boa. A Klara leu-te a história."
+      },
+      "stat": {
+        "clear": "claras",
+        "sentences": "frases"
+      },
+      "words": {
+        "title": "Palavras para rever",
+        "added": "✓ Em revisão",
+        "adding": "A adicionar…",
+        "add": "+ Revisão"
+      },
+      "cta": {
+        "another": "Outra história",
+        "reread": "Reler esta"
+      }
+    }
+  },
+  "wpop": {
+    "audio": {
+      "aria": "Ouvir a palavra"
+    },
+    "add": {
+      "added": "✓ Em revisão",
+      "adding": "A adicionar…",
+      "add": "+ Revisão"
+    },
+    "pos": {
+      "noun": "subst.",
+      "verb": "verbo",
+      "adjective": "adj.",
+      "adverb": "adv.",
+      "pronoun": "pron.",
+      "preposition": "prep.",
+      "conjunction": "conj.",
+      "article": "art.",
+      "phrase": "frase",
+      "other": ""
+    }
+  },
+  "recbar": {
+    "listening": "A ouvir…"
+  },
+  "pron": {
+    "verdict": {
+      "again": "Vamos tentar outra vez.",
+      "almost": "Quase.",
+      "good": "Muito bem.",
+      "excellent": "Excelente."
+    },
+    "pill": {
+      "clear_one": "{{count}} clara",
+      "clear_other": "{{count}} claras",
+      "approx_one": "{{count}} aproximada",
+      "approx_other": "{{count}} aproximadas",
+      "review_one": "{{count}} a rever",
+      "review_other": "{{count}} a rever"
+    },
+    "btn": {
+      "listen": "Ouvir a Klara",
+      "retry": "Outra vez"
+    }
+  },
+  "settings": {
+    "kicker": "Ajustes",
+    "title": "O teu perfil com a Klara",
+    "sub": "A Klara adapta as histórias a estas informações.",
+    "field": {
+      "name": "Nome",
+      "level": "Nível QECR",
+      "levelAria": "Nível QECR",
+      "nativeLang": "Língua materna (a que falas)",
+      "targetLang": "Língua que queres aprender",
+      "context": "Contexto (opcional)",
+      "contextPlaceholder": "ex.: uso no trabalho, viajo muito, gosto de cozinhar…"
+    },
+    "sameLangWarn": "Escolhe uma língua diferente da materna.",
+    "saved": "Guardado ✓",
+    "button": {
+      "save": "Guardar",
+      "saving": "A guardar…",
+      "cancel": "Cancelar"
+    },
+    "error": {
+      "sameLang": "A língua materna e a língua a aprender têm de ser diferentes."
+    }
+  },
+  "stub": {
+    "review": {
+      "kicker": "Revisão",
+      "title": "Em breve.",
+      "dek": "A Klara revê contigo as palavras das histórias que já leste. Sem contadores. Sem pressão."
+    },
+    "chat": {
+      "kicker": "Falar com a Klara",
+      "title": "Em breve.",
+      "dek": "Conversa livre. Voz a voz, quando estiveres pronto."
+    }
+  }
+}

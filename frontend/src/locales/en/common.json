@@ -1,0 +1,225 @@
+{
+  "nav": {
+    "home": "Today",
+    "review": "Review",
+    "chat": "Speak",
+    "settings": "Settings",
+    "theme": {
+      "toLight": "Day",
+      "toDark": "Night",
+      "aria": {
+        "toLight": "Switch to light mode",
+        "toDark": "Switch to dark mode"
+      }
+    },
+    "brand": {
+      "aria": "Klara — home"
+    }
+  },
+  "common": {
+    "back": "← Back",
+    "backHome": "← Back home",
+    "exit": "← Exit",
+    "loading": "Loading…",
+    "klaraWriting": "Klara is writing…",
+    "unknownError": "Unknown error"
+  },
+  "home": {
+    "sub": "Three minutes. No rush.",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "firstFeature": {
+      "kicker": "First request to Klara",
+      "title": "You haven't read anything yet.",
+      "dek": "Ask Klara for a micro-story. Five minutes, no rush.",
+      "cta": "Start"
+    },
+    "latest": {
+      "kicker": "Latest story",
+      "cta": "Read",
+      "minutes": "{{count}} min",
+      "words_one": "{{count}} word",
+      "words_other": "{{count}} words",
+      "new_one": "{{count}} new",
+      "new_other": "{{count}} new",
+      "fallbackDek": "A small scene from everyday life."
+    },
+    "sec": {
+      "newStory": {
+        "title": "Another story",
+        "dek": "Ask Klara about a different topic."
+      },
+      "review": {
+        "title": "Word review",
+        "dek": {
+          "unknown": "The words you save come back just before you'd forget them.",
+          "none": "Nothing for now. Come back after reading something.",
+          "due_one": "{{count}} ready to review.",
+          "due_other": "{{count}} ready to review."
+        }
+      },
+      "chat": {
+        "title": "Talk with Klara",
+        "dek": "Free conversation, whatever's on your mind."
+      }
+    },
+    "footer": {
+      "edition": "Klara — {{city}} edition",
+      "aria": "Klara — {{city}} edition"
+    }
+  },
+  "newstory": {
+    "kicker": "Request to Klara",
+    "title": "What shall we talk about today?",
+    "sub": "One word is enough. Or let Klara choose.",
+    "input": {
+      "placeholder": "A bakery on a Saturday at 8…"
+    },
+    "chips": {
+      "label": "Or pick a topic"
+    },
+    "chip": {
+      "supermarket": "Shopping at the supermarket",
+      "doctorCall": "A call to the doctor",
+      "publicTransport": "On public transport",
+      "streetEncounter": "Unexpected encounter on the street",
+      "orderCoffee": "Ordering a coffee",
+      "officeErrand": "Errand at an office"
+    },
+    "generate": "Generate story",
+    "generating": "Klara is writing…",
+    "surprise": "Surprise me",
+    "klaraAdapts": "Klara writes at your level"
+  },
+  "story": {
+    "step": {
+      "listen": "Listen",
+      "pausing": "Pausing…",
+      "listenAria": {
+        "play": "Listen",
+        "pause": "Pause"
+      },
+      "klaraReads": "Klara reads",
+      "pronounce": "Pronounce",
+      "listening": "Listening…",
+      "yourTurn": "Your turn",
+      "sayIn": "Say it in {{target}}",
+      "pronounceAria": {
+        "start": "Pronounce",
+        "stop": "Stop recording"
+      },
+      "prev": "Previous",
+      "prevAria": "Previous sentence",
+      "next": "Continue",
+      "finish": "Finish",
+      "nextAria": "Next sentence",
+      "finishAria": "Finish"
+    },
+    "end": {
+      "kicker": "End of story",
+      "dek": {
+        "practiced_one": "Nice. You practiced your pronunciation on {{count}} sentence.",
+        "practiced_other": "Nice. You practiced your pronunciation on {{count}} sentences.",
+        "read": "Nice. Klara read the story for you."
+      },
+      "stat": {
+        "clear": "clear",
+        "sentences": "sentences"
+      },
+      "words": {
+        "title": "Words to review",
+        "added": "✓ In review",
+        "adding": "Adding…",
+        "add": "+ Review"
+      },
+      "cta": {
+        "another": "Another story",
+        "reread": "Read again"
+      }
+    }
+  },
+  "wpop": {
+    "audio": {
+      "aria": "Listen to word"
+    },
+    "add": {
+      "added": "✓ In review",
+      "adding": "Adding…",
+      "add": "+ Review"
+    },
+    "pos": {
+      "noun": "n.",
+      "verb": "v.",
+      "adjective": "adj.",
+      "adverb": "adv.",
+      "pronoun": "pron.",
+      "preposition": "prep.",
+      "conjunction": "conj.",
+      "article": "art.",
+      "phrase": "phrase",
+      "other": ""
+    }
+  },
+  "recbar": {
+    "listening": "Listening…"
+  },
+  "pron": {
+    "verdict": {
+      "again": "Let's try again.",
+      "almost": "Almost.",
+      "good": "Well done.",
+      "excellent": "Excellent."
+    },
+    "pill": {
+      "clear_one": "{{count}} clear",
+      "clear_other": "{{count}} clear",
+      "approx_one": "{{count}} approximate",
+      "approx_other": "{{count}} approximate",
+      "review_one": "{{count}} to review",
+      "review_other": "{{count}} to review"
+    },
+    "btn": {
+      "listen": "Listen to Klara",
+      "retry": "Try again"
+    }
+  },
+  "settings": {
+    "kicker": "Settings",
+    "title": "Your profile with Klara",
+    "sub": "Klara adapts the stories to this information.",
+    "field": {
+      "name": "Name",
+      "level": "CEFR level",
+      "levelAria": "CEFR level",
+      "nativeLang": "Native language (what you speak)",
+      "targetLang": "Language you want to learn",
+      "context": "Context (optional)",
+      "contextPlaceholder": "e.g. I use it for work, I travel often, I'm into cooking…"
+    },
+    "sameLangWarn": "Pick a language different from your native one.",
+    "saved": "Saved ✓",
+    "button": {
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "error": {
+      "sameLang": "Your native language and the language you're learning must be different."
+    }
+  },
+  "stub": {
+    "review": {
+      "kicker": "Review",
+      "title": "Coming soon.",
+      "dek": "Klara reviews with you the words from stories you've already read. No counters. No pressure."
+    },
+    "chat": {
+      "kicker": "Talk with Klara",
+      "title": "Coming soon.",
+      "dek": "Free conversation. Voice to voice, when you're ready."
+    }
+  }
+}

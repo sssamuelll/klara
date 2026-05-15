@@ -1,4 +1,7 @@
+import { useTranslation } from "react-i18next";
+
 export default function RecordingBar() {
+  const { t } = useTranslation();
   return (
     <div className="recbar" role="status" aria-live="polite">
       <span className="recbar__dot" />
@@ -11,7 +14,7 @@ export default function RecordingBar() {
           />
         ))}
       </span>
-      <span className="recbar__label k-mono">Escuchando…</span>
+      <span className="recbar__label k-mono">{t("recbar.listening")}</span>
     </div>
   );
 }

@@ -1,0 +1,225 @@
+{
+  "nav": {
+    "home": "今日",
+    "review": "復習",
+    "chat": "話す",
+    "settings": "設定",
+    "theme": {
+      "toLight": "昼",
+      "toDark": "夜",
+      "aria": {
+        "toLight": "ライトモードに切り替え",
+        "toDark": "ダークモードに切り替え"
+      }
+    },
+    "brand": {
+      "aria": "Klara — ホーム"
+    }
+  },
+  "common": {
+    "back": "← 戻る",
+    "backHome": "← ホームへ戻る",
+    "exit": "← 退出",
+    "loading": "読み込み中…",
+    "klaraWriting": "Klara が書いています…",
+    "unknownError": "不明なエラー"
+  },
+  "home": {
+    "sub": "3分。急がずに。",
+    "greeting": {
+      "morning": "おはよう",
+      "afternoon": "こんにちは",
+      "evening": "こんばんは"
+    },
+    "firstFeature": {
+      "kicker": "Klara への最初のリクエスト",
+      "title": "まだ何も読んでいません。",
+      "dek": "Klara に小さな物語を頼んでみよう。5分、急がずに。",
+      "cta": "はじめる"
+    },
+    "latest": {
+      "kicker": "最新の物語",
+      "cta": "読む",
+      "minutes": "{{count}} 分",
+      "words_one": "{{count}} 語",
+      "words_other": "{{count}} 語",
+      "new_one": "新しい単語 {{count}}",
+      "new_other": "新しい単語 {{count}}",
+      "fallbackDek": "日常の小さな一場面。"
+    },
+    "sec": {
+      "newStory": {
+        "title": "別の物語",
+        "dek": "Klara に違うテーマをお願いしてみよう。"
+      },
+      "review": {
+        "title": "単語の復習",
+        "dek": {
+          "unknown": "追加した単語は、忘れそうな頃に戻ってきます。",
+          "none": "今はありません。何か読んだあとに戻ってきてね。",
+          "due_one": "{{count}} 件、復習できます。",
+          "due_other": "{{count}} 件、復習できます。"
+        }
+      },
+      "chat": {
+        "title": "Klara と話す",
+        "dek": "自由な会話、今あなたが考えていることを。"
+      }
+    },
+    "footer": {
+      "edition": "Klara — {{city}} 版",
+      "aria": "Klara — {{city}} 版"
+    }
+  },
+  "newstory": {
+    "kicker": "Klara へのリクエスト",
+    "title": "今日は何について話そう?",
+    "sub": "一言でいい。Klara に任せても。",
+    "input": {
+      "placeholder": "土曜日朝8時のパン屋…"
+    },
+    "chips": {
+      "label": "またはテーマを選ぶ"
+    },
+    "chip": {
+      "supermarket": "スーパーで買い物",
+      "doctorCall": "医者への電話",
+      "publicTransport": "公共交通機関で",
+      "streetEncounter": "通りでの思いがけない出会い",
+      "orderCoffee": "コーヒーを注文",
+      "officeErrand": "役所での手続き"
+    },
+    "generate": "物語を生成",
+    "generating": "Klara が書いています…",
+    "surprise": "おまかせ",
+    "klaraAdapts": "Klara はあなたのレベルで書きます"
+  },
+  "story": {
+    "step": {
+      "listen": "聞く",
+      "pausing": "一時停止中…",
+      "listenAria": {
+        "play": "聞く",
+        "pause": "一時停止"
+      },
+      "klaraReads": "Klara が読む",
+      "pronounce": "発音する",
+      "listening": "聞いています…",
+      "yourTurn": "あなたの番",
+      "sayIn": "{{target}} で言ってみて",
+      "pronounceAria": {
+        "start": "発音する",
+        "stop": "録音を停止"
+      },
+      "prev": "前へ",
+      "prevAria": "前の文",
+      "next": "続ける",
+      "finish": "終了",
+      "nextAria": "次の文",
+      "finishAria": "終了"
+    },
+    "end": {
+      "kicker": "物語の終わり",
+      "dek": {
+        "practiced_one": "よくできました。{{count}} 文で発音を練習しました。",
+        "practiced_other": "よくできました。{{count}} 文で発音を練習しました。",
+        "read": "よくできました。Klara が物語を読んでくれました。"
+      },
+      "stat": {
+        "clear": "明瞭",
+        "sentences": "文"
+      },
+      "words": {
+        "title": "復習する単語",
+        "added": "✓ 復習に追加済み",
+        "adding": "追加中…",
+        "add": "+ 復習"
+      },
+      "cta": {
+        "another": "別の物語",
+        "reread": "もう一度読む"
+      }
+    }
+  },
+  "wpop": {
+    "audio": {
+      "aria": "単語を聞く"
+    },
+    "add": {
+      "added": "✓ 復習に追加済み",
+      "adding": "追加中…",
+      "add": "+ 復習"
+    },
+    "pos": {
+      "noun": "名",
+      "verb": "動",
+      "adjective": "形",
+      "adverb": "副",
+      "pronoun": "代",
+      "preposition": "前",
+      "conjunction": "接",
+      "article": "冠",
+      "phrase": "句",
+      "other": ""
+    }
+  },
+  "recbar": {
+    "listening": "聞いています…"
+  },
+  "pron": {
+    "verdict": {
+      "again": "もう一度やってみよう。",
+      "almost": "もう少し。",
+      "good": "とても良い。",
+      "excellent": "素晴らしい。"
+    },
+    "pill": {
+      "clear_one": "明瞭 {{count}}",
+      "clear_other": "明瞭 {{count}}",
+      "approx_one": "おおむね {{count}}",
+      "approx_other": "おおむね {{count}}",
+      "review_one": "要確認 {{count}}",
+      "review_other": "要確認 {{count}}"
+    },
+    "btn": {
+      "listen": "Klara を聞く",
+      "retry": "もう一度"
+    }
+  },
+  "settings": {
+    "kicker": "設定",
+    "title": "Klara でのプロフィール",
+    "sub": "Klara はこれらの情報に合わせて物語を作ります。",
+    "field": {
+      "name": "名前",
+      "level": "CEFR レベル",
+      "levelAria": "CEFR レベル",
+      "nativeLang": "母語(あなたが話す言語)",
+      "targetLang": "学びたい言語",
+      "context": "コンテキスト(任意)",
+      "contextPlaceholder": "例:仕事で使う、よく旅行する、料理が好き…"
+    },
+    "sameLangWarn": "母語とは違う言語を選んでください。",
+    "saved": "保存しました ✓",
+    "button": {
+      "save": "保存",
+      "saving": "保存中…",
+      "cancel": "キャンセル"
+    },
+    "error": {
+      "sameLang": "母語と学ぶ言語は別のものにしてください。"
+    }
+  },
+  "stub": {
+    "review": {
+      "kicker": "復習",
+      "title": "近日公開。",
+      "dek": "Klara が、あなたが読んだ物語の単語を一緒に復習します。カウンターなし。プレッシャーなし。"
+    },
+    "chat": {
+      "kicker": "Klara と話す",
+      "title": "近日公開。",
+      "dek": "自由な会話。準備ができたら、声と声で。"
+    }
+  }
+}
