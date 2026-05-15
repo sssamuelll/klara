@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 export type PronScore = "good" | "ok" | "bad";
 export type PronScores = Record<number, PronScore>;
 
@@ -8,6 +10,7 @@ interface Props {
 }
 
 export default function PronunciationFeedback({ scores, onRetry, onListen }: Props) {
+  const { t } = useTranslation();
   const vals = Object.values(scores);
   const good = vals.filter((v) => v === "good").length;
   const ok = vals.filter((v) => v === "ok").length;
@@ -15,10 +18,10 @@ export default function PronunciationFeedback({ scores, onRetry, onListen }: Pro
   const total = vals.length || 1;
   const pct = Math.round(((good + ok * 0.6) / total) * 100);
 
-  let verdict = "Excelente.";
-  if (pct < 60) verdict = "Probemos de nuevo.";
-  else if (pct < 80) verdict = "Casi.";
-  else if (pct < 95) verdict = "Muy bien.";
+  let verdict = t("pron.verdict.excellent");
+  if (pct < 60) verdict = t("pron.verdict.again");
+  else if (pct < 80) verdict = t("pron.verdict.almost");
+  else if (pct < 95) verdict = t("pron.verdict.good");
 
   return (
     <div className="pron">
@@ -32,26 +35,26 @@ export default function PronunciationFeedback({ scores, onRetry, onListen }: Pro
       <div className="pron__breakdown">
         {good > 0 && (
           <span className="pron__pill" data-tone="good">
-            {good} clara{good > 1 ? "s" : ""}
+            {t("pron.pill.clear", { count: good })}
           </span>
         )}
         {ok > 0 && (
           <span className="pron__pill" data-tone="ok">
-            {ok} aproximada{ok > 1 ? "s" : ""}
+            {t("pron.pill.approx", { count: ok })}
           </span>
         )}
         {bad > 0 && (
           <span className="pron__pill" data-tone="bad">
-            {bad} a revisar
+            {t("pron.pill.review", { count: bad })}
           </span>
         )}
       </div>
       <div className="pron__actions">
         <button type="button" className="pron__btn" onClick={onListen}>
-          <span className="pron__btn-icon">▸</span> Escuchar a Klara
+          <span className="pron__btn-icon">▸</span> {t("pron.btn.listen")}
         </button>
         <button type="button" className="pron__btn" onClick={onRetry}>
-          ↻ Otra vez
+          ↻ {t("pron.btn.retry")}
         </button>
       </div>
     </div>

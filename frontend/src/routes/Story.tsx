@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Story, StoryWord } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
@@ -34,6 +35,7 @@ function tokenizeWordIndices(text: string): number[] {
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [story, setStory] = useState<Story | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fontScale] = useFontScale();
@@ -67,13 +69,13 @@ export default function StoryView() {
         if (!cancelled) setStory(s);
       })
       .catch((e) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Error");
+        if (!cancelled) setError(e instanceof Error ? e.message : t("common.unknownError"));
       });
     return () => {
       cancelled = true;
       stop();
     };
-  }, [id]);
+  }, [id, t]);
 
   const sentences = story?.content.sentences ?? [];
   const total = sentences.length;
@@ -107,7 +109,7 @@ export default function StoryView() {
     if (!sentence) return;
     const wordIndices = tokenizeWordIndices(sentence.target);
     const idx = recordingIndex;
-    const t = window.setTimeout(() => {
+    const tm = window.setTimeout(() => {
       const scores: PronScores = {};
       for (const i of wordIndices) {
         const r = Math.random();
@@ -116,7 +118,7 @@ export default function StoryView() {
       setScoresBySentence((s) => ({ ...s, [idx]: scores }));
       setRecordingIndex(null);
     }, 2400);
-    return () => window.clearTimeout(t);
+    return () => window.clearTimeout(tm);
   }, [recordingIndex, sentences]);
 
   const closePopover = useCallback(() => {
@@ -213,7 +215,7 @@ export default function StoryView() {
     return (
       <main className="k-page story">
         <button className="story__back k-mono" onClick={() => navigate("/")}>
-          ← Volver
+          {t("common.back")}
         </button>
         <div className="k-error" role="alert">
           {error}
@@ -226,10 +228,10 @@ export default function StoryView() {
     return (
       <main className="k-page story">
         <button className="story__back k-mono" onClick={() => navigate("/")}>
-          ← Volver
+          {t("common.back")}
         </button>
         <div className="story-loading">
-          <span className="k-mono">Klara está escribiendo…</span>
+          <span className="k-mono">{t("common.klaraWriting")}</span>
           <span className="k-spinner" />
         </div>
       </main>
@@ -264,7 +266,7 @@ export default function StoryView() {
     >
       <div className="story__topbar">
         <button className="story__back k-mono" onClick={() => navigate("/")}>
-          ← Salir
+          {t("common.exit")}
         </button>
         <div className="story__byline-mini">
           <KlaraMark size={12} speaking={klaraSpeaking} />
@@ -341,6 +343,7 @@ function StoryFinished({
   onHome,
   onToggleReview,
 }: FinishedProps) {
+  const { t } = useTranslation();
   const sentencesPracticed = Object.keys(scoresBySentence).length;
   const allScores = Object.values(scoresBySentence).flatMap((s) => Object.values(s));
   const goodPct = allScores.length
@@ -350,22 +353,19 @@ function StoryFinished({
   return (
     <main className="k-page story-end">
       <button className="story__back k-mono" onClick={onHome}>
-        ← Volver al inicio
+        {t("common.backHome")}
       </button>
 
       <header className="story-end__head">
         <div className="story-end__sig">
           <KlaraMark size={14} />
-          <span className="k-mono">Fin de la historia</span>
+          <span className="k-mono">{t("story.end.kicker")}</span>
         </div>
         <h1 className="story-end__title">{story.title}</h1>
         <p className="story-end__dek k-serif">
-          Bien.{" "}
           {sentencesPracticed > 0
-            ? `Practicaste tu pronunciación en ${sentencesPracticed} ${
-                sentencesPracticed > 1 ? "oraciones" : "oración"
-              }.`
-            : "Klara te leyó la historia."}
+            ? t("story.end.dek.practiced", { count: sentencesPracticed })
+            : t("story.end.dek.read")}
         </p>
       </header>
 
@@ -376,7 +376,7 @@ function StoryFinished({
               {goodPct}
               <span className="story-end__stat-unit k-mono">%</span>
             </span>
-            <span className="k-mono">claras</span>
+            <span className="k-mono">{t("story.end.stat.clear")}</span>
           </div>
           <div className="story-end__stat-rule" />
           <div className="story-end__stat">
@@ -384,7 +384,7 @@ function StoryFinished({
               {sentencesPracticed}
               <span className="story-end__stat-unit k-mono">/{story.content.sentences.length}</span>
             </span>
-            <span className="k-mono">oraciones</span>
+            <span className="k-mono">{t("story.end.stat.sentences")}</span>
           </div>
         </section>
       )}
@@ -394,7 +394,7 @@ function StoryFinished({
           <hr className="k-hairline" />
           <section className="story__new">
             <header className="story__new-head">
-              <span className="k-mono">Palabras para repasar</span>
+              <span className="k-mono">{t("story.end.words.title")}</span>
               <span className="k-mono story__new-count">{story.target_words.length}</span>
             </header>
             <ul className="story__new-list">
@@ -418,7 +418,11 @@ function StoryFinished({
                       disabled={adding === w.id}
                       onClick={() => onToggleReview(w)}
                     >
-                      {added ? "✓ En repaso" : adding === w.id ? "Añadiendo…" : "+ Repaso"}
+                      {added
+                        ? t("story.end.words.added")
+                        : adding === w.id
+                        ? t("story.end.words.adding")
+                        : t("story.end.words.add")}
                     </button>
                   </li>
                 );
@@ -432,10 +436,10 @@ function StoryFinished({
 
       <footer className="story__foot">
         <button type="button" className="k-btn" onClick={onNew}>
-          Otra historia <span className="arrow">→</span>
+          {t("story.end.cta.another")} <span className="arrow">→</span>
         </button>
         <button type="button" className="k-btn k-btn--ghost" onClick={onRestart}>
-          Releer esta
+          {t("story.end.cta.reread")}
         </button>
       </footer>
     </main>

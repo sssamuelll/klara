@@ -1,12 +1,13 @@
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from german_app.config import Settings, get_settings
 from german_app.db import get_session
+from german_app.i18n.messages import DEFAULT_LOCALE
 from german_app.llm.base import LLMClient
 from german_app.llm.litellm_impl import LiteLLMClient
 from german_app.models import User
@@ -15,7 +16,14 @@ from german_app.models.enums import CEFRLevel
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-__all__ = ["CurrentUser", "DBSession", "SettingsDep", "ChatLLM", "StoryLLM"]
+__all__ = ["ChatLLM", "CurrentUser", "DBSession", "LocaleDep", "SettingsDep", "StoryLLM"]
+
+
+def get_locale(request: Request) -> str:
+    return getattr(request.state, "locale", DEFAULT_LOCALE)
+
+
+LocaleDep = Annotated[str, Depends(get_locale)]
 
 
 async def db_session() -> AsyncGenerator[AsyncSession, None]:

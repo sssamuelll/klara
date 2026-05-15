@@ -1,33 +1,35 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import KlaraMark from "../components/KlaraMark";
 
-const SUGGESTIONS = [
-  "Comprar en el supermercado",
-  "Una llamada al médico",
-  "En el transporte público",
-  "Encuentro inesperado en la calle",
-  "Pidiendo un café",
-  "Trámite en una oficina",
-];
+const SUGGESTION_KEYS = [
+  "newstory.chip.supermarket",
+  "newstory.chip.doctorCall",
+  "newstory.chip.publicTransport",
+  "newstory.chip.streetEncounter",
+  "newstory.chip.orderCoffee",
+  "newstory.chip.officeErrand",
+] as const;
 
 export default function NewStory() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [topic, setTopic] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generate(t: string) {
+  async function generate(text: string) {
     if (loading) return;
     setLoading(true);
     setError(null);
     try {
-      const story = await api.createStory(t.trim() || undefined);
+      const story = await api.createStory(text.trim() || undefined);
       navigate(`/story/${story.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error desconocido");
+      setError(e instanceof Error ? e.message : t("common.unknownError"));
     } finally {
       setLoading(false);
     }
@@ -36,13 +38,13 @@ export default function NewStory() {
   return (
     <main className="k-page snew">
       <button className="snew__back k-mono" onClick={() => navigate("/")}>
-        ← Volver
+        {t("common.back")}
       </button>
 
       <div className="snew__head">
-        <span className="k-mono">Pedido a Klara</span>
-        <h1 className="snew__title">¿De qué hablamos hoy?</h1>
-        <p className="snew__sub">Una palabra alcanza. O dejá que Klara elija.</p>
+        <span className="k-mono">{t("newstory.kicker")}</span>
+        <h1 className="snew__title">{t("newstory.title")}</h1>
+        <p className="snew__sub">{t("newstory.sub")}</p>
       </div>
 
       {error && <div className="k-error" role="alert">{error}</div>}
@@ -56,7 +58,7 @@ export default function NewStory() {
       >
         <input
           className="snew__input"
-          placeholder="Una panadería un sábado a las 8…"
+          placeholder={t("newstory.input.placeholder")}
           value={topic}
           onChange={(e) => {
             setTopic(e.target.value);
@@ -69,23 +71,26 @@ export default function NewStory() {
       </form>
 
       <div className="snew__chips-block">
-        <div className="k-mono">O elegí un tema</div>
+        <div className="k-mono">{t("newstory.chips.label")}</div>
         <div className="snew__chips">
-          {SUGGESTIONS.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="k-chip"
-              data-selected={selected === s}
-              onClick={() => {
-                setSelected(s);
-                setTopic(s);
-              }}
-              disabled={loading}
-            >
-              {s}
-            </button>
-          ))}
+          {SUGGESTION_KEYS.map((k) => {
+            const label = t(k);
+            return (
+              <button
+                key={k}
+                type="button"
+                className="k-chip"
+                data-selected={selected === label}
+                onClick={() => {
+                  setSelected(label);
+                  setTopic(label);
+                }}
+                disabled={loading}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -98,11 +103,11 @@ export default function NewStory() {
         >
           {loading ? (
             <>
-              <span className="k-spinner" /> Klara está escribiendo…
+              <span className="k-spinner" /> {t("newstory.generating")}
             </>
           ) : (
             <>
-              Generar historia <span className="arrow">→</span>
+              {t("newstory.generate")} <span className="arrow">→</span>
             </>
           )}
         </button>
@@ -112,13 +117,13 @@ export default function NewStory() {
           onClick={() => generate("")}
           disabled={loading}
         >
-          Sorprendeme
+          {t("newstory.surprise")}
         </button>
       </div>
 
       <div className="snew__klara">
         <KlaraMark size={14} />
-        <span className="k-mono">Klara escribe a tu nivel</span>
+        <span className="k-mono">{t("newstory.klaraAdapts")}</span>
       </div>
     </main>
   );

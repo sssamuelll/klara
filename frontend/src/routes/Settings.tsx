@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { CEFRLevel, LanguageCode } from "../api/types";
 import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
 import { patchUser, useUser } from "../lib/user";
@@ -8,6 +9,7 @@ const LEVELS: CEFRLevel[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, loading } = useUser();
   const [displayName, setDisplayName] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("A0");
@@ -32,7 +34,7 @@ export default function Settings() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (sameLang) {
-      setError("El idioma nativo y el idioma a aprender deben ser diferentes.");
+      setError(t("settings.error.sameLang"));
       return;
     }
     setSaving(true);
@@ -48,7 +50,7 @@ export default function Settings() {
       });
       setSaved(true);
     } catch (e2) {
-      setError(e2 instanceof Error ? e2.message : "Error desconocido");
+      setError(e2 instanceof Error ? e2.message : t("common.unknownError"));
     } finally {
       setSaving(false);
     }
@@ -58,7 +60,7 @@ export default function Settings() {
     return (
       <main className="k-page snew">
         <div className="story-loading">
-          <span className="k-mono">Cargando…</span>
+          <span className="k-mono">{t("common.loading")}</span>
         </div>
       </main>
     );
@@ -67,23 +69,23 @@ export default function Settings() {
   return (
     <main className="k-page snew">
       <button className="snew__back k-mono" onClick={() => navigate("/")}>
-        ← Volver
+        {t("common.back")}
       </button>
 
       <div className="snew__head">
-        <span className="k-mono">Ajustes</span>
-        <h1 className="snew__title">Tu perfil con Klara</h1>
-        <p className="snew__sub">Klara adapta las historias a estos datos.</p>
+        <span className="k-mono">{t("settings.kicker")}</span>
+        <h1 className="snew__title">{t("settings.title")}</h1>
+        <p className="snew__sub">{t("settings.sub")}</p>
       </div>
 
       {error && <div className="k-error" role="alert">{error}</div>}
       {saved && !error && (
-        <div className="k-mono" style={{ color: "var(--ink-3)" }}>Guardado ✓</div>
+        <div className="k-mono" style={{ color: "var(--ink-3)" }}>{t("settings.saved")}</div>
       )}
 
       <form onSubmit={onSubmit}>
         <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          Nombre
+          {t("settings.field.name")}
         </label>
         <input
           className="snew__input"
@@ -93,7 +95,7 @@ export default function Settings() {
         />
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          Nivel CEFR
+          {t("settings.field.level")}
         </label>
         <div className="snew__level">
           <input
@@ -105,7 +107,7 @@ export default function Settings() {
             value={LEVELS.indexOf(level)}
             onChange={(e) => setLevel(LEVELS[Number(e.target.value)])}
             disabled={saving}
-            aria-label="Nivel CEFR"
+            aria-label={t("settings.field.levelAria")}
             aria-valuetext={level}
           />
           <div className="snew__level-marks k-mono">
@@ -116,7 +118,7 @@ export default function Settings() {
         </div>
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          Idioma nativo (lo que hablás)
+          {t("settings.field.nativeLang")}
         </label>
         <select
           className="snew__input"
@@ -138,7 +140,7 @@ export default function Settings() {
         </select>
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          Idioma que querés aprender
+          {t("settings.field.targetLang")}
         </label>
         <select
           className="snew__input"
@@ -155,17 +157,17 @@ export default function Settings() {
         </select>
         {sameLang && (
           <div className="k-mono" style={{ color: "var(--ink-3)", marginTop: ".5rem" }}>
-            Elegí un idioma distinto al nativo.
+            {t("settings.sameLangWarn")}
           </div>
         )}
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          Contexto (opcional)
+          {t("settings.field.context")}
         </label>
         <textarea
           className="snew__input"
           rows={3}
-          placeholder="ej: lo uso para el trabajo, viajo seguido, me interesa la cocina…"
+          placeholder={t("settings.field.contextPlaceholder")}
           value={context}
           onChange={(e) => setContext(e.target.value)}
           disabled={saving}
@@ -176,7 +178,7 @@ export default function Settings() {
 
         <div className="snew__actions">
           <button type="submit" className="k-btn" disabled={saving || sameLang}>
-            {saving ? "Guardando…" : "Guardar"}
+            {saving ? t("settings.button.saving") : t("settings.button.save")}
           </button>
           <button
             type="button"
@@ -184,7 +186,7 @@ export default function Settings() {
             onClick={() => navigate("/")}
             disabled={saving}
           >
-            Cancelar
+            {t("settings.button.cancel")}
           </button>
         </div>
       </form>
