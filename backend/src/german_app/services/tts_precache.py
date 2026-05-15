@@ -28,12 +28,12 @@ def collect_story_texts(story_content: dict, target_words: list[dict] | None = N
     texts: list[str] = []
     sentences = story_content.get("sentences") or []
     for s in sentences:
-        de = (s.get("de") or "").strip()
-        if de:
-            texts.append(de)
+        target = (s.get("target") or "").strip()
+        if target:
+            texts.append(target)
     if target_words:
         for w in target_words:
-            example = (w.get("example_de") or "").strip()
+            example = (w.get("example_target") or "").strip()
             if example:
                 texts.append(example)
             lemma = (w.get("lemma") or "").strip()

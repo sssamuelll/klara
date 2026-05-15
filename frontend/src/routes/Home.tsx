@@ -4,8 +4,7 @@ import { api } from "../api/client";
 import type { CardOut, Story, StoryListItem } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import { mastheadDate, greeting } from "../lib/dateLabel";
-
-const USER_NAME = "Samuel";
+import { useUser } from "../lib/user";
 
 interface HomeStorySummary {
   id: string;
@@ -19,11 +18,11 @@ interface HomeStorySummary {
 
 function summarize(story: Story): HomeStorySummary {
   const wordCount = story.content.sentences.reduce(
-    (acc, s) => acc + s.de.trim().split(/\s+/).filter(Boolean).length,
+    (acc, s) => acc + s.target.trim().split(/\s+/).filter(Boolean).length,
     0
   );
   const minutes = Math.max(1, Math.round(wordCount / 60));
-  const dek = story.content.sentences[0]?.es ?? "Una pequeña escena de la vida diaria.";
+  const dek = story.content.sentences[0]?.native ?? "Una pequeña escena de la vida diaria.";
   return {
     id: story.id,
     level: story.level,
@@ -37,6 +36,7 @@ function summarize(story: Story): HomeStorySummary {
 
 export default function Home() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [latest, setLatest] = useState<HomeStorySummary | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,7 +80,9 @@ export default function Home() {
         <div className="k-mono home__date">{dateLabel}</div>
         <h1 className="home__greeting">
           <span className="home__greeting-line">{hello},</span>
-          <span className="home__greeting-line home__greeting-line--name">{USER_NAME}.</span>
+          <span className="home__greeting-line home__greeting-line--name">
+            {user?.display_name ?? "…"}.
+          </span>
         </h1>
         <p className="home__sub">Tres minutos. Sin apuro.</p>
       </div>

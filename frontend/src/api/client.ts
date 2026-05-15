@@ -1,4 +1,4 @@
-import type { CardOut, Story, StoryListItem } from "./types";
+import type { CardOut, Story, StoryListItem, User, UserUpdate } from "./types";
 
 const API_BASE = "/api/v1";
 
@@ -25,6 +25,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   health: () => request<{ status: string }>("/health"),
+
+  getMe: () => request<User>("/me"),
+
+  updateMe: (patch: UserUpdate) =>
+    request<User>("/me", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
 
   listStories: (limit = 20, offset = 0) =>
     request<StoryListItem[]>(`/stories?limit=${limit}&offset=${offset}`),

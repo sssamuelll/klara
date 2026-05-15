@@ -1,3 +1,7 @@
+import type { LanguageCode } from "../lib/languages";
+
+export type { LanguageCode };
+
 export type CEFRLevel = "A0" | "A1" | "A2" | "B1" | "B2" | "C1";
 
 export type PartOfSpeech =
@@ -15,15 +19,15 @@ export type PartOfSpeech =
 export type ReviewRating = "again" | "hard" | "good" | "easy";
 
 export interface StorySentence {
-  de: string;
-  es: string;
+  target: string;
+  native: string;
   new_words: string[];
 }
 
 export interface ComprehensionQuestion {
-  q_de: string;
-  q_es: string;
-  options_de: string[];
+  q_target: string;
+  q_native: string;
+  options_target: string[];
   correct_index: number;
 }
 
@@ -33,8 +37,8 @@ export interface StoryWord {
   pos: PartOfSpeech;
   gender: string | null;
   plural: string | null;
-  translation_es: string | null;
-  example_de: string | null;
+  translation: string | null;
+  example_target: string | null;
 }
 
 export interface StoryContent {
@@ -45,6 +49,8 @@ export interface StoryContent {
 export interface Story {
   id: string;
   level: CEFRLevel;
+  target_language: LanguageCode;
+  native_language: LanguageCode;
   title: string;
   content: StoryContent;
   target_words: StoryWord[];
@@ -57,6 +63,7 @@ export interface Story {
 export interface StoryListItem {
   id: string;
   level: CEFRLevel;
+  target_language: LanguageCode;
   title: string;
   created_at: string;
 }
@@ -66,10 +73,27 @@ export interface CardOut {
   vocab_item_id: string;
   lemma: string;
   pos: PartOfSpeech;
-  translation_es: string | null;
-  example_de: string | null;
+  translation: string | null;
+  example_target: string | null;
   state: "new" | "learning" | "reviewing" | "relearning" | "suspended";
   interval_days: number;
   next_review_at: string | null;
   repetitions: number;
+}
+
+export interface User {
+  id: string;
+  display_name: string;
+  level: CEFRLevel;
+  native_language: LanguageCode;
+  target_language: LanguageCode;
+  learning_context: string | null;
+}
+
+export interface UserUpdate {
+  display_name?: string;
+  level?: CEFRLevel;
+  native_language?: LanguageCode;
+  target_language?: LanguageCode;
+  learning_context?: string | null;
 }

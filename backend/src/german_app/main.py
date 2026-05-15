@@ -13,7 +13,7 @@ from german_app.db import dispose_engine, get_session, init_engine
 from german_app.logging_setup import configure_logging
 from german_app.models import User
 from german_app.models.enums import CEFRLevel
-from german_app.routers import health, srs, stories, tts
+from german_app.routers import health, srs, stories, tts, users
 
 log = structlog.get_logger(__name__)
 
@@ -27,6 +27,8 @@ async def _ensure_default_user() -> None:
                 display_name=settings.default_user_display_name,
                 level=CEFRLevel(settings.default_user_level),
                 native_language=settings.default_user_native_language,
+                target_language=settings.default_user_target_language,
+                learning_context=settings.default_user_learning_context,
             )
             db.add(user)
             await db.commit()
@@ -78,6 +80,7 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestIDMiddleware)
 
     app.include_router(health.router, prefix="/api/v1")
+    app.include_router(users.router, prefix="/api/v1")
     app.include_router(stories.router, prefix="/api/v1")
     app.include_router(srs.router, prefix="/api/v1")
     app.include_router(tts.router, prefix="/api/v1")

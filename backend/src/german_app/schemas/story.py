@@ -12,20 +12,20 @@ class StoryWordOut(BaseModel):
     pos: PartOfSpeech
     gender: str | None = None
     plural: str | None = None
-    translation_es: str | None = None
-    example_de: str | None = None
+    translation: str | None = None
+    example_target: str | None = None
 
 
 class StorySentenceOut(BaseModel):
-    de: str
-    es: str
+    target: str
+    native: str
     new_words: list[str] = Field(default_factory=list)
 
 
 class ComprehensionQuestionOut(BaseModel):
-    q_de: str
-    q_es: str
-    options_de: list[str]
+    q_target: str
+    q_native: str
+    options_target: list[str]
     correct_index: int
 
 
@@ -37,6 +37,8 @@ class StoryContent(BaseModel):
 class StoryOut(BaseModel):
     id: UUID
     level: CEFRLevel
+    target_language: str
+    native_language: str
     title: str
     content: StoryContent
     target_words: list[StoryWordOut]
@@ -54,5 +56,6 @@ class StoryCreateRequest(BaseModel):
 class StoryListItem(BaseModel):
     id: UUID
     level: CEFRLevel
+    target_language: str
     title: str
     created_at: datetime

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import type { StoryWord } from "../api/types";
+import type { LanguageCode, StoryWord } from "../api/types";
 import { api } from "../api/client";
-import { speakGerman } from "../lib/tts";
+import { speak } from "../lib/tts";
 
 interface Props {
   word: StoryWord;
   anchorRect: DOMRect;
+  targetLanguage: LanguageCode;
   alreadyAdded?: boolean;
   onClose: () => void;
   onAdded?: (wordId: string) => void;
@@ -30,7 +31,14 @@ const ARTICLE_COLOR: Record<string, string> = {
   das: "oklch(0.55 0.13 145)",
 };
 
-export default function WordPopover({ word, anchorRect, alreadyAdded, onClose, onAdded }: Props) {
+export default function WordPopover({
+  word,
+  anchorRect,
+  targetLanguage,
+  alreadyAdded,
+  onClose,
+  onAdded,
+}: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(!!alreadyAdded);
@@ -64,7 +72,9 @@ export default function WordPopover({ word, anchorRect, alreadyAdded, onClose, o
     }
   }
 
-  const article = word.gender && ARTICLE_COLOR[word.gender] ? word.gender : null;
+  const showArticle = targetLanguage === "de";
+  const article =
+    showArticle && word.gender && ARTICLE_COLOR[word.gender] ? word.gender : null;
   const articleColor = article ? ARTICLE_COLOR[article] : "var(--ink-3)";
   const top = anchorRect.top + window.scrollY - 12;
   const left = anchorRect.left + anchorRect.width / 2 + window.scrollX;
@@ -89,20 +99,20 @@ export default function WordPopover({ word, anchorRect, alreadyAdded, onClose, o
           aria-label="Escuchar palabra"
           onClick={(e) => {
             e.stopPropagation();
-            speakGerman(word.lemma);
+            speak(word.lemma, targetLanguage);
           }}
         >
           <span className="wpop__audio-icon" />
         </button>
       </div>
 
-      {word.translation_es && (
-        <div className="wpop__translation">{word.translation_es}</div>
+      {word.translation && (
+        <div className="wpop__translation">{word.translation}</div>
       )}
 
-      {word.example_de && (
+      {word.example_target && (
         <div className="wpop__example">
-          <span className="wpop__example-de">{word.example_de}</span>
+          <span className="wpop__example-de">{word.example_target}</span>
         </div>
       )}
 

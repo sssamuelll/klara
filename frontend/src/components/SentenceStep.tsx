@@ -1,4 +1,5 @@
 import type { StorySentence, StoryWord } from "../api/types";
+import { languageLabel } from "../lib/languages";
 import RecordingBar from "./RecordingBar";
 import PronunciationFeedback, { type PronScores } from "./PronunciationFeedback";
 
@@ -6,6 +7,7 @@ interface Props {
   sentence: StorySentence;
   index: number;
   total: number;
+  targetLanguage: string;
   lemmaIndex: Record<string, string>;
   wordsById: Record<string, StoryWord>;
   activeWordKey: string | null;
@@ -59,6 +61,7 @@ export default function SentenceStep({
   sentence,
   index,
   total,
+  targetLanguage,
   lemmaIndex,
   wordsById,
   activeWordKey,
@@ -75,7 +78,8 @@ export default function SentenceStep({
   canPrev,
   canNext,
 }: Props) {
-  const tokens = tokenize(sentence.de);
+  const tokens = tokenize(sentence.target);
+  const targetLabel = languageLabel(targetLanguage);
 
   return (
     <section className="step" data-active="true">
@@ -131,7 +135,7 @@ export default function SentenceStep({
               );
             })}
           </p>
-          <p className="step__es">{sentence.es}</p>
+          <p className="step__es">{sentence.native}</p>
         </div>
 
         <aside className="step__actions">
@@ -166,7 +170,7 @@ export default function SentenceStep({
                 {recording ? "Escuchando…" : "Pronunciar"}
               </span>
               <span className="step__action-sub k-mono">
-                {recording ? "Decí en alemán" : "Tu turno"}
+                {recording ? `Decí en ${targetLabel}` : "Tu turno"}
               </span>
             </span>
           </button>

@@ -1,4 +1,5 @@
-from sqlalchemy import Index, Integer, String, UniqueConstraint
+from sqlalchemy import Index, Integer, String, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from german_app.models.base import Base, created_ts, pg_enum, uuid_pk
@@ -22,10 +23,13 @@ class VocabItem(Base):
     )
     gender: Mapped[str | None] = mapped_column(String(8), nullable=True)
     plural: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    translation_es: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    translation_en: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    example_de: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    example_es: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    translations: Mapped[dict] = mapped_column(
+        JSONB,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+        nullable=False,
+    )
+    example_target: Mapped[str | None] = mapped_column(String(500), nullable=True)
     ipa: Mapped[str | None] = mapped_column(String(120), nullable=True)
     cefr_level: Mapped[CEFRLevel | None] = mapped_column(
         pg_enum(CEFRLevel, name="cefr_level", create_type=False),

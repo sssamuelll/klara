@@ -21,6 +21,8 @@ class Story(Base):
         pg_enum(CEFRLevel, name="cefr_level", create_type=False),
         nullable=False,
     )
+    target_language: Mapped[str] = mapped_column(String(8), nullable=False)
+    native_language: Mapped[str] = mapped_column(String(8), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     target_vocab_item_ids: Mapped[list[UUID]] = mapped_column(
