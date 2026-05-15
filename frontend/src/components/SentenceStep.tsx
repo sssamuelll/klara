@@ -194,10 +194,6 @@ export default function SentenceStep({
           <span className="k-mono">Anterior</span>
         </button>
 
-        <span className="k-mono step__nav-hint">
-          {canNext ? "Siguiente" : "Última oración"}
-        </span>
-
         <button
           type="button"
           className="step__nav-btn step__nav-btn--next"
