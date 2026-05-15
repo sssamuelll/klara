@@ -1,15 +1,25 @@
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from german_app.models.base import Base, created_ts, pg_enum, updated_ts, uuid_pk
+from german_app.models.base import Base, created_ts, pg_enum, updated_ts
 from german_app.models.enums import CEFRLevel
 
 
-class User(Base):
+class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid_pk]
-    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
+    # Override the FastAPI-Users mixin defaults: email and hashed_password must be
+    # nullable so (a) the legacy single-user row can exist with email IS NULL
+    # until INITIAL_OWNER_EMAIL claims it, and (b) Google-OAuth-only accounts
+    # don't carry a password.
+    email: Mapped[str | None] = mapped_column(  # type: ignore[assignment]
+        String(320), unique=True, index=True, nullable=True
+    )
+    hashed_password: Mapped[str | None] = mapped_column(  # type: ignore[assignment]
+        String(1024), nullable=True
+    )
+
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     level: Mapped[CEFRLevel] = mapped_column(
         pg_enum(CEFRLevel, name="cefr_level"),

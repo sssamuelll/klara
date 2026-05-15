@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "El idioma nativo y el idioma a aprender deben ser diferentes."
+    },
+    "account": {
+      "section": "Cuenta",
+      "emailLabel": "Correo electrónico",
+      "changePasswordBtn": "Cambiar contraseña",
+      "logoutBtn": "Cerrar sesión"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar a Klara",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "submit": "Entrar",
+      "googleBtn": "Continuar con Google",
+      "signupLink": "Crear cuenta",
+      "forgotLink": "Olvidé mi contraseña",
+      "error": {
+        "invalidCredentials": "Correo o contraseña incorrectos."
+      }
+    },
+    "signup": {
+      "title": "Crear cuenta",
+      "emailLabel": "Correo electrónico",
+      "passwordLabel": "Contraseña",
+      "confirmLabel": "Repetí la contraseña",
+      "submit": "Crear cuenta",
+      "googleBtn": "Continuar con Google",
+      "loginLink": "Ya tengo cuenta",
+      "error": {
+        "allowlist": "Este correo no está autorizado para registrarse.",
+        "passwordMismatch": "Las contraseñas no coinciden."
+      },
+      "verifyEmailSent": "Te enviamos un correo para confirmar la dirección."
+    },
+    "verify": {
+      "title": "Confirmar correo",
+      "success": "Listo. Tu correo está confirmado.",
+      "error": "No pudimos confirmar tu correo. El enlace puede haber expirado.",
+      "resendBtn": "Reenviar correo"
+    },
+    "reset": {
+      "forgotTitle": "Restablecer contraseña",
+      "forgotSubmit": "Enviar enlace",
+      "forgotSent": "Si el correo existe, te mandamos un enlace para restablecer la contraseña.",
+      "resetTitle": "Nueva contraseña",
+      "newPasswordLabel": "Nueva contraseña",
+      "confirmLabel": "Repetí la contraseña",
+      "submit": "Cambiar contraseña",
+      "success": "Listo. Ya podés entrar con la nueva contraseña."
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "Próximamente.",
       "dek": "Conversación libre. Voz a voz, cuando estés listo."
     }
+  },
+  "errors": {
+    "unauthorized": "Necesitás iniciar sesión.",
+    "session_expired": "Tu sesión expiró. Iniciá sesión otra vez.",
+    "not_in_allowlist": "Este correo no está autorizado.",
+    "invalid_credentials": "Correo o contraseña incorrectos.",
+    "email_not_verified": "Confirmá tu correo antes de continuar."
   }
 }

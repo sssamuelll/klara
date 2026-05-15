@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "La langue maternelle et la langue à apprendre doivent être différentes."
+    },
+    "account": {
+      "section": "Compte",
+      "emailLabel": "E-mail",
+      "changePasswordBtn": "Changer le mot de passe",
+      "logoutBtn": "Se déconnecter"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Se connecter à Klara",
+      "emailLabel": "E-mail",
+      "passwordLabel": "Mot de passe",
+      "submit": "Se connecter",
+      "googleBtn": "Continuer avec Google",
+      "signupLink": "Créer un compte",
+      "forgotLink": "Mot de passe oublié",
+      "error": {
+        "invalidCredentials": "E-mail ou mot de passe invalide."
+      }
+    },
+    "signup": {
+      "title": "Créer un compte",
+      "emailLabel": "E-mail",
+      "passwordLabel": "Mot de passe",
+      "confirmLabel": "Confirmer le mot de passe",
+      "submit": "Créer un compte",
+      "googleBtn": "Continuer avec Google",
+      "loginLink": "J'ai déjà un compte",
+      "error": {
+        "allowlist": "Cet e-mail n'est pas autorisé à s'inscrire.",
+        "passwordMismatch": "Les mots de passe ne correspondent pas."
+      },
+      "verifyEmailSent": "Nous t'avons envoyé un e-mail pour confirmer ton adresse."
+    },
+    "verify": {
+      "title": "Vérifier l'e-mail",
+      "success": "Terminé. Ton e-mail est vérifié.",
+      "error": "Impossible de vérifier ton e-mail. Le lien a peut-être expiré.",
+      "resendBtn": "Renvoyer l'e-mail"
+    },
+    "reset": {
+      "forgotTitle": "Réinitialiser le mot de passe",
+      "forgotSubmit": "Envoyer le lien",
+      "forgotSent": "Si le compte existe, nous t'avons envoyé un lien de réinitialisation.",
+      "resetTitle": "Nouveau mot de passe",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "confirmLabel": "Confirmer le mot de passe",
+      "submit": "Mettre à jour le mot de passe",
+      "success": "Terminé. Tu peux te connecter avec ton nouveau mot de passe."
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "Bientôt disponible.",
       "dek": "Conversation libre. De vive voix, quand tu seras prêt·e."
     }
+  },
+  "errors": {
+    "unauthorized": "Tu dois te connecter.",
+    "session_expired": "Ta session a expiré. Reconnecte-toi.",
+    "not_in_allowlist": "Cet e-mail n'est pas autorisé.",
+    "invalid_credentials": "E-mail ou mot de passe invalide.",
+    "email_not_verified": "Vérifie ton e-mail avant de continuer."
   }
 }
