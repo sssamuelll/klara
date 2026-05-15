@@ -4,12 +4,12 @@ import { api } from "../api/client";
 import KlaraMark from "../components/KlaraMark";
 
 const SUGGESTIONS = [
-  "Panadería un sábado",
-  "Cita en el Bürgeramt",
-  "U-Bahn averiada",
-  "Comprando un Deutschlandticket",
-  "Vecino que toca timbre",
-  "Médico de cabecera",
+  "Comprar en el supermercado",
+  "Una llamada al médico",
+  "En el transporte público",
+  "Encuentro inesperado en la calle",
+  "Pidiendo un café",
+  "Trámite en una oficina",
 ];
 
 export default function NewStory() {

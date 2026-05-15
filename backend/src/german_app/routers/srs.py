@@ -13,14 +13,14 @@ from german_app.services.srs_engine import schedule_next_review
 router = APIRouter(prefix="/srs", tags=["srs"])
 
 
-def _card_to_out(card: UserCard, vocab: VocabItem) -> CardOut:
+def _card_to_out(card: UserCard, vocab: VocabItem, native_language: str) -> CardOut:
     return CardOut(
         id=card.id,
         vocab_item_id=vocab.id,
         lemma=vocab.lemma,
         pos=vocab.pos,
-        translation_es=vocab.translation_es,
-        example_de=vocab.example_de,
+        translation=(vocab.translations or {}).get(native_language),
+        example_target=vocab.example_target,
         state=card.state,
         interval_days=card.interval_days,
         next_review_at=card.next_review_at,
@@ -51,12 +51,12 @@ async def add_card(payload: CardCreateRequest, db: DBSession, user: CurrentUser)
             )
         ).scalar_one()
         await db.commit()
-        return _card_to_out(existing, vocab)
+        return _card_to_out(existing, vocab, user.native_language)
 
     await db.commit()
     card = await db.get(UserCard, new_id)
     assert card is not None
-    return _card_to_out(card, vocab)
+    return _card_to_out(card, vocab, user.native_language)
 
 
 @router.get("/cards/due", response_model=list[CardOut])
@@ -77,7 +77,7 @@ async def due_cards(
         .limit(limit)
     )
     rows = (await db.execute(stmt)).all()
-    return [_card_to_out(c, v) for c, v in rows]
+    return [_card_to_out(c, v, user.native_language) for c, v in rows]
 
 
 @router.post("/cards/{card_id}/review", response_model=ReviewOut)

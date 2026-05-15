@@ -8,8 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from german_app.i18n import language_label
 from german_app.llm.base import LLMClient, Message
-from german_app.llm.prompts import STORY_SYSTEM_PROMPT, STORY_USER_PROMPT
+from german_app.llm.prompts import STORY_USER_PROMPT, build_story_system_prompt
 from german_app.models import Story, VocabItem
 from german_app.models.enums import CEFRLevel, PartOfSpeech
 
@@ -31,8 +32,8 @@ def _parse_pos(value: str | None) -> PartOfSpeech:
         return PartOfSpeech.OTHER
 
 
-def _parse_gender(value: str | None) -> str | None:
-    if not value:
+def _parse_gender(value: str | None, *, target_language: str) -> str | None:
+    if target_language != "de" or not value:
         return None
     v = value.strip().lower()
     if v in {"der", "die", "das"}:
@@ -40,11 +41,12 @@ def _parse_gender(value: str | None) -> str | None:
     return None
 
 
-def _clean_lemma(lemma: str) -> tuple[str, str | None]:
+def _clean_lemma(lemma: str, *, target_language: str) -> tuple[str, str | None]:
     cleaned = lemma.strip().lstrip("•").strip()
-    parts = cleaned.split(maxsplit=1)
-    if len(parts) == 2 and parts[0].lower() in {"der", "die", "das"}:
-        return parts[1], parts[0].lower()
+    if target_language == "de":
+        parts = cleaned.split(maxsplit=1)
+        if len(parts) == 2 and parts[0].lower() in {"der", "die", "das"}:
+            return parts[1], parts[0].lower()
     return cleaned, None
 
 
@@ -65,6 +67,9 @@ async def _upsert_vocab_items(
     db: AsyncSession,
     target_words: list[dict[str, Any]],
     level: CEFRLevel,
+    *,
+    target_language: str,
+    native_language: str,
 ) -> list[VocabItem]:
     if not target_words:
         return []
@@ -75,24 +80,27 @@ async def _upsert_vocab_items(
         if not raw_lemma:
             continue
         pos = _parse_pos(w.get("pos"))
-        lemma, inferred_gender = _clean_lemma(raw_lemma)
-        gender = _parse_gender(w.get("gender")) or inferred_gender
+        lemma, inferred_gender = _clean_lemma(raw_lemma, target_language=target_language)
+        gender = _parse_gender(w.get("gender"), target_language=target_language) or inferred_gender
+
+        translation = (w.get("translation") or "").strip() or None
+        translations = {native_language: translation} if translation else {}
 
         stmt = pg_insert(VocabItem).values(
             lemma=lemma,
-            language="de",
+            language=target_language,
             pos=pos,
             gender=gender,
             plural=w.get("plural") or None,
-            translation_es=w.get("translation_es") or None,
-            example_de=w.get("example_de") or None,
+            translations=translations,
+            example_target=w.get("example_target") or None,
             cefr_level=level,
         )
         stmt = stmt.on_conflict_do_update(
             constraint="uq_vocab_lemma_lang_pos",
             set_={
-                "translation_es": stmt.excluded.translation_es,
-                "example_de": stmt.excluded.example_de,
+                "translations": VocabItem.translations.op("||")(stmt.excluded.translations),
+                "example_target": stmt.excluded.example_target,
                 "gender": stmt.excluded.gender,
                 "plural": stmt.excluded.plural,
             },
@@ -130,18 +138,36 @@ async def generate_story(
     *,
     user_id: UUID,
     level: CEFRLevel,
+    target_language: str,
     native_language: str,
+    learning_context: str | None,
     topic: str | None,
     model: str | None,
 ) -> GeneratedStory:
+    target_label = language_label(target_language)
+    native_label = language_label(native_language)
     recent = await _recent_vocab_lemmas(db, user_id)
-    system = STORY_SYSTEM_PROMPT.format(native_language=native_language, level=level.value)
+    system = build_story_system_prompt(
+        target_label=target_label,
+        native_label=native_label,
+        level=level.value,
+        target_language=target_language,
+        learning_context=learning_context,
+    )
     user = STORY_USER_PROMPT.format(
-        topic=topic or "libre — algo cotidiano de Nürnberg",
+        topic=topic or "libre — algo cotidiano",
+        target_label=target_label,
         recent_vocab=", ".join(recent) if recent else "(ninguno)",
     )
 
-    log.info("story.generate.request", user_id=str(user_id), level=level.value, topic=topic)
+    log.info(
+        "story.generate.request",
+        user_id=str(user_id),
+        level=level.value,
+        target_language=target_language,
+        native_language=native_language,
+        topic=topic,
+    )
     response = await llm.complete(
         messages=[Message("system", system), Message("user", user)],
         model=model,
@@ -157,11 +183,19 @@ async def generate_story(
     questions = data.get("comprehension_questions") or []
     target_words_raw = data.get("target_words") or []
 
-    target_words = await _upsert_vocab_items(db, target_words_raw, level)
+    target_words = await _upsert_vocab_items(
+        db,
+        target_words_raw,
+        level,
+        target_language=target_language,
+        native_language=native_language,
+    )
 
     story = Story(
         user_id=user_id,
         level=level,
+        target_language=target_language,
+        native_language=native_language,
         title=title,
         content={"sentences": sentences, "comprehension_questions": questions},
         target_vocab_item_ids=[w.id for w in target_words],

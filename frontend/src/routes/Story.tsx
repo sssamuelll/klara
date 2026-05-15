@@ -17,14 +17,14 @@ interface ActiveWord {
 
 type Direction = "forward" | "backward";
 
-function tokenizeWordIndices(de: string): number[] {
+function tokenizeWordIndices(text: string): number[] {
   // Returns indices of word tokens within the same tokenization SentenceStep uses.
   // Not strictly needed — pronunciation simulator uses contiguous indices anyway.
   const out: number[] = [];
   const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
   let i = 0;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(de)) !== null) {
+  while ((m = re.exec(text)) !== null) {
     if (m[3]) out.push(i);
     i++;
   }
@@ -96,7 +96,7 @@ export default function StoryView() {
   // Which sentence (if any) is currently being read aloud by Klara?
   const playingIndex = useMemo(() => {
     if (!tts.text) return -1;
-    return sentences.findIndex((s) => s.de === tts.text);
+    return sentences.findIndex((s) => s.target === tts.text);
   }, [sentences, tts.text]);
   const klaraSpeaking = tts.playing && playingIndex >= 0;
 
@@ -105,7 +105,7 @@ export default function StoryView() {
     if (recordingIndex === null) return;
     const sentence = sentences[recordingIndex];
     if (!sentence) return;
-    const wordIndices = tokenizeWordIndices(sentence.de);
+    const wordIndices = tokenizeWordIndices(sentence.target);
     const idx = recordingIndex;
     const t = window.setTimeout(() => {
       const scores: PronScores = {};
@@ -131,14 +131,14 @@ export default function StoryView() {
   );
 
   const handlePlay = useCallback(() => {
-    if (!current) return;
+    if (!current || !story) return;
     setRecordingIndex(null);
     if (playingIndex === currentIndex && tts.playing) {
       stop();
     } else {
-      speak(current.de);
+      speak(current.target, story.target_language);
     }
-  }, [current, currentIndex, playingIndex, tts.playing]);
+  }, [current, currentIndex, playingIndex, tts.playing, story]);
 
   const handleRecord = useCallback(() => {
     stop();
@@ -280,6 +280,7 @@ export default function StoryView() {
             sentence={current}
             index={currentIndex}
             total={total}
+            targetLanguage={story.target_language}
             lemmaIndex={lemmaIndex}
             wordsById={wordsById}
             activeWordKey={active?.key ?? null}
@@ -303,6 +304,7 @@ export default function StoryView() {
         <WordPopover
           word={active.word}
           anchorRect={active.rect}
+          targetLanguage={story.target_language}
           alreadyAdded={reviewIds.has(active.word.id)}
           onClose={closePopover}
           onAdded={(id) =>
@@ -398,15 +400,16 @@ function StoryFinished({
             <ul className="story__new-list">
               {story.target_words.map((w) => {
                 const added = reviewIds.has(w.id);
-                const article = w.gender ?? null;
+                const showArticle = story.target_language === "de";
+                const article = showArticle ? w.gender ?? null : null;
                 return (
                   <li key={w.id} className="story__new-item">
                     <div className="story__new-word">
                       {article && <span className="story__new-art">{article}</span>}
                       <span className="story__new-lemma">{w.lemma}</span>
                     </div>
-                    {w.translation_es && (
-                      <span className="story__new-tx">{w.translation_es}</span>
+                    {w.translation && (
+                      <span className="story__new-tx">{w.translation}</span>
                     )}
                     <button
                       type="button"

@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     default_user_display_name: str = "Samuel"
     default_user_level: str = "A0"
     default_user_native_language: str = "es"
+    default_user_target_language: str = "de"
+    default_user_learning_context: str | None = None
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 

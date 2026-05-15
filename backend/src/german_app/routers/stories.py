@@ -20,7 +20,7 @@ from german_app.services.tts_precache import collect_story_texts, precache_texts
 router = APIRouter(prefix="/stories", tags=["stories"])
 
 
-def _serialize_story(story: Story, words: list[VocabItem]) -> StoryOut:
+def _serialize_story(story: Story, words: list[VocabItem], native_language: str) -> StoryOut:
     content = story.content or {}
     sentences = [StorySentenceOut(**s) for s in content.get("sentences", [])]
     questions = [ComprehensionQuestionOut(**q) for q in content.get("comprehension_questions", [])]
@@ -31,14 +31,16 @@ def _serialize_story(story: Story, words: list[VocabItem]) -> StoryOut:
             pos=w.pos,
             gender=w.gender,
             plural=w.plural,
-            translation_es=w.translation_es,
-            example_de=w.example_de,
+            translation=(w.translations or {}).get(native_language),
+            example_target=w.example_target,
         )
         for w in words
     ]
     return StoryOut(
         id=story.id,
         level=story.level,
+        target_language=story.target_language,
+        native_language=story.native_language,
         title=story.title,
         content=StoryContent(sentences=sentences, comprehension_questions=questions),
         target_words=target,
@@ -72,13 +74,15 @@ async def create_story(
         llm,
         user_id=user.id,
         level=level,
+        target_language=user.target_language,
         native_language=user.native_language,
+        learning_context=user.learning_context,
         topic=payload.topic,
         model=None,
     )
-    serialized = _serialize_story(result.story, result.target_words)
+    serialized = _serialize_story(result.story, result.target_words, user.native_language)
     target_words_dicts = [
-        {"lemma": w.lemma, "example_de": w.example_de} for w in result.target_words
+        {"lemma": w.lemma, "example_target": w.example_target} for w in result.target_words
     ]
     texts = collect_story_texts(result.story.content, target_words_dicts)
     if serialized.title:
@@ -103,7 +107,14 @@ async def list_stories(
     )
     rows = (await db.execute(stmt)).scalars().all()
     return [
-        StoryListItem(id=s.id, level=s.level, title=s.title, created_at=s.created_at) for s in rows
+        StoryListItem(
+            id=s.id,
+            level=s.level,
+            target_language=s.target_language,
+            title=s.title,
+            created_at=s.created_at,
+        )
+        for s in rows
     ]
 
 
@@ -113,4 +124,4 @@ async def get_story(story_id: UUID, db: DBSession, user: CurrentUser) -> StoryOu
     if story is None or story.user_id != user.id:
         raise HTTPException(status_code=404, detail="Story not found")
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
-    return _serialize_story(story, words)
+    return _serialize_story(story, words, user.native_language)

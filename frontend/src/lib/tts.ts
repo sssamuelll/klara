@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { speechLocale } from "./languages";
 
 export interface TTSState {
   text: string | null;
@@ -12,6 +13,7 @@ type Listener = (state: TTSState) => void;
 const listeners = new Set<Listener>();
 let state: TTSState = { text: null, playing: false, progress: 0, duration: 0 };
 let audio: HTMLAudioElement | null = null;
+let activeLocale: string = "de-DE";
 
 function emit() {
   for (const l of listeners) l(state);
@@ -43,9 +45,10 @@ export function useTTS(): TTSState {
   return s;
 }
 
-export function speak(text: string): void {
+export function speak(text: string, language?: string): void {
   stop();
   if (!text.trim()) return;
+  activeLocale = language ? speechLocale(language) : "de-DE";
   const a = new Audio(ttsUrl(text));
   a.preload = "auto";
   a.addEventListener("loadedmetadata", () => {
@@ -69,7 +72,7 @@ export function speak(text: string): void {
   set({ text, playing: false, progress: 0, duration: 0 });
   a.play().catch((err) => {
     console.warn("TTS playback failed, falling back to Web Speech", err);
-    fallbackWebSpeech(text);
+    fallbackWebSpeech(text, activeLocale);
   });
 }
 
@@ -93,22 +96,15 @@ export function stop(): void {
   set({ text: null, playing: false, progress: 0, duration: 0 });
 }
 
-export function speakGerman(text: string): void {
-  speak(text);
-}
-
-export function stopSpeaking(): void {
-  stop();
-}
-
-function fallbackWebSpeech(text: string): void {
+function fallbackWebSpeech(text: string, locale: string): void {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   const utter = new SpeechSynthesisUtterance(text);
+  const langPrefix = locale.split("-")[0].toLowerCase();
   const voice = window.speechSynthesis
     .getVoices()
-    .find((v) => v.lang?.toLowerCase().startsWith("de"));
+    .find((v) => v.lang?.toLowerCase().startsWith(langPrefix));
   if (voice) utter.voice = voice;
-  utter.lang = voice?.lang ?? "de-DE";
+  utter.lang = voice?.lang ?? locale;
   utter.rate = 0.95;
   window.speechSynthesis.speak(utter);
 }

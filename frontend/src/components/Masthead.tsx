@@ -13,6 +13,7 @@ export default function Masthead({ edition, theme, onToggleTheme }: Props) {
   const isHome = pathname === "/" || pathname.startsWith("/story");
   const isReview = pathname.startsWith("/review");
   const isChat = pathname.startsWith("/chat");
+  const isSettings = pathname.startsWith("/settings");
   const switchLabel = theme === "light" ? "Noche" : "Día";
 
   return (
@@ -26,6 +27,7 @@ export default function Masthead({ edition, theme, onToggleTheme }: Props) {
         <Link to="/" data-active={isHome}>Hoy</Link>
         <Link to="/review" data-active={isReview}>Repaso</Link>
         <Link to="/chat" data-active={isChat}>Hablar</Link>
+        <Link to="/settings" data-active={isSettings}>Ajustes</Link>
         <button
           type="button"
           className="k-masthead__theme"

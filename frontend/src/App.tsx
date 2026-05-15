@@ -5,6 +5,7 @@ import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
 import ReviewStub from "./routes/ReviewStub";
 import ChatStub from "./routes/ChatStub";
+import Settings from "./routes/Settings";
 import { mastheadDate } from "./lib/dateLabel";
 import { useTheme } from "./lib/preferences";
 
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/story/:id" element={<StoryView />} />
           <Route path="/review" element={<ReviewStub />} />
           <Route path="/chat" element={<ChatStub />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>
     </div>

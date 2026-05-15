@@ -15,8 +15,8 @@ class CardOut(BaseModel):
     vocab_item_id: UUID
     lemma: str
     pos: PartOfSpeech
-    translation_es: str | None
-    example_de: str | None
+    translation: str | None
+    example_target: str | None
     state: CardState
     interval_days: float
     next_review_at: datetime | None

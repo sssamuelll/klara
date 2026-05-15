@@ -47,6 +47,8 @@ async def current_user(db: DBSession, settings: SettingsDep) -> User:
         display_name=settings.default_user_display_name,
         level=CEFRLevel(settings.default_user_level),
         native_language=settings.default_user_native_language,
+        target_language=settings.default_user_target_language,
+        learning_context=settings.default_user_learning_context,
     )
     db.add(user)
     await db.commit()
