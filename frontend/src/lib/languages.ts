@@ -5,6 +5,9 @@ export interface LanguageInfo {
   speechLocale: string;
 }
 
+// Keep in sync with backend/src/german_app/i18n/languages.py. The backend
+// exposes the same map at GET /api/v1/me/languages if we ever want to fetch
+// it instead of mirroring.
 export const SUPPORTED_LANGUAGES: Record<LanguageCode, LanguageInfo> = {
   de: { label: "Deutsch", speechLocale: "de-DE" },
   en: { label: "English", speechLocale: "en-US" },

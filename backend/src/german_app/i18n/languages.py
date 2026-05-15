@@ -9,6 +9,9 @@ class LanguageInfo(TypedDict):
 LanguageCode = Literal["de", "en", "fr", "ja", "pt", "es"]
 
 
+# Keep in sync with frontend/src/lib/languages.ts (and bump both together when
+# adding/removing a code). The /api/v1/me/languages endpoint exposes this so
+# the frontend *could* fetch it, but today it just mirrors the constants.
 SUPPORTED_LANGUAGES: dict[str, LanguageInfo] = {
     "de": {"label": "Deutsch", "speech_locale": "de-DE"},
     "en": {"label": "English", "speech_locale": "en-US"},
@@ -28,12 +31,10 @@ def validate_language(code: str) -> str:
 
 
 def language_label(code: str) -> str:
-    return SUPPORTED_LANGUAGES.get(code, {"label": code, "speech_locale": code}).get(
-        "label", code
-    )
+    info = SUPPORTED_LANGUAGES.get(code)
+    return info["label"] if info else code
 
 
 def speech_locale(code: str) -> str:
-    return SUPPORTED_LANGUAGES.get(code, {"label": code, "speech_locale": code}).get(
-        "speech_locale", code
-    )
+    info = SUPPORTED_LANGUAGES.get(code)
+    return info["speech_locale"] if info else code

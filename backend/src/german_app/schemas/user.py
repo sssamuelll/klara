@@ -25,12 +25,15 @@ class UserOut(BaseModel):
     learning_context: str | None = None
 
 
+LEARNING_CONTEXT_MAX_LEN = 500
+
+
 class UserUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     level: CEFRLevel | None = None
     native_language: str | None = None
     target_language: str | None = None
-    learning_context: str | None = None
+    learning_context: str | None = Field(default=None, max_length=LEARNING_CONTEXT_MAX_LEN)
 
     @field_validator("native_language", "target_language")
     @classmethod

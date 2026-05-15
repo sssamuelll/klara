@@ -52,17 +52,20 @@ def upgrade() -> None:
         ),
     )
     # Backfill story content: rename keys de->target, es->native, q_de/q_es/options_de.
+    # Use COALESCE(..., '') so the target/native keys always exist as strings —
+    # StorySentenceOut requires them non-null, and jsonb_strip_nulls would have
+    # dropped a missing key entirely.
     op.execute(
         """
         UPDATE stories SET content = jsonb_build_object(
             'sentences', COALESCE(
                 (
                     SELECT jsonb_agg(
-                        jsonb_strip_nulls(jsonb_build_object(
-                            'target', s->>'de',
-                            'native', s->>'es',
+                        jsonb_build_object(
+                            'target', COALESCE(s->>'de', ''),
+                            'native', COALESCE(s->>'es', ''),
                             'new_words', COALESCE(s->'new_words', '[]'::jsonb)
-                        ))
+                        )
                     )
                     FROM jsonb_array_elements(COALESCE(content->'sentences', '[]'::jsonb)) AS s
                 ),
@@ -71,12 +74,12 @@ def upgrade() -> None:
             'comprehension_questions', COALESCE(
                 (
                     SELECT jsonb_agg(
-                        jsonb_strip_nulls(jsonb_build_object(
-                            'q_target', q->>'q_de',
-                            'q_native', q->>'q_es',
+                        jsonb_build_object(
+                            'q_target', COALESCE(q->>'q_de', ''),
+                            'q_native', COALESCE(q->>'q_es', ''),
                             'options_target', COALESCE(q->'options_de', '[]'::jsonb),
                             'correct_index', COALESCE((q->>'correct_index')::int, 0)
-                        ))
+                        )
                     )
                     FROM jsonb_array_elements(COALESCE(content->'comprehension_questions', '[]'::jsonb)) AS q
                 ),
@@ -146,11 +149,11 @@ def downgrade() -> None:
             'sentences', COALESCE(
                 (
                     SELECT jsonb_agg(
-                        jsonb_strip_nulls(jsonb_build_object(
-                            'de', s->>'target',
-                            'es', s->>'native',
+                        jsonb_build_object(
+                            'de', COALESCE(s->>'target', ''),
+                            'es', COALESCE(s->>'native', ''),
                             'new_words', COALESCE(s->'new_words', '[]'::jsonb)
-                        ))
+                        )
                     )
                     FROM jsonb_array_elements(COALESCE(content->'sentences', '[]'::jsonb)) AS s
                 ),
@@ -159,12 +162,12 @@ def downgrade() -> None:
             'comprehension_questions', COALESCE(
                 (
                     SELECT jsonb_agg(
-                        jsonb_strip_nulls(jsonb_build_object(
-                            'q_de', q->>'q_target',
-                            'q_es', q->>'q_native',
+                        jsonb_build_object(
+                            'q_de', COALESCE(q->>'q_target', ''),
+                            'q_es', COALESCE(q->>'q_native', ''),
                             'options_de', COALESCE(q->'options_target', '[]'::jsonb),
                             'correct_index', COALESCE((q->>'correct_index')::int, 0)
-                        ))
+                        )
                     )
                     FROM jsonb_array_elements(COALESCE(content->'comprehension_questions', '[]'::jsonb)) AS q
                 ),

@@ -41,12 +41,42 @@ def _parse_gender(value: str | None, *, target_language: str) -> str | None:
     return None
 
 
+# Articles per language. The German set is split because der/die/das also feed
+# the `gender` field; the others are best-effort cleanup defensive against LLM
+# noise even though the prompt forbids articles in `lemma`.
+_GERMAN_GENDERED_ARTICLES = {"der", "die", "das"}
+_LEADING_ARTICLES: dict[str, set[str]] = {
+    "en": {"the", "a", "an"},
+    "fr": {"le", "la", "les", "un", "une", "des"},
+    "es": {"el", "la", "los", "las", "un", "una", "unos", "unas"},
+    "pt": {"o", "a", "os", "as", "um", "uma", "uns", "umas"},
+}
+_FRENCH_ELISION_PREFIXES = ("l'", "l’", "d'", "d’")
+
+
+def _strip_leading_article(text: str, articles: set[str]) -> str:
+    parts = text.split(maxsplit=1)
+    if len(parts) == 2 and parts[0].lower() in articles:
+        return parts[1]
+    return text
+
+
 def _clean_lemma(lemma: str, *, target_language: str) -> tuple[str, str | None]:
     cleaned = lemma.strip().lstrip("•").strip()
     if target_language == "de":
         parts = cleaned.split(maxsplit=1)
-        if len(parts) == 2 and parts[0].lower() in {"der", "die", "das"}:
+        if len(parts) == 2 and parts[0].lower() in _GERMAN_GENDERED_ARTICLES:
             return parts[1], parts[0].lower()
+        return cleaned, None
+    if target_language == "fr":
+        lower = cleaned.lower()
+        for prefix in _FRENCH_ELISION_PREFIXES:
+            if lower.startswith(prefix) and len(cleaned) > len(prefix):
+                cleaned = cleaned[len(prefix):]
+                break
+    articles = _LEADING_ARTICLES.get(target_language)
+    if articles:
+        cleaned = _strip_leading_article(cleaned, articles)
     return cleaned, None
 
 

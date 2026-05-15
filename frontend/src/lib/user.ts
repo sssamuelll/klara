@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { User, UserUpdate } from "../api/types";
 
@@ -51,44 +51,47 @@ export function useUser(): UseUserResult {
   const [user, setUser] = useState<User | null>(cached);
   const [loading, setLoading] = useState<boolean>(cached === null);
   const [error, setError] = useState<string | null>(null);
+  const activeRef = useRef(true);
 
   useEffect(() => {
-    let active = true;
+    activeRef.current = true;
     listeners.add(setUser);
     if (cached === null) {
       setLoading(true);
       load()
         .then((u) => {
-          if (active) {
+          if (activeRef.current) {
             setUser(u);
             setError(null);
           }
         })
         .catch((e) => {
-          if (active) setError(e instanceof Error ? e.message : String(e));
+          if (activeRef.current) setError(e instanceof Error ? e.message : String(e));
         })
         .finally(() => {
-          if (active) setLoading(false);
+          if (activeRef.current) setLoading(false);
         });
     }
     return () => {
-      active = false;
+      activeRef.current = false;
       listeners.delete(setUser);
     };
   }, []);
 
-  const reload = async () => {
-    setLoading(true);
+  const reload = useCallback(async () => {
+    if (activeRef.current) setLoading(true);
     try {
       const u = await refreshUser();
-      setUser(u);
-      setError(null);
+      if (activeRef.current) {
+        setUser(u);
+        setError(null);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (activeRef.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      if (activeRef.current) setLoading(false);
     }
-  };
+  }, []);
 
   return { user, loading, error, reload };
 }
