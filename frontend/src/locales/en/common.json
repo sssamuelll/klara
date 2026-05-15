@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "Your native language and the language you're learning must be different."
+    },
+    "account": {
+      "section": "Account",
+      "emailLabel": "Email",
+      "changePasswordBtn": "Change password",
+      "logoutBtn": "Log out"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to Klara",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submit": "Sign in",
+      "googleBtn": "Continue with Google",
+      "signupLink": "Create account",
+      "forgotLink": "Forgot password",
+      "error": {
+        "invalidCredentials": "Invalid email or password."
+      }
+    },
+    "signup": {
+      "title": "Create account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "confirmLabel": "Confirm password",
+      "submit": "Create account",
+      "googleBtn": "Continue with Google",
+      "loginLink": "I already have an account",
+      "error": {
+        "allowlist": "This email is not authorized to sign up.",
+        "passwordMismatch": "Passwords don't match."
+      },
+      "verifyEmailSent": "We sent you an email to confirm your address."
+    },
+    "verify": {
+      "title": "Verify email",
+      "success": "Done. Your email is verified.",
+      "error": "We couldn't verify your email. The link may have expired.",
+      "resendBtn": "Resend email"
+    },
+    "reset": {
+      "forgotTitle": "Reset password",
+      "forgotSubmit": "Send link",
+      "forgotSent": "If the account exists, we've sent a reset link to your inbox.",
+      "resetTitle": "New password",
+      "newPasswordLabel": "New password",
+      "confirmLabel": "Confirm password",
+      "submit": "Update password",
+      "success": "Done. You can sign in with your new password."
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "Coming soon.",
       "dek": "Free conversation. Voice to voice, when you're ready."
     }
+  },
+  "errors": {
+    "unauthorized": "You need to sign in.",
+    "session_expired": "Your session expired. Please sign in again.",
+    "not_in_allowlist": "This email is not authorized.",
+    "invalid_credentials": "Invalid email or password.",
+    "email_not_verified": "Please verify your email before continuing."
   }
 }

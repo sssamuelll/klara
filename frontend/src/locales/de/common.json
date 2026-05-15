@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "Muttersprache und Lernsprache müssen unterschiedlich sein."
+    },
+    "account": {
+      "section": "Konto",
+      "emailLabel": "E-Mail",
+      "changePasswordBtn": "Passwort ändern",
+      "logoutBtn": "Abmelden"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bei Klara anmelden",
+      "emailLabel": "E-Mail",
+      "passwordLabel": "Passwort",
+      "submit": "Anmelden",
+      "googleBtn": "Mit Google fortfahren",
+      "signupLink": "Konto erstellen",
+      "forgotLink": "Passwort vergessen",
+      "error": {
+        "invalidCredentials": "E-Mail oder Passwort ungültig."
+      }
+    },
+    "signup": {
+      "title": "Konto erstellen",
+      "emailLabel": "E-Mail",
+      "passwordLabel": "Passwort",
+      "confirmLabel": "Passwort bestätigen",
+      "submit": "Konto erstellen",
+      "googleBtn": "Mit Google fortfahren",
+      "loginLink": "Ich habe schon ein Konto",
+      "error": {
+        "allowlist": "Diese E-Mail ist nicht für die Registrierung freigeschaltet.",
+        "passwordMismatch": "Die Passwörter stimmen nicht überein."
+      },
+      "verifyEmailSent": "Wir haben dir eine E-Mail zur Bestätigung geschickt."
+    },
+    "verify": {
+      "title": "E-Mail bestätigen",
+      "success": "Fertig. Deine E-Mail ist bestätigt.",
+      "error": "Wir konnten deine E-Mail nicht bestätigen. Der Link ist möglicherweise abgelaufen.",
+      "resendBtn": "E-Mail erneut senden"
+    },
+    "reset": {
+      "forgotTitle": "Passwort zurücksetzen",
+      "forgotSubmit": "Link senden",
+      "forgotSent": "Falls das Konto existiert, haben wir dir einen Link zum Zurücksetzen geschickt.",
+      "resetTitle": "Neues Passwort",
+      "newPasswordLabel": "Neues Passwort",
+      "confirmLabel": "Passwort bestätigen",
+      "submit": "Passwort aktualisieren",
+      "success": "Fertig. Du kannst dich jetzt mit dem neuen Passwort anmelden."
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "Bald verfügbar.",
       "dek": "Freies Gespräch. Stimme zu Stimme, wenn du bereit bist."
     }
+  },
+  "errors": {
+    "unauthorized": "Du musst dich anmelden.",
+    "session_expired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    "not_in_allowlist": "Diese E-Mail ist nicht freigeschaltet.",
+    "invalid_credentials": "E-Mail oder Passwort ungültig.",
+    "email_not_verified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
   }
 }

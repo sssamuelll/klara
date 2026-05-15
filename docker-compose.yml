@@ -44,6 +44,16 @@ services:
       DEFAULT_USER_LEVEL: A0
       DEFAULT_USER_NATIVE_LANGUAGE: es
       CORS_ORIGINS: "http://localhost:5273,http://127.0.0.1:5273"
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-dev-secret-do-not-use-in-prod-change-me-32b}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-klara_session}
+      AUTH_COOKIE_MAX_AGE: ${AUTH_COOKIE_MAX_AGE:-2592000}
+      ALLOWED_SIGNUP_EMAILS: ${ALLOWED_SIGNUP_EMAILS:-}
+      INITIAL_OWNER_EMAIL: ${INITIAL_OWNER_EMAIL:-}
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Klara <noreply@klara.app>}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5273}
     ports:
       - "8000:8000"
     volumes:

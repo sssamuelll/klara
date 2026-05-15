@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { CEFRLevel, LanguageCode } from "../api/types";
 import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
+import { useAuth } from "../lib/auth";
 import { patchUser, useUser } from "../lib/user";
 
 const LEVELS: CEFRLevel[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
@@ -11,6 +12,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, loading } = useUser();
+  const { logout } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [level, setLevel] = useState<CEFRLevel>("A0");
   const [nativeLang, setNativeLang] = useState<LanguageCode>("es");
@@ -190,6 +192,44 @@ export default function Settings() {
           </button>
         </div>
       </form>
+
+      <hr className="k-hairline" />
+
+      <section style={{ marginTop: "1.5rem" }}>
+        <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
+          {t("settings.account.section")}
+        </h2>
+
+        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
+          {t("settings.account.emailLabel")}
+        </label>
+        <input
+          className="snew__input"
+          value={user?.email ?? ""}
+          readOnly
+          disabled
+        />
+
+        <div className="snew__actions" style={{ marginTop: "1rem" }}>
+          <button
+            type="button"
+            className="k-btn k-btn--ghost"
+            onClick={() => navigate("/forgot")}
+          >
+            {t("settings.account.changePasswordBtn")}
+          </button>
+          <button
+            type="button"
+            className="k-btn k-btn--ghost"
+            onClick={async () => {
+              await logout();
+              navigate("/login", { replace: true });
+            }}
+          >
+            {t("settings.account.logoutBtn")}
+          </button>
+        </div>
+      </section>
     </main>
   );
 }

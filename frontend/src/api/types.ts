@@ -83,6 +83,7 @@ export interface CardOut {
 
 export interface User {
   id: string;
+  email: string | null;
   display_name: string;
   level: CEFRLevel;
   native_language: LanguageCode;

@@ -3,8 +3,32 @@ import type { CardOut, Story, StoryListItem, User, UserUpdate } from "./types";
 
 const API_BASE = "/api/v1";
 
+class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+export class AuthRequiredError extends ApiError {
+  constructor() {
+    super(401, "auth required");
+  }
+}
+
+// Anything listening here can react to a session expiring mid-session.
+// AuthProvider hooks this up to clear in-memory state and redirect to /login.
+type UnauthorizedListener = () => void;
+const unauthorizedListeners = new Set<UnauthorizedListener>();
+export function onUnauthorized(fn: UnauthorizedListener): () => void {
+  unauthorizedListeners.add(fn);
+  return () => unauthorizedListeners.delete(fn);
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       "Accept-Language": i18n.language || "es",
@@ -12,6 +36,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     },
     ...init,
   });
+  if (resp.status === 401) {
+    for (const fn of unauthorizedListeners) fn();
+    throw new AuthRequiredError();
+  }
   if (!resp.ok) {
     let detail: string;
     try {
@@ -20,14 +48,79 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       detail = await resp.text();
     }
-    throw new Error(`${resp.status} ${resp.statusText}: ${detail}`);
+    throw new ApiError(resp.status, `${resp.status} ${resp.statusText}: ${detail}`);
   }
+  if (resp.status === 204) return undefined as T;
   return resp.json() as Promise<T>;
+}
+
+interface SignupPayload {
+  email: string;
+  password: string;
+  display_name?: string;
 }
 
 export const api = {
   health: () => request<{ status: string }>("/health"),
 
+  // --- auth ---
+  signup: (payload: SignupPayload) =>
+    request<User>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  login: async (email: string, password: string): Promise<void> => {
+    const body = new URLSearchParams({ username: email, password });
+    const resp = await fetch(`${API_BASE}/auth/jwt/login`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept-Language": i18n.language || "es",
+      },
+      body: body.toString(),
+    });
+    if (!resp.ok) {
+      let detail: string;
+      try {
+        const j = await resp.json();
+        detail = j.detail ?? JSON.stringify(j);
+      } catch {
+        detail = await resp.text();
+      }
+      throw new ApiError(resp.status, `${resp.status}: ${detail}`);
+    }
+  },
+
+  logout: () =>
+    request<void>("/auth/jwt/logout", { method: "POST" }),
+
+  forgotPassword: (email: string) =>
+    request<void>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (token: string, password: string) =>
+    request<void>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
+
+  verifyEmail: (token: string) =>
+    request<User>("/auth/verify", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
+  requestVerifyToken: (email: string) =>
+    request<void>("/auth/request-verify-token", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  // --- protected ---
   getMe: () => request<User>("/me"),
 
   updateMe: (patch: UserUpdate) =>

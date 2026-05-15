@@ -1,7 +1,6 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -47,6 +46,17 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
+    auth_jwt_secret: str = "dev-secret-do-not-use-in-prod-change-me-32b"
+    auth_cookie_name: str = "klara_session"
+    auth_cookie_max_age: int = 60 * 60 * 24 * 30  # 30 days
+    allowed_signup_emails: str = ""
+    initial_owner_email: str | None = None
+    google_oauth_client_id: str | None = None
+    google_oauth_client_secret: str | None = None
+    resend_api_key: str | None = None
+    email_from: str = "Klara <noreply@klara.app>"
+    app_base_url: str = "http://localhost:5273"
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
@@ -54,6 +64,18 @@ class Settings(BaseSettings):
     @property
     def is_dev(self) -> bool:
         return self.app_env == "development"
+
+    @property
+    def allowed_signup_email_set(self) -> set[str]:
+        return {
+            e.strip().lower()
+            for e in self.allowed_signup_emails.split(",")
+            if e.strip()
+        }
+
+    @property
+    def initial_owner_email_normalized(self) -> str | None:
+        return self.initial_owner_email.strip().lower() if self.initial_owner_email else None
 
 
 @lru_cache(maxsize=1)

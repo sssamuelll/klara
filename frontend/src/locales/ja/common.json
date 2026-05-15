@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "母語と学ぶ言語は別のものにしてください。"
+    },
+    "account": {
+      "section": "アカウント",
+      "emailLabel": "メールアドレス",
+      "changePasswordBtn": "パスワードを変更",
+      "logoutBtn": "ログアウト"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Klara にログイン",
+      "emailLabel": "メールアドレス",
+      "passwordLabel": "パスワード",
+      "submit": "ログイン",
+      "googleBtn": "Google で続ける",
+      "signupLink": "アカウントを作成",
+      "forgotLink": "パスワードをお忘れですか",
+      "error": {
+        "invalidCredentials": "メールアドレスまたはパスワードが正しくありません。"
+      }
+    },
+    "signup": {
+      "title": "アカウントを作成",
+      "emailLabel": "メールアドレス",
+      "passwordLabel": "パスワード",
+      "confirmLabel": "パスワードを再入力",
+      "submit": "アカウントを作成",
+      "googleBtn": "Google で続ける",
+      "loginLink": "すでにアカウントを持っています",
+      "error": {
+        "allowlist": "このメールアドレスは登録を許可されていません。",
+        "passwordMismatch": "パスワードが一致しません。"
+      },
+      "verifyEmailSent": "確認メールを送信しました。"
+    },
+    "verify": {
+      "title": "メールを確認",
+      "success": "完了しました。メールアドレスが確認されました。",
+      "error": "メールを確認できませんでした。リンクの期限が切れている可能性があります。",
+      "resendBtn": "メールを再送"
+    },
+    "reset": {
+      "forgotTitle": "パスワードをリセット",
+      "forgotSubmit": "リンクを送信",
+      "forgotSent": "アカウントが存在する場合、リセット用のリンクを送信しました。",
+      "resetTitle": "新しいパスワード",
+      "newPasswordLabel": "新しいパスワード",
+      "confirmLabel": "パスワードを再入力",
+      "submit": "パスワードを更新",
+      "success": "完了しました。新しいパスワードでログインできます。"
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "近日公開。",
       "dek": "自由な会話。準備ができたら、声と声で。"
     }
+  },
+  "errors": {
+    "unauthorized": "ログインが必要です。",
+    "session_expired": "セッションの期限が切れました。もう一度ログインしてください。",
+    "not_in_allowlist": "このメールアドレスは許可されていません。",
+    "invalid_credentials": "メールアドレスまたはパスワードが正しくありません。",
+    "email_not_verified": "続行する前にメールアドレスを確認してください。"
   }
 }

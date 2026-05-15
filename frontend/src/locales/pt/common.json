@@ -208,6 +208,56 @@
     },
     "error": {
       "sameLang": "A língua materna e a língua a aprender têm de ser diferentes."
+    },
+    "account": {
+      "section": "Conta",
+      "emailLabel": "Email",
+      "changePasswordBtn": "Alterar palavra-passe",
+      "logoutBtn": "Terminar sessão"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Entrar no Klara",
+      "emailLabel": "Email",
+      "passwordLabel": "Palavra-passe",
+      "submit": "Entrar",
+      "googleBtn": "Continuar com Google",
+      "signupLink": "Criar conta",
+      "forgotLink": "Esqueci-me da palavra-passe",
+      "error": {
+        "invalidCredentials": "Email ou palavra-passe inválidos."
+      }
+    },
+    "signup": {
+      "title": "Criar conta",
+      "emailLabel": "Email",
+      "passwordLabel": "Palavra-passe",
+      "confirmLabel": "Confirmar palavra-passe",
+      "submit": "Criar conta",
+      "googleBtn": "Continuar com Google",
+      "loginLink": "Já tenho conta",
+      "error": {
+        "allowlist": "Este email não está autorizado a registar-se.",
+        "passwordMismatch": "As palavras-passe não coincidem."
+      },
+      "verifyEmailSent": "Enviámos-te um email para confirmar o endereço."
+    },
+    "verify": {
+      "title": "Confirmar email",
+      "success": "Pronto. O teu email está confirmado.",
+      "error": "Não conseguimos confirmar o teu email. O link pode ter expirado.",
+      "resendBtn": "Reenviar email"
+    },
+    "reset": {
+      "forgotTitle": "Repor palavra-passe",
+      "forgotSubmit": "Enviar link",
+      "forgotSent": "Se a conta existir, enviámos-te um link para repor a palavra-passe.",
+      "resetTitle": "Nova palavra-passe",
+      "newPasswordLabel": "Nova palavra-passe",
+      "confirmLabel": "Confirmar palavra-passe",
+      "submit": "Atualizar palavra-passe",
+      "success": "Pronto. Já podes entrar com a nova palavra-passe."
     }
   },
   "stub": {
@@ -221,5 +271,12 @@
       "title": "Em breve.",
       "dek": "Conversa livre. Voz a voz, quando estiveres pronto."
     }
+  },
+  "errors": {
+    "unauthorized": "Tens de iniciar sessão.",
+    "session_expired": "A tua sessão expirou. Inicia sessão novamente.",
+    "not_in_allowlist": "Este email não está autorizado.",
+    "invalid_credentials": "Email ou palavra-passe inválidos.",
+    "email_not_verified": "Confirma o teu email antes de continuar."
   }
 }
