@@ -81,7 +81,7 @@ export default function Settings() {
         <div className="k-mono" style={{ color: "var(--ink-3)" }}>Guardado ✓</div>
       )}
 
-      <form className="snew__input-wrap" onSubmit={onSubmit} style={{ display: "block" }}>
+      <form onSubmit={onSubmit}>
         <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
           Nombre
         </label>
@@ -91,21 +91,29 @@ export default function Settings() {
           onChange={(e) => setDisplayName(e.target.value)}
           disabled={saving}
         />
-        <span className="snew__input-rule" />
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
           Nivel CEFR
         </label>
-        <select
-          className="snew__input"
-          value={level}
-          onChange={(e) => setLevel(e.target.value as CEFRLevel)}
-          disabled={saving}
-        >
-          {LEVELS.map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
+        <div className="snew__level">
+          <input
+            type="range"
+            className="snew__range"
+            min={0}
+            max={LEVELS.length - 1}
+            step={1}
+            value={LEVELS.indexOf(level)}
+            onChange={(e) => setLevel(LEVELS[Number(e.target.value)])}
+            disabled={saving}
+            aria-label="Nivel CEFR"
+            aria-valuetext={level}
+          />
+          <div className="snew__level-marks k-mono">
+            {LEVELS.map((l) => (
+              <span key={l} data-active={l === level}>{l}</span>
+            ))}
+          </div>
+        </div>
 
         <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
           Idioma nativo (lo que hablás)
@@ -157,14 +165,16 @@ export default function Settings() {
         <textarea
           className="snew__input"
           rows={3}
-          placeholder="ej: Vivo en Nürnberg, quiero pasar el DTZ B1"
+          placeholder="ej: lo uso para el trabajo, viajo seguido, me interesa la cocina…"
           value={context}
           onChange={(e) => setContext(e.target.value)}
           disabled={saving}
           style={{ resize: "vertical" }}
         />
 
-        <div className="snew__actions" style={{ marginTop: "2rem" }}>
+        <hr className="k-hairline" />
+
+        <div className="snew__actions">
           <button type="submit" className="k-btn" disabled={saving || sameLang}>
             {saving ? "Guardando…" : "Guardar"}
           </button>
