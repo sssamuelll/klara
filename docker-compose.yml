@@ -53,7 +53,8 @@ services:
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-Klara <noreply@klara.app>}
-      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5273}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:5273}
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://localhost:8000}
     ports:
       - "8000:8000"
     volumes:

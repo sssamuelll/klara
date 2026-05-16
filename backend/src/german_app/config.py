@@ -55,7 +55,12 @@ class Settings(BaseSettings):
     google_oauth_client_secret: str | None = None
     resend_api_key: str | None = None
     email_from: str = "Klara <noreply@klara.app>"
-    app_base_url: str = "http://localhost:5273"
+    # Where the SPA lives — used in verify / reset email links.
+    frontend_base_url: str = "http://localhost:5273"
+    # Where the FastAPI app lives — used as the OAuth redirect_uri so Google
+    # can POST the code back to /api/v1/auth/google/callback. MUST match what's
+    # registered in the Google Cloud Console OAuth client.
+    backend_base_url: str = "http://localhost:8000"
 
     @property
     def cors_origin_list(self) -> list[str]:

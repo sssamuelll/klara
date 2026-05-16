@@ -29,14 +29,14 @@ class EmailService:
 
     async def send_verify(self, user: User, token: str) -> None:
         locale = _locale_for(user)
-        link = f"{self.settings.app_base_url}/verify?token={token}"
+        link = f"{self.settings.frontend_base_url}/verify?token={token}"
         subject = t("auth.email.verify_subject", locale)
         body_html = t("auth.email.verify_body_html", locale, link=link)
         await self._send(user, subject, body_html, kind="verify")
 
     async def send_reset(self, user: User, token: str) -> None:
         locale = _locale_for(user)
-        link = f"{self.settings.app_base_url}/reset?token={token}"
+        link = f"{self.settings.frontend_base_url}/reset?token={token}"
         subject = t("auth.email.reset_subject", locale)
         body_html = t("auth.email.reset_body_html", locale, link=link)
         await self._send(user, subject, body_html, kind="reset")
