@@ -145,6 +145,28 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     await dispose_engine()
 
 
+@pytest.fixture
+def captured_emails(monkeypatch):
+    """
+    Replaces EmailService.send_verify / send_reset with capturing stubs so
+    verify and reset flow tests can pull the token without parsing logs.
+    Returns the same list that the stubs append to.
+    """
+    captured: list[dict[str, str]] = []
+
+    async def fake_send_verify(self, user, token):  # type: ignore[no-untyped-def]
+        captured.append({"kind": "verify", "to": user.email or "", "token": token})
+
+    async def fake_send_reset(self, user, token):  # type: ignore[no-untyped-def]
+        captured.append({"kind": "reset", "to": user.email or "", "token": token})
+
+    from german_app.auth.email import EmailService
+
+    monkeypatch.setattr(EmailService, "send_verify", fake_send_verify)
+    monkeypatch.setattr(EmailService, "send_reset", fake_send_reset)
+    return captured
+
+
 @pytest_asyncio.fixture
 async def legacy_owner_with_story(db_session: AsyncSession):
     """Inserts a legacy user (email=NULL) plus an owned story — mimics pre-auth state."""

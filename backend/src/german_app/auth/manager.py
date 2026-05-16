@@ -183,7 +183,11 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         owner_email = self.settings.initial_owner_email_normalized
         if owner_email is None or owner_email != incoming_email:
             return None
-        stmt = select(User).where(User.email.is_(None))
+        # FOR UPDATE locks the candidate row for the duration of this
+        # transaction so two concurrent owner signups can't both adopt the
+        # same legacy row. The second waiter sees the row already claimed
+        # (email set) and falls through to UserAlreadyExists upstream.
+        stmt = select(User).where(User.email.is_(None)).with_for_update()
         candidates = (await self.session.execute(stmt)).scalars().all()
         if len(candidates) != 1:
             if len(candidates) > 1:

@@ -113,6 +113,9 @@ def create_app() -> FastAPI:
     app.add_middleware(LocaleMiddleware)
 
     auth_prefix = "/api/v1/auth"
+    # TODO(security): wire slowapi rate limiting on /jwt/login and /register
+    # (e.g. 5 req/min per IP). Currently relying on the email allowlist as the
+    # primary brute-force defense; fine while the gate is on, weak if ever off.
     app.include_router(
         fastapi_users.get_auth_router(auth_backend),
         prefix=f"{auth_prefix}/jwt",
@@ -136,12 +139,16 @@ def create_app() -> FastAPI:
 
     google_client = make_google_oauth_client(settings)
     if google_client is not None:
+        # The redirect_uri MUST point at the backend's OAuth callback (not the
+        # frontend) — FastAPI-Users handles the code exchange there, sets the
+        # session cookie, and returns. This URL must also be registered in the
+        # Google Cloud Console OAuth client.
         app.include_router(
             fastapi_users.get_oauth_router(
                 google_client,
                 auth_backend,
                 settings.auth_jwt_secret,
-                redirect_url=f"{settings.app_base_url}/auth/google/callback",
+                redirect_url=f"{settings.backend_base_url}/api/v1/auth/google/callback",
                 associate_by_email=True,
                 is_verified_by_default=True,
             ),
