@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     # Azure AI Speech — powers POST /api/v1/pronunciation/score. Without a key
     # the endpoint returns 503 so the frontend can fall back gracefully.
     azure_speech_key: str | None = None
-    azure_speech_region: str = "westeurope"
+    azure_speech_region: str = "eastus"
     # Hard cap on uploaded audio (bytes). 25 MB ≈ ~5 min of 16kHz PCM — way
     # more than a single sentence needs, but protects against accidental
     # uploads of huge files.
