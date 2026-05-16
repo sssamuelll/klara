@@ -21,6 +21,20 @@ export function readCachedNativeLang(): LanguageCode | null {
   }
 }
 
+// Best-effort match of navigator.language(s) to one of our supported codes.
+// Used at first paint (no auth yet) so the login/signup screens render in the
+// visitor's language, and to seed `native_language` for brand-new signups.
+export function detectBrowserLang(): LanguageCode | null {
+  if (typeof navigator === "undefined") return null;
+  const candidates = (navigator.languages?.length ? navigator.languages : [navigator.language]) ?? [];
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const code = raw.toLowerCase().split("-")[0];
+    if ((LANGUAGE_CODES as string[]).includes(code)) return code as LanguageCode;
+  }
+  return null;
+}
+
 export function writeCachedNativeLang(code: string | null | undefined): void {
   if (typeof window === "undefined") return;
   try {

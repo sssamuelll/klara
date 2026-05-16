@@ -58,6 +58,7 @@ interface SignupPayload {
   email: string;
   password: string;
   display_name?: string;
+  native_language?: string;
 }
 
 export const api = {

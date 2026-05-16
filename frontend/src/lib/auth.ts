@@ -22,7 +22,12 @@ interface AuthState {
 export interface AuthContextValue extends AuthState {
   reload: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  signup: (input: { email: string; password: string; display_name?: string }) => Promise<void>;
+  signup: (input: {
+    email: string;
+    password: string;
+    display_name?: string;
+    native_language?: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (patch: UserUpdate) => Promise<User>;
 }
@@ -67,7 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signup = useCallback(
-    async (input: { email: string; password: string; display_name?: string }) => {
+    async (input: {
+      email: string;
+      password: string;
+      display_name?: string;
+      native_language?: string;
+    }) => {
       await api.signup(input);
       // FastAPI-Users doesn't auto-login on register; do an explicit login so
       // the user lands authenticated and we don't have to bounce through /login.

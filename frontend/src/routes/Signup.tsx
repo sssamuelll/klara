@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
+import { detectBrowserLang } from "../lib/preferences";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -22,7 +23,11 @@ export default function Signup() {
     setSubmitting(true);
     setError(null);
     try {
-      await signup({ email: email.trim().toLowerCase(), password });
+      await signup({
+        email: email.trim().toLowerCase(),
+        password,
+        native_language: detectBrowserLang() ?? undefined,
+      });
       navigate("/", { replace: true });
     } catch (e2) {
       const msg = e2 instanceof Error ? e2.message : String(e2);
