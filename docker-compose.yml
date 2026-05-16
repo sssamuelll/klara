@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: german_app_postgres
+    container_name: klara_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-german}
@@ -20,7 +20,7 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: german_app_backend
+    container_name: klara_backend
     restart: unless-stopped
     depends_on:
       postgres:
@@ -64,7 +64,7 @@ services:
   frontend:
     build:
       context: ./frontend
-    container_name: german_app_frontend
+    container_name: klara_frontend
     restart: unless-stopped
     depends_on:
       - backend

@@ -34,7 +34,7 @@ async def test_initial_owner_adopts_legacy_user(
     assert body["id"] == pre_user_id  # ← the critical assertion: same UUID
     assert body["is_superuser"] is True  # owner adoption promotes to admin
 
-    from german_app.models import Story, User
+    from klara.models import Story, User
 
     user = (
         await db_session.execute(
@@ -76,7 +76,7 @@ async def test_non_owner_email_does_not_adopt(
     body = r.json()
     assert body["id"] != legacy_owner_with_story["user_id"]
 
-    from german_app.models import User
+    from klara.models import User
 
     legacy_user = (
         await db_session.execute(

@@ -96,7 +96,7 @@ def _set_settings_env(**overrides: str | None) -> None:
 
 
 def _reset_settings_cache() -> None:
-    from german_app.config import get_settings
+    from klara.config import get_settings
 
     get_settings.cache_clear()
 
@@ -132,9 +132,9 @@ def app_settings():
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     # Import inside fixture so env vars set at import-time take effect.
-    from german_app.config import get_settings
-    from german_app.db import dispose_engine, init_engine
-    from german_app.main import create_app
+    from klara.config import get_settings
+    from klara.db import dispose_engine, init_engine
+    from klara.main import create_app
 
     settings = get_settings()
     init_engine(settings)
@@ -160,7 +160,7 @@ def captured_emails(monkeypatch):
     async def fake_send_reset(self, user, token):  # type: ignore[no-untyped-def]
         captured.append({"kind": "reset", "to": user.email or "", "token": token})
 
-    from german_app.auth.email import EmailService
+    from klara.auth.email import EmailService
 
     monkeypatch.setattr(EmailService, "send_verify", fake_send_verify)
     monkeypatch.setattr(EmailService, "send_reset", fake_send_reset)
@@ -172,9 +172,9 @@ async def seed_invite(db_session: AsyncSession):
     """Returns a coroutine that seeds an active invitation row and returns its token."""
     from datetime import UTC, datetime, timedelta
 
-    from german_app.auth.invitations import generate_token
-    from german_app.models import Invitation, User
-    from german_app.models.enums import CEFRLevel
+    from klara.auth.invitations import generate_token
+    from klara.models import Invitation, User
+    from klara.models.enums import CEFRLevel
 
     async def _seed(*, email: str | None = None, ttl_days: int = 7) -> str:
         # The invite needs a creator FK — seed an admin user if none exists.
@@ -218,8 +218,8 @@ async def seed_invite(db_session: AsyncSession):
 @pytest_asyncio.fixture
 async def legacy_owner_with_story(db_session: AsyncSession):
     """Inserts a legacy user (email=NULL) plus an owned story — mimics pre-auth state."""
-    from german_app.models import Story, User
-    from german_app.models.enums import CEFRLevel
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
 
     user = User(
         id=uuid.uuid4(),
