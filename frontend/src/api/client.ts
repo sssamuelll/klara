@@ -3,6 +3,7 @@ import type {
   CardOut,
   Invitation,
   InvitationCreate,
+  PronunciationScoreResponse,
   Story,
   StoryListItem,
   User,
@@ -177,4 +178,37 @@ export const api = {
     request<Invitation>(`/admin/invitations/${id}/revoke`, {
       method: "POST",
     }),
+
+  // --- pronunciation ---
+  scorePronunciation: async (
+    audio: Blob,
+    referenceText: string,
+    language: string,
+  ): Promise<PronunciationScoreResponse> => {
+    const fd = new FormData();
+    fd.append("audio", audio, "user.webm");
+    fd.append("reference_text", referenceText);
+    fd.append("language", language);
+    const resp = await fetch(`${API_BASE}/pronunciation/score`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Accept-Language": i18n.language || "es" },
+      body: fd,
+    });
+    if (resp.status === 401) {
+      for (const fn of unauthorizedListeners) fn();
+      throw new AuthRequiredError();
+    }
+    if (!resp.ok) {
+      let detail: string;
+      try {
+        const body = await resp.json();
+        detail = body.detail ?? JSON.stringify(body);
+      } catch {
+        detail = await resp.text();
+      }
+      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
+    }
+    return resp.json() as Promise<PronunciationScoreResponse>;
+  },
 };

@@ -18,7 +18,7 @@ from klara.i18n.messages import DEFAULT_LOCALE, SUPPORTED
 from klara.logging_setup import configure_logging
 from klara.models import User
 from klara.models.enums import CEFRLevel
-from klara.routers import health, invitations, srs, stories, tts, users
+from klara.routers import health, invitations, pronunciation, srs, stories, tts, users
 
 log = structlog.get_logger(__name__)
 
@@ -162,6 +162,7 @@ def create_app() -> FastAPI:
     app.include_router(srs.router, prefix="/api/v1")
     app.include_router(tts.router, prefix="/api/v1")
     app.include_router(invitations.router, prefix="/api/v1", tags=["invitations"])
+    app.include_router(pronunciation.router, prefix="/api/v1")
 
     return app
 

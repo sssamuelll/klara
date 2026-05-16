@@ -184,6 +184,17 @@
     "btn": {
       "listen": "Listen to Klara",
       "retry": "Try again"
+    },
+    "evaluating": "Scoring your pronunciation…",
+    "error": {
+      "mic_denied": "We need permission to use your microphone.",
+      "mic_unavailable": "Your browser doesn't support audio recording.",
+      "no_speech": "We didn't catch any speech. Speak louder and record again.",
+      "audio_too_large": "The recording is too long. Try a shorter sentence.",
+      "audio_undecodable": "We couldn't process the audio. Try again.",
+      "service_unavailable": "Pronunciation scoring isn't available right now.",
+      "network": "You appear to be offline. Check your connection and retry.",
+      "unknown": "Something went wrong. Try again."
     }
   },
   "settings": {

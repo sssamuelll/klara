@@ -4,6 +4,13 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 WORKDIR /app
 
+# ffmpeg: needed by klara.pronunciation.audio to transcode webm/ogg/mp3
+# uploads to WAV 16kHz mono (Azure Pronunciation Assessment's required format).
+# libasound2: runtime dep of azure-cognitiveservices-speech on linux.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
