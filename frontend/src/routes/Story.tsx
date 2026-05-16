@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
@@ -8,6 +8,12 @@ import SentenceStep from "../components/SentenceStep";
 import WordPopover from "../components/WordPopover";
 import type { PronScores } from "../components/PronunciationFeedback";
 import { useFontScale } from "../lib/preferences";
+import {
+  bandsByTokenIndex,
+  scoreAudio,
+  startMicRecording,
+  type PronunciationError,
+} from "../lib/pronunciation";
 import { speak, stop, useTTS } from "../lib/tts";
 
 interface ActiveWord {
@@ -46,8 +52,14 @@ export default function StoryView() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<Direction>("forward");
   const [recordingIndex, setRecordingIndex] = useState<number | null>(null);
+  const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
   const [scoresBySentence, setScoresBySentence] = useState<Record<number, PronScores>>({});
+  const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [finished, setFinished] = useState(false);
+
+  // Active recording handle. While set, recorder is live; calling stop()
+  // returns the captured audio Blob.
+  const recorderRef = useRef<{ stop: () => Promise<Blob>; cancel: () => void } | null>(null);
 
   const tts = useTTS();
 
@@ -102,24 +114,24 @@ export default function StoryView() {
   }, [sentences, tts.text]);
   const klaraSpeaking = tts.playing && playingIndex >= 0;
 
-  // Pronunciation simulation — replace with real MediaRecorder pipeline later.
+  // Cleanup any in-flight recording when the story or component unmounts.
   useEffect(() => {
-    if (recordingIndex === null) return;
-    const sentence = sentences[recordingIndex];
-    if (!sentence) return;
-    const wordIndices = tokenizeWordIndices(sentence.target);
-    const idx = recordingIndex;
-    const tm = window.setTimeout(() => {
-      const scores: PronScores = {};
-      for (const i of wordIndices) {
-        const r = Math.random();
-        scores[i] = r < 0.62 ? "good" : r < 0.88 ? "ok" : "bad";
-      }
-      setScoresBySentence((s) => ({ ...s, [idx]: scores }));
-      setRecordingIndex(null);
-    }, 2400);
-    return () => window.clearTimeout(tm);
-  }, [recordingIndex, sentences]);
+    return () => {
+      recorderRef.current?.cancel();
+      recorderRef.current = null;
+    };
+  }, []);
+
+  // Fallback used only if the backend signals it can't score (e.g. 503 because
+  // no Azure key in dev). Produces simulated bands so the UI still feels alive.
+  function simulatedBands(text: string): PronScores {
+    const out: PronScores = {};
+    for (const i of tokenizeWordIndices(text)) {
+      const r = Math.random();
+      out[i] = r < 0.62 ? "good" : r < 0.88 ? "ok" : "bad";
+    }
+    return out;
+  }
 
   const closePopover = useCallback(() => {
     setActive(null);
@@ -142,15 +154,59 @@ export default function StoryView() {
     }
   }, [current, currentIndex, playingIndex, tts.playing, story]);
 
-  const handleRecord = useCallback(() => {
+  const handleRecord = useCallback(async () => {
     stop();
-    setRecordingIndex((r) => (r === currentIndex ? null : currentIndex));
+    // Toggle off: stop the active recorder and let the upload finish.
+    if (recordingIndex === currentIndex && recorderRef.current) {
+      const rec = recorderRef.current;
+      recorderRef.current = null;
+      setRecordingIndex(null);
+      setEvaluatingIndex(currentIndex);
+      try {
+        const blob = await rec.stop();
+        if (!blob || blob.size === 0) {
+          setPronError({ kind: "no_speech" });
+          return;
+        }
+        const sentence = sentences[currentIndex];
+        if (!sentence || !story) return;
+        const resp = await scoreAudio(blob, sentence.target, story.target_language);
+        const bands = bandsByTokenIndex(sentence.target, resp.words);
+        setScoresBySentence((s) => ({ ...s, [currentIndex]: bands }));
+        setPronError(null);
+      } catch (e) {
+        const perr = e as PronunciationError;
+        // 503 (no Azure key configured) → fall back to the simulated bands so
+        // the dev experience without a key still feels functional.
+        if (perr.kind === "service_unavailable") {
+          const sentence = sentences[currentIndex];
+          if (sentence) {
+            setScoresBySentence((s) => ({ ...s, [currentIndex]: simulatedBands(sentence.target) }));
+          }
+          setPronError(null);
+        } else {
+          setPronError(perr);
+        }
+      } finally {
+        setEvaluatingIndex(null);
+      }
+      return;
+    }
+    // Toggle on: clear any previous score for this sentence and open the mic.
     setScoresBySentence((s) => {
       const n = { ...s };
       delete n[currentIndex];
       return n;
     });
-  }, [currentIndex]);
+    setPronError(null);
+    try {
+      const rec = await startMicRecording();
+      recorderRef.current = rec;
+      setRecordingIndex(currentIndex);
+    } catch (e) {
+      setPronError(e as PronunciationError);
+    }
+  }, [currentIndex, recordingIndex, sentences, story]);
 
   const goNext = useCallback(() => {
     if (currentIndex >= total - 1) {
@@ -160,7 +216,11 @@ export default function StoryView() {
     }
     setDirection("forward");
     stop();
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
     setRecordingIndex(null);
+    setEvaluatingIndex(null);
+    setPronError(null);
     closePopover();
     setCurrentIndex((i) => i + 1);
   }, [currentIndex, total, closePopover]);
@@ -169,7 +229,11 @@ export default function StoryView() {
     if (currentIndex <= 0) return;
     setDirection("backward");
     stop();
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
     setRecordingIndex(null);
+    setEvaluatingIndex(null);
+    setPronError(null);
     closePopover();
     setCurrentIndex((i) => i - 1);
   }, [currentIndex, closePopover]);
@@ -301,6 +365,17 @@ export default function StoryView() {
           />
         )}
       </div>
+
+      {evaluatingIndex === currentIndex && (
+        <div className="k-mono" style={{ marginTop: "0.75rem", color: "var(--ink-3)" }}>
+          {t("pron.evaluating")}
+        </div>
+      )}
+      {pronError && (
+        <div className="k-error" role="alert" style={{ marginTop: "0.75rem" }}>
+          {t(`pron.error.${pronError.kind}`)}
+        </div>
+      )}
 
       {active && (
         <WordPopover

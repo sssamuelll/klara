@@ -184,6 +184,17 @@
     "btn": {
       "listen": "Ouvir a Klara",
       "retry": "Outra vez"
+    },
+    "evaluating": "A avaliar a tua pronúncia…",
+    "error": {
+      "mic_denied": "Precisamos de permissão para usar o microfone.",
+      "mic_unavailable": "O teu navegador não suporta gravação de áudio.",
+      "no_speech": "Não detetámos voz. Fala mais alto e grava de novo.",
+      "audio_too_large": "A gravação é demasiado longa. Tenta uma frase mais curta.",
+      "audio_undecodable": "Não foi possível processar o áudio. Tenta novamente.",
+      "service_unavailable": "A avaliação de pronúncia não está disponível neste momento.",
+      "network": "Parece que estás offline. Verifica a tua ligação e tenta novamente.",
+      "unknown": "Algo correu mal. Tenta novamente."
     }
   },
   "settings": {

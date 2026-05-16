@@ -62,6 +62,19 @@ class Settings(BaseSettings):
     # registered in the Google Cloud Console OAuth client.
     backend_base_url: str = "http://localhost:8000"
 
+    # Azure AI Speech — powers POST /api/v1/pronunciation/score. Without a key
+    # the endpoint returns 503 so the frontend can fall back gracefully.
+    azure_speech_key: str | None = None
+    azure_speech_region: str = "westeurope"
+    # Hard cap on uploaded audio (bytes). 25 MB ≈ ~5 min of 16kHz PCM — way
+    # more than a single sentence needs, but protects against accidental
+    # uploads of huge files.
+    pronunciation_max_audio_bytes: int = 25 * 1024 * 1024
+
+    @property
+    def azure_speech_configured(self) -> bool:
+        return bool(self.azure_speech_key)
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

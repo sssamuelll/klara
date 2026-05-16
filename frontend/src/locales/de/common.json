@@ -184,6 +184,17 @@
     "btn": {
       "listen": "Klara anhören",
       "retry": "Noch einmal"
+    },
+    "evaluating": "Aussprache wird ausgewertet…",
+    "error": {
+      "mic_denied": "Wir brauchen die Erlaubnis, dein Mikrofon zu nutzen.",
+      "mic_unavailable": "Dein Browser unterstützt keine Audioaufnahme.",
+      "no_speech": "Wir haben keine Stimme erkannt. Sprich lauter und nimm es noch einmal auf.",
+      "audio_too_large": "Die Aufnahme ist zu lang. Versuche einen kürzeren Satz.",
+      "audio_undecodable": "Audio konnte nicht verarbeitet werden. Versuche es noch einmal.",
+      "service_unavailable": "Die Aussprachebewertung ist gerade nicht verfügbar.",
+      "network": "Du scheinst offline zu sein. Prüfe deine Verbindung und versuche es erneut.",
+      "unknown": "Etwas ist schiefgegangen. Versuche es noch einmal."
     }
   },
   "settings": {

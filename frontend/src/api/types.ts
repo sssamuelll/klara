@@ -114,6 +114,33 @@ export interface InvitationCreate {
   ttl_days?: number;
 }
 
+export interface PhonemeScore {
+  phoneme: string;
+  accuracy_score: number;
+}
+
+export interface WordScore {
+  word: string;
+  accuracy_score: number;
+  error_type: "None" | "Mispronunciation" | "Omission" | "Insertion" | string;
+  phonemes: PhonemeScore[];
+}
+
+export interface PronunciationOverallScores {
+  accuracy: number;
+  fluency: number;
+  completeness: number;
+  pronunciation: number;
+}
+
+export interface PronunciationScoreResponse {
+  recognized_text: string;
+  reference_text: string;
+  language: string;
+  scores: PronunciationOverallScores;
+  words: WordScore[];
+}
+
 export interface UserUpdate {
   display_name?: string;
   level?: CEFRLevel;
