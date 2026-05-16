@@ -214,6 +214,29 @@
       "emailLabel": "メールアドレス",
       "changePasswordBtn": "パスワードを変更",
       "logoutBtn": "ログアウト"
+    },
+    "invitations": {
+      "section": "招待",
+      "help": "リンクを作成して友人に送ります。各リンクは一度のみ使用できます。",
+      "emailLabel": "メール（任意。指定するとそのアドレス専用になります）",
+      "emailPlaceholder": "friend@example.com",
+      "noteLabel": "メモ（任意。誰に渡したか覚えるため）",
+      "notePlaceholder": "例：田中さん、隣人",
+      "createBtn": "招待を作成",
+      "creating": "作成中…",
+      "copyBtn": "リンクをコピー",
+      "copied": "✓ コピー済み",
+      "copyFallback": "このリンクをコピーしてください：",
+      "revokeBtn": "取り消し",
+      "confirmRevoke": "この招待を取り消しますか？",
+      "empty": "まだ招待を作成していません。",
+      "anyEmail": "（任意のメール）",
+      "state": {
+        "active": "有効",
+        "expired": "期限切れ",
+        "used": "使用済み",
+        "revoked": "取り消し済み"
+      }
     }
   },
   "auth": {
@@ -237,9 +260,17 @@
       "submit": "アカウントを作成",
       "googleBtn": "Google で続ける",
       "loginLink": "すでにアカウントを持っています",
+      "inviteOnly": {
+        "title": "招待制の登録",
+        "body": "Klara への登録は招待制です。管理者にリンクをリクエストし、ここで開いてください。"
+      },
       "error": {
         "allowlist": "このメールアドレスは登録を許可されていません。",
-        "passwordMismatch": "パスワードが一致しません。"
+        "passwordMismatch": "パスワードが一致しません。",
+        "inviteInvalid": "この招待リンクは無効です。",
+        "inviteExpired": "この招待リンクは期限切れです。",
+        "inviteUsed": "この招待リンクはすでに使用されています。",
+        "inviteRevoked": "この招待リンクは取り消されました。"
       },
       "verifyEmailSent": "確認メールを送信しました。"
     },

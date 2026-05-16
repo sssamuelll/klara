@@ -214,6 +214,29 @@
       "emailLabel": "Email",
       "changePasswordBtn": "Change password",
       "logoutBtn": "Log out"
+    },
+    "invitations": {
+      "section": "Invitations",
+      "help": "Create a link and send it to a friend. Each link works once.",
+      "emailLabel": "Email (optional — locks the link to that person)",
+      "emailPlaceholder": "friend@example.com",
+      "noteLabel": "Note (optional — for your own reference)",
+      "notePlaceholder": "e.g. John, downstairs neighbor",
+      "createBtn": "Create invitation",
+      "creating": "Creating…",
+      "copyBtn": "Copy link",
+      "copied": "✓ Copied",
+      "copyFallback": "Copy this link:",
+      "revokeBtn": "Revoke",
+      "confirmRevoke": "Revoke this invitation?",
+      "empty": "You haven't created any invitations yet.",
+      "anyEmail": "(any email)",
+      "state": {
+        "active": "Active",
+        "expired": "Expired",
+        "used": "Used",
+        "revoked": "Revoked"
+      }
     }
   },
   "auth": {
@@ -237,9 +260,17 @@
       "submit": "Create account",
       "googleBtn": "Continue with Google",
       "loginLink": "I already have an account",
+      "inviteOnly": {
+        "title": "Invitation-only signup",
+        "body": "Access to Klara is invitation-only. Ask the admin for a link and open it here."
+      },
       "error": {
         "allowlist": "This email is not authorized to sign up.",
-        "passwordMismatch": "Passwords don't match."
+        "passwordMismatch": "Passwords don't match.",
+        "inviteInvalid": "This invitation link is not valid.",
+        "inviteExpired": "This invitation link has expired.",
+        "inviteUsed": "This invitation link has already been used.",
+        "inviteRevoked": "This invitation link has been revoked."
       },
       "verifyEmailSent": "We sent you an email to confirm your address."
     },

@@ -15,10 +15,12 @@ fastapi_users: FastAPIUsers[User, UUID] = FastAPIUsers[User, UUID](
 # not blocking. Flip to active=True, verified=True once the email pipeline is
 # fully exercised in prod.
 current_active_user = fastapi_users.current_user(active=True)
+current_admin_user = fastapi_users.current_user(active=True, superuser=True)
 
 __all__ = [
     "auth_backend",
     "current_active_user",
+    "current_admin_user",
     "fastapi_users",
     "get_user_manager",
 ]

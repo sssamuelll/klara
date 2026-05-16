@@ -19,6 +19,9 @@ class UserCreate(schemas.BaseUserCreate):
     native_language: str | None = None
     target_language: str | None = None
     learning_context: str | None = None
+    # Required for every signup except the bootstrap owner (the user matching
+    # INITIAL_OWNER_EMAIL adopting the legacy row). Validated server-side.
+    invite_token: str | None = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):

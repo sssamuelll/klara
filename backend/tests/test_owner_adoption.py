@@ -32,6 +32,7 @@ async def test_initial_owner_adopts_legacy_user(
     assert r.status_code == 201, r.text
     body = r.json()
     assert body["id"] == pre_user_id  # ← the critical assertion: same UUID
+    assert body["is_superuser"] is True  # owner adoption promotes to admin
 
     from german_app.models import Story, User
 
@@ -42,6 +43,7 @@ async def test_initial_owner_adopts_legacy_user(
     ).scalar_one()
     assert user.email == "samuel@klara.app"
     assert user.hashed_password is not None
+    assert user.is_superuser is True
 
     story = (
         await db_session.execute(
@@ -53,17 +55,22 @@ async def test_initial_owner_adopts_legacy_user(
 
 @pytest.mark.asyncio
 async def test_non_owner_email_does_not_adopt(
-    client, app_settings, legacy_owner_with_story, db_session
+    client, app_settings, legacy_owner_with_story, db_session, seed_invite
 ):
-    """A non-owner email in the allowlist must NOT touch the legacy row."""
+    """A non-owner email (with a valid invite) must NOT touch the legacy row."""
     app_settings(
         ALLOWED_SIGNUP_EMAILS="other@klara.app,samuel@klara.app",
         INITIAL_OWNER_EMAIL="samuel@klara.app",
     )
+    token = await seed_invite(email="other@klara.app")
 
     r = await client.post(
         "/api/v1/auth/register",
-        json={"email": "other@klara.app", "password": "hunter2hunter2"},
+        json={
+            "email": "other@klara.app",
+            "password": "hunter2hunter2",
+            "invite_token": token,
+        },
     )
     assert r.status_code == 201, r.text
     body = r.json()

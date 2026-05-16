@@ -2,11 +2,32 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_signup_blocked_by_allowlist(client, app_settings):
-    app_settings(ALLOWED_SIGNUP_EMAILS="ok@example.com")
+async def test_signup_requires_invite_token(client, app_settings):
+    """No invite + not bootstrap owner -> 400. The new primary gate."""
+    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
     resp = await client.post(
         "/api/v1/auth/register",
-        json={"email": "intruder@example.com", "password": "hunter2hunter2"},
+        json={"email": "anyone@example.com", "password": "hunter2hunter2"},
+    )
+    assert resp.status_code == 400, resp.text
+    body = resp.json()
+    detail = body["detail"].lower()
+    assert "invit" in detail
+
+
+@pytest.mark.asyncio
+async def test_signup_blocked_by_allowlist_even_with_invite(client, app_settings, seed_invite):
+    """Allowlist runs before invite — defense-in-depth: a stale invite for an
+    email outside the allowlist still gets 403."""
+    app_settings(ALLOWED_SIGNUP_EMAILS="ok@example.com")
+    token = await seed_invite(email=None)
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "intruder@example.com",
+            "password": "hunter2hunter2",
+            "invite_token": token,
+        },
     )
     assert resp.status_code == 403
     body = resp.json()
@@ -14,8 +35,9 @@ async def test_signup_blocked_by_allowlist(client, app_settings):
 
 
 @pytest.mark.asyncio
-async def test_signup_ok_then_login(client, app_settings):
-    app_settings(ALLOWED_SIGNUP_EMAILS="ok@example.com")
+async def test_signup_ok_with_invite_then_login(client, app_settings, seed_invite):
+    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    token = await seed_invite(email=None)
 
     r1 = await client.post(
         "/api/v1/auth/register",
@@ -23,6 +45,7 @@ async def test_signup_ok_then_login(client, app_settings):
             "email": "ok@example.com",
             "password": "hunter2hunter2",
             "display_name": "Tester",
+            "invite_token": token,
         },
     )
     assert r1.status_code == 201, r1.text
@@ -52,22 +75,16 @@ async def test_me_requires_auth(client):
 
 
 @pytest.mark.asyncio
-async def test_signup_with_empty_allowlist_allows_all(client, app_settings):
-    """When ALLOWED_SIGNUP_EMAILS is empty the gate is off — open registration."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="")
-    r = await client.post(
-        "/api/v1/auth/register",
-        json={"email": "anyone@example.com", "password": "hunter2hunter2"},
-    )
-    assert r.status_code == 201, r.text
-
-
-@pytest.mark.asyncio
-async def test_email_is_case_insensitive(client, app_settings):
+async def test_email_is_case_insensitive(client, app_settings, seed_invite):
     app_settings(ALLOWED_SIGNUP_EMAILS="case@example.com")
+    token = await seed_invite(email=None)
     r1 = await client.post(
         "/api/v1/auth/register",
-        json={"email": "Case@Example.COM", "password": "hunter2hunter2"},
+        json={
+            "email": "Case@Example.COM",
+            "password": "hunter2hunter2",
+            "invite_token": token,
+        },
     )
     assert r1.status_code == 201, r1.text
 

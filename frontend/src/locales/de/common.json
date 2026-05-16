@@ -214,6 +214,29 @@
       "emailLabel": "E-Mail",
       "changePasswordBtn": "Passwort ändern",
       "logoutBtn": "Abmelden"
+    },
+    "invitations": {
+      "section": "Einladungen",
+      "help": "Erstelle einen Link und schicke ihn einem Freund. Jeder Link funktioniert einmal.",
+      "emailLabel": "E-Mail (optional — bindet den Link an diese Person)",
+      "emailPlaceholder": "freund@beispiel.de",
+      "noteLabel": "Notiz (optional — zur eigenen Erinnerung)",
+      "notePlaceholder": "z. B. Jan, Nachbar im 4. OG",
+      "createBtn": "Einladung erstellen",
+      "creating": "Wird erstellt…",
+      "copyBtn": "Link kopieren",
+      "copied": "✓ Kopiert",
+      "copyFallback": "Kopiere diesen Link:",
+      "revokeBtn": "Widerrufen",
+      "confirmRevoke": "Diese Einladung widerrufen?",
+      "empty": "Du hast noch keine Einladungen erstellt.",
+      "anyEmail": "(beliebige E-Mail)",
+      "state": {
+        "active": "Aktiv",
+        "expired": "Abgelaufen",
+        "used": "Verwendet",
+        "revoked": "Widerrufen"
+      }
     }
   },
   "auth": {
@@ -237,9 +260,17 @@
       "submit": "Konto erstellen",
       "googleBtn": "Mit Google fortfahren",
       "loginLink": "Ich habe schon ein Konto",
+      "inviteOnly": {
+        "title": "Nur auf Einladung",
+        "body": "Der Zugang zu Klara ist nur auf Einladung. Bitte den Admin um einen Link und öffne ihn hier."
+      },
       "error": {
         "allowlist": "Diese E-Mail ist nicht für die Registrierung freigeschaltet.",
-        "passwordMismatch": "Die Passwörter stimmen nicht überein."
+        "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+        "inviteInvalid": "Dieser Einladungslink ist ungültig.",
+        "inviteExpired": "Dieser Einladungslink ist abgelaufen.",
+        "inviteUsed": "Dieser Einladungslink wurde bereits verwendet.",
+        "inviteRevoked": "Dieser Einladungslink wurde widerrufen."
       },
       "verifyEmailSent": "Wir haben dir eine E-Mail zur Bestätigung geschickt."
     },

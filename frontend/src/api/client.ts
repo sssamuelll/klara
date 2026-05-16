@@ -1,5 +1,13 @@
 import i18n from "../i18n";
-import type { CardOut, Story, StoryListItem, User, UserUpdate } from "./types";
+import type {
+  CardOut,
+  Invitation,
+  InvitationCreate,
+  Story,
+  StoryListItem,
+  User,
+  UserUpdate,
+} from "./types";
 
 const API_BASE = "/api/v1";
 
@@ -59,6 +67,7 @@ interface SignupPayload {
   password: string;
   display_name?: string;
   native_language?: string;
+  invite_token?: string;
 }
 
 export const api = {
@@ -153,5 +162,19 @@ export const api = {
     request(`/srs/cards/${cardId}/review`, {
       method: "POST",
       body: JSON.stringify({ rating }),
+    }),
+
+  // --- invitations (admin only) ---
+  listInvitations: () => request<Invitation[]>("/admin/invitations"),
+
+  createInvitation: (payload: InvitationCreate) =>
+    request<Invitation>("/admin/invitations", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  revokeInvitation: (id: string) =>
+    request<Invitation>(`/admin/invitations/${id}/revoke`, {
+      method: "POST",
     }),
 };

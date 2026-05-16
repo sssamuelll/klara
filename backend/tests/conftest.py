@@ -62,8 +62,8 @@ async def _clean_tables():
     async with engine.connect() as conn:
         await conn.execute(
             text(
-                "TRUNCATE oauth_accounts, reviews, user_cards, story_views, "
-                "study_sessions, stories, users RESTART IDENTITY CASCADE"
+                "TRUNCATE invitations, oauth_accounts, reviews, user_cards, "
+                "story_views, study_sessions, stories, users RESTART IDENTITY CASCADE"
             )
         )
         await conn.commit()
@@ -165,6 +165,54 @@ def captured_emails(monkeypatch):
     monkeypatch.setattr(EmailService, "send_verify", fake_send_verify)
     monkeypatch.setattr(EmailService, "send_reset", fake_send_reset)
     return captured
+
+
+@pytest_asyncio.fixture
+async def seed_invite(db_session: AsyncSession):
+    """Returns a coroutine that seeds an active invitation row and returns its token."""
+    from datetime import UTC, datetime, timedelta
+
+    from german_app.auth.invitations import generate_token
+    from german_app.models import Invitation, User
+    from german_app.models.enums import CEFRLevel
+
+    async def _seed(*, email: str | None = None, ttl_days: int = 7) -> str:
+        # The invite needs a creator FK — seed an admin user if none exists.
+        admin = (
+            await db_session.execute(
+                __import__("sqlalchemy").select(User).where(User.is_superuser.is_(True))
+            )
+        ).scalars().first()
+        if admin is None:
+            admin = User(
+                id=uuid.uuid4(),
+                email=f"admin-{uuid.uuid4().hex[:6]}@klara.app",
+                hashed_password="x",
+                is_active=True,
+                is_verified=True,
+                is_superuser=True,
+                display_name="Admin",
+                level=CEFRLevel.A0,
+                native_language="es",
+                target_language="de",
+            )
+            db_session.add(admin)
+            await db_session.flush()
+
+        token = generate_token()
+        inv = Invitation(
+            id=uuid.uuid4(),
+            token=token,
+            email=email.lower() if email else None,
+            note=None,
+            created_by=admin.id,
+            expires_at=datetime.now(UTC) + timedelta(days=ttl_days),
+        )
+        db_session.add(inv)
+        await db_session.commit()
+        return token
+
+    return _seed
 
 
 @pytest_asyncio.fixture

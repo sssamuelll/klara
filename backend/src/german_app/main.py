@@ -18,7 +18,7 @@ from german_app.i18n.messages import DEFAULT_LOCALE, SUPPORTED
 from german_app.logging_setup import configure_logging
 from german_app.models import User
 from german_app.models.enums import CEFRLevel
-from german_app.routers import health, srs, stories, tts, users
+from german_app.routers import health, invitations, srs, stories, tts, users
 
 log = structlog.get_logger(__name__)
 
@@ -161,6 +161,7 @@ def create_app() -> FastAPI:
     app.include_router(stories.router, prefix="/api/v1")
     app.include_router(srs.router, prefix="/api/v1")
     app.include_router(tts.router, prefix="/api/v1")
+    app.include_router(invitations.router, prefix="/api/v1", tags=["invitations"])
 
     return app
 

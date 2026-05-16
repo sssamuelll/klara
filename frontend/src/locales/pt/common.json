@@ -214,6 +214,29 @@
       "emailLabel": "Email",
       "changePasswordBtn": "Alterar palavra-passe",
       "logoutBtn": "Terminar sessão"
+    },
+    "invitations": {
+      "section": "Convites",
+      "help": "Cria um link e envia-o a um amigo. Cada link só funciona uma vez.",
+      "emailLabel": "Email (opcional — restringe o link a essa pessoa)",
+      "emailPlaceholder": "amigo@exemplo.com",
+      "noteLabel": "Nota (opcional — para tu te lembrares)",
+      "notePlaceholder": "ex: João, vizinho do 4.º andar",
+      "createBtn": "Criar convite",
+      "creating": "A criar…",
+      "copyBtn": "Copiar link",
+      "copied": "✓ Copiado",
+      "copyFallback": "Copia este link:",
+      "revokeBtn": "Revogar",
+      "confirmRevoke": "Revogar este convite?",
+      "empty": "Ainda não criaste convites.",
+      "anyEmail": "(qualquer email)",
+      "state": {
+        "active": "Ativo",
+        "expired": "Expirado",
+        "used": "Usado",
+        "revoked": "Revogado"
+      }
     }
   },
   "auth": {
@@ -237,9 +260,17 @@
       "submit": "Criar conta",
       "googleBtn": "Continuar com Google",
       "loginLink": "Já tenho conta",
+      "inviteOnly": {
+        "title": "Registo por convite",
+        "body": "O acesso ao Klara é apenas por convite. Pede um link ao administrador e abre-o aqui."
+      },
       "error": {
         "allowlist": "Este email não está autorizado a registar-se.",
-        "passwordMismatch": "As palavras-passe não coincidem."
+        "passwordMismatch": "As palavras-passe não coincidem.",
+        "inviteInvalid": "Este link de convite não é válido.",
+        "inviteExpired": "Este link de convite expirou.",
+        "inviteUsed": "Este link de convite já foi usado.",
+        "inviteRevoked": "Este link de convite foi revogado."
       },
       "verifyEmailSent": "Enviámos-te um email para confirmar o endereço."
     },
