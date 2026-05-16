@@ -75,8 +75,6 @@ export default function Login() {
 
         <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>
           <Link to="/forgot">{t("auth.login.forgotLink")}</Link>
-          {" · "}
-          <Link to="/signup">{t("auth.login.signupLink")}</Link>
         </p>
       </form>
     </main>

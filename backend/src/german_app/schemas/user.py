@@ -19,6 +19,7 @@ def _validate_lang(code: str | None) -> str | None:
 class UserOut(BaseModel):
     id: UUID
     email: str | None = None
+    is_superuser: bool = False
     display_name: str
     level: CEFRLevel
     native_language: str

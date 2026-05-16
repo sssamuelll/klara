@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from german_app.auth.db import AuthSessionDep, UserDbDep
 from german_app.auth.email import EmailService
+from german_app.auth.invitations import InvitationService, require_active
 from german_app.config import Settings, get_settings
 from german_app.i18n.messages import DEFAULT_LOCALE, SUPPORTED, t
 from german_app.models import User
@@ -104,6 +105,8 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         email = user_create.email.strip().lower()
         locale = _locale_from_request(request)
 
+        # Allowlist stays as defense-in-depth if the admin configured one;
+        # otherwise the invite token is the only gate.
         if _allowlist_blocked(self.settings, email):
             raise _allowlist_http_exception(locale)
 
@@ -111,10 +114,26 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
 
+        # Bootstrap exception: the INITIAL_OWNER_EMAIL adopts the legacy row
+        # without an invite (there's no admin yet to issue one).
         adopted = await self._adopt_legacy_if_owner(email, user_create, request)
         if adopted is not None:
             await self.on_after_register(adopted, request)
             return adopted
+
+        invite_token = getattr(user_create, "invite_token", None)
+        if not invite_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=t("auth.invite_required", locale),
+            )
+        invites = InvitationService(self.session)
+        invite = require_active(await invites.get_by_token(invite_token), locale)
+        if invite.email and invite.email != email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=t("auth.invite_email_mismatch", locale),
+            )
 
         user_dict = (
             user_create.create_update_dict()
@@ -124,9 +143,11 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         user_dict["email"] = email
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
+        user_dict.pop("invite_token", None)
         user_dict = _apply_profile_defaults(user_dict, self.settings)
 
         created_user = await self.user_db.create(user_dict)
+        await invites.mark_used(invite.id, created_user.id)
         await self.on_after_register(created_user, request)
         return created_user
 
@@ -164,6 +185,16 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
             )
             if adopted is not None:
                 return adopted
+            # Brand-new OAuth user, not the bootstrap owner -> only allowed if
+            # the email already exists in the users table (i.e. they previously
+            # signed up via invite and are now linking Google). Otherwise we
+            # silently treat OAuth as login-only, never invite-bypassing signup.
+            existing = await self.user_db.get_by_email(account_email)
+            if existing is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=t("auth.invite_required", locale),
+                ) from None
 
         return await super().oauth_callback(
             oauth_name,
@@ -209,7 +240,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         legacy.hashed_password = self.password_helper.hash(user_create.password)
         legacy.is_active = True
         legacy.is_verified = False
-        legacy.is_superuser = False
+        legacy.is_superuser = True  # the owner is the admin
 
         display_name = getattr(user_create, "display_name", None)
         if display_name:
@@ -250,6 +281,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         legacy.email = account_email
         legacy.is_active = True
         legacy.is_verified = True
+        legacy.is_superuser = True  # the owner is the admin
 
         await self.session.commit()
         await self.session.refresh(legacy)

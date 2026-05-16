@@ -84,11 +84,34 @@ export interface CardOut {
 export interface User {
   id: string;
   email: string | null;
+  is_superuser: boolean;
   display_name: string;
   level: CEFRLevel;
   native_language: LanguageCode;
   target_language: LanguageCode;
   learning_context: string | null;
+}
+
+export type InvitationState = "active" | "expired" | "used" | "revoked";
+
+export interface Invitation {
+  id: string;
+  token: string;
+  email: string | null;
+  note: string | null;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
+  used_by: string | null;
+  revoked_at: string | null;
+  state: InvitationState;
+  share_url: string;
+}
+
+export interface InvitationCreate {
+  email?: string;
+  note?: string;
+  ttl_days?: number;
 }
 
 export interface UserUpdate {

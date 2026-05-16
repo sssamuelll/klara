@@ -18,6 +18,7 @@ def _to_out(user: User) -> UserOut:
     return UserOut(
         id=user.id,
         email=user.email,
+        is_superuser=user.is_superuser,
         display_name=user.display_name,
         level=user.level,
         native_language=user.native_language,

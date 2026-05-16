@@ -5,6 +5,7 @@ import type { CEFRLevel, LanguageCode } from "../api/types";
 import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
 import { useAuth } from "../lib/auth";
 import { patchUser, useUser } from "../lib/user";
+import InvitationsPanel from "../components/InvitationsPanel";
 
 const LEVELS: CEFRLevel[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
 
@@ -230,6 +231,13 @@ export default function Settings() {
           </button>
         </div>
       </section>
+
+      {user?.is_superuser && (
+        <>
+          <hr className="k-hairline" />
+          <InvitationsPanel />
+        </>
+      )}
     </main>
   );
 }

@@ -27,6 +27,7 @@ export interface AuthContextValue extends AuthState {
     password: string;
     display_name?: string;
     native_language?: string;
+    invite_token?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (patch: UserUpdate) => Promise<User>;
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password: string;
       display_name?: string;
       native_language?: string;
+      invite_token?: string;
     }) => {
       await api.signup(input);
       // FastAPI-Users doesn't auto-login on register; do an explicit login so

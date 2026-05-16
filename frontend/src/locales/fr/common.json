@@ -214,6 +214,29 @@
       "emailLabel": "E-mail",
       "changePasswordBtn": "Changer le mot de passe",
       "logoutBtn": "Se déconnecter"
+    },
+    "invitations": {
+      "section": "Invitations",
+      "help": "Crée un lien et envoie-le à un ami. Chaque lien ne fonctionne qu'une fois.",
+      "emailLabel": "E-mail (optionnel — restreint le lien à cette personne)",
+      "emailPlaceholder": "ami@exemple.com",
+      "noteLabel": "Note (optionnel — pour t'en souvenir)",
+      "notePlaceholder": "ex : Jean, voisin du 4ᵉ",
+      "createBtn": "Créer une invitation",
+      "creating": "Création…",
+      "copyBtn": "Copier le lien",
+      "copied": "✓ Copié",
+      "copyFallback": "Copie ce lien :",
+      "revokeBtn": "Révoquer",
+      "confirmRevoke": "Révoquer cette invitation ?",
+      "empty": "Tu n'as pas encore créé d'invitations.",
+      "anyEmail": "(n'importe quel e-mail)",
+      "state": {
+        "active": "Active",
+        "expired": "Expirée",
+        "used": "Utilisée",
+        "revoked": "Révoquée"
+      }
     }
   },
   "auth": {
@@ -237,9 +260,17 @@
       "submit": "Créer un compte",
       "googleBtn": "Continuer avec Google",
       "loginLink": "J'ai déjà un compte",
+      "inviteOnly": {
+        "title": "Inscription sur invitation",
+        "body": "L'accès à Klara se fait uniquement sur invitation. Demande un lien à l'administrateur et ouvre-le ici."
+      },
       "error": {
         "allowlist": "Cet e-mail n'est pas autorisé à s'inscrire.",
-        "passwordMismatch": "Les mots de passe ne correspondent pas."
+        "passwordMismatch": "Les mots de passe ne correspondent pas.",
+        "inviteInvalid": "Ce lien d'invitation n'est pas valide.",
+        "inviteExpired": "Ce lien d'invitation a expiré.",
+        "inviteUsed": "Ce lien d'invitation a déjà été utilisé.",
+        "inviteRevoked": "Ce lien d'invitation a été révoqué."
       },
       "verifyEmailSent": "Nous t'avons envoyé un e-mail pour confirmer ton adresse."
     },
