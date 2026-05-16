@@ -16,8 +16,8 @@ async def _login_cookie(client, email: str, password: str) -> str:
 
 async def _register_owner(client, app_settings, db_session):
     """Bootstrap the owner via the legacy-row adoption path; returns the cookie."""
-    from german_app.models import User
-    from german_app.models.enums import CEFRLevel
+    from klara.models import User
+    from klara.models.enums import CEFRLevel
 
     db_session.add(
         User(
@@ -187,7 +187,7 @@ async def test_expired_invite_rejected(client, app_settings, db_session):
     token = r1.json()["token"]
 
     # Backdate the expiry directly in the DB.
-    from german_app.models import Invitation
+    from klara.models import Invitation
 
     inv = await db_session.get(Invitation, inv_id)
     inv.expires_at = datetime.now(UTC) - timedelta(minutes=1)
@@ -255,7 +255,7 @@ async def test_invitation_marked_used_in_db(client, app_settings, db_session):
     assert r2.status_code == 201
     new_user_id = r2.json()["id"]
 
-    from german_app.models import Invitation
+    from klara.models import Invitation
 
     # Different session — must re-query.
     db_session.expire_all()

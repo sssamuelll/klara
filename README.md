@@ -2,7 +2,7 @@
 
 App personal de apoyo para aprender idiomas, con una IA tutora llamada **Klara**.
 
-> Estado actual: enfocada en alemán (A0 → DTZ B1). Pensada para crecer a otros idiomas más adelante; el código aún tiene referencias a `german_app` que se irán migrando a un nombre neutro.
+> Klara soporta varios idiomas (es, en, de, fr, ja, pt). El idioma a aprender lo elige cada usuario en sus ajustes.
 
 ## Stack
 
@@ -16,7 +16,7 @@ App personal de apoyo para aprender idiomas, con una IA tutora llamada **Klara**
 
 ```
 app/
-├── backend/    # FastAPI (paquete Python: german_app — pendiente de rename)
+├── backend/    # FastAPI (paquete Python: klara)
 ├── frontend/   # React + Vite
 └── docker-compose.yml
 ```

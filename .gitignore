@@ -15,6 +15,15 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# Root-level artifacts from local Playwright e2e runs and Claude session state.
+node_modules/
+package.json
+package-lock.json
+e2e-*.mjs
+shots-*/
+e2e-shots*/
+.claude/
+
 .DS_Store
 Thumbs.db
 *.log
