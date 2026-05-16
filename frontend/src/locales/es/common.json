@@ -25,16 +25,16 @@
     "unknownError": "Error desconocido"
   },
   "home": {
-    "sub": "Tres minutos. Sin apuro.",
+    "sub": "Tres minutos. Sin prisa.",
     "greeting": {
       "morning": "Buenos días",
       "afternoon": "Buenas tardes",
       "evening": "Buenas noches"
     },
     "firstFeature": {
-      "kicker": "Primer pedido a Klara",
-      "title": "Todavía no leíste nada.",
-      "dek": "Pedile a Klara una micro-historia. Cinco minutos, sin apuro.",
+      "kicker": "Primera petición a Klara",
+      "title": "Todavía no has leído nada.",
+      "dek": "Pídele a Klara una micro-historia. Cinco minutos, sin prisa.",
       "cta": "Empezar"
     },
     "latest": {
@@ -50,13 +50,13 @@
     "sec": {
       "newStory": {
         "title": "Otra historia",
-        "dek": "Pedile a Klara un tema distinto."
+        "dek": "Pídele a Klara un tema distinto."
       },
       "review": {
         "title": "Repaso de palabras",
         "dek": {
           "unknown": "Las palabras que añadiste vuelven cuando estés por olvidarlas.",
-          "none": "Nada por ahora. Volvé después de leer algo.",
+          "none": "Nada por ahora. Vuelve después de leer algo.",
           "due_one": "{{count}} lista para revisar.",
           "due_other": "{{count}} listas para revisar."
         }
@@ -72,14 +72,14 @@
     }
   },
   "newstory": {
-    "kicker": "Pedido a Klara",
+    "kicker": "Petición a Klara",
     "title": "¿De qué hablamos hoy?",
-    "sub": "Una palabra alcanza. O dejá que Klara elija.",
+    "sub": "Una palabra basta. O deja que Klara elija.",
     "input": {
       "placeholder": "Una panadería un sábado a las 8…"
     },
     "chips": {
-      "label": "O elegí un tema"
+      "label": "O elige un tema"
     },
     "chip": {
       "supermarket": "Comprar en el supermercado",
@@ -91,7 +91,7 @@
     },
     "generate": "Generar historia",
     "generating": "Klara está escribiendo…",
-    "surprise": "Sorprendeme",
+    "surprise": "Sorpréndeme",
     "klaraAdapts": "Klara escribe a tu nivel"
   },
   "story": {
@@ -106,7 +106,7 @@
       "pronounce": "Pronunciar",
       "listening": "Escuchando…",
       "yourTurn": "Tu turno",
-      "sayIn": "Decí en {{target}}",
+      "sayIn": "Di en {{target}}",
       "pronounceAria": {
         "start": "Pronunciar",
         "stop": "Detener grabación"
@@ -194,12 +194,12 @@
       "name": "Nombre",
       "level": "Nivel CEFR",
       "levelAria": "Nivel CEFR",
-      "nativeLang": "Idioma nativo (lo que hablás)",
-      "targetLang": "Idioma que querés aprender",
+      "nativeLang": "Idioma nativo (el que hablas)",
+      "targetLang": "Idioma que quieres aprender",
       "context": "Contexto (opcional)",
-      "contextPlaceholder": "ej: lo uso para el trabajo, viajo seguido, me interesa la cocina…"
+      "contextPlaceholder": "ej: lo uso para el trabajo, viajo a menudo, me interesa la cocina…"
     },
-    "sameLangWarn": "Elegí un idioma distinto al nativo.",
+    "sameLangWarn": "Elige un idioma distinto al nativo.",
     "saved": "Guardado ✓",
     "button": {
       "save": "Guardar",
@@ -233,7 +233,7 @@
       "title": "Crear cuenta",
       "emailLabel": "Correo electrónico",
       "passwordLabel": "Contraseña",
-      "confirmLabel": "Repetí la contraseña",
+      "confirmLabel": "Repite la contraseña",
       "submit": "Crear cuenta",
       "googleBtn": "Continuar con Google",
       "loginLink": "Ya tengo cuenta",
@@ -252,19 +252,19 @@
     "reset": {
       "forgotTitle": "Restablecer contraseña",
       "forgotSubmit": "Enviar enlace",
-      "forgotSent": "Si el correo existe, te mandamos un enlace para restablecer la contraseña.",
+      "forgotSent": "Si el correo existe, te enviamos un enlace para restablecer la contraseña.",
       "resetTitle": "Nueva contraseña",
       "newPasswordLabel": "Nueva contraseña",
-      "confirmLabel": "Repetí la contraseña",
+      "confirmLabel": "Repite la contraseña",
       "submit": "Cambiar contraseña",
-      "success": "Listo. Ya podés entrar con la nueva contraseña."
+      "success": "Listo. Ya puedes entrar con la nueva contraseña."
     }
   },
   "stub": {
     "review": {
       "kicker": "Repaso",
       "title": "Próximamente.",
-      "dek": "Klara repasa contigo las palabras de las historias que ya leíste. Sin contadores. Sin presión."
+      "dek": "Klara repasa contigo las palabras de las historias que ya has leído. Sin contadores. Sin presión."
     },
     "chat": {
       "kicker": "Hablar con Klara",
@@ -273,10 +273,10 @@
     }
   },
   "errors": {
-    "unauthorized": "Necesitás iniciar sesión.",
-    "session_expired": "Tu sesión expiró. Iniciá sesión otra vez.",
+    "unauthorized": "Necesitas iniciar sesión.",
+    "session_expired": "Tu sesión expiró. Inicia sesión otra vez.",
     "not_in_allowlist": "Este correo no está autorizado.",
     "invalid_credentials": "Correo o contraseña incorrectos.",
-    "email_not_verified": "Confirmá tu correo antes de continuar."
+    "email_not_verified": "Confirma tu correo antes de continuar."
   }
 }

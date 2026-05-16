@@ -68,7 +68,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "pt": "Email ou palavra-passe inválidos.",
     },
     "auth.email_not_verified": {
-        "es": "Tenés que verificar tu correo antes de continuar.",
+        "es": "Tienes que verificar tu correo antes de continuar.",
         "en": "Please verify your email before continuing.",
         "de": "Bitte bestätige deine E-Mail, bevor du fortfährst.",
         "fr": "Veuillez vérifier votre e-mail avant de continuer.",
@@ -76,7 +76,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "pt": "Verifica o teu email antes de continuar.",
     },
     "auth.token_expired": {
-        "es": "El enlace expiró. Pedí uno nuevo.",
+        "es": "El enlace expiró. Pide uno nuevo.",
         "en": "This link has expired. Request a new one.",
         "de": "Dieser Link ist abgelaufen. Fordere einen neuen an.",
         "fr": "Ce lien a expiré. Demandez-en un nouveau.",
@@ -84,7 +84,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "pt": "Este link expirou. Pede um novo.",
     },
     "auth.email.verify_subject": {
-        "es": "Confirmá tu correo en Klara",
+        "es": "Confirma tu correo en Klara",
         "en": "Confirm your email on Klara",
         "de": "Bestätige deine E-Mail bei Klara",
         "fr": "Confirmez votre e-mail sur Klara",
@@ -92,7 +92,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "pt": "Confirma o teu email no Klara",
     },
     "auth.email.verify_body_html": {
-        "es": "<p>Hola,</p><p>Confirmá tu correo para empezar a usar Klara:</p><p><a href=\"{link}\">Confirmar correo</a></p><p>Si no fuiste vos, ignorá este mensaje.</p>",
+        "es": "<p>Hola,</p><p>Confirma tu correo para empezar a usar Klara:</p><p><a href=\"{link}\">Confirmar correo</a></p><p>Si no fuiste tú, ignora este mensaje.</p>",
         "en": "<p>Hi,</p><p>Confirm your email to start using Klara:</p><p><a href=\"{link}\">Confirm email</a></p><p>If this wasn't you, ignore this message.</p>",
         "de": "<p>Hallo,</p><p>Bestätige deine E-Mail, um Klara zu nutzen:</p><p><a href=\"{link}\">E-Mail bestätigen</a></p><p>Wenn du das nicht warst, ignoriere diese Nachricht.</p>",
         "fr": "<p>Bonjour,</p><p>Confirmez votre e-mail pour commencer à utiliser Klara :</p><p><a href=\"{link}\">Confirmer l'e-mail</a></p><p>Si ce n'était pas vous, ignorez ce message.</p>",
@@ -108,7 +108,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "pt": "Repor a tua palavra-passe do Klara",
     },
     "auth.email.reset_body_html": {
-        "es": "<p>Hola,</p><p>Hacé clic para crear una contraseña nueva:</p><p><a href=\"{link}\">Cambiar contraseña</a></p><p>El enlace vence en una hora. Si no fuiste vos, ignorá este mensaje.</p>",
+        "es": "<p>Hola,</p><p>Haz clic para crear una contraseña nueva:</p><p><a href=\"{link}\">Cambiar contraseña</a></p><p>El enlace vence en una hora. Si no fuiste tú, ignora este mensaje.</p>",
         "en": "<p>Hi,</p><p>Click to set a new password:</p><p><a href=\"{link}\">Reset password</a></p><p>The link expires in an hour. If this wasn't you, ignore this message.</p>",
         "de": "<p>Hallo,</p><p>Klicke, um ein neues Passwort zu setzen:</p><p><a href=\"{link}\">Passwort zurücksetzen</a></p><p>Der Link läuft in einer Stunde ab. Wenn du das nicht warst, ignoriere diese Nachricht.</p>",
         "fr": "<p>Bonjour,</p><p>Cliquez pour définir un nouveau mot de passe :</p><p><a href=\"{link}\">Réinitialiser le mot de passe</a></p><p>Le lien expire dans une heure. Si ce n'était pas vous, ignorez ce message.</p>",
