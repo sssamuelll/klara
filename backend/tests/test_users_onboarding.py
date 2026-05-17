@@ -249,3 +249,162 @@ async def test_post_onboarding_complete_requires_auth(client):
     """Sin sesión → 401."""
     resp = await client.post("/api/v1/me/onboarding/complete")
     assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_post_password_sets_hashed_password(db_session, seed_oauth_account):
+    """OAuth-only user → POST setea password, auth_methods en response incluye 'password'."""
+    user = User(
+        id=uuid.uuid4(),
+        email="setpw@example.com",
+        hashed_password=None,
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="SetPw",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.flush()
+    await seed_oauth_account(user_id=user.id, account_email="setpw@example.com")
+    await db_session.commit()
+
+    from klara.auth.db import get_auth_session
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    app.dependency_overrides[get_auth_session] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/me/password", json={"password": "newpassword123"})
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["auth_methods"] == ["google", "password"]
+
+    await db_session.refresh(user)
+    assert user.hashed_password is not None
+
+
+@pytest.mark.asyncio
+async def test_post_password_rejects_short_password(db_session, seed_oauth_account):
+    """Password < 8 chars → 422 con detail localizado via t()."""
+    user = User(
+        id=uuid.uuid4(),
+        email="short@example.com",
+        hashed_password=None,
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="Short",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.flush()
+    await seed_oauth_account(user_id=user.id, account_email="short@example.com")
+    await db_session.commit()
+
+    from klara.auth.db import get_auth_session
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    app.dependency_overrides[get_auth_session] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/me/password", json={"password": "abc"})
+    assert resp.status_code == 422
+    body = resp.json()
+    # detail viene de t("auth.password_invalid", locale) — accept-language defaults to "es"
+    assert "inválida" in body["detail"].lower() or "invalid" in body["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_post_password_rejects_oversized_password(db_session):
+    """Password > 128 chars → 422 (validación Pydantic). NO assertear body (Pydantic English)."""
+    user = User(
+        id=uuid.uuid4(),
+        email="big@example.com",
+        hashed_password=None,
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="Big",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.db import get_auth_session
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    app.dependency_overrides[get_auth_session] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/me/password", json={"password": "x" * 200})
+    assert resp.status_code == 422
+    # Pydantic envelope is English by default — only check status + field loc:
+    body = resp.json()
+    locs = [".".join(str(x) for x in err["loc"]) for err in body["detail"]]
+    assert any("password" in loc for loc in locs)
+
+
+@pytest.mark.asyncio
+async def test_post_password_already_set(db_session):
+    """Usuario con password existente → 409."""
+    user = User(
+        id=uuid.uuid4(),
+        email="hadpw@example.com",
+        hashed_password="existing-hash",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="Had",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.db import get_auth_session
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    app.dependency_overrides[get_auth_session] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/me/password", json={"password": "newpassword123"})
+    assert resp.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_post_password_requires_auth(client):
+    """Sin sesión → 401."""
+    resp = await client.post("/api/v1/me/password", json={"password": "newpassword123"})
+    assert resp.status_code == 401
