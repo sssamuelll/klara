@@ -15,6 +15,15 @@ frontend/node_modules/
 frontend/dist/
 frontend/.vite/
 
+# TypeScript build outputs (tsc -b composite mode lands .js next to .ts when
+# tsconfig has no outDir). We use Vite for bundling — these are noise.
+frontend/src/**/*.js
+frontend/src/**/*.js.map
+frontend/src/**/*.d.ts
+frontend/tsconfig*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
 # Root-level artifacts from local Playwright e2e runs and Claude session state.
 node_modules/
 package.json
