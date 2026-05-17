@@ -95,6 +95,14 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
 
     # --- overrides -----------------------------------------------------------
 
+    async def validate_password(
+        self,
+        password: str,
+        user: "User | schemas.UC",
+    ) -> None:
+        if len(password) < 8:
+            raise exceptions.InvalidPasswordException(reason="too_short")
+
     async def create(
         self,
         user_create: schemas.UC,
