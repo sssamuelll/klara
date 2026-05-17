@@ -2,14 +2,15 @@ from datetime import UTC, datetime
 
 import structlog
 from fastapi import APIRouter, HTTPException
+from fastapi_users import exceptions as fa_exceptions
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from klara.dependencies import CurrentUser, DBSession, LocaleDep
+from klara.dependencies import CurrentUser, DBSession, LocaleDep, UserManagerDep
 from klara.i18n import SUPPORTED_LANGUAGES, t
 from klara.models import OAuthAccount, User
-from klara.schemas.user import UserOut, UserUpdate
+from klara.schemas.user import SetPasswordIn, UserOut, UserUpdate
 
 log = structlog.get_logger(__name__)
 
@@ -97,6 +98,27 @@ async def complete_onboarding(db: DBSession, user: CurrentUser) -> UserOut:
         await db.commit()
         await db.refresh(user)
         log.info("auth.onboarding_completed", user_id=str(user.id))
+    return await _to_out(db, user)
+
+
+@router.post("/password", response_model=UserOut)
+async def set_password(
+    payload: SetPasswordIn,
+    db: DBSession,
+    user: CurrentUser,
+    user_manager: UserManagerDep,
+    locale: LocaleDep,
+) -> UserOut:
+    if user.hashed_password is not None:
+        raise HTTPException(409, t("auth.password_already_set", locale))
+    try:
+        await user_manager.validate_password(payload.password, user)
+    except fa_exceptions.InvalidPasswordException as e:
+        raise HTTPException(422, t("auth.password_invalid", locale)) from e
+    user.hashed_password = user_manager.password_helper.hash(payload.password)
+    await db.commit()
+    await db.refresh(user)
+    log.info("auth.password_set", user_id=str(user.id))
     return await _to_out(db, user)
 
 
