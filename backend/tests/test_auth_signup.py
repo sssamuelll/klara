@@ -94,3 +94,24 @@ async def test_email_is_case_insensitive(client, app_settings, seed_invite):
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     assert r2.status_code == 204, r2.text
+
+
+@pytest.mark.asyncio
+async def test_signup_rejects_short_password_via_validate_password(
+    client, app_settings, seed_invite
+):
+    """Regresión: el override de UserManager.validate_password aplica también en signup."""
+    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    token = await seed_invite(email=None)
+    resp = await client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": "shortpw@example.com",
+            "password": "abc",  # 3 chars, < 8
+            "invite_token": token,
+        },
+    )
+    assert resp.status_code == 400, resp.text
+    body = resp.json()
+    assert body["detail"]["code"] == "REGISTER_INVALID_PASSWORD"
+    assert body["detail"]["reason"] == "too_short"
