@@ -250,3 +250,31 @@ async def legacy_owner_with_story(db_session: AsyncSession):
     await db_session.commit()
     await db_session.refresh(user)
     return {"user_id": str(user.id), "story_id": str(story.id)}
+
+
+@pytest_asyncio.fixture
+async def seed_oauth_account(db_session):
+    """Returns a coroutine that links an oauth_account row to an existing user."""
+    from klara.models import OAuthAccount
+
+    async def _seed(
+        *,
+        user_id,
+        oauth_name: str = "google",
+        account_id: str | None = None,
+        account_email: str,
+        access_token: str = "fake-access-token",
+    ):
+        row = OAuthAccount(
+            id=uuid.uuid4(),
+            user_id=user_id,
+            oauth_name=oauth_name,
+            account_id=account_id or uuid.uuid4().hex,
+            account_email=account_email,
+            access_token=access_token,
+        )
+        db_session.add(row)
+        await db_session.commit()
+        return row.id
+
+    return _seed
