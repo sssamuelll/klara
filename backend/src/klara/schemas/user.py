@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -25,6 +26,8 @@ class UserOut(BaseModel):
     native_language: str
     target_language: str
     learning_context: str | None = None
+    auth_methods: list[Literal["password", "google"]] = Field(default_factory=list)
+    needs_onboarding: bool = False
 
 
 LEARNING_CONTEXT_MAX_LEN = 500
