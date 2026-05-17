@@ -54,3 +54,10 @@ class UserUpdate(BaseModel):
         ):
             raise ValueError("native_language and target_language must be different")
         return self
+
+
+class SetPasswordIn(BaseModel):
+    # Min length lo aplica UserManager.validate_password (centralizado).
+    # max_length aquí es sanity cap (consistente con display_name: 100,
+    # learning_context: 500) para no pre-digerir megabytes en Argon2.
+    password: str = Field(max_length=128)

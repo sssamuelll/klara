@@ -179,6 +179,22 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ja": "続行する前にメールアドレスを確認してください。",
         "pt": "Verifica o teu email antes de continuar.",
     },
+    "auth.password_already_set": {
+        "es": "Ya tienes una contraseña. Cámbiala desde Ajustes.",
+        "en": "You already have a password. Change it from Settings.",
+        "de": "Du hast bereits ein Passwort. Ändere es in den Einstellungen.",
+        "fr": "Tu as déjà un mot de passe. Change-le depuis les Réglages.",
+        "ja": "すでにパスワードが設定されています。設定から変更してください。",
+        "pt": "Já tens uma palavra-passe. Altera-a nas Definições.",
+    },
+    "auth.password_invalid": {
+        "es": "Contraseña inválida (mínimo 8 caracteres).",
+        "en": "Invalid password (minimum 8 characters).",
+        "de": "Ungültiges Passwort (mindestens 8 Zeichen).",
+        "fr": "Mot de passe invalide (8 caractères minimum).",
+        "ja": "無効なパスワードです(8 文字以上)。",
+        "pt": "Palavra-passe inválida (mínimo 8 caracteres).",
+    },
     "auth.token_expired": {
         "es": "El enlace expiró. Pide uno nuevo.",
         "en": "This link has expired. Request a new one.",

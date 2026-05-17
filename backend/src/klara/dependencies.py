@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.auth.manager import UserManager, get_user_manager
 from klara.auth.users import current_active_user
 from klara.config import Settings, get_settings
 from klara.db import get_session
@@ -15,7 +16,15 @@ from klara.models import User
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-__all__ = ["ChatLLM", "CurrentUser", "DBSession", "LocaleDep", "SettingsDep", "StoryLLM"]
+__all__ = [
+    "ChatLLM",
+    "CurrentUser",
+    "DBSession",
+    "LocaleDep",
+    "SettingsDep",
+    "StoryLLM",
+    "UserManagerDep",
+]
 
 
 def get_locale(request: Request) -> str:
@@ -46,3 +55,4 @@ ChatLLM = Annotated[LLMClient, Depends(get_chat_llm)]
 
 
 CurrentUser = Annotated[User, Depends(current_active_user)]
+UserManagerDep = Annotated[UserManager, Depends(get_user_manager)]
