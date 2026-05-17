@@ -1,16 +1,15 @@
 import uuid
+from datetime import UTC, datetime
 
 import pytest
-import pytest_asyncio
-from sqlalchemy import select
 
 from klara.models import User
 from klara.models.enums import CEFRLevel
 
 
 @pytest.mark.asyncio
-async def test_user_model_has_onboarding_completed_at_nullable(db_session):
-    """La columna existe, default NULL, acepta inserción sin valor."""
+async def test_user_onboarding_completed_at_roundtrips(db_session):
+    """Column defaults to NULL and round-trips a timezone-aware datetime."""
     user = User(
         id=uuid.uuid4(),
         email=None,
@@ -27,3 +26,11 @@ async def test_user_model_has_onboarding_completed_at_nullable(db_session):
     await db_session.commit()
     await db_session.refresh(user)
     assert user.onboarding_completed_at is None
+
+    ts = datetime.now(UTC)
+    user.onboarding_completed_at = ts
+    await db_session.commit()
+    await db_session.refresh(user)
+    assert user.onboarding_completed_at is not None
+    # Round-trips a tz-aware datetime (Postgres stores in UTC):
+    assert user.onboarding_completed_at.tzinfo is not None

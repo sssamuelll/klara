@@ -30,6 +30,10 @@ updated_ts = Annotated[
         nullable=False,
     ),
 ]
+nullable_ts = Annotated[
+    datetime | None,
+    mapped_column(DateTime(timezone=True), nullable=True),
+]
 
 
 class Base(DeclarativeBase):
