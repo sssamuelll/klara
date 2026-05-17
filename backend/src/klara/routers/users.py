@@ -1,3 +1,6 @@
+from datetime import UTC, datetime
+
+import structlog
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -7,6 +10,8 @@ from klara.dependencies import CurrentUser, DBSession, LocaleDep
 from klara.i18n import SUPPORTED_LANGUAGES, t
 from klara.models import OAuthAccount, User
 from klara.schemas.user import UserOut, UserUpdate
+
+log = structlog.get_logger(__name__)
 
 
 class LanguageInfoOut(BaseModel):
@@ -82,6 +87,16 @@ async def update_me(
 
     await db.commit()
     await db.refresh(user)
+    return await _to_out(db, user)
+
+
+@router.post("/onboarding/complete", response_model=UserOut)
+async def complete_onboarding(db: DBSession, user: CurrentUser) -> UserOut:
+    if user.onboarding_completed_at is None:
+        user.onboarding_completed_at = datetime.now(UTC)
+        await db.commit()
+        await db.refresh(user)
+        log.info("auth.onboarding_completed", user_id=str(user.id))
     return await _to_out(db, user)
 
 

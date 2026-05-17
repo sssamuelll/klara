@@ -166,3 +166,86 @@ async def test_get_me_auth_methods_hybrid(db_session, seed_oauth_account):
     body = resp.json()
     assert body["auth_methods"] == ["google", "password"]
     assert body["needs_onboarding"] is True
+
+
+@pytest.mark.asyncio
+async def test_post_onboarding_complete_sets_timestamp(db_session):
+    """POST flippea needs_onboarding y setea onboarding_completed_at."""
+    user = User(
+        id=uuid.uuid4(),
+        email="complete@example.com",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="C",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/me/onboarding/complete")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["needs_onboarding"] is False
+
+    await db_session.refresh(user)
+    assert user.onboarding_completed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_post_onboarding_complete_idempotent(db_session):
+    """Segunda llamada preserva el timestamp original (first-write-wins)."""
+    user = User(
+        id=uuid.uuid4(),
+        email="idempotent@example.com",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="I",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        r1 = await ac.post("/api/v1/me/onboarding/complete")
+        await db_session.refresh(user)
+        first_ts = user.onboarding_completed_at
+        assert first_ts is not None
+        r2 = await ac.post("/api/v1/me/onboarding/complete")
+    assert r1.status_code == 200
+    assert r2.status_code == 200
+    await db_session.refresh(user)
+    assert user.onboarding_completed_at == first_ts  # NO cambia
+
+
+@pytest.mark.asyncio
+async def test_post_onboarding_complete_requires_auth(client):
+    """Sin sesión → 401."""
+    resp = await client.post("/api/v1/me/onboarding/complete")
+    assert resp.status_code == 401
