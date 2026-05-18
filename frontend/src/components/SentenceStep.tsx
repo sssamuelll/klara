@@ -16,6 +16,7 @@ interface Props {
   playing: boolean;
   recording: boolean;
   onPlay: () => void;
+  onPlaySlow: () => void;
   onRecord: () => void;
   scores?: PronScores;
   feedback?: PronScores;
@@ -70,6 +71,7 @@ export default function SentenceStep({
   playing,
   recording,
   onPlay,
+  onPlaySlow,
   onRecord,
   scores,
   feedback,
@@ -141,23 +143,40 @@ export default function SentenceStep({
         </div>
 
         <aside className="step__actions">
-          <button
-            type="button"
-            className="step__action"
-            data-on={playing}
-            onClick={onPlay}
-            aria-label={playing ? t("story.step.listenAria.pause") : t("story.step.listenAria.play")}
-          >
-            <span className="step__action-icon">
-              {playing ? <span className="step__pause" /> : <span className="step__triangle" />}
-            </span>
-            <span className="step__action-label">
-              <span className="step__action-title">
-                {playing ? t("story.step.pausing") : t("story.step.listen")}
+          <div className="step__action-row">
+            <button
+              type="button"
+              className="step__action"
+              data-on={playing}
+              onClick={onPlay}
+              aria-label={playing ? t("story.step.listenAria.pause") : t("story.step.listenAria.play")}
+            >
+              <span className="step__action-icon">
+                {playing ? <span className="step__pause" /> : <span className="step__triangle" />}
               </span>
-              <span className="step__action-sub k-mono">{t("story.step.klaraReads")}</span>
-            </span>
-          </button>
+              <span className="step__action-label">
+                <span className="step__action-title">
+                  {playing ? t("story.step.pausing") : t("story.step.listen")}
+                </span>
+                <span className="step__action-sub k-mono">{t("story.step.klaraReads")}</span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="step__action step__action--slow"
+              onClick={onPlaySlow}
+              aria-label={t("story.step.listenSlowAria")}
+            >
+              <span className="step__action-icon">
+                <span className="step__triangle" />
+              </span>
+              <span className="step__action-label">
+                <span className="step__action-title">{t("story.step.listenSlow")}</span>
+                <span className="step__action-sub k-mono">0.7×</span>
+              </span>
+            </button>
+          </div>
 
           <button
             type="button"

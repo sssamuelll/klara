@@ -485,6 +485,15 @@ select.snew__input option {
   position: sticky;
   top: var(--space-5);
 }
+.step__action-row {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+.step__action-row > .step__action {
+  flex: 1 1 0;
+  min-width: 0;
+}
 .step__action {
   display: flex;
   align-items: center;
@@ -513,6 +522,16 @@ select.snew__input option {
   border-color: var(--accent);
   color: var(--paper);
   animation: mic-pulse 1.4s var(--ease-out) infinite;
+}
+.step__action--slow {
+  background: transparent;
+  color: var(--ink-2);
+  border-style: dashed;
+}
+.step__action--slow:hover {
+  background: var(--paper-2);
+  border-style: solid;
+  color: var(--ink);
 }
 @keyframes mic-pulse {
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--accent) 40%, transparent); }
