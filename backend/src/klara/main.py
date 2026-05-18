@@ -94,6 +94,24 @@ class LocaleMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class OAuthCallbackRedirectMiddleware(BaseHTTPMiddleware):
+    """fastapi-users' OAuth callback returns 204 + Set-Cookie, which leaves the
+    browser stuck on a blank page after the provider redirect. Convert it to a
+    302 → "/" so browser-driven OAuth flows actually land in the SPA."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if (
+            path.startswith("/api/v1/auth/")
+            and path.endswith("/callback")
+            and response.status_code == 204
+        ):
+            response.status_code = 302
+            response.headers["Location"] = "/"
+        return response
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
@@ -111,6 +129,7 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(RequestIDMiddleware)
     app.add_middleware(LocaleMiddleware)
+    app.add_middleware(OAuthCallbackRedirectMiddleware)
 
     auth_prefix = "/api/v1/auth"
     # TODO(security): wire slowapi rate limiting on /jwt/login and /register
