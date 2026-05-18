@@ -50,12 +50,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AuthRequiredError();
   }
   if (!resp.ok) {
+    // Read body once as text; try to parse as JSON. Reading both .json() and
+    // .text() on the same Response throws "body stream already read" because
+    // the body is consumed on first read.
+    const text = await resp.text();
     let detail: string;
     try {
-      const body = await resp.json();
+      const body = JSON.parse(text);
       detail = body.detail ?? JSON.stringify(body);
     } catch {
-      detail = await resp.text();
+      detail = text;
     }
     throw new ApiError(resp.status, `${resp.status} ${resp.statusText}: ${detail}`);
   }
@@ -93,12 +97,13 @@ export const api = {
       body: body.toString(),
     });
     if (!resp.ok) {
+      const text = await resp.text();
       let detail: string;
       try {
-        const j = await resp.json();
+        const j = JSON.parse(text);
         detail = j.detail ?? JSON.stringify(j);
       } catch {
-        detail = await resp.text();
+        detail = text;
       }
       throw new ApiError(resp.status, `${resp.status}: ${detail}`);
     }
