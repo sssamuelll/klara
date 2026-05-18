@@ -59,6 +59,15 @@ async def get_me(db: DBSession, user: CurrentUser) -> UserOut:
     return await _to_out(db, user)
 
 
+async def _reload_in_db(db: AsyncSession, user: User) -> User:
+    """CurrentUser comes from fastapi-users' auth session (a different session
+    than our DBSession). Re-fetch the row in the router's session so any
+    mutations + commit + refresh operate on a persistent instance."""
+    return (
+        await db.execute(select(User).where(User.id == user.id))
+    ).scalar_one()
+
+
 @router.patch("", response_model=UserOut)
 async def update_me(
     payload: UserUpdate, db: DBSession, user: CurrentUser, locale: LocaleDep
@@ -73,6 +82,8 @@ async def update_me(
             status_code=422,
             detail=t("errors.languages_must_differ", locale),
         )
+
+    user = await _reload_in_db(db, user)
 
     if data.get("display_name"):
         user.display_name = data["display_name"]
@@ -93,6 +104,7 @@ async def update_me(
 
 @router.post("/onboarding/complete", response_model=UserOut)
 async def complete_onboarding(db: DBSession, user: CurrentUser) -> UserOut:
+    user = await _reload_in_db(db, user)
     if user.onboarding_completed_at is None:
         user.onboarding_completed_at = datetime.now(UTC)
         await db.commit()
@@ -115,6 +127,7 @@ async def set_password(
         await user_manager.validate_password(payload.password, user)
     except fa_exceptions.InvalidPasswordException as e:
         raise HTTPException(422, t("auth.password_invalid", locale)) from e
+    user = await _reload_in_db(db, user)
     user.hashed_password = user_manager.password_helper.hash(payload.password)
     await db.commit()
     await db.refresh(user)
