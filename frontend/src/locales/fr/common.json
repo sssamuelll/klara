@@ -281,6 +281,12 @@
         "used": "Utilisée",
         "revoked": "Révoquée"
       }
+    },
+    "security": {
+      "kicker": "Sécurité",
+      "title": "Définir un mot de passe",
+      "hint": "Tu t'es connecté uniquement avec Google. Si tu veux, ajoute un mot de passe pour pouvoir aussi te connecter par email.",
+      "savedToast": "Mot de passe enregistré"
     }
   },
   "auth": {

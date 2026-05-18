@@ -281,6 +281,12 @@
         "used": "Verwendet",
         "revoked": "Widerrufen"
       }
+    },
+    "security": {
+      "kicker": "Sicherheit",
+      "title": "Passwort festlegen",
+      "hint": "Du hast dich nur mit Google angemeldet. Wenn du willst, füge ein Passwort hinzu, damit du dich auch per E-Mail einloggen kannst.",
+      "savedToast": "Passwort gespeichert"
     }
   },
   "auth": {
