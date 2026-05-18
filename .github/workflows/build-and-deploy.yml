@@ -1,0 +1,183 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag a deployar (default: SHA actual). Usar para rollbacks (e.g. sha-abc1234).'
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    name: build / ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            dockerfile: backend/Dockerfile
+          - service: frontend
+            dockerfile: frontend/Dockerfile.prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/sssamuelll/klara-${{ matrix.service }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=run-${{ github.run_id }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  deploy:
+    name: deploy to klara.sdar.dev
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    # Gate: solo deploya si estamos en main. workflow_dispatch desde feature
+    # branch construye imágenes (job anterior) pero NO deploya (evita skew
+    # con git reset --hard origin/main del script remoto).
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Compute IMAGE_TAG
+        id: tag
+        env:
+          INPUT_IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          if [ -n "${INPUT_IMAGE_TAG}" ]; then
+            echo "value=${INPUT_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          envs: IMAGE_TAG,AUTH_JWT_SECRET,POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,INITIAL_OWNER_EMAIL,ALLOWED_SIGNUP_EMAILS,EMAIL_FROM,DEEPSEEK_API_KEY,ANTHROPIC_API_KEY,OPENAI_API_KEY,ELEVENLABS_API_KEY,AZURE_SPEECH_KEY,GOOGLE_OAUTH_CLIENT_ID,GOOGLE_OAUTH_CLIENT_SECRET,RESEND_API_KEY,GHCR_PULL_TOKEN,GHCR_USER
+          script: |
+            set -euo pipefail
+            cd ~/klara
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            cat > .env <<EOF
+            AUTH_JWT_SECRET=${AUTH_JWT_SECRET}
+            AUTH_COOKIE_NAME=klara_session
+            AUTH_COOKIE_MAX_AGE=2592000
+
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            POSTGRES_DB=${POSTGRES_DB}
+
+            FRONTEND_BASE_URL=https://klara.sdar.dev
+            BACKEND_BASE_URL=https://klara.sdar.dev
+
+            DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+            ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+            OPENAI_API_KEY=${OPENAI_API_KEY:-}
+            LLM_STORY_MODEL=deepseek/deepseek-chat
+            LLM_CHAT_MODEL=deepseek/deepseek-chat
+            LLM_CORRECTION_MODEL=deepseek/deepseek-chat
+
+            TTS_PROVIDER=elevenlabs
+            ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}
+            ELEVENLABS_VOICE_ID=EXAVITQu4vr4xnSDxMaL
+            ELEVENLABS_MODEL=eleven_turbo_v2_5
+
+            AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY:-}
+            AZURE_SPEECH_REGION=eastus
+
+            GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+            GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET:-}
+
+            RESEND_API_KEY=${RESEND_API_KEY:-}
+            EMAIL_FROM=${EMAIL_FROM}
+
+            INITIAL_OWNER_EMAIL=${INITIAL_OWNER_EMAIL}
+            ALLOWED_SIGNUP_EMAILS=${ALLOWED_SIGNUP_EMAILS:-}
+            EOF
+            chmod 600 .env
+
+            if [ -n "${GHCR_PULL_TOKEN:-}" ]; then
+              echo "${GHCR_PULL_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+            fi
+
+            IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+            IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+            for svc in backend frontend; do
+              actual=$(docker image inspect "klara_${svc}" --format '{{ index .RepoDigests 0 }}' 2>/dev/null || echo "no-digest")
+              expected_repo="ghcr.io/sssamuelll/klara-${svc}"
+              if [[ "$actual" != "${expected_repo}"@* ]]; then
+                echo "WARN: ${svc} container is running ${actual}, expected ${expected_repo}@..."
+              fi
+            done
+        env:
+          IMAGE_TAG: ${{ steps.tag.outputs.value }}
+          AUTH_JWT_SECRET: ${{ secrets.AUTH_JWT_SECRET }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          INITIAL_OWNER_EMAIL: ${{ secrets.INITIAL_OWNER_EMAIL }}
+          ALLOWED_SIGNUP_EMAILS: ${{ secrets.ALLOWED_SIGNUP_EMAILS }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+          GHCR_USER: ${{ secrets.GHCR_USER }}
+
+      - name: Wait for health
+        run: |
+          for i in {1..30}; do
+            status=$(curl -sS -o /dev/null -w '%{http_code}' https://klara.sdar.dev/api/v1/health || echo "000")
+            if [ "$status" = "200" ]; then
+              echo "Healthy after $((i*2))s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Health check failed after 60s"
+          exit 1
