@@ -44,6 +44,16 @@ app/
 
 Ver `.env.example`. Como mínimo se necesita una API key de LLM (Anthropic, DeepSeek u OpenAI) y, si se quiere TTS, una de ElevenLabs.
 
+## Deploy
+
+Producción vive en `https://klara.sdar.dev` (server EC2 `eu-north-1`).
+
+Despliegue automático: push a `main` → GitHub Actions construye las imágenes (`ghcr.io/sssamuelll/klara-{backend,frontend}`) → SSH al server → pull + `docker compose up -d` → health check externo.
+
+Ver [`.github/workflows/README.md`](.github/workflows/README.md) para detalles de rollback (`workflow_dispatch` con `image_tag`), branch protection, y disaster recovery.
+
+Para desarrollo local: `docker compose up --build` (sin `-f docker-compose.prod.yml`) usa `build:` para construir el código local; en prod, el overlay reemplaza con `image:` de GHCR.
+
 ## Notas
 
 - Los textos de la interfaz están en **español neutro**.
