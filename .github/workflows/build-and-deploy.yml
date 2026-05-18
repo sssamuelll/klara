@@ -143,10 +143,22 @@ jobs:
             IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
             for svc in backend frontend; do
-              actual=$(docker image inspect "klara_${svc}" --format '{{ index .RepoDigests 0 }}' 2>/dev/null || echo "no-digest")
+              # Resolve the container's image ID, then its RepoDigest.
+              # `docker image inspect klara_${svc}` would be wrong: those are
+              # container names, not image names — it would always fail and
+              # emit a false WARN. `docker inspect` (no `image`) is polymorphic
+              # and accepts container names.
+              image_id=$(docker inspect "klara_${svc}" --format '{{ .Image }}' 2>/dev/null || echo "")
+              if [ -z "$image_id" ]; then
+                echo "WARN: container klara_${svc} not found"
+                continue
+              fi
+              actual=$(docker image inspect "$image_id" --format '{{ index .RepoDigests 0 }}' 2>/dev/null || echo "no-digest")
               expected_repo="ghcr.io/sssamuelll/klara-${svc}"
               if [[ "$actual" != "${expected_repo}"@* ]]; then
                 echo "WARN: ${svc} container is running ${actual}, expected ${expected_repo}@..."
+              else
+                echo "OK: ${svc} -> ${actual}"
               fi
             done
         env:
