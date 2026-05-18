@@ -140,6 +140,17 @@ export const api = {
       body: JSON.stringify(patch),
     }),
 
+  async completeOnboarding(): Promise<User> {
+    return request<User>("/me/onboarding/complete", { method: "POST" });
+  },
+
+  async setPassword(password: string): Promise<User> {
+    return request<User>("/me/password", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    });
+  },
+
   listStories: (limit = 20, offset = 0) =>
     request<StoryListItem[]>(`/stories?limit=${limit}&offset=${offset}`),
 
