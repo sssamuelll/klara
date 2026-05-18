@@ -139,6 +139,14 @@ jobs:
               echo "${GHCR_PULL_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
             fi
 
+            # Free disk before pull: remove unused images + build cache older
+            # than 7d. Preserves recent rollback targets (the GHCR pulls of
+            # the last week) but reclaims space from dangling layers and old
+            # base images. The 30GB root volume has filled to 99% twice
+            # because deploys accumulate ~1GB/image without cleanup.
+            docker builder prune -af --filter "until=168h" 2>/dev/null || true
+            docker image prune -af --filter "until=168h" 2>/dev/null || true
+
             IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
             IMAGE_TAG=${IMAGE_TAG} docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
