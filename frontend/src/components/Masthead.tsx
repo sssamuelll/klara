@@ -43,6 +43,17 @@ export default function Masthead({ edition, theme, onToggleTheme }: Props) {
             <Link to="/settings" data-active={isSettings}>{t("nav.settings")}</Link>
           </>
         )}
+        <a
+          className="k-masthead__star"
+          href="https://github.com/sssamuelll/klara"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t("nav.star.aria")}
+          title={t("nav.star.aria")}
+        >
+          <span className="k-masthead__star-icon" aria-hidden="true">★</span>
+          <span className="k-masthead__star-label">{t("nav.star.label")}</span>
+        </a>
         {user && (
           <button
             type="button"

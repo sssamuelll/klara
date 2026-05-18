@@ -14,6 +14,10 @@
     },
     "brand": {
       "aria": "Klara — inicio"
+    },
+    "star": {
+      "label": "Star",
+      "aria": "Dar una estrella en GitHub"
     }
   },
   "common": {
