@@ -1,0 +1,129 @@
+.onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.onboarding__head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.onboarding__kicker {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.onboarding__title {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.onboarding__rule {
+  margin: 0;
+}
+
+.onboarding__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.onboarding__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.onboarding__field input,
+.onboarding__field select,
+.onboarding__field textarea {
+  font: inherit;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: 2px;
+}
+
+.onboarding__char-counter {
+  align-self: flex-end;
+  opacity: 0.6;
+}
+
+.onboarding__error {
+  color: #b00020;
+  padding: 0.5rem 0;
+}
+
+.onboarding__hint {
+  margin: 0;
+  opacity: 0.8;
+}
+
+.onboarding__level-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.onboarding__level {
+  padding: 0.6rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.onboarding__level--active {
+  background: currentColor;
+  color: var(--k-bg, #fff);
+}
+
+.onboarding__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.onboarding__footer-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.pw-set-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pw-set-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pw-set-form__field input {
+  font: inherit;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  border-radius: 2px;
+}
+
+.pw-set-form__error {
+  color: #b00020;
+}
+
+@media (max-width: 480px) {
+  .onboarding__level-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
