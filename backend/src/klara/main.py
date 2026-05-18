@@ -156,6 +156,39 @@ def create_app() -> FastAPI:
             tags=["auth"],
         )
 
+        # Surface the actual provider response when the People API call fails
+        # (most common cause: People API not enabled in Google Cloud Console).
+        # Without this handler the user sees a bare 500 and we have no clue
+        # what status code Google returned.
+        from fastapi.responses import JSONResponse
+        from httpx_oauth.exceptions import GetIdEmailError, GetProfileError
+
+        async def _oauth_profile_error_handler(
+            request: Request, exc: Exception
+        ) -> JSONResponse:
+            response = getattr(exc, "response", None)
+            if response is not None:
+                log.error(
+                    "auth.oauth_profile_error",
+                    status_code=response.status_code,
+                    body=response.text[:500],
+                    url=str(response.url),
+                )
+            else:
+                log.error("auth.oauth_profile_error", message=str(exc))
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "detail": (
+                        "Failed to retrieve profile from OAuth provider. "
+                        "Check that People API is enabled in Google Cloud Console."
+                    )
+                },
+            )
+
+        app.add_exception_handler(GetIdEmailError, _oauth_profile_error_handler)
+        app.add_exception_handler(GetProfileError, _oauth_profile_error_handler)
+
     app.include_router(health.router, prefix="/api/v1")
     app.include_router(users.router, prefix="/api/v1")
     app.include_router(stories.router, prefix="/api/v1")
