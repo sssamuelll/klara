@@ -45,12 +45,20 @@ export function useTTS(): TTSState {
   return s;
 }
 
-export function speak(text: string, language?: string): void {
+export function speak(text: string, language?: string, opts?: { rate?: number }): void {
   stop();
   if (!text.trim()) return;
   activeLocale = language ? speechLocale(language) : "de-DE";
   const a = new Audio(ttsUrl(text));
   a.preload = "auto";
+  const rate = opts?.rate ?? 1;
+  if (rate !== 1) {
+    // preservesPitch keeps Klara's voice natural at non-1.0 rates instead of
+    // pitching it up/down like a chipmunk/walrus. Supported in modern browsers;
+    // older WebKit ignores it but still applies the rate.
+    a.preservesPitch = true;
+    a.playbackRate = rate;
+  }
   a.addEventListener("loadedmetadata", () => {
     if (audio === a && Number.isFinite(a.duration)) set({ duration: a.duration });
   });

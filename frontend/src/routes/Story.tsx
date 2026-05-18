@@ -154,6 +154,12 @@ export default function StoryView() {
     }
   }, [current, currentIndex, playingIndex, tts.playing, story]);
 
+  const handlePlaySlow = useCallback(() => {
+    if (!current || !story) return;
+    setRecordingIndex(null);
+    speak(current.target, story.target_language, { rate: 0.7 });
+  }, [current, story]);
+
   const handleRecord = useCallback(async () => {
     stop();
     // Toggle off: stop the active recorder and let the upload finish.
@@ -354,6 +360,7 @@ export default function StoryView() {
             playing={playingIndex === currentIndex && tts.playing}
             recording={recordingIndex === currentIndex}
             onPlay={handlePlay}
+            onPlaySlow={handlePlaySlow}
             onRecord={handleRecord}
             scores={scoresBySentence[currentIndex]}
             feedback={scoresBySentence[currentIndex]}
