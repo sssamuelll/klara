@@ -299,7 +299,8 @@
       "signupLink": "Crear cuenta",
       "forgotLink": "Olvidé mi contraseña",
       "error": {
-        "invalidCredentials": "Correo o contraseña incorrectos."
+        "invalidCredentials": "Correo o contraseña incorrectos.",
+        "googleFailed": "No se pudo iniciar sesión con Google. Inténtalo de nuevo."
       }
     },
     "signup": {

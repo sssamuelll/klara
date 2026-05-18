@@ -299,7 +299,8 @@
       "signupLink": "アカウントを作成",
       "forgotLink": "パスワードをお忘れですか",
       "error": {
-        "invalidCredentials": "メールアドレスまたはパスワードが正しくありません。"
+        "invalidCredentials": "メールアドレスまたはパスワードが正しくありません。",
+        "googleFailed": "Google でのログインに失敗しました。もう一度お試しください。"
       }
     },
     "signup": {

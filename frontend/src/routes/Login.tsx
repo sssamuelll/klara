@@ -29,6 +29,21 @@ export default function Login() {
     }
   }
 
+  async function onGoogle() {
+    setError(null);
+    try {
+      const resp = await fetch("/api/v1/auth/google/authorize", {
+        credentials: "include",
+      });
+      if (!resp.ok) throw new Error(`http ${resp.status}`);
+      const data = (await resp.json()) as { authorization_url?: string };
+      if (!data.authorization_url) throw new Error("no authorization_url");
+      window.location.href = data.authorization_url;
+    } catch {
+      setError(t("auth.login.error.googleFailed"));
+    }
+  }
+
   return (
     <main className="k-page snew">
       <div className="snew__head">
@@ -68,9 +83,14 @@ export default function Login() {
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.login.submit")}
           </button>
-          <a className="k-btn k-btn--ghost" href="/api/v1/auth/google/authorize">
+          <button
+            type="button"
+            className="k-btn k-btn--ghost"
+            onClick={onGoogle}
+            disabled={submitting}
+          >
             {t("auth.login.googleBtn")}
-          </a>
+          </button>
         </div>
 
         <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>

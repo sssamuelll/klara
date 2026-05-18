@@ -299,7 +299,8 @@
       "signupLink": "Konto erstellen",
       "forgotLink": "Passwort vergessen",
       "error": {
-        "invalidCredentials": "E-Mail oder Passwort ungültig."
+        "invalidCredentials": "E-Mail oder Passwort ungültig.",
+        "googleFailed": "Anmeldung mit Google fehlgeschlagen. Versuche es erneut."
       }
     },
     "signup": {
