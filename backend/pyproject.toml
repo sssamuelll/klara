@@ -43,7 +43,16 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "RUF"]
-ignore = ["E501"]
+ignore = [
+    "E501",
+    # Ambiguous unicode chars used intentionally: en dash in user-facing
+    # prompts (1–3 words) and French apostrophe `’` in the elision constants
+    # for the French story generator.
+    "RUF001",
+    # SQLAlchemy `DeclarativeBase.type_annotation_map` is API-mandated as a
+    # class-level mutable mapping.
+    "RUF012",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
