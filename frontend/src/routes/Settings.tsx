@@ -23,7 +23,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [pwSavedToast, setPwSavedToast] = useState(false);
+  const [recentlySetPw, setRecentlySetPw] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -35,10 +35,10 @@ export default function Settings() {
   }, [user]);
 
   useEffect(() => {
-    if (!pwSavedToast) return;
-    const id = setTimeout(() => setPwSavedToast(false), 3000);
+    if (!recentlySetPw) return;
+    const id = setTimeout(() => setRecentlySetPw(false), 3000);
     return () => clearTimeout(id);
-  }, [pwSavedToast]);
+  }, [recentlySetPw]);
 
   const sameLang = nativeLang === targetLang;
 
@@ -247,7 +247,7 @@ export default function Settings() {
         </>
       )}
 
-      {user && !user.auth_methods.includes("password") && (
+      {user && (!user.auth_methods.includes("password") || recentlySetPw) && (
         <>
           <hr className="k-hairline" />
           <section style={{ marginTop: "1.5rem" }}>
@@ -258,12 +258,14 @@ export default function Settings() {
             <p className="snew__sub" style={{ marginTop: "0.5rem" }}>
               {t("settings.security.hint")}
             </p>
-            {pwSavedToast && (
+            {recentlySetPw && (
               <div className="snew__toast k-mono" role="status">
                 {t("settings.security.savedToast")}
               </div>
             )}
-            <PasswordSetForm onSuccess={() => setPwSavedToast(true)} />
+            {!user.auth_methods.includes("password") && (
+              <PasswordSetForm onSuccess={() => setRecentlySetPw(true)} />
+            )}
           </section>
         </>
       )}
