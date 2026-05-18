@@ -15,6 +15,7 @@ export default function Onboarding() {
   const { user, applyUserResponse } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const stepIds = useMemo(() => {
     const base = ["name", "languages", "level", "context"];
@@ -38,10 +39,13 @@ export default function Onboarding() {
       return;
     }
     setSubmitting(true);
+    setError(null);
     try {
       const updated = await api.completeOnboarding();
       applyUserResponse(updated);
       navigate("/", { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t("common.unknownError"));
     } finally {
       setSubmitting(false);
     }
@@ -56,11 +60,26 @@ export default function Onboarding() {
   };
 
   const id = stepIds[stepIndex];
-  if (id === "name") return <NameStep {...stepProps} />;
-  if (id === "languages") return <LanguagesStep {...stepProps} />;
-  if (id === "level") return <LevelStep {...stepProps} />;
-  if (id === "context") return <ContextStep {...stepProps} onSkip={advance} />;
-  if (id === "password") return <PasswordStep {...stepProps} onSkip={advance} />;
+  const currentStep = (() => {
+    if (id === "name") return <NameStep {...stepProps} />;
+    if (id === "languages") return <LanguagesStep {...stepProps} />;
+    if (id === "level") return <LevelStep {...stepProps} />;
+    if (id === "context") return <ContextStep {...stepProps} onSkip={advance} />;
+    if (id === "password") return <PasswordStep {...stepProps} onSkip={advance} />;
+    return <main className="k-page">{t("common.loading")}</main>;
+  })();
 
-  return <main className="k-page">{t("common.loading")}</main>;
+  return (
+    <>
+      {currentStep}
+      {error && (
+        <div
+          className="onboarding__error onboarding__global-error k-mono"
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
+    </>
+  );
 }
