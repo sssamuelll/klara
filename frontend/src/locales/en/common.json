@@ -281,6 +281,12 @@
         "used": "Used",
         "revoked": "Revoked"
       }
+    },
+    "security": {
+      "kicker": "Security",
+      "title": "Set a password",
+      "hint": "You signed in with Google only. Add a password if you'd like to also log in with email.",
+      "savedToast": "Password saved"
     }
   },
   "auth": {

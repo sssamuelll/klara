@@ -6,6 +6,7 @@ import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
 import { useAuth } from "../lib/auth";
 import { patchUser, useUser } from "../lib/user";
 import InvitationsPanel from "../components/InvitationsPanel";
+import PasswordSetForm from "../components/PasswordSetForm";
 
 const LEVELS: CEFRLevel[] = ["A0", "A1", "A2", "B1", "B2", "C1"];
 
@@ -22,6 +23,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pwSavedToast, setPwSavedToast] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -31,6 +33,12 @@ export default function Settings() {
     setTargetLang(user.target_language);
     setContext(user.learning_context ?? "");
   }, [user]);
+
+  useEffect(() => {
+    if (!pwSavedToast) return;
+    const id = setTimeout(() => setPwSavedToast(false), 3000);
+    return () => clearTimeout(id);
+  }, [pwSavedToast]);
 
   const sameLang = nativeLang === targetLang;
 
@@ -236,6 +244,27 @@ export default function Settings() {
         <>
           <hr className="k-hairline" />
           <InvitationsPanel />
+        </>
+      )}
+
+      {user && !user.auth_methods.includes("password") && (
+        <>
+          <hr className="k-hairline" />
+          <section style={{ marginTop: "1.5rem" }}>
+            <span className="k-mono">{t("settings.security.kicker")}</span>
+            <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)", marginTop: "0.5rem" }}>
+              {t("settings.security.title")}
+            </h2>
+            <p className="snew__sub" style={{ marginTop: "0.5rem" }}>
+              {t("settings.security.hint")}
+            </p>
+            {pwSavedToast && (
+              <div className="snew__toast k-mono" role="status">
+                {t("settings.security.savedToast")}
+              </div>
+            )}
+            <PasswordSetForm onSuccess={() => setPwSavedToast(true)} />
+          </section>
         </>
       )}
     </main>

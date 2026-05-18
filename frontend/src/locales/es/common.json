@@ -281,6 +281,12 @@
         "used": "Usada",
         "revoked": "Revocada"
       }
+    },
+    "security": {
+      "kicker": "Seguridad",
+      "title": "Establecer contraseña",
+      "hint": "Has entrado solo con Google. Si quieres, añade una contraseña para poder entrar también con email.",
+      "savedToast": "Contraseña guardada"
     }
   },
   "auth": {

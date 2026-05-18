@@ -281,6 +281,12 @@
         "used": "Usado",
         "revoked": "Revogado"
       }
+    },
+    "security": {
+      "kicker": "Segurança",
+      "title": "Definir palavra-passe",
+      "hint": "Entraste apenas com Google. Se quiseres, adiciona uma palavra-passe para poder entrar também por email.",
+      "savedToast": "Palavra-passe guardada"
     }
   },
   "auth": {
