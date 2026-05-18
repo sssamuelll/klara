@@ -9,7 +9,7 @@ import StoryView from "./routes/Story";
 import ReviewStub from "./routes/ReviewStub";
 import ChatStub from "./routes/ChatStub";
 import Settings from "./routes/Settings";
-import Onboarding from "./routes/Onboarding";
+import Onboarding from "./onboarding/Onboarding";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import ForgotPassword from "./routes/ForgotPassword";
