@@ -85,11 +85,7 @@ class Settings(BaseSettings):
 
     @property
     def allowed_signup_email_set(self) -> set[str]:
-        return {
-            e.strip().lower()
-            for e in self.allowed_signup_emails.split(",")
-            if e.strip()
-        }
+        return {e.strip().lower() for e in self.allowed_signup_emails.split(",") if e.strip()}
 
     @property
     def initial_owner_email_normalized(self) -> str | None:

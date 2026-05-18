@@ -62,8 +62,8 @@ Reglas:
 
 GERMAN_GENDER_RULE = (
     "Para sustantivos siempre incluye género (der/die/das) y plural si aplica. "
-    "El campo `lemma` NUNCA debe incluir el artículo. Para \"die Bäckerei\" el "
-    "lemma es \"Bäckerei\" y el gender es \"die\". El artículo va SIEMPRE en "
+    'El campo `lemma` NUNCA debe incluir el artículo. Para "die Bäckerei" el '
+    'lemma es "Bäckerei" y el gender es "die". El artículo va SIEMPRE en '
     "el campo `gender`, nunca dentro de `lemma`."
 )
 DEFAULT_GENDER_RULE = (

@@ -182,9 +182,7 @@ def create_app() -> FastAPI:
         from fastapi.responses import JSONResponse
         from httpx_oauth.exceptions import GetIdEmailError, GetProfileError
 
-        async def _oauth_profile_error_handler(
-            request: Request, exc: Exception
-        ) -> JSONResponse:
+        async def _oauth_profile_error_handler(request: Request, exc: Exception) -> JSONResponse:
             response = getattr(exc, "response", None)
             if response is not None:
                 log.error(

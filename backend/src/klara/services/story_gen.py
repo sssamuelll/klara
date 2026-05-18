@@ -72,7 +72,7 @@ def _clean_lemma(lemma: str, *, target_language: str) -> tuple[str, str | None]:
         lower = cleaned.lower()
         for prefix in _FRENCH_ELISION_PREFIXES:
             if lower.startswith(prefix) and len(cleaned) > len(prefix):
-                cleaned = cleaned[len(prefix):]
+                cleaned = cleaned[len(prefix) :]
                 break
     articles = _LEADING_ARTICLES.get(target_language)
     if articles:

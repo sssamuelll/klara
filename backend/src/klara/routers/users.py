@@ -19,6 +19,7 @@ class LanguageInfoOut(BaseModel):
     label: str
     speech_locale: str
 
+
 router = APIRouter(prefix="/me", tags=["users"])
 
 
@@ -26,9 +27,7 @@ async def _to_out(db: AsyncSession, user: User) -> UserOut:
     oauth_names = (
         (
             await db.execute(
-                select(OAuthAccount.oauth_name)
-                .where(OAuthAccount.user_id == user.id)
-                .distinct()
+                select(OAuthAccount.oauth_name).where(OAuthAccount.user_id == user.id).distinct()
             )
         )
         .scalars()
@@ -63,9 +62,7 @@ async def _reload_in_db(db: AsyncSession, user: User) -> User:
     """CurrentUser comes from fastapi-users' auth session (a different session
     than our DBSession). Re-fetch the row in the router's session so any
     mutations + commit + refresh operate on a persistent instance."""
-    return (
-        await db.execute(select(User).where(User.id == user.id))
-    ).scalar_one()
+    return (await db.execute(select(User).where(User.id == user.id))).scalar_one()
 
 
 @router.patch("", response_model=UserOut)

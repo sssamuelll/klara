@@ -13,7 +13,7 @@ log = structlog.get_logger(__name__)
 
 
 def _hash_request(*, provider: str, model: str, voice_id: str, text: str) -> str:
-    raw = f"{provider}|{model}|{voice_id}|{text}".encode("utf-8")
+    raw = f"{provider}|{model}|{voice_id}|{text}".encode()
     return hashlib.sha256(raw).hexdigest()
 
 
@@ -27,9 +27,7 @@ async def get_or_synthesize(
     """Returns (audio_bytes, mime_type, was_cache_hit)."""
     text = text.strip()
     voice = voice_id or tts.default_voice_id
-    text_hash = _hash_request(
-        provider=tts.name, model=tts.model, voice_id=voice, text=text
-    )
+    text_hash = _hash_request(provider=tts.name, model=tts.model, voice_id=voice, text=text)
 
     cached = (
         await db.execute(select(AudioCache).where(AudioCache.text_hash == text_hash))

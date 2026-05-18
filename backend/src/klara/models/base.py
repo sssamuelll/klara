@@ -16,6 +16,7 @@ def pg_enum(enum_cls: type[Enum], **kwargs: Any) -> SAEnum:
         **kwargs,
     )
 
+
 uuid_pk = Annotated[UUID, mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)]
 created_ts = Annotated[
     datetime,

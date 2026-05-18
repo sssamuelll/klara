@@ -179,10 +179,14 @@ async def seed_invite(db_session: AsyncSession):
     async def _seed(*, email: str | None = None, ttl_days: int = 7) -> str:
         # The invite needs a creator FK — seed an admin user if none exists.
         admin = (
-            await db_session.execute(
-                __import__("sqlalchemy").select(User).where(User.is_superuser.is_(True))
+            (
+                await db_session.execute(
+                    __import__("sqlalchemy").select(User).where(User.is_superuser.is_(True))
+                )
             )
-        ).scalars().first()
+            .scalars()
+            .first()
+        )
         if admin is None:
             admin = User(
                 id=uuid.uuid4(),

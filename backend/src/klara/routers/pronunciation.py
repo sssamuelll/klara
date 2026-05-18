@@ -5,6 +5,7 @@ gets transcoded to WAV via ffmpeg, then evaluated against `reference_text`.
 Response carries per-word and per-phoneme scores so the UI can highlight
 mispronounced parts.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

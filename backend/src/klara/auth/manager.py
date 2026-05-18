@@ -71,7 +71,9 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
             "auth.user_registered",
             user_id=str(user.id),
             email=user.email,
-            adopted=bool(getattr(request, "state", None) and getattr(request.state, "adopted_legacy", False)),
+            adopted=bool(
+                getattr(request, "state", None) and getattr(request.state, "adopted_legacy", False)
+            ),
         )
         if user.email and not user.is_verified:
             try:
@@ -144,9 +146,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
             )
 
         user_dict = (
-            user_create.create_update_dict()
-            if safe
-            else user_create.create_update_dict_superuser()
+            user_create.create_update_dict() if safe else user_create.create_update_dict_superuser()
         )
         user_dict["email"] = email
         password = user_dict.pop("password")

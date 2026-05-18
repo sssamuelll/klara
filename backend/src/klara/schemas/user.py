@@ -10,9 +10,7 @@ def _validate_lang(code: str | None) -> str | None:
     if code is None:
         return None
     if code not in SUPPORTED_LANGUAGES:
-        raise ValueError(
-            f"Unsupported language '{code}'. Supported: {sorted(SUPPORTED_LANGUAGES)}"
-        )
+        raise ValueError(f"Unsupported language '{code}'. Supported: {sorted(SUPPORTED_LANGUAGES)}")
     return code
 
 
