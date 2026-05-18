@@ -9,6 +9,7 @@ import StoryView from "./routes/Story";
 import ReviewStub from "./routes/ReviewStub";
 import ChatStub from "./routes/ChatStub";
 import Settings from "./routes/Settings";
+import Onboarding from "./routes/Onboarding";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import ForgotPassword from "./routes/ForgotPassword";
@@ -44,6 +45,14 @@ function AppShell() {
           <Route path="/forgot" element={<ForgotPassword />} />
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/verify" element={<VerifyEmail />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <Onboarding />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/"
             element={
