@@ -197,6 +197,39 @@
       "unknown": "Quelque chose s'est mal passé. Réessaye."
     }
   },
+  "onboarding": {
+    "kicker": "Onboarding",
+    "continue": "Continuer →",
+    "back": "← Retour",
+    "skip": "Passer",
+    "name": {
+      "title": "Bonjour. Comment t'appelles-tu ?",
+      "label": "Nom",
+      "placeholder": "Samuel"
+    },
+    "languages": {
+      "title": "Quelle langue parles-tu et laquelle veux-tu apprendre ?",
+      "native": "Langue maternelle",
+      "target": "Langue à apprendre"
+    },
+    "level": {
+      "title": "Où en es-tu maintenant ?"
+    },
+    "context": {
+      "title": "Dis à Klara comment tu apprends le mieux",
+      "label": "Ton contexte (facultatif)",
+      "placeholder": "J'apprends en écoutant des podcasts et en lisant la presse…"
+    },
+    "password": {
+      "title": "Veux-tu ajouter un mot de passe en secours ?",
+      "hint": "Tu t'es connecté avec Google. Si tu veux, ajoute un mot de passe pour pouvoir aussi te connecter par e-mail.",
+      "label": "Mot de passe",
+      "confirm": "Répète-le",
+      "submit": "Enregistrer le mot de passe",
+      "tooShort": "Le mot de passe doit comporter au moins 8 caractères.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    }
+  },
   "settings": {
     "kicker": "Réglages",
     "title": "Ton profil avec Klara",

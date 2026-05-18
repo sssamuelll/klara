@@ -197,6 +197,39 @@
       "unknown": "Algo correu mal. Tenta novamente."
     }
   },
+  "onboarding": {
+    "kicker": "Onboarding",
+    "continue": "Continuar →",
+    "back": "← Voltar",
+    "skip": "Saltar",
+    "name": {
+      "title": "Olá. Como te chamas?",
+      "label": "Nome",
+      "placeholder": "Samuel"
+    },
+    "languages": {
+      "title": "Que língua falas e qual queres aprender?",
+      "native": "Língua materna",
+      "target": "Língua a aprender"
+    },
+    "level": {
+      "title": "Onde estás agora?"
+    },
+    "context": {
+      "title": "Conta à Klara como aprendes melhor",
+      "label": "O teu contexto (opcional)",
+      "placeholder": "Aprendo a ouvir podcasts e a ler notícias…"
+    },
+    "password": {
+      "title": "Queres adicionar uma palavra-passe como backup?",
+      "hint": "Entraste com Google. Se quiseres, adiciona uma palavra-passe para poderes entrar também por email.",
+      "label": "Palavra-passe",
+      "confirm": "Repete-a",
+      "submit": "Guardar palavra-passe",
+      "tooShort": "A palavra-passe deve ter pelo menos 8 caracteres.",
+      "mismatch": "As palavras-passe não coincidem."
+    }
+  },
   "settings": {
     "kicker": "Ajustes",
     "title": "O teu perfil com a Klara",

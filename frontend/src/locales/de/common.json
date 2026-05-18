@@ -197,6 +197,39 @@
       "unknown": "Etwas ist schiefgegangen. Versuche es noch einmal."
     }
   },
+  "onboarding": {
+    "kicker": "Onboarding",
+    "continue": "Weiter →",
+    "back": "← Zurück",
+    "skip": "Überspringen",
+    "name": {
+      "title": "Hallo. Wie heißt du?",
+      "label": "Name",
+      "placeholder": "Samuel"
+    },
+    "languages": {
+      "title": "Welche Sprache sprichst du und welche möchtest du lernen?",
+      "native": "Muttersprache",
+      "target": "Lernsprache"
+    },
+    "level": {
+      "title": "Wo stehst du gerade?"
+    },
+    "context": {
+      "title": "Erzähl Klara, wie du am besten lernst",
+      "label": "Dein Kontext (optional)",
+      "placeholder": "Ich lerne mit Podcasts und Nachrichten…"
+    },
+    "password": {
+      "title": "Möchtest du ein Passwort als Backup hinzufügen?",
+      "hint": "Du hast dich mit Google angemeldet. Wenn du willst, füge ein Passwort hinzu, damit du dich auch per E-Mail einloggen kannst.",
+      "label": "Passwort",
+      "confirm": "Wiederhole es",
+      "submit": "Passwort speichern",
+      "tooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+      "mismatch": "Die Passwörter stimmen nicht überein."
+    }
+  },
   "settings": {
     "kicker": "Einstellungen",
     "title": "Dein Profil bei Klara",
