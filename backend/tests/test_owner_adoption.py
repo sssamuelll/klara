@@ -37,18 +37,14 @@ async def test_initial_owner_adopts_legacy_user(
     from klara.models import Story, User
 
     user = (
-        await db_session.execute(
-            select(User).where(User.id == uuid.UUID(pre_user_id))
-        )
+        await db_session.execute(select(User).where(User.id == uuid.UUID(pre_user_id)))
     ).scalar_one()
     assert user.email == "samuel@klara.app"
     assert user.hashed_password is not None
     assert user.is_superuser is True
 
     story = (
-        await db_session.execute(
-            select(Story).where(Story.id == uuid.UUID(pre_story_id))
-        )
+        await db_session.execute(select(Story).where(Story.id == uuid.UUID(pre_story_id)))
     ).scalar_one()
     assert str(story.user_id) == pre_user_id
 

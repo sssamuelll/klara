@@ -4,6 +4,7 @@ Bootstrap exception: if INITIAL_OWNER_EMAIL is configured and a legacy row
 (email IS NULL) exists, that one signup is allowed without an invite. After
 that, every new account needs a valid token issued by an admin.
 """
+
 from __future__ import annotations
 
 import secrets

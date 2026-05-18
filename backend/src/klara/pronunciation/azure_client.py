@@ -3,6 +3,7 @@
 Synchronous SDK call — the FastAPI route runs it in a threadpool via
 `run_in_threadpool` so it doesn't block the event loop.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -50,9 +51,7 @@ def score_pronunciation(
         enable_miscue=True,
     )
 
-    recognizer = speechsdk.SpeechRecognizer(
-        speech_config=speech_config, audio_config=audio_config
-    )
+    recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
     pronunciation_config.apply_to(recognizer)
 
     result = recognizer.recognize_once()

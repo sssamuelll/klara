@@ -42,6 +42,4 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     # `user.oauth_accounts.append(...)` and get_by_oauth_account() iterates
     # the relationship — both require this attribute. lazy="selectin" so async
     # sessions don't hit MissingGreenlet on implicit lazy loads.
-    oauth_accounts: Mapped[list["OAuthAccount"]] = relationship(
-        "OAuthAccount", lazy="selectin"
-    )
+    oauth_accounts: Mapped[list["OAuthAccount"]] = relationship("OAuthAccount", lazy="selectin")

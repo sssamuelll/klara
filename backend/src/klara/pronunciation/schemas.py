@@ -1,4 +1,5 @@
 """Response schemas for /pronunciation/score (Azure Pronunciation Assessment)."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field

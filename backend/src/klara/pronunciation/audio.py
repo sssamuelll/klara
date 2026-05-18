@@ -3,6 +3,7 @@
 Azure Pronunciation Assessment requires WAV; browsers tend to send webm/opus
 or ogg. Subprocess-shells out to ffmpeg, which the backend image installs.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -27,10 +28,20 @@ def transcode_to_wav(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
     try:
         subprocess.run(
             [
-                "ffmpeg", "-y", "-i", src.name,
-                "-ar", str(sample_rate), "-ac", "1", "-f", "wav", str(dst),
+                "ffmpeg",
+                "-y",
+                "-i",
+                src.name,
+                "-ar",
+                str(sample_rate),
+                "-ac",
+                "1",
+                "-f",
+                "wav",
+                str(dst),
             ],
-            check=True, capture_output=True,
+            check=True,
+            capture_output=True,
         )
     except FileNotFoundError as e:
         raise FfmpegMissingError("ffmpeg is not installed in the server PATH.") from e

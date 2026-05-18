@@ -259,8 +259,6 @@ async def test_invitation_marked_used_in_db(client, app_settings, db_session):
 
     # Different session — must re-query.
     db_session.expire_all()
-    inv = (
-        await db_session.execute(select(Invitation).where(Invitation.id == inv_id))
-    ).scalar_one()
+    inv = (await db_session.execute(select(Invitation).where(Invitation.id == inv_id))).scalar_one()
     assert inv.used_at is not None
     assert str(inv.used_by) == new_user_id

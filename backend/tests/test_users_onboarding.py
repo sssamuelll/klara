@@ -60,10 +60,9 @@ async def test_seed_oauth_account_fixture_works(db_session, seed_oauth_account):
         account_email="oauth@example.com",
     )
     from klara.models import OAuthAccount
+
     row = (
-        await db_session.execute(
-            select(OAuthAccount).where(OAuthAccount.id == oa_id)
-        )
+        await db_session.execute(select(OAuthAccount).where(OAuthAccount.id == oa_id))
     ).scalar_one()
     assert row.oauth_name == "google"
     assert row.user_id == user.id
@@ -122,6 +121,7 @@ async def test_get_me_auth_methods_oauth_only(db_session, seed_oauth_account):
     app.dependency_overrides[current_active_user] = lambda: user
     app.dependency_overrides[db_session_dep] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/me")
@@ -159,6 +159,7 @@ async def test_get_me_auth_methods_hybrid(db_session, seed_oauth_account):
     app.dependency_overrides[current_active_user] = lambda: user
     app.dependency_overrides[db_session_dep] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.get("/api/v1/me")
@@ -194,6 +195,7 @@ async def test_post_onboarding_complete_sets_timestamp(db_session):
     app.dependency_overrides[current_active_user] = lambda: user
     app.dependency_overrides[db_session_dep] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/api/v1/me/onboarding/complete")
@@ -231,6 +233,7 @@ async def test_post_onboarding_complete_idempotent(db_session):
     app.dependency_overrides[current_active_user] = lambda: user
     app.dependency_overrides[db_session_dep] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         r1 = await ac.post("/api/v1/me/onboarding/complete")
@@ -281,6 +284,7 @@ async def test_post_password_sets_hashed_password(db_session, seed_oauth_account
     app.dependency_overrides[db_session_dep] = lambda: db_session
     app.dependency_overrides[get_auth_session] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/api/v1/me/password", json={"password": "newpassword123"})
@@ -322,6 +326,7 @@ async def test_post_password_rejects_short_password(db_session, seed_oauth_accou
     app.dependency_overrides[db_session_dep] = lambda: db_session
     app.dependency_overrides[get_auth_session] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/api/v1/me/password", json={"password": "abc"})
@@ -359,6 +364,7 @@ async def test_post_password_rejects_oversized_password(db_session):
     app.dependency_overrides[db_session_dep] = lambda: db_session
     app.dependency_overrides[get_auth_session] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/api/v1/me/password", json={"password": "x" * 200})
@@ -397,6 +403,7 @@ async def test_post_password_already_set(db_session):
     app.dependency_overrides[db_session_dep] = lambda: db_session
     app.dependency_overrides[get_auth_session] = lambda: db_session
     from httpx import ASGITransport, AsyncClient
+
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.post("/api/v1/me/password", json={"password": "newpassword123"})

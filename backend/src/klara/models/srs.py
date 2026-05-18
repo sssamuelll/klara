@@ -16,7 +16,9 @@ class UserCard(Base):
     )
 
     id: Mapped[uuid_pk]
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     vocab_item_id: Mapped[UUID] = mapped_column(
         ForeignKey("vocab_items.id", ondelete="CASCADE"), nullable=False
     )
@@ -24,7 +26,9 @@ class UserCard(Base):
     interval_days: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     repetitions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     next_review_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_reviewed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     state: Mapped[CardState] = mapped_column(
         pg_enum(CardState, name="card_state"),
         default=CardState.NEW,
