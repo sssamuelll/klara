@@ -14,6 +14,10 @@
     },
     "brand": {
       "aria": "Klara — Start"
+    },
+    "star": {
+      "label": "Star",
+      "aria": "Auf GitHub mit Stern markieren"
     }
   },
   "common": {
