@@ -197,6 +197,39 @@
       "unknown": "問題が発生しました。もう一度お試しください。"
     }
   },
+  "onboarding": {
+    "kicker": "オンボーディング",
+    "continue": "続ける →",
+    "back": "← 戻る",
+    "skip": "スキップ",
+    "name": {
+      "title": "こんにちは。お名前は?",
+      "label": "名前",
+      "placeholder": "Samuel"
+    },
+    "languages": {
+      "title": "話す言語と、学びたい言語を教えてください。",
+      "native": "母語",
+      "target": "学ぶ言語"
+    },
+    "level": {
+      "title": "今のレベルは?"
+    },
+    "context": {
+      "title": "あなたの学び方を Klara に教えてください",
+      "label": "あなたの背景(任意)",
+      "placeholder": "ポッドキャストやニュースで学んでいます…"
+    },
+    "password": {
+      "title": "バックアップ用のパスワードを設定しますか?",
+      "hint": "Google でログインしました。メールでもログインできるように、パスワードを追加できます。",
+      "label": "パスワード",
+      "confirm": "もう一度入力",
+      "submit": "パスワードを保存",
+      "tooShort": "パスワードは 8 文字以上必要です。",
+      "mismatch": "パスワードが一致しません。"
+    }
+  },
   "settings": {
     "kicker": "設定",
     "title": "Klara でのプロフィール",

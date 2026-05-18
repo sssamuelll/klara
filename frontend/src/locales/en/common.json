@@ -197,6 +197,39 @@
       "unknown": "Something went wrong. Try again."
     }
   },
+  "onboarding": {
+    "kicker": "Onboarding",
+    "continue": "Continue →",
+    "back": "← Back",
+    "skip": "Skip",
+    "name": {
+      "title": "Hi. What's your name?",
+      "label": "Name",
+      "placeholder": "Samuel"
+    },
+    "languages": {
+      "title": "What language do you speak, and which one do you want to learn?",
+      "native": "Native language",
+      "target": "Language to learn"
+    },
+    "level": {
+      "title": "Where are you now?"
+    },
+    "context": {
+      "title": "Tell Klara how you learn best",
+      "label": "Your context (optional)",
+      "placeholder": "I learn by listening to podcasts and reading news…"
+    },
+    "password": {
+      "title": "Want to add a password as backup?",
+      "hint": "You signed in with Google. If you'd like, add a password so you can also log in with email.",
+      "label": "Password",
+      "confirm": "Repeat it",
+      "submit": "Save password",
+      "tooShort": "Password must be at least 8 characters.",
+      "mismatch": "Passwords don't match."
+    }
+  },
   "settings": {
     "kicker": "Settings",
     "title": "Your profile with Klara",
