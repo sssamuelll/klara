@@ -299,7 +299,8 @@
       "signupLink": "Criar conta",
       "forgotLink": "Esqueci-me da palavra-passe",
       "error": {
-        "invalidCredentials": "Email ou palavra-passe inválidos."
+        "invalidCredentials": "Email ou palavra-passe inválidos.",
+        "googleFailed": "Não foi possível iniciar sessão com Google. Tenta de novo."
       }
     },
     "signup": {

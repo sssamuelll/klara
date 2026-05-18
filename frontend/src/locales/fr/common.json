@@ -299,7 +299,8 @@
       "signupLink": "Créer un compte",
       "forgotLink": "Mot de passe oublié",
       "error": {
-        "invalidCredentials": "E-mail ou mot de passe invalide."
+        "invalidCredentials": "E-mail ou mot de passe invalide.",
+        "googleFailed": "Impossible de se connecter avec Google. Réessaie."
       }
     },
     "signup": {
