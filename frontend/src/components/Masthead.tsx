@@ -35,22 +35,24 @@ export default function Masthead({ edition, theme, onToggleTheme }: Props) {
         <span className="edition">{edition}</span>
       </Link>
       <nav>
-        {user && (
+        {user && !user.needs_onboarding && (
           <>
             <Link to="/" data-active={isHome}>{t("nav.home")}</Link>
             <Link to="/review" data-active={isReview}>{t("nav.review")}</Link>
             <Link to="/chat" data-active={isChat}>{t("nav.chat")}</Link>
             <Link to="/settings" data-active={isSettings}>{t("nav.settings")}</Link>
-            <button
-              type="button"
-              className="k-masthead__theme"
-              onClick={onLogout}
-              aria-label={t("settings.account.logoutBtn")}
-              title={t("settings.account.logoutBtn")}
-            >
-              {t("settings.account.logoutBtn")}
-            </button>
           </>
+        )}
+        {user && (
+          <button
+            type="button"
+            className="k-masthead__theme"
+            onClick={onLogout}
+            aria-label={t("settings.account.logoutBtn")}
+            title={t("settings.account.logoutBtn")}
+          >
+            {t("settings.account.logoutBtn")}
+          </button>
         )}
         <button
           type="button"
