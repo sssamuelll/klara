@@ -81,6 +81,8 @@ export interface CardOut {
   repetitions: number;
 }
 
+export type AuthMethod = "password" | "google";
+
 export interface User {
   id: string;
   email: string | null;
@@ -90,6 +92,8 @@ export interface User {
   native_language: LanguageCode;
   target_language: LanguageCode;
   learning_context: string | null;
+  auth_methods: AuthMethod[];
+  needs_onboarding: boolean;
 }
 
 export type InvitationState = "active" | "expired" | "used" | "revoked";
