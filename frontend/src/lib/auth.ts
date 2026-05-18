@@ -31,6 +31,7 @@ export interface AuthContextValue extends AuthState {
   }) => Promise<void>;
   logout: () => Promise<void>;
   patchUser: (patch: UserUpdate) => Promise<User>;
+  applyUserResponse: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -97,20 +98,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const applyUserResponse = useCallback((u: User) => {
+    setUser(u);
+    writeCachedNativeLang(u.native_language);
+  }, []);
+
   const patchUser = useCallback(async (patch: UserUpdate): Promise<User> => {
     const updated = await api.updateMe(patch);
-    setUser(updated);
-    writeCachedNativeLang(updated.native_language);
+    applyUserResponse(updated);
     return updated;
-  }, []);
+  }, [applyUserResponse]);
 
   useEffect(() => {
     _registerPatchUser(patchUser);
   }, [patchUser]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, error, reload: fetchMe, login, signup, logout, patchUser }),
-    [user, loading, error, fetchMe, login, signup, logout, patchUser],
+    () => ({ user, loading, error, reload: fetchMe, login, signup, logout, patchUser, applyUserResponse }),
+    [user, loading, error, fetchMe, login, signup, logout, patchUser, applyUserResponse],
   );
 
   return createElement(AuthContext.Provider, { value }, children);
