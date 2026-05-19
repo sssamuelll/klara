@@ -3,9 +3,17 @@ from uuid import UUID
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from sqlalchemy import select
 
-from klara.dependencies import CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
+from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import t
-from klara.models import Story, VocabItem
+from klara.models import PronunciationAttempt, QuizAttempt, Story, VocabItem
+from klara.schemas.finish import (
+    InsightOut,
+    PronunciationAttemptIn,
+    PronunciationAttemptOut,
+    QuizAttemptIn,
+    QuizAttemptOut,
+    QuizOut,
+)
 from klara.schemas.story import (
     ComprehensionQuestionOut,
     StoryContent,
@@ -15,6 +23,7 @@ from klara.schemas.story import (
     StorySentenceOut,
     StoryWordOut,
 )
+from klara.services.finish_lessons import ensure_insight, ensure_quiz_items
 from klara.services.story_gen import generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 
@@ -134,3 +143,111 @@ async def get_story(
         raise HTTPException(status_code=404, detail=t("errors.story_not_found", locale))
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
     return _serialize_story(story, words, user.native_language)
+
+
+async def _load_or_404(db, story_id: UUID, user_id: UUID, locale: str) -> Story:
+    story = await db.get(Story, story_id)
+    if story is None or story.user_id != user_id:
+        raise HTTPException(status_code=404, detail=t("errors.story_not_found", locale))
+    return story
+
+
+@router.get("/{story_id}/quiz", response_model=QuizOut)
+async def get_story_quiz(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+    llm: ChatLLM,
+) -> QuizOut:
+    story = await _load_or_404(db, story_id, user.id, locale)
+    words = await _load_words(db, list(story.target_vocab_item_ids or []))
+    lemmas = [w.lemma for w in words]
+    items = await ensure_quiz_items(db, story, llm, lemmas=lemmas)
+    return QuizOut(items=items or [])
+
+
+@router.get("/{story_id}/insight", response_model=InsightOut | None)
+async def get_story_insight(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+    llm: ChatLLM,
+) -> InsightOut | None:
+    story = await _load_or_404(db, story_id, user.id, locale)
+    words = await _load_words(db, list(story.target_vocab_item_ids or []))
+    lemmas = [w.lemma for w in words]
+    result = await ensure_insight(db, story, llm, lemmas=lemmas)
+    if result is None:
+        return None
+    title, body = result
+    return InsightOut(title=title, body=body)
+
+
+@router.post(
+    "/{story_id}/pronunciation/attempts",
+    response_model=PronunciationAttemptOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_pronunciation_attempt(
+    story_id: UUID,
+    payload: PronunciationAttemptIn,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> PronunciationAttemptOut:
+    await _load_or_404(db, story_id, user.id, locale)
+    row = PronunciationAttempt(
+        user_id=user.id,
+        story_id=story_id,
+        sentence_index=payload.sentence_index,
+        reference_text=payload.reference_text,
+        recognized_text=payload.recognized_text,
+        overall_score=payload.overall_score,
+        word_bands=payload.word_bands,
+    )
+    db.add(row)
+    await db.commit()
+    await db.refresh(row)
+    return PronunciationAttemptOut(
+        id=row.id,
+        sentence_index=row.sentence_index,
+        overall_score=row.overall_score,
+        attempted_at=row.attempted_at,
+    )
+
+
+@router.post(
+    "/{story_id}/quiz/attempts",
+    response_model=QuizAttemptOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_quiz_attempt(
+    story_id: UUID,
+    payload: QuizAttemptIn,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> QuizAttemptOut:
+    await _load_or_404(db, story_id, user.id, locale)
+    row = QuizAttempt(
+        user_id=user.id,
+        story_id=story_id,
+        question_index=payload.question_index,
+        question_type=payload.question_type,
+        was_correct=payload.was_correct,
+        was_revealed=payload.was_revealed,
+        detail=payload.detail,
+    )
+    db.add(row)
+    await db.commit()
+    await db.refresh(row)
+    return QuizAttemptOut(
+        id=row.id,
+        question_index=row.question_index,
+        question_type=row.question_type,
+        was_correct=row.was_correct,
+        was_revealed=row.was_revealed,
+        attempted_at=row.attempted_at,
+    )

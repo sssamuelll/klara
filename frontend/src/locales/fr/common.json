@@ -180,6 +180,68 @@
         "another": "Une autre histoire",
         "reread": "Relire celle-ci"
       }
+    },
+    "finish": {
+      "quiz": {
+        "title": "Avant de conclure, quatre questions.",
+        "sub": "Une pour fixer la compréhension, une pour la produire. Si tu ne l’as pas, tu peux voir la réponse.",
+        "mc": {
+          "pick": "Choisis la bonne réponse"
+        },
+        "cloze": {
+          "klaraSays": "Klara dit :",
+          "nailed": "Dans le mille. Dit sans indice.",
+          "close": "C’était « {{answer}} ». Réessayons ce mot une autre fois.",
+          "wasRevealed": "C’était « {{answer}} ». Je le mets devant."
+        },
+        "shadow": {
+          "play": "Lire",
+          "replay": "Relire",
+          "tapToHear": "Touche pour écouter",
+          "listenFirst": "Écoute d’abord Klara",
+          "repeat": "Répète comme tu l’entends",
+          "repeatBtn": "Répète",
+          "verdict": {
+            "full": "Tout clair.",
+            "most": "Presque tout.",
+            "half": "À mi-chemin.",
+            "retry": "Essayons-en une autre."
+          },
+          "legend": {
+            "clear": "clairs",
+            "ok": "approchants",
+            "bad": "à revoir"
+          }
+        },
+        "reveal": "Voir la réponse",
+        "yourTurn": "À toi",
+        "next": "Suivant",
+        "toSummary": "Voir le résumé"
+      },
+      "summary": {
+        "cap": "Fin de la leçon",
+        "sentencesPronounced": "phrases prononcées",
+        "clear": "claires",
+        "questions": "questions",
+        "backToQuiz": "Voir mes réponses",
+        "souvenir": {
+          "title": "La ligne qui reste",
+          "sub": "De toute l’histoire, celle-ci tient toute seule."
+        },
+        "schedule": {
+          "title": "Dans la file",
+          "count_one": "{{count}} mot",
+          "count_other": "{{count}} mots",
+          "struggled": "coincé aujourd’hui",
+          "nextSession": "Prochaine séance",
+          "later": "Plus tard",
+          "added": "En révision"
+        },
+        "insight": {
+          "title": "Une chose à remarquer",
+          "unavailable": "Klara n’a pas trouvé de motif clair cette fois."
+        }
+      }
     }
   },
   "wpop": {

@@ -180,6 +180,68 @@
         "another": "Otra historia",
         "reread": "Releer esta"
       }
+    },
+    "finish": {
+      "quiz": {
+        "title": "Antes de cerrar, cuatro preguntas.",
+        "sub": "Una para fijar la comprensión, otra para producirla. Si no la tienes a mano, puedes ver la respuesta.",
+        "mc": {
+          "pick": "Elige la respuesta correcta"
+        },
+        "cloze": {
+          "klaraSays": "Klara dice:",
+          "nailed": "Clavada. Lo dijiste sin pista.",
+          "close": "Era «{{answer}}». Probemos esa palabra otra vez en otra ocasión.",
+          "wasRevealed": "Era «{{answer}}». La pongo al frente de la cola."
+        },
+        "shadow": {
+          "play": "Reproducir",
+          "replay": "Reproducir otra vez",
+          "tapToHear": "Toca para escuchar",
+          "listenFirst": "Escucha primero a Klara",
+          "repeat": "Repítela tal como suena",
+          "repeatBtn": "Repítela",
+          "verdict": {
+            "full": "Clara entera.",
+            "most": "Casi todas.",
+            "half": "A medio camino.",
+            "retry": "Probemos otra."
+          },
+          "legend": {
+            "clear": "claras",
+            "ok": "aproximadas",
+            "bad": "a revisar"
+          }
+        },
+        "reveal": "Ver respuesta",
+        "yourTurn": "Tu turno",
+        "next": "Siguiente",
+        "toSummary": "Ver resumen"
+      },
+      "summary": {
+        "cap": "Fin de la lectura",
+        "sentencesPronounced": "oraciones pronunciadas",
+        "clear": "claras",
+        "questions": "preguntas",
+        "backToQuiz": "Ver mis respuestas",
+        "souvenir": {
+          "title": "La línea que se queda",
+          "sub": "De toda la historia, ésta es la que se sostiene sola."
+        },
+        "schedule": {
+          "title": "Lo que queda en agenda",
+          "count_one": "{{count}} palabra",
+          "count_other": "{{count}} palabras",
+          "struggled": "se atascó hoy",
+          "nextSession": "Próxima sesión",
+          "later": "Más adelante",
+          "added": "En repaso"
+        },
+        "insight": {
+          "title": "Una cosa a notar",
+          "unavailable": "Klara no encontró un patrón claro esta vez."
+        }
+      }
     }
   },
   "wpop": {

@@ -1,3 +1,4 @@
+from klara.models.attempts import PronunciationAttempt, QuizAttempt
 from klara.models.audio import AudioCache
 from klara.models.base import Base
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating, SessionType
@@ -17,6 +18,8 @@ __all__ = [
     "Invitation",
     "OAuthAccount",
     "PartOfSpeech",
+    "PronunciationAttempt",
+    "QuizAttempt",
     "Review",
     "ReviewRating",
     "SessionType",

@@ -201,7 +201,7 @@ async def generate_story(
     response = await llm.complete(
         messages=[Message("system", system), Message("user", user)],
         model=model,
-        max_tokens=1500,
+        max_tokens=2800,
         temperature=0.8,
         response_format={"type": "json_object"},
     )
@@ -212,6 +212,20 @@ async def generate_story(
     sentences = data.get("sentences") or []
     questions = data.get("comprehension_questions") or []
     target_words_raw = data.get("target_words") or []
+    # quiz_items and insight are newer fields. They may be missing from
+    # historical prompts or trimmed by the LLM; downstream code treats them
+    # as best-effort and lazily backfills via dedicated endpoints.
+    quiz_items_raw = data.get("quiz_items") or None
+    insight_raw = data.get("insight") or None
+    insight_title = None
+    insight_body = None
+    if isinstance(insight_raw, dict):
+        t = insight_raw.get("title")
+        b = insight_raw.get("body")
+        if isinstance(t, str) and t.strip():
+            insight_title = t.strip()[:200]
+        if isinstance(b, str) and b.strip():
+            insight_body = b.strip()[:2000]
 
     target_words = await _upsert_vocab_items(
         db,
@@ -232,6 +246,9 @@ async def generate_story(
         generated_by_provider=response.provider,
         generated_by_model=response.model,
         generation_cost_usd=response.cost_usd,
+        quiz_items=quiz_items_raw if isinstance(quiz_items_raw, list) else None,
+        insight_title=insight_title,
+        insight_body=insight_body,
     )
     db.add(story)
     await db.flush()

@@ -180,6 +180,68 @@
         "another": "Eine andere Geschichte",
         "reread": "Nochmal lesen"
       }
+    },
+    "finish": {
+      "quiz": {
+        "title": "Bevor wir Schluss machen, vier Fragen.",
+        "sub": "Eine für das Verständnis, eine für die Produktion. Wenn du sie nicht hast, kannst du die Antwort aufdecken.",
+        "mc": {
+          "pick": "Wähle die richtige Antwort"
+        },
+        "cloze": {
+          "klaraSays": "Klara sagt:",
+          "nailed": "Genau. Ohne Hinweis getroffen.",
+          "close": "Es war «{{answer}}». Versuchen wir das Wort später nochmal.",
+          "wasRevealed": "Es war «{{answer}}». Ich nehme es nach vorn in die Schlange."
+        },
+        "shadow": {
+          "play": "Abspielen",
+          "replay": "Nochmal abspielen",
+          "tapToHear": "Tippen zum Anhören",
+          "listenFirst": "Hör Klara zuerst zu",
+          "repeat": "Sprich es so nach, wie es klingt",
+          "repeatBtn": "Nachsprechen",
+          "verdict": {
+            "full": "Alles klar.",
+            "most": "Fast alle.",
+            "half": "Halbwegs.",
+            "retry": "Versuchen wir noch eine."
+          },
+          "legend": {
+            "clear": "klar",
+            "ok": "fast",
+            "bad": "unklar"
+          }
+        },
+        "reveal": "Antwort zeigen",
+        "yourTurn": "Du bist dran",
+        "next": "Weiter",
+        "toSummary": "Zur Übersicht"
+      },
+      "summary": {
+        "cap": "Ende der Lektion",
+        "sentencesPronounced": "Sätze ausgesprochen",
+        "clear": "klar",
+        "questions": "Fragen",
+        "backToQuiz": "Meine Antworten ansehen",
+        "souvenir": {
+          "title": "Die Zeile, die bleibt",
+          "sub": "Von der ganzen Geschichte steht diese für sich."
+        },
+        "schedule": {
+          "title": "Im Wiederholungsplan",
+          "count_one": "{{count}} Wort",
+          "count_other": "{{count}} Wörter",
+          "struggled": "heute hängen geblieben",
+          "nextSession": "Nächste Sitzung",
+          "later": "Später",
+          "added": "Im Repertoire"
+        },
+        "insight": {
+          "title": "Eine Sache zum Beachten",
+          "unavailable": "Klara hat dieses Mal kein klares Muster gefunden."
+        }
+      }
     }
   },
   "wpop": {

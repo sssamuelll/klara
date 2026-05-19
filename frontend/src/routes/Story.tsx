@@ -3,8 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Story, StoryWord } from "../api/types";
-import KlaraMark from "../components/KlaraMark";
 import SentenceView from "../components/SentenceView";
+import StoryFinish from "../components/StoryFinish";
 import WordPopover from "../components/WordPopover";
 import { useFontScale } from "../lib/preferences";
 import {
@@ -248,6 +248,19 @@ export default function StoryView() {
       const bands = bandsByTokenIndex(sentence.target, resp.words);
       setScoresBySentence((s) => ({ ...s, [idxAtStart]: bands }));
       setPronError(null);
+      // Best-effort: persist the attempt so SRS + souvenir picker can use it
+      // across sessions. Failure here doesn't affect the UX.
+      void api
+        .recordPronunciationAttempt(story.id, {
+          sentence_index: idxAtStart,
+          reference_text: sentence.target,
+          recognized_text: resp.recognized_text,
+          overall_score: resp.scores.pronunciation,
+          word_bands: Object.fromEntries(
+            Object.entries(bands).map(([k, v]) => [k, v]),
+          ),
+        })
+        .catch(() => undefined);
       // Fire-and-forget: hints arrive after the panel is already on screen.
       void fetchAndStoreHints(idxAtStart, sentence.target, bands, story.target_language);
     } catch (e) {
@@ -405,7 +418,7 @@ export default function StoryView() {
 
   if (finished) {
     return (
-      <StoryFinished
+      <StoryFinish
         story={story}
         reviewIds={reviewIds}
         adding={adding}
@@ -496,124 +509,3 @@ export default function StoryView() {
   );
 }
 
-interface FinishedProps {
-  story: Story;
-  reviewIds: Set<string>;
-  adding: string | null;
-  scoresBySentence: Record<number, PronScores>;
-  onRestart: () => void;
-  onNew: () => void;
-  onHome: () => void;
-  onToggleReview: (word: StoryWord) => void;
-}
-
-function StoryFinished({
-  story,
-  reviewIds,
-  adding,
-  scoresBySentence,
-  onRestart,
-  onNew,
-  onHome,
-  onToggleReview,
-}: FinishedProps) {
-  const { t } = useTranslation();
-  const sentencesPracticed = Object.keys(scoresBySentence).length;
-  const allScores = Object.values(scoresBySentence).flatMap((s) => Object.values(s));
-  const goodPct = allScores.length
-    ? Math.round((allScores.filter((v) => v === "good").length / allScores.length) * 100)
-    : null;
-
-  return (
-    <main className="k-page story-end">
-      <button className="story__back k-mono" onClick={onHome}>
-        {t("common.backHome")}
-      </button>
-
-      <header className="story-end__head">
-        <div className="story-end__sig">
-          <KlaraMark size={14} />
-          <span className="k-mono">{t("story.end.kicker")}</span>
-        </div>
-        <h1 className="story-end__title">{story.title}</h1>
-        <p className="story-end__dek k-serif">
-          {sentencesPracticed > 0
-            ? t("story.end.dek.practiced", { count: sentencesPracticed })
-            : t("story.end.dek.read")}
-        </p>
-      </header>
-
-      {goodPct !== null && (
-        <section className="story-end__stats">
-          <div className="story-end__stat">
-            <span className="story-end__stat-num">
-              {goodPct}
-              <span className="story-end__stat-unit k-mono">%</span>
-            </span>
-            <span className="k-mono">{t("story.end.stat.clear")}</span>
-          </div>
-          <div className="story-end__stat-rule" />
-          <div className="story-end__stat">
-            <span className="story-end__stat-num">
-              {sentencesPracticed}
-              <span className="story-end__stat-unit k-mono">/{story.content.sentences.length}</span>
-            </span>
-            <span className="k-mono">{t("story.end.stat.sentences")}</span>
-          </div>
-        </section>
-      )}
-
-      {story.target_words.length > 0 && (
-        <>
-          <hr className="k-hairline" />
-          <section className="story__new">
-            <header className="story__new-head">
-              <span className="k-mono">{t("story.end.words.title")}</span>
-              <span className="k-mono story__new-count">{story.target_words.length}</span>
-            </header>
-            <ul className="story__new-list">
-              {story.target_words.map((w) => {
-                const added = reviewIds.has(w.id);
-                const showArticle = story.target_language === "de";
-                const article = showArticle ? w.gender ?? null : null;
-                return (
-                  <li key={w.id} className="story__new-item">
-                    <div className="story__new-word">
-                      {article && <span className="story__new-art">{article}</span>}
-                      <span className="story__new-lemma">{w.lemma}</span>
-                    </div>
-                    {w.translation && <span className="story__new-tx">{w.translation}</span>}
-                    <button
-                      type="button"
-                      className="story__new-add"
-                      data-added={added}
-                      disabled={adding === w.id}
-                      onClick={() => onToggleReview(w)}
-                    >
-                      {added
-                        ? t("story.end.words.added")
-                        : adding === w.id
-                          ? t("story.end.words.adding")
-                          : t("story.end.words.add")}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </>
-      )}
-
-      <hr className="k-hairline" />
-
-      <footer className="story__foot">
-        <button type="button" className="k-btn" onClick={onNew}>
-          {t("story.end.cta.another")} <span className="arrow">→</span>
-        </button>
-        <button type="button" className="k-btn k-btn--ghost" onClick={onRestart}>
-          {t("story.end.cta.reread")}
-        </button>
-      </footer>
-    </main>
-  );
-}

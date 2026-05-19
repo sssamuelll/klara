@@ -34,6 +34,17 @@ class Story(Base):
     generated_by_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     generated_by_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     generation_cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Finish-quiz items, persisted with the story so re-reads quiz on the
+    # same questions (testing recall on the same prompts is the whole point
+    # of SRS). Shape: [{type, ...}, ...], 4 entries, mixed types. Nullable
+    # for backwards compat — stories generated before this column existed
+    # backfill lazily via the quiz endpoint.
+    quiz_items: Mapped[list[dict] | None] = mapped_column(JSONB, nullable=True)
+    # Linguistic insight surfaced on the Finish summary. Cached so re-views
+    # are free. Title is short ("La tilde de «autobús»"), body is a paragraph
+    # explaining the rule, both in the user's native_language.
+    insight_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    insight_body: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     created_at: Mapped[created_ts]
 
 

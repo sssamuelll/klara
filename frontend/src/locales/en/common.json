@@ -180,6 +180,68 @@
         "another": "Another story",
         "reread": "Read again"
       }
+    },
+    "finish": {
+      "quiz": {
+        "title": "Before we close, four questions.",
+        "sub": "One to lock in comprehension, another to produce it. If you don’t have it on hand, you can reveal the answer.",
+        "mc": {
+          "pick": "Pick the correct answer"
+        },
+        "cloze": {
+          "klaraSays": "Klara says:",
+          "nailed": "Nailed it. Said it without a hint.",
+          "close": "It was «{{answer}}». Let’s try that word again later.",
+          "wasRevealed": "It was «{{answer}}». Bumped to the front of the queue."
+        },
+        "shadow": {
+          "play": "Play",
+          "replay": "Play again",
+          "tapToHear": "Tap to listen",
+          "listenFirst": "Listen to Klara first",
+          "repeat": "Repeat it as it sounds",
+          "repeatBtn": "Repeat it",
+          "verdict": {
+            "full": "All clear.",
+            "most": "Most of them.",
+            "half": "Halfway there.",
+            "retry": "Let’s try another."
+          },
+          "legend": {
+            "clear": "clear",
+            "ok": "close",
+            "bad": "off"
+          }
+        },
+        "reveal": "Reveal",
+        "yourTurn": "Your turn",
+        "next": "Next",
+        "toSummary": "See summary"
+      },
+      "summary": {
+        "cap": "End of lesson",
+        "sentencesPronounced": "sentences pronounced",
+        "clear": "clear",
+        "questions": "questions",
+        "backToQuiz": "See my answers",
+        "souvenir": {
+          "title": "The line that stays",
+          "sub": "Of the whole story, this one stands on its own."
+        },
+        "schedule": {
+          "title": "In the queue",
+          "count_one": "{{count}} word",
+          "count_other": "{{count}} words",
+          "struggled": "stuck today",
+          "nextSession": "Next session",
+          "later": "Later",
+          "added": "In review"
+        },
+        "insight": {
+          "title": "One thing to notice",
+          "unavailable": "Klara didn’t find a clear pattern this time."
+        }
+      }
     }
   },
   "wpop": {
