@@ -6,14 +6,16 @@ from klara.dependencies import DBSession, LocaleDep, SettingsDep
 from klara.i18n import t
 from klara.models import AudioCache
 from klara.services.tts_service import get_or_synthesize
-from klara.tts.elevenlabs_impl import ElevenLabsTTS, ElevenLabsTTSError
+from klara.tts import ElevenLabsTTS, InworldTTS, TTSError, TTSProvider
 
 router = APIRouter(prefix="/tts", tags=["tts"])
 
 
-def _build_provider(settings, locale: str):
+def _build_provider(settings, locale: str) -> TTSProvider:
     if settings.tts_provider == "elevenlabs":
         return ElevenLabsTTS(settings)
+    if settings.tts_provider == "inworld":
+        return InworldTTS(settings)
     raise HTTPException(
         status_code=503,
         detail=t("errors.tts_provider_unsupported", locale, provider=settings.tts_provider),
@@ -27,6 +29,7 @@ async def synthesize(
     locale: LocaleDep,
     text: str = Query(..., min_length=1),
     voice: str | None = Query(None),
+    lang: str | None = Query(None, max_length=8),
 ) -> Response:
     if len(text) > settings.tts_max_text_chars:
         raise HTTPException(
@@ -36,12 +39,14 @@ async def synthesize(
 
     try:
         provider = _build_provider(settings, locale)
-    except ElevenLabsTTSError as e:
+    except TTSError as e:
         raise HTTPException(status_code=503, detail=str(e)) from e
 
     try:
-        audio, mime, hit = await get_or_synthesize(db, provider, text=text, voice_id=voice)
-    except ElevenLabsTTSError as e:
+        audio, mime, hit = await get_or_synthesize(
+            db, provider, text=text, voice_id=voice, lang=lang
+        )
+    except TTSError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
 
     return Response(
@@ -58,6 +63,8 @@ async def synthesize(
 async def tts_health() -> dict[str, str]:
     settings = get_settings()
     if settings.tts_provider == "elevenlabs" and not settings.elevenlabs_api_key:
+        return {"status": "missing_key", "provider": settings.tts_provider}
+    if settings.tts_provider == "inworld" and not settings.inworld_api_key:
         return {"status": "missing_key", "provider": settings.tts_provider}
     return {"status": "ok", "provider": settings.tts_provider}
 

@@ -23,10 +23,16 @@ async def get_or_synthesize(
     *,
     text: str,
     voice_id: str | None = None,
+    lang: str | None = None,
 ) -> tuple[bytes, str, bool]:
-    """Returns (audio_bytes, mime_type, was_cache_hit)."""
+    """Returns (audio_bytes, mime_type, was_cache_hit).
+
+    `lang` (ISO 639-1) lets the provider pick a language-native voice;
+    explicit `voice_id` always wins. The resolved voice goes into the cache
+    hash, so per-language voices land in separate cache entries.
+    """
     text = text.strip()
-    voice = voice_id or tts.default_voice_id
+    voice = voice_id or tts.voice_for_lang(lang)
     text_hash = _hash_request(provider=tts.name, model=tts.model, voice_id=voice, text=text)
 
     cached = (

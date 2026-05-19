@@ -32,11 +32,58 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
 
     tts_provider: str = "elevenlabs"
+    # ElevenLabs voices are technically multilingual but each has a native
+    # tongue; the voice that nails German with no accent may butcher Spanish.
+    # `elevenlabs_voice_id` is the fallback; per-language overrides win when
+    # set. Pick voices at https://elevenlabs.io/app/voice-library.
     elevenlabs_api_key: str | None = None
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"
+    elevenlabs_voice_id_de: str = ""
+    elevenlabs_voice_id_es: str = ""
+    elevenlabs_voice_id_fr: str = ""
+    elevenlabs_voice_id_ja: str = ""
+    elevenlabs_voice_id_pt: str = ""
+    elevenlabs_voice_id_en: str = ""
     elevenlabs_model: str = "eleven_turbo_v2_5"
+    # Inworld TTS — alternative provider. Flip TTS_PROVIDER=inworld to use.
+    # The API key from Inworld Portal is already base64-encoded; paste as-is.
+    # Inworld voices are language-locked (unlike ElevenLabs), so the per-lang
+    # mapping matters even more here.
+    inworld_api_key: str | None = None
+    inworld_voice_id: str = ""
+    inworld_voice_id_de: str = ""
+    inworld_voice_id_es: str = ""
+    inworld_voice_id_fr: str = ""
+    inworld_voice_id_ja: str = ""
+    inworld_voice_id_pt: str = ""
+    inworld_voice_id_en: str = ""
+    inworld_model: str = "inworld-tts-1.5-mini"
+    inworld_audio_encoding: str = "MP3"
+    inworld_sample_rate_hz: int = 24000
     tts_request_timeout_seconds: float = 30.0
     tts_max_text_chars: int = 4000
+
+    @property
+    def elevenlabs_voices_by_lang(self) -> dict[str, str]:
+        return {
+            "de": self.elevenlabs_voice_id_de,
+            "es": self.elevenlabs_voice_id_es,
+            "fr": self.elevenlabs_voice_id_fr,
+            "ja": self.elevenlabs_voice_id_ja,
+            "pt": self.elevenlabs_voice_id_pt,
+            "en": self.elevenlabs_voice_id_en,
+        }
+
+    @property
+    def inworld_voices_by_lang(self) -> dict[str, str]:
+        return {
+            "de": self.inworld_voice_id_de,
+            "es": self.inworld_voice_id_es,
+            "fr": self.inworld_voice_id_fr,
+            "ja": self.inworld_voice_id_ja,
+            "pt": self.inworld_voice_id_pt,
+            "en": self.inworld_voice_id_en,
+        }
 
     default_user_display_name: str = "Samuel"
     default_user_level: str = "A0"
