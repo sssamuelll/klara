@@ -31,7 +31,7 @@ import type {
   Story,
   StoryWord,
 } from "../api/types";
-import type { ScoreBand } from "../lib/pronunciation";
+import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
 import { speak, stop as stopTTS } from "../lib/tts";
 import { useMicScorer } from "../lib/useMicScorer";
 
@@ -185,6 +185,7 @@ function Quiz({ items, story, onComplete }: QuizProps): JSX.Element {
         {q.type === "mc" && (
           <MCQuestion
             q={q}
+            story={story}
             onAnswered={onAnswered}
             onNext={onNext}
             isLast={isLast}
@@ -239,33 +240,143 @@ function QuizHero({ idx, total }: { idx: number; total: number }): JSX.Element {
 }
 
 /* ============================================================
-   MC question — tap-to-pick (voice-pick deferred to follow-up).
+   MC question — voice-pick (mic transcribes + fuzzy-matches the option)
+   with tap as accessibility fallback.
    ============================================================ */
 
 interface MCProps {
   q: MCQuizItem;
+  story: Story;
   onAnswered: (r: Omit<QuizResult, "index" | "qType">) => void;
   onNext: () => void;
   isLast: boolean;
 }
 
-function MCQuestion({ q, onAnswered, onNext, isLast }: MCProps): JSX.Element {
+type MCMicPhase = "idle" | "recording" | "resolving" | "no_match";
+
+function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Element {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [micPhase, setMicPhase] = useState<MCMicPhase>("idle");
+  const [lastTranscript, setLastTranscript] = useState<string>("");
+  const recorderRef = useRef<MicRecorder | null>(null);
+  const recAnalyserRef = useRef<AnalyserNode | null>(null);
+  const recBarsRef = useRef<HTMLSpanElement[]>([]);
   const answered = picked !== null;
 
   const onTap = (i: number) => {
-    if (answered) return;
+    if (answered || micPhase !== "idle") return;
     setPicked(i);
     onAnswered({ correct: i === q.correct, revealed: false });
   };
   const onReveal = () => {
     if (answered) return;
+    cancelMic();
     setPicked(q.correct);
     setRevealed(true);
     onAnswered({ correct: false, revealed: true });
   };
+
+  function cancelMic() {
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    recAnalyserRef.current = null;
+    setMicPhase("idle");
+  }
+
+  async function startMic() {
+    if (micPhase !== "idle" && micPhase !== "no_match") return;
+    setLastTranscript("");
+    try {
+      const rec = await startMicRecording();
+      recorderRef.current = rec;
+      recAnalyserRef.current = rec.analyser;
+      setMicPhase("recording");
+    } catch {
+      setMicPhase("idle");
+    }
+  }
+
+  async function stopMic() {
+    const rec = recorderRef.current;
+    if (rec === null || micPhase !== "recording") return;
+    recorderRef.current = null;
+    recAnalyserRef.current = null;
+    setMicPhase("resolving");
+    try {
+      const blob = await rec.stop();
+      if (!blob || blob.size === 0) {
+        setMicPhase("no_match");
+        return;
+      }
+      const resp = await api.resolveMC(
+        story.id,
+        blob,
+        q.options,
+        story.target_language,
+      );
+      setLastTranscript(resp.transcript);
+      if (resp.picked_index !== null) {
+        setPicked(resp.picked_index);
+        onAnswered({ correct: resp.picked_index === q.correct, revealed: false });
+      } else {
+        setMicPhase("no_match");
+      }
+    } catch {
+      setMicPhase("no_match");
+    } finally {
+      // The "no_match" branch leaves micPhase as-is; the success branch
+      // already set picked which hides the mic UI. Only the resolving →
+      // happy-path needs idle reset, but setting it here unconditionally
+      // is harmless because answered hides this whole block.
+      if (recorderRef.current === null && !answered) {
+        // Leave phase alone — either we picked (UI hides) or no_match (shown).
+      }
+    }
+  }
+
+  function tryAgain() {
+    setMicPhase("idle");
+    setLastTranscript("");
+  }
+
+  // Live RMS bars while recording
+  useEffect(() => {
+    if (micPhase !== "recording" || !recAnalyserRef.current) return;
+    const analyser = recAnalyserRef.current;
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+    let raf = 0;
+    const tick = () => {
+      analyser.getByteFrequencyData(buf);
+      for (let i = 0; i < 16; i++) {
+        const a = buf[i * 2] ?? 0;
+        const b = buf[i * 2 + 1] ?? 0;
+        const v = Math.max(0.05, ((a + b) / 2) / 255);
+        const el = recBarsRef.current[i];
+        if (el) el.style.height = `${(v * 100).toFixed(0)}%`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [micPhase]);
+
+  // Auto-stop after 6s in case the user forgets
+  useEffect(() => {
+    if (micPhase !== "recording") return;
+    const id = window.setTimeout(() => void stopMic(), 6000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [micPhase]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      recorderRef.current?.cancel();
+      recorderRef.current = null;
+    };
+  }, []);
 
   return (
     <article className="qcard" data-type="mc">
@@ -291,7 +402,7 @@ function MCQuestion({ q, onAnswered, onNext, isLast }: MCProps): JSX.Element {
                   className="qcard__opt"
                   data-state={state}
                   onClick={() => onTap(i)}
-                  disabled={answered}
+                  disabled={answered || micPhase === "recording" || micPhase === "resolving"}
                 >
                   <span className="qcard__opt-letter">
                     {String.fromCharCode(65 + i)}
@@ -307,12 +418,61 @@ function MCQuestion({ q, onAnswered, onNext, isLast }: MCProps): JSX.Element {
         </ul>
       </div>
       <footer className="qcard__foot">
-        {!answered && (
+        {!answered && micPhase === "idle" && (
           <div className="qcard__voicebar">
-            <span className="qcard__hint">{t("story.finish.quiz.mc.pick")}</span>
+            <span className="qcard__hint">{t("story.finish.quiz.mc.readAloud")}</span>
             <div className="qcard__actions">
               <button type="button" className="qcard__ghost" onClick={onReveal}>
                 {t("story.finish.quiz.reveal")}
+              </button>
+              <button type="button" className="qcard__mic" onClick={() => void startMic()}>
+                <span className="fin-mic" />
+                <span>{t("story.finish.quiz.yourTurn")}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {micPhase === "recording" && (
+          <div className="qcard__rec" role="status" aria-live="polite" onClick={() => void stopMic()} style={{ cursor: "pointer" }}>
+            <span className="qcard__rec-dot" />
+            <span className="qcard__rec-bars" aria-hidden="true">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="qcard__rec-bar"
+                  ref={(el) => {
+                    if (el) recBarsRef.current[i] = el;
+                  }}
+                  style={{ height: "30%" }}
+                />
+              ))}
+            </span>
+            <span className="qcard__rec-lbl">{t("story.sentence.listening")}</span>
+          </div>
+        )}
+
+        {micPhase === "resolving" && (
+          <div className="qcard__eval" role="status" aria-live="polite">
+            <span className="qcard__eval-spin" aria-hidden="true" />
+            <span className="qcard__eval-lbl">{t("story.sentence.evaluating")}</span>
+          </div>
+        )}
+
+        {micPhase === "no_match" && (
+          <div className="qcard__voicebar">
+            <span className="qcard__hint">
+              {lastTranscript
+                ? t("story.finish.quiz.mc.heardButNoMatch", { transcript: lastTranscript })
+                : t("story.finish.quiz.mc.noSpeech")}
+            </span>
+            <div className="qcard__actions">
+              <button type="button" className="qcard__ghost" onClick={onReveal}>
+                {t("story.finish.quiz.reveal")}
+              </button>
+              <button type="button" className="qcard__mic" onClick={tryAgain}>
+                <span className="fin-mic" />
+                <span>{t("story.finish.quiz.mc.tryAgain")}</span>
               </button>
             </div>
           </div>

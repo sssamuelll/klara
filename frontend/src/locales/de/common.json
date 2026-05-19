@@ -186,7 +186,10 @@
         "title": "Bevor wir Schluss machen, vier Fragen.",
         "sub": "Eine für das Verständnis, eine für die Produktion. Wenn du sie nicht hast, kannst du die Antwort aufdecken.",
         "mc": {
-          "pick": "Wähle die richtige Antwort"
+          "readAloud": "Lies sie laut vor oder tippe sie an",
+          "heardButNoMatch": "Ich habe «{{transcript}}» gehört, aber das passt zu keiner Option.",
+          "noSpeech": "Ich habe nichts gehört. Versuchen wir’s nochmal.",
+          "tryAgain": "Nochmal"
         },
         "cloze": {
           "klaraSays": "Klara sagt:",

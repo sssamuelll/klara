@@ -1,14 +1,32 @@
+import json
 from datetime import UTC, datetime
+from pathlib import Path
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+    status,
+)
 from sqlalchemy import select
+from starlette.concurrency import run_in_threadpool
 
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import t
+from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.models import PronunciationAttempt, QuizAttempt, Story, UserCard, VocabItem
+from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
+from klara.pronunciation.azure_client import AzureSpeechError
+from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
     InsightOut,
+    MCResolveOut,
     PronunciationAttemptIn,
     PronunciationAttemptOut,
     QuizAttemptIn,
@@ -30,6 +48,7 @@ from klara.schemas.story import (
 from klara.services.finish_lessons import ensure_insight, ensure_quiz_items
 from klara.services.story_gen import generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
+from klara.services.voice_mc import resolve_option
 
 router = APIRouter(prefix="/stories", tags=["stories"])
 
@@ -324,3 +343,104 @@ async def record_quiz_attempt(
         was_revealed=row.was_revealed,
         attempted_at=row.attempted_at,
     )
+
+
+def _resolve_bcp47(raw: str) -> str:
+    if "-" in raw:
+        return raw
+    if raw in SUPPORTED_LANGUAGES:
+        return speech_locale(raw)
+    return raw
+
+
+MCAudio = Annotated[UploadFile, File(description="User audio reading the option.")]
+MCOptions = Annotated[str, Form(description="JSON-encoded list of option strings.")]
+MCLang = Annotated[str, Form(description="BCP-47 or short code.")]
+
+
+@router.post("/{story_id}/quiz/resolve-mc", response_model=MCResolveOut)
+async def resolve_mc(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    settings: SettingsDep,
+    locale: LocaleDep,
+    audio: MCAudio,
+    options: MCOptions,
+    language: MCLang = "de-DE",
+) -> MCResolveOut:
+    """Transcribe user audio + fuzzy-match against MC options.
+
+    `picked_index` is null when no option matches well enough; the UI
+    asks the user to repeat. The transcript is always returned so the
+    UI can surface "heard: «...»" if useful.
+    """
+    await _load_or_404(db, story_id, user.id, locale)
+
+    if not settings.azure_speech_configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=t("pron.unavailable", locale),
+        )
+
+    try:
+        opts = json.loads(options)
+        if not isinstance(opts, list) or not all(isinstance(o, str) for o in opts):
+            raise ValueError
+        if not opts or len(opts) > 8:
+            raise ValueError
+    except (ValueError, json.JSONDecodeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="options must be a JSON array of 1-8 strings",
+        ) from e
+
+    audio_bytes = await audio.read()
+    if not audio_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=t("pron.audio_empty", locale),
+        )
+    if len(audio_bytes) > settings.pronunciation_max_audio_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=t("pron.audio_too_large", locale),
+        )
+
+    bcp47 = _resolve_bcp47(language)
+
+    try:
+        wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
+    except TranscodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=t("pron.audio_undecodable", locale),
+        ) from None
+    except FfmpegMissingError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=t("pron.unavailable", locale),
+        ) from None
+
+    try:
+        transcript = await run_in_threadpool(
+            transcribe,
+            wav_path,
+            bcp47,
+            azure_key=settings.azure_speech_key or "",
+            azure_region=settings.azure_speech_region,
+        )
+    except AzureSpeechError as e:
+        if e.recoverable:
+            # No speech detected — return empty transcript so the UI prompts
+            # a retry without failing the request.
+            return MCResolveOut(transcript="", picked_index=None, option_scores=[])
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=t("pron.upstream_error", locale),
+        ) from e
+    finally:
+        wav_path.unlink(missing_ok=True)
+
+    picked, scores = resolve_option(transcript, opts)
+    return MCResolveOut(transcript=transcript, picked_index=picked, option_scores=scores)

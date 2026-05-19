@@ -225,6 +225,12 @@ export interface ScheduleResponse {
   entries: ScheduleEntry[];
 }
 
+export interface MCResolveResponse {
+  transcript: string;
+  picked_index: number | null;
+  option_scores: number[];
+}
+
 export interface UserUpdate {
   display_name?: string;
   level?: CEFRLevel;
