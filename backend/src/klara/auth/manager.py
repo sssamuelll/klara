@@ -33,20 +33,6 @@ def _locale_from_request(request: Request | None) -> str:
     return locale if locale in SUPPORTED else DEFAULT_LOCALE
 
 
-def _allowlist_blocked(settings: Settings, email: str) -> bool:
-    allowed = settings.allowed_signup_email_set
-    if not allowed:
-        return False
-    return email.strip().lower() not in allowed
-
-
-def _allowlist_http_exception(locale: str) -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail=t("auth.allowlist_blocked", locale),
-    )
-
-
 class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     password_helper = _password_helper
 
@@ -115,11 +101,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         email = user_create.email.strip().lower()
         locale = _locale_from_request(request)
 
-        # Allowlist stays as defense-in-depth if the admin configured one;
-        # otherwise the invite token is the only gate.
-        if _allowlist_blocked(self.settings, email):
-            raise _allowlist_http_exception(locale)
-
         existing_user = await self.user_db.get_by_email(email)
         if existing_user is not None:
             raise exceptions.UserAlreadyExists()
@@ -175,13 +156,12 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         account_email = account_email.strip().lower()
         locale = _locale_from_request(request)
 
-        # If we already know this oauth account, let the parent handle the
-        # update path — no allowlist re-check on every login.
+        # Known oauth account → parent handles the login/update path.
+        # Unknown oauth account → only the bootstrap owner or someone who
+        # already has a user row (via invite + password signup) may proceed.
         try:
             await self.get_by_oauth_account(oauth_name, account_id)
         except exceptions.UserNotExists:
-            if _allowlist_blocked(self.settings, account_email):
-                raise _allowlist_http_exception(locale) from None
             adopted = await self._adopt_legacy_if_owner_oauth(
                 account_email,
                 oauth_name,

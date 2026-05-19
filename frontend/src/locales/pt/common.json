@@ -322,7 +322,6 @@
         "body": "O acesso ao Klara é apenas por convite. Pede um link ao administrador e abre-o aqui."
       },
       "error": {
-        "allowlist": "Este email não está autorizado a registar-se.",
         "passwordMismatch": "As palavras-passe não coincidem.",
         "inviteInvalid": "Este link de convite não é válido.",
         "inviteExpired": "Este link de convite expirou.",
@@ -363,7 +362,6 @@
   "errors": {
     "unauthorized": "Tens de iniciar sessão.",
     "session_expired": "A tua sessão expirou. Inicia sessão novamente.",
-    "not_in_allowlist": "Este email não está autorizado.",
     "invalid_credentials": "Email ou palavra-passe inválidos.",
     "email_not_verified": "Confirma o teu email antes de continuar."
   }

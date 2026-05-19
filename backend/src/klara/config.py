@@ -49,7 +49,6 @@ class Settings(BaseSettings):
     auth_jwt_secret: str = "dev-secret-do-not-use-in-prod-change-me-32b"
     auth_cookie_name: str = "klara_session"
     auth_cookie_max_age: int = 60 * 60 * 24 * 30  # 30 days
-    allowed_signup_emails: str = ""
     initial_owner_email: str | None = None
     google_oauth_client_id: str | None = None
     google_oauth_client_secret: str | None = None
@@ -82,10 +81,6 @@ class Settings(BaseSettings):
     @property
     def is_dev(self) -> bool:
         return self.app_env == "development"
-
-    @property
-    def allowed_signup_email_set(self) -> set[str]:
-        return {e.strip().lower() for e in self.allowed_signup_emails.split(",") if e.strip()}
 
     @property
     def initial_owner_email_normalized(self) -> str | None:

@@ -34,10 +34,7 @@ async def _register_owner(client, app_settings, db_session):
     )
     await db_session.commit()
 
-    app_settings(
-        ALLOWED_SIGNUP_EMAILS="",
-        INITIAL_OWNER_EMAIL="owner@klara.app",
-    )
+    app_settings(INITIAL_OWNER_EMAIL="owner@klara.app")
     r = await client.post(
         "/api/v1/auth/register",
         json={"email": "owner@klara.app", "password": "hunter2hunter2"},
@@ -208,7 +205,7 @@ async def test_expired_invite_rejected(client, app_settings, db_session):
 @pytest.mark.asyncio
 async def test_non_admin_cannot_create_invite(client, app_settings, db_session, seed_invite):
     """Non-superuser hitting the admin route gets 403."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     token = await seed_invite(email=None)
     await client.post(
         "/api/v1/auth/register",
