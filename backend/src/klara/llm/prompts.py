@@ -14,6 +14,11 @@ Reglas absolutas:
 5. Las palabras nuevas (los lemas) van marcadas EXACTAMENTE como aparecen en `target_words`.
 6. {gender_rule}
 7. Las preguntas de comprensión: 1 literal (qué pasó), 1 inferencial (por qué / qué piensa el personaje).
+8. El quiz final tiene 4 items y se intercala para "interleaving" (probado en retention). Orden estricto:
+   item 0 = mc · comprensión inferencial (¿por qué? ¿qué piensa?)
+   item 1 = cloze · una frase de la historia con UNA palabra clave en blanco (un target word o un lema importante)
+   item 2 = shadow · una frase corta de la historia para que el estudiante la repita
+   item 3 = cloze · otra frase distinta de la historia con otra palabra en blanco
 
 Devuelve SOLO JSON válido con este esquema, sin texto extra ni markdown:
 {{
@@ -38,7 +43,46 @@ Devuelve SOLO JSON válido con este esquema, sin texto extra ni markdown:
       "options_target": ["opción A", "opción B", "opción C"],
       "correct_index": 0
     }}
-  ]
+  ],
+  "quiz_items": [
+    {{
+      "type": "mc",
+      "cap": "Comprensión",
+      "prompt": "pregunta en {native_label} (inferencial)",
+      "options": ["opción A en {target_label}", "opción B", "opción C"],
+      "correct": 0,
+      "after": "explicación corta en {native_label} de POR QUÉ es la respuesta correcta"
+    }},
+    {{
+      "type": "cloze",
+      "cap": "Vocabulario · habla",
+      "sentence_pre": "principio de la frase en {target_label} antes del blanco",
+      "sentence_post": "final de la frase después del blanco (puede ser vacío)",
+      "answer": "palabra exacta que va en el blanco (en {target_label})",
+      "en": "traducción de la frase completa al {native_label}",
+      "hint": "pista corta en {native_label} (e.g. 'm. · transporte público urbano')"
+    }},
+    {{
+      "type": "shadow",
+      "cap": "Repite con Klara",
+      "sentence": "frase corta en {target_label} para repetir",
+      "en": "traducción al {native_label}",
+      "after": "una línea en {native_label} sobre qué palabra / patrón aprende el estudiante con esta frase"
+    }},
+    {{
+      "type": "cloze",
+      "cap": "Vocabulario · habla",
+      "sentence_pre": "...",
+      "sentence_post": "...",
+      "answer": "...",
+      "en": "...",
+      "hint": "..."
+    }}
+  ],
+  "insight": {{
+    "title": "título breve en {native_label} sobre UN aspecto lingüístico específico que aparece en esta historia (e.g. una tilde, un caso, una preposición, una conjugación). NO genérico.",
+    "body": "párrafo (60-90 palabras) en {native_label} explicando el patrón con ejemplos extraídos directamente de la historia. Suena como una nota al margen de profesora, no como un libro de gramática."
+  }}
 }}"""
 
 

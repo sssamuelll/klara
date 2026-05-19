@@ -150,6 +150,62 @@ export interface PhoneticHintsResponse {
   hints: Record<string, string>;
 }
 
+// ---- Finish quiz + insight + attempts ----------------------------------
+
+export interface MCQuizItem {
+  type: "mc";
+  cap: string;
+  prompt: string;
+  options: string[];
+  correct: number;
+  after?: string | null;
+}
+
+export interface ClozeQuizItem {
+  type: "cloze";
+  cap: string;
+  sentence_pre: string;
+  sentence_post: string;
+  answer: string;
+  en?: string | null;
+  hint?: string | null;
+}
+
+export interface ShadowQuizItem {
+  type: "shadow";
+  cap: string;
+  sentence: string;
+  en?: string | null;
+  after?: string | null;
+}
+
+export type QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem;
+
+export interface QuizResponse {
+  items: QuizItem[];
+}
+
+export interface InsightResponse {
+  title: string;
+  body: string;
+}
+
+export interface PronunciationAttemptIn {
+  sentence_index: number;
+  reference_text: string;
+  recognized_text?: string | null;
+  overall_score: number;
+  word_bands: Record<string, "good" | "ok" | "bad">;
+}
+
+export interface QuizAttemptIn {
+  question_index: number;
+  question_type: "mc" | "cloze" | "shadow";
+  was_correct: boolean;
+  was_revealed?: boolean;
+  detail?: Record<string, unknown> | null;
+}
+
 export interface UserUpdate {
   display_name?: string;
   level?: CEFRLevel;

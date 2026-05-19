@@ -1,10 +1,14 @@
 import i18n from "../i18n";
 import type {
   CardOut,
+  InsightResponse,
   Invitation,
   InvitationCreate,
   PhoneticHintsResponse,
+  PronunciationAttemptIn,
   PronunciationScoreResponse,
+  QuizAttemptIn,
+  QuizResponse,
   Story,
   StoryListItem,
   User,
@@ -236,5 +240,24 @@ export const api = {
     request<PhoneticHintsResponse>("/pronunciation/phonetic-hints", {
       method: "POST",
       body: JSON.stringify({ words, language }),
+    }),
+
+  // --- finish quiz + insight + attempts ---
+  getStoryQuiz: (storyId: string) =>
+    request<QuizResponse>(`/stories/${storyId}/quiz`),
+
+  getStoryInsight: (storyId: string) =>
+    request<InsightResponse | null>(`/stories/${storyId}/insight`),
+
+  recordPronunciationAttempt: (storyId: string, payload: PronunciationAttemptIn) =>
+    request<void>(`/stories/${storyId}/pronunciation/attempts`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  recordQuizAttempt: (storyId: string, payload: QuizAttemptIn) =>
+    request<void>(`/stories/${storyId}/quiz/attempts`, {
+      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };

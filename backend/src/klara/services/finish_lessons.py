@@ -1,0 +1,213 @@
+"""Lazy backfill of quiz_items + insight for stories generated before
+those fields existed (or where the LLM trimmed them).
+
+Both are persisted on the Story so re-visits are free. The Finish flow
+calls into these once per (user, story); the first call pays the LLM
+latency, the rest are DB lookups.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+
+import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from klara.i18n import language_label
+from klara.llm.base import LLMClient, Message
+from klara.models import Story
+
+log = structlog.get_logger(__name__)
+
+
+_QUIZ_PROMPT = """Eres Klara, profesora de {target_label}. El estudiante terminó esta historia y necesita un quiz de 4 preguntas interleaved para fijar lo aprendido.
+
+Historia (en {target_label}):
+{story_text}
+
+Palabras nuevas marcadas en la historia:
+{lemmas}
+
+Genera el quiz siguiendo EXACTAMENTE este orden y esquema (los 4 items, en este orden):
+
+item 0 = mc (comprensión inferencial — ¿por qué? ¿qué piensa el personaje?)
+item 1 = cloze (frase real de la historia, una palabra clave en blanco)
+item 2 = shadow (frase corta de la historia para repetir)
+item 3 = cloze (otra frase distinta, otra palabra en blanco)
+
+Las claves de los items deben estar en {native_label} EXCEPTO los textos en {target_label} (frases, opciones, answers).
+
+Devuelve SOLO este JSON, sin markdown ni texto extra:
+{{
+  "quiz_items": [
+    {{
+      "type": "mc",
+      "cap": "Comprensión",
+      "prompt": "pregunta en {native_label}",
+      "options": ["opción A en {target_label}", "opción B", "opción C"],
+      "correct": 0,
+      "after": "explicación corta en {native_label} de por qué es correcta"
+    }},
+    {{
+      "type": "cloze",
+      "cap": "Vocabulario · habla",
+      "sentence_pre": "principio en {target_label}",
+      "sentence_post": "final en {target_label} (puede ser vacío)",
+      "answer": "palabra en {target_label}",
+      "en": "frase completa traducida al {native_label}",
+      "hint": "pista corta en {native_label}"
+    }},
+    {{
+      "type": "shadow",
+      "cap": "Repite con Klara",
+      "sentence": "frase corta en {target_label}",
+      "en": "traducción al {native_label}",
+      "after": "una línea en {native_label} sobre qué se aprende"
+    }},
+    {{
+      "type": "cloze",
+      "cap": "Vocabulario · habla",
+      "sentence_pre": "...",
+      "sentence_post": "...",
+      "answer": "...",
+      "en": "...",
+      "hint": "..."
+    }}
+  ]
+}}"""
+
+
+_INSIGHT_PROMPT = """Eres Klara, profesora de {target_label}. El estudiante acaba de terminar esta historia. Selecciona UN aspecto lingüístico concreto que aparezca en ella y escríbele una nota al margen (NO un libro de gramática).
+
+Historia (en {target_label}):
+{story_text}
+
+Palabras nuevas:
+{lemmas}
+
+Reglas:
+- El título es breve (máx 60 caracteres) en {native_label}, e.g. "La tilde de «autobús»", "Cuándo va «se»", "El género de «mano»".
+- El cuerpo es UN párrafo de 60-90 palabras en {native_label}.
+- Usa ejemplos EXTRAÍDOS LITERALMENTE de la historia.
+- Tono: profesora cálida, no formal. Sin "en este post veremos...". Sin viñetas. Sin emojis.
+- Foco UNO solo: una tilde, un caso, una conjugación, una preposición — no panorámico.
+
+Devuelve SOLO este JSON, sin markdown ni texto extra:
+{{
+  "title": "título breve en {native_label}",
+  "body": "párrafo en {native_label}"
+}}"""
+
+
+def _story_text_for_prompt(story: Story) -> str:
+    sentences = (story.content or {}).get("sentences") or []
+    return "\n".join(s.get("target", "") for s in sentences if s.get("target"))
+
+
+def _lemmas_for_prompt(story: Story, lemmas: list[str]) -> str:
+    if not lemmas:
+        return "(ninguna marcada)"
+    return ", ".join(lemmas)
+
+
+def _extract_json(text: str) -> dict:
+    text = text.strip()
+    fence = re.match(r"^```(?:json)?\s*(.*?)\s*```$", text, re.DOTALL)
+    if fence:
+        text = fence.group(1).strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        raise ValueError(f"No JSON object in LLM response: {text[:200]}")
+    return json.loads(text[start : end + 1])
+
+
+async def ensure_quiz_items(
+    db: AsyncSession,
+    story: Story,
+    llm: LLMClient,
+    *,
+    lemmas: list[str],
+) -> list[dict] | None:
+    """Return the story's quiz_items, generating + persisting them once if missing."""
+    if story.quiz_items:
+        return story.quiz_items
+
+    target_label = language_label(story.target_language)
+    native_label = language_label(story.native_language)
+    prompt = _QUIZ_PROMPT.format(
+        target_label=target_label,
+        native_label=native_label,
+        story_text=_story_text_for_prompt(story),
+        lemmas=_lemmas_for_prompt(story, lemmas),
+    )
+
+    try:
+        resp = await llm.complete(
+            messages=[Message(role="user", content=prompt)],
+            max_tokens=1400,
+            temperature=0.7,
+            response_format={"type": "json_object"},
+        )
+        data = _extract_json(resp.content)
+        items = data.get("quiz_items")
+        if not isinstance(items, list) or not items:
+            log.warning("finish.quiz.bad_shape", story_id=str(story.id))
+            return None
+    except Exception as e:
+        log.warning("finish.quiz.gen_failed", story_id=str(story.id), error=str(e))
+        return None
+
+    story.quiz_items = items
+    await db.commit()
+    await db.refresh(story)
+    return story.quiz_items
+
+
+async def ensure_insight(
+    db: AsyncSession,
+    story: Story,
+    llm: LLMClient,
+    *,
+    lemmas: list[str],
+) -> tuple[str, str] | None:
+    """Return (title, body), generating + persisting once if missing."""
+    if story.insight_title and story.insight_body:
+        return story.insight_title, story.insight_body
+
+    target_label = language_label(story.target_language)
+    native_label = language_label(story.native_language)
+    prompt = _INSIGHT_PROMPT.format(
+        target_label=target_label,
+        native_label=native_label,
+        story_text=_story_text_for_prompt(story),
+        lemmas=_lemmas_for_prompt(story, lemmas),
+    )
+
+    try:
+        resp = await llm.complete(
+            messages=[Message(role="user", content=prompt)],
+            max_tokens=600,
+            temperature=0.6,
+            response_format={"type": "json_object"},
+        )
+        data = _extract_json(resp.content)
+        title = data.get("title")
+        body = data.get("body")
+        if not isinstance(title, str) or not isinstance(body, str):
+            log.warning("finish.insight.bad_shape", story_id=str(story.id))
+            return None
+        title = title.strip()[:200]
+        body = body.strip()[:2000]
+        if not title or not body:
+            return None
+    except Exception as e:
+        log.warning("finish.insight.gen_failed", story_id=str(story.id), error=str(e))
+        return None
+
+    story.insight_title = title
+    story.insight_body = body
+    await db.commit()
+    await db.refresh(story)
+    return title, body

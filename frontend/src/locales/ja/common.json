@@ -180,6 +180,68 @@
         "another": "別の物語",
         "reread": "もう一度読む"
       }
+    },
+    "finish": {
+      "quiz": {
+        "title": "終わる前に、さいごに4問。",
+        "sub": "理解を固めるための問と、生産するための問。わからなければ答えを見られます。",
+        "mc": {
+          "pick": "正しい答えを選んでください"
+        },
+        "cloze": {
+          "klaraSays": "Klaraが言う：",
+          "nailed": "完璧。ヒントなしで言えました。",
+          "close": "「{{answer}}」でした。もう一度後で試しましょう。",
+          "wasRevealed": "「{{answer}}」でした。キューの先頭にします。"
+        },
+        "shadow": {
+          "play": "再生",
+          "replay": "もう一度再生",
+          "tapToHear": "タップして聞く",
+          "listenFirst": "まずKlaraを聞いてください",
+          "repeat": "聞こえた通りに繰り返して",
+          "repeatBtn": "繰り返す",
+          "verdict": {
+            "full": "全部明瞭。",
+            "most": "ほとんど明瞭。",
+            "half": "半分くらい。",
+            "retry": "他を試しましょう。"
+          },
+          "legend": {
+            "clear": "明瞭",
+            "ok": "近い",
+            "bad": "要確認"
+          }
+        },
+        "reveal": "答えを見る",
+        "yourTurn": "あなたの番",
+        "next": "次へ",
+        "toSummary": "まとめを見る"
+      },
+      "summary": {
+        "cap": "レッスン終了",
+        "sentencesPronounced": "文を発音しました",
+        "clear": "明瞭",
+        "questions": "問",
+        "backToQuiz": "回答を見る",
+        "souvenir": {
+          "title": "残る一行",
+          "sub": "この物語の中で、これだけで成り立ちます。"
+        },
+        "schedule": {
+          "title": "復習キュー",
+          "count_one": "{{count}} 語",
+          "count_other": "{{count}} 語",
+          "struggled": "今日詰まった",
+          "nextSession": "次のセッション",
+          "later": "あとで",
+          "added": "復習中"
+        },
+        "insight": {
+          "title": "気づきポイント",
+          "unavailable": "Klaraは今回明確なパターンを見つけませんでした。"
+        }
+      }
     }
   },
   "wpop": {
