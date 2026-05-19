@@ -88,7 +88,7 @@ async def create_story(
     texts = collect_story_texts(result.story.content, target_words_dicts)
     if serialized.title:
         texts = [serialized.title] + [t for t in texts if t != serialized.title]
-    background.add_task(precache_texts, settings, texts)
+    background.add_task(precache_texts, settings, texts, result.story.target_language)
     return serialized
 
 

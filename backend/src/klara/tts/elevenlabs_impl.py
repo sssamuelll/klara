@@ -2,12 +2,12 @@ import httpx
 import structlog
 
 from klara.config import Settings
-from klara.tts.base import TTSResult
+from klara.tts.base import TTSError, TTSResult
 
 log = structlog.get_logger(__name__)
 
 
-class ElevenLabsTTSError(RuntimeError):
+class ElevenLabsTTSError(TTSError):
     pass
 
 
@@ -21,6 +21,9 @@ class ElevenLabsTTS:
         self._timeout = settings.tts_request_timeout_seconds
         self._model = settings.elevenlabs_model
         self._default_voice = settings.elevenlabs_voice_id
+        # Only keep entries with a configured voice; an empty string would
+        # masquerade as a real voice_id and 404 against the API.
+        self._voices_by_lang = {k: v for k, v in settings.elevenlabs_voices_by_lang.items() if v}
 
     @property
     def name(self) -> str:
@@ -32,6 +35,13 @@ class ElevenLabsTTS:
 
     @property
     def default_voice_id(self) -> str:
+        return self._default_voice
+
+    def voice_for_lang(self, lang: str | None) -> str:
+        if lang:
+            specific = self._voices_by_lang.get(lang.lower())
+            if specific:
+                return specific
         return self._default_voice
 
     async def synthesize(self, text: str, voice_id: str | None = None) -> TTSResult:

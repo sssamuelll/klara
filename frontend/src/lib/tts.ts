@@ -24,8 +24,9 @@ function set(patch: Partial<TTSState>) {
   emit();
 }
 
-function ttsUrl(text: string): string {
-  return `/api/v1/tts?text=${encodeURIComponent(text)}`;
+function ttsUrl(text: string, lang?: string): string {
+  const base = `/api/v1/tts?text=${encodeURIComponent(text)}`;
+  return lang ? `${base}&lang=${encodeURIComponent(lang)}` : base;
 }
 
 export function getTTSState(): TTSState {
@@ -49,7 +50,7 @@ export function speak(text: string, language?: string, opts?: { rate?: number })
   stop();
   if (!text.trim()) return;
   activeLocale = language ? speechLocale(language) : "de-DE";
-  const a = new Audio(ttsUrl(text));
+  const a = new Audio(ttsUrl(text, language));
   a.preload = "auto";
   const rate = opts?.rate ?? 1;
   if (rate !== 1) {

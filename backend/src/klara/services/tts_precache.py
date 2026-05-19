@@ -5,8 +5,7 @@ import structlog
 from klara.config import Settings
 from klara.db import get_sessionmaker
 from klara.services.tts_service import get_or_synthesize
-from klara.tts.base import TTSProvider
-from klara.tts.elevenlabs_impl import ElevenLabsTTS, ElevenLabsTTSError
+from klara.tts import ElevenLabsTTS, InworldTTS, TTSError, TTSProvider
 
 log = structlog.get_logger(__name__)
 
@@ -14,12 +13,14 @@ _TTS_CONCURRENCY = 3
 
 
 def _build_provider(settings: Settings) -> TTSProvider | None:
-    if settings.tts_provider != "elevenlabs":
+    try:
+        if settings.tts_provider == "elevenlabs":
+            return ElevenLabsTTS(settings)
+        if settings.tts_provider == "inworld":
+            return InworldTTS(settings)
         log.warning("tts.precache.unsupported_provider", provider=settings.tts_provider)
         return None
-    try:
-        return ElevenLabsTTS(settings)
-    except ElevenLabsTTSError as e:
+    except TTSError as e:
         log.warning("tts.precache.provider_init_failed", error=str(e))
         return None
 
@@ -48,7 +49,7 @@ def collect_story_texts(story_content: dict, target_words: list[dict] | None = N
     return deduped
 
 
-async def precache_texts(settings: Settings, texts: list[str]) -> None:
+async def precache_texts(settings: Settings, texts: list[str], lang: str | None = None) -> None:
     if not texts:
         return
     provider = _build_provider(settings)
@@ -67,9 +68,9 @@ async def precache_texts(settings: Settings, texts: list[str]) -> None:
         async with semaphore:
             async with sm() as session:
                 try:
-                    _, _, hit = await get_or_synthesize(session, provider, text=text)
+                    _, _, hit = await get_or_synthesize(session, provider, text=text, lang=lang)
                     log.debug("tts.precache.done", chars=len(text), cache_hit=hit)
-                except ElevenLabsTTSError as e:
+                except TTSError as e:
                     log.warning("tts.precache.failed", error=str(e), chars=len(text))
                 except Exception as e:
                     log.warning("tts.precache.unexpected", error=str(e), chars=len(text))
