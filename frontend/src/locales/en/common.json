@@ -124,6 +124,39 @@
       "nextAria": "Next sentence",
       "finishAria": "Finish"
     },
+    "sentence": {
+      "verdict": {
+        "excellent": "Excellent.",
+        "good": "Well done.",
+        "close": "Close.",
+        "retry": "Let's try again."
+      },
+      "hint": {
+        "listen": "listen",
+        "talk": "talk",
+        "navigate": "navigate"
+      },
+      "feedback": {
+        "tipPrefix": "Check",
+        "listen": "Listen to Klara",
+        "retry": "Try again",
+        "legend": {
+          "clear_one": "{{count}} clear",
+          "clear_other": "{{count}} clear",
+          "ok_one": "{{count}} close",
+          "ok_other": "{{count}} close",
+          "bad_one": "{{count}} off",
+          "bad_other": "{{count}} off"
+        }
+      },
+      "listening": "Listening",
+      "stop": "Stop",
+      "stopAria": "Stop recording",
+      "playAria": "Listen to Klara",
+      "pauseAria": "Pause",
+      "speedAria": "Speed {{rate}}",
+      "micAria": "Pronounce — hold to record"
+    },
     "end": {
       "kicker": "End of story",
       "dek": {
@@ -169,28 +202,7 @@
       "other": ""
     }
   },
-  "recbar": {
-    "listening": "Listening…"
-  },
   "pron": {
-    "verdict": {
-      "again": "Let's try again.",
-      "almost": "Almost.",
-      "good": "Well done.",
-      "excellent": "Excellent."
-    },
-    "pill": {
-      "clear_one": "{{count}} clear",
-      "clear_other": "{{count}} clear",
-      "approx_one": "{{count}} approximate",
-      "approx_other": "{{count}} approximate",
-      "review_one": "{{count}} to review",
-      "review_other": "{{count}} to review"
-    },
-    "btn": {
-      "listen": "Listen to Klara",
-      "retry": "Try again"
-    },
     "evaluating": "Scoring your pronunciation…",
     "error": {
       "mic_denied": "We need permission to use your microphone.",

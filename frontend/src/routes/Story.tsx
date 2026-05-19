@@ -4,15 +4,16 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Story, StoryWord } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
-import SentenceStep from "../components/SentenceStep";
+import SentenceView from "../components/SentenceView";
 import WordPopover from "../components/WordPopover";
-import type { PronScores } from "../components/PronunciationFeedback";
 import { useFontScale } from "../lib/preferences";
 import {
   bandsByTokenIndex,
   scoreAudio,
   startMicRecording,
+  type MicRecorder,
   type PronunciationError,
+  type ScoreBand,
 } from "../lib/pronunciation";
 import { speak, stop, useTTS } from "../lib/tts";
 
@@ -22,17 +23,22 @@ interface ActiveWord {
   rect: DOMRect;
 }
 
-type Direction = "forward" | "backward";
+type PronScores = Record<number, ScoreBand>;
 
-function tokenizeWordIndices(text: string): number[] {
-  // Returns indices of word tokens within the same tokenization SentenceStep uses.
-  // Not strictly needed — pronunciation simulator uses contiguous indices anyway.
-  const out: number[] = [];
-  const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+const RATES = [0.7, 1, 1.3] as const;
+type Rate = (typeof RATES)[number];
+
+// Word-token regex shared with SentenceView; used here to extract bad-word
+// strings for the phonetic-hints request.
+const WORD_RE = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+
+function badWordsFromBands(text: string, bands: PronScores): string[] {
+  const out: string[] = [];
   let i = 0;
   let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
-    if (m[3]) out.push(i);
+  WORD_RE.lastIndex = 0;
+  while ((m = WORD_RE.exec(text)) !== null) {
+    if (m[3] && bands[i] === "bad") out.push(m[3]);
     i++;
   }
   return out;
@@ -50,16 +56,19 @@ export default function StoryView() {
   const [adding, setAdding] = useState<string | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [direction, setDirection] = useState<Direction>("forward");
   const [recordingIndex, setRecordingIndex] = useState<number | null>(null);
   const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
   const [scoresBySentence, setScoresBySentence] = useState<Record<number, PronScores>>({});
+  const [phoneticHintsBySentence, setPhoneticHintsBySentence] = useState<
+    Record<number, Record<string, string>>
+  >({});
   const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [finished, setFinished] = useState(false);
+  const [rate, setRate] = useState<Rate>(1);
+  const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
 
-  // Active recording handle. While set, recorder is live; calling stop()
-  // returns the captured audio Blob.
-  const recorderRef = useRef<{ stop: () => Promise<Blob>; cancel: () => void } | null>(null);
+  // While set, recorder is live; calling stop() returns the captured Blob.
+  const recorderRef = useRef<MicRecorder | null>(null);
 
   const tts = useTTS();
 
@@ -71,9 +80,9 @@ export default function StoryView() {
     setActive(null);
     setReviewIds(new Set());
     setCurrentIndex(0);
-    setDirection("forward");
     setRecordingIndex(null);
     setScoresBySentence({});
+    setPhoneticHintsBySentence({});
     setFinished(false);
     api
       .getStory(id)
@@ -112,23 +121,30 @@ export default function StoryView() {
     if (!tts.text) return -1;
     return sentences.findIndex((s) => s.target === tts.text);
   }, [sentences, tts.text]);
-  const klaraSpeaking = tts.playing && playingIndex >= 0;
 
   // Cleanup any in-flight recording when the story or component unmounts.
   useEffect(() => {
     return () => {
       recorderRef.current?.cancel();
       recorderRef.current = null;
+      setMicAnalyser(null);
     };
   }, []);
 
   // Fallback used only if the backend signals it can't score (e.g. 503 because
-  // no Azure key in dev). Produces simulated bands so the UI still feels alive.
+  // no Azure key in dev). Produces simulated bands keyed by FULL token index
+  // so the UI still feels alive.
   function simulatedBands(text: string): PronScores {
     const out: PronScores = {};
-    for (const i of tokenizeWordIndices(text)) {
-      const r = Math.random();
-      out[i] = r < 0.62 ? "good" : r < 0.88 ? "ok" : "bad";
+    let i = 0;
+    let m: RegExpExecArray | null;
+    WORD_RE.lastIndex = 0;
+    while ((m = WORD_RE.exec(text)) !== null) {
+      if (m[3]) {
+        const r = Math.random();
+        out[i] = r < 0.62 ? "good" : r < 0.88 ? "ok" : "bad";
+      }
+      i++;
     }
     return out;
   }
@@ -141,78 +157,122 @@ export default function StoryView() {
     (word: StoryWord, key: string, el: HTMLElement) => {
       setActive({ word, key, rect: el.getBoundingClientRect() });
     },
-    []
+    [],
   );
 
-  const handlePlay = useCallback(() => {
+  const handlePlayPause = useCallback(() => {
     if (!current || !story) return;
-    setRecordingIndex(null);
     if (playingIndex === currentIndex && tts.playing) {
       stop();
     } else {
-      speak(current.target, story.target_language);
+      speak(current.target, story.target_language, { rate });
     }
-  }, [current, currentIndex, playingIndex, tts.playing, story]);
+  }, [current, currentIndex, playingIndex, rate, story, tts.playing]);
 
-  const handlePlaySlow = useCallback(() => {
+  const handleListenFromFeedback = useCallback(() => {
     if (!current || !story) return;
-    setRecordingIndex(null);
-    speak(current.target, story.target_language, { rate: 0.7 });
-  }, [current, story]);
+    speak(current.target, story.target_language, { rate });
+  }, [current, rate, story]);
 
-  const handleRecord = useCallback(async () => {
-    stop();
-    // Toggle off: stop the active recorder and let the upload finish.
-    if (recordingIndex === currentIndex && recorderRef.current) {
-      const rec = recorderRef.current;
-      recorderRef.current = null;
-      setRecordingIndex(null);
-      setEvaluatingIndex(currentIndex);
-      try {
-        const blob = await rec.stop();
-        if (!blob || blob.size === 0) {
-          setPronError({ kind: "no_speech" });
-          return;
-        }
-        const sentence = sentences[currentIndex];
-        if (!sentence || !story) return;
-        const resp = await scoreAudio(blob, sentence.target, story.target_language);
-        const bands = bandsByTokenIndex(sentence.target, resp.words);
-        setScoresBySentence((s) => ({ ...s, [currentIndex]: bands }));
-        setPronError(null);
-      } catch (e) {
-        const perr = e as PronunciationError;
-        // 503 (no Azure key configured) → fall back to the simulated bands so
-        // the dev experience without a key still feels functional.
-        if (perr.kind === "service_unavailable") {
-          const sentence = sentences[currentIndex];
-          if (sentence) {
-            setScoresBySentence((s) => ({ ...s, [currentIndex]: simulatedBands(sentence.target) }));
-          }
-          setPronError(null);
-        } else {
-          setPronError(perr);
-        }
-      } finally {
-        setEvaluatingIndex(null);
-      }
-      return;
-    }
-    // Toggle on: clear any previous score for this sentence and open the mic.
-    setScoresBySentence((s) => {
-      const n = { ...s };
-      delete n[currentIndex];
-      return n;
+  const cycleSpeed = useCallback(() => {
+    setRate((r) => {
+      const idx = RATES.indexOf(r);
+      return RATES[(idx + 1) % RATES.length];
     });
+  }, []);
+
+  const clearFeedback = useCallback(() => {
+    setScoresBySentence((s) => {
+      if (!(currentIndex in s)) return s;
+      const next = { ...s };
+      delete next[currentIndex];
+      return next;
+    });
+    setPhoneticHintsBySentence((s) => {
+      if (!(currentIndex in s)) return s;
+      const next = { ...s };
+      delete next[currentIndex];
+      return next;
+    });
+  }, [currentIndex]);
+
+  const fetchAndStoreHints = useCallback(
+    async (idx: number, sentenceText: string, bands: PronScores, language: string) => {
+      const badWords = badWordsFromBands(sentenceText, bands);
+      if (badWords.length === 0) return;
+      try {
+        const resp = await api.getPhoneticHints(badWords, language);
+        if (Object.keys(resp.hints).length === 0) return;
+        setPhoneticHintsBySentence((s) => ({ ...s, [idx]: resp.hints }));
+      } catch {
+        // best-effort: an empty hints map just means the verdict shows
+        // without a phonetic tip.
+      }
+    },
+    [],
+  );
+
+  const startRecording = useCallback(async () => {
+    // Ignore if we're already recording or no sentence yet.
+    if (recordingIndex !== null || !current || !story) return;
+    stop(); // any Klara playback stops when the mic opens
+    clearFeedback();
     setPronError(null);
     try {
       const rec = await startMicRecording();
       recorderRef.current = rec;
+      setMicAnalyser(rec.analyser);
       setRecordingIndex(currentIndex);
     } catch (e) {
       setPronError(e as PronunciationError);
     }
-  }, [currentIndex, recordingIndex, sentences, story]);
+  }, [clearFeedback, current, currentIndex, recordingIndex, story]);
+
+  const stopRecording = useCallback(async () => {
+    const rec = recorderRef.current;
+    if (rec === null || recordingIndex === null || !story) return;
+    const idxAtStart = recordingIndex;
+    recorderRef.current = null;
+    setRecordingIndex(null);
+    setMicAnalyser(null);
+    setEvaluatingIndex(idxAtStart);
+    try {
+      const blob = await rec.stop();
+      if (!blob || blob.size === 0) {
+        setPronError({ kind: "no_speech" });
+        return;
+      }
+      const sentence = sentences[idxAtStart];
+      if (!sentence) return;
+      const resp = await scoreAudio(blob, sentence.target, story.target_language);
+      const bands = bandsByTokenIndex(sentence.target, resp.words);
+      setScoresBySentence((s) => ({ ...s, [idxAtStart]: bands }));
+      setPronError(null);
+      // Fire-and-forget: hints arrive after the panel is already on screen.
+      void fetchAndStoreHints(idxAtStart, sentence.target, bands, story.target_language);
+    } catch (e) {
+      const perr = e as PronunciationError;
+      if (perr.kind === "service_unavailable") {
+        const sentence = sentences[idxAtStart];
+        if (sentence) {
+          setScoresBySentence((s) => ({ ...s, [idxAtStart]: simulatedBands(sentence.target) }));
+        }
+        setPronError(null);
+      } else {
+        setPronError(perr);
+      }
+    } finally {
+      setEvaluatingIndex(null);
+    }
+  }, [fetchAndStoreHints, recordingIndex, sentences, story]);
+
+  const cancelRecording = useCallback(() => {
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    setRecordingIndex(null);
+    setMicAnalyser(null);
+    setPronError(null);
+  }, []);
 
   const goNext = useCallback(() => {
     if (currentIndex >= total - 1) {
@@ -220,36 +280,38 @@ export default function StoryView() {
       setFinished(true);
       return;
     }
-    setDirection("forward");
     stop();
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    setRecordingIndex(null);
+    cancelRecording();
     setEvaluatingIndex(null);
-    setPronError(null);
     closePopover();
     setCurrentIndex((i) => i + 1);
-  }, [currentIndex, total, closePopover]);
+  }, [cancelRecording, closePopover, currentIndex, total]);
 
   const goPrev = useCallback(() => {
     if (currentIndex <= 0) return;
-    setDirection("backward");
     stop();
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    setRecordingIndex(null);
+    cancelRecording();
     setEvaluatingIndex(null);
-    setPronError(null);
     closePopover();
     setCurrentIndex((i) => i - 1);
-  }, [currentIndex, closePopover]);
+  }, [cancelRecording, closePopover, currentIndex]);
 
+  const onRetry = useCallback(() => {
+    clearFeedback();
+    // The retry button doesn't start recording immediately — user holds the
+    // mic (or presses M) to re-attempt. This matches the hold-to-talk model.
+  }, [clearFeedback]);
+
+  // Keyboard: SPACE play/pause · M hold-to-talk · ←/→ navigate · ESC cancel
   useEffect(() => {
     if (finished || !story) return;
+    function isTypingTarget(el: EventTarget | null): boolean {
+      if (!(el instanceof HTMLElement)) return false;
+      return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable;
+    }
     function onKey(e: KeyboardEvent) {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) return;
-      if (e.key === "ArrowRight") {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
         goNext();
       } else if (e.key === "ArrowLeft") {
@@ -257,12 +319,45 @@ export default function StoryView() {
         goPrev();
       } else if (e.key === " ") {
         e.preventDefault();
-        handlePlay();
+        handlePlayPause();
+      } else if (e.key === "m" || e.key === "M") {
+        // Hold-to-talk: ignore autorepeat firings of keydown.
+        if (e.repeat) return;
+        e.preventDefault();
+        void startRecording();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        if (recordingIndex !== null) cancelRecording();
+        else if (currentIndex in scoresBySentence) clearFeedback();
+      }
+    }
+    function onKeyUp(e: KeyboardEvent) {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        void stopRecording();
       }
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [goNext, goPrev, handlePlay, finished, story]);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [
+    cancelRecording,
+    clearFeedback,
+    currentIndex,
+    finished,
+    goNext,
+    goPrev,
+    handlePlayPause,
+    recordingIndex,
+    scoresBySentence,
+    startRecording,
+    stopRecording,
+    story,
+  ]);
 
   async function toggleReview(word: StoryWord) {
     if (reviewIds.has(word.id) || adding === word.id) return;
@@ -318,8 +413,8 @@ export default function StoryView() {
         onRestart={() => {
           stop();
           setCurrentIndex(0);
-          setDirection("forward");
           setScoresBySentence({});
+          setPhoneticHintsBySentence({});
           setFinished(false);
         }}
         onNew={() => navigate("/story/new")}
@@ -329,57 +424,58 @@ export default function StoryView() {
     );
   }
 
+  const recording = recordingIndex === currentIndex;
+  const feedback = scoresBySentence[currentIndex];
+  const phoneticHints = phoneticHintsBySentence[currentIndex];
+  const sentencePlaying = playingIndex === currentIndex && tts.playing;
+
   return (
     <main
-      className="k-page story"
+      className="k-page story story--audio"
       style={{ "--font-scale": fontScale } as React.CSSProperties}
     >
-      <div className="story__topbar">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("common.exit")}
-        </button>
-        <div className="story__byline-mini">
-          <KlaraMark size={12} speaking={klaraSpeaking} />
-          <span className="k-mono">{story.title}</span>
-        </div>
-        <span className="k-level story__topbar-level">{story.level}</span>
-      </div>
-
-      <div className="story__stage" data-direction={direction}>
-        {current && (
-          <SentenceStep
-            key={currentIndex}
-            sentence={current}
-            index={currentIndex}
-            total={total}
-            targetLanguage={story.target_language}
-            lemmaIndex={lemmaIndex}
-            wordsById={wordsById}
-            activeWordKey={active?.key ?? null}
-            onWordTap={handleWordTap}
-            playing={playingIndex === currentIndex && tts.playing}
-            recording={recordingIndex === currentIndex}
-            onPlay={handlePlay}
-            onPlaySlow={handlePlaySlow}
-            onRecord={handleRecord}
-            scores={scoresBySentence[currentIndex]}
-            feedback={scoresBySentence[currentIndex]}
-            onRetry={handleRecord}
-            onPrev={goPrev}
-            onNext={goNext}
-            canPrev={currentIndex > 0}
-            canNext={currentIndex < total - 1}
-          />
-        )}
-      </div>
+      {current && (
+        <SentenceView
+          storyTitle={story.title}
+          storyLevel={story.level}
+          onExit={() => navigate("/")}
+          sentence={current}
+          index={currentIndex}
+          total={total}
+          targetLanguage={story.target_language}
+          lemmaIndex={lemmaIndex}
+          wordsById={wordsById}
+          activeWordKey={active?.key ?? null}
+          onWordTap={handleWordTap}
+          playing={sentencePlaying}
+          progress={sentencePlaying ? tts.progress : 0}
+          duration={tts.duration}
+          recording={recording}
+          micAnalyser={recording ? micAnalyser : null}
+          feedback={feedback}
+          phoneticHints={phoneticHints}
+          rate={rate}
+          onPlayPause={handlePlayPause}
+          onCycleSpeed={cycleSpeed}
+          onRecordStart={startRecording}
+          onRecordStop={stopRecording}
+          onRecordCancel={cancelRecording}
+          onRetry={onRetry}
+          onListenFromFeedback={handleListenFromFeedback}
+          onPrev={goPrev}
+          onNext={goNext}
+          canPrev={currentIndex > 0}
+          canNext={currentIndex < total - 1}
+        />
+      )}
 
       {evaluatingIndex === currentIndex && (
-        <div className="k-mono" style={{ marginTop: "0.75rem", color: "var(--ink-3)" }}>
+        <div className="k-mono story__evaluating" role="status" aria-live="polite">
           {t("pron.evaluating")}
         </div>
       )}
       {pronError && (
-        <div className="k-error" role="alert" style={{ marginTop: "0.75rem" }}>
+        <div className="k-error story__pron-error" role="alert">
           {t(`pron.error.${pronError.kind}`)}
         </div>
       )}
@@ -490,9 +586,7 @@ function StoryFinished({
                       {article && <span className="story__new-art">{article}</span>}
                       <span className="story__new-lemma">{w.lemma}</span>
                     </div>
-                    {w.translation && (
-                      <span className="story__new-tx">{w.translation}</span>
-                    )}
+                    {w.translation && <span className="story__new-tx">{w.translation}</span>}
                     <button
                       type="button"
                       className="story__new-add"
@@ -503,8 +597,8 @@ function StoryFinished({
                       {added
                         ? t("story.end.words.added")
                         : adding === w.id
-                        ? t("story.end.words.adding")
-                        : t("story.end.words.add")}
+                          ? t("story.end.words.adding")
+                          : t("story.end.words.add")}
                     </button>
                   </li>
                 );

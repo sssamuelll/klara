@@ -1,0 +1,520 @@
+/* ============================================================
+   KLARA — Sentence view (audio-centric redesign)
+   Ported from the design handoff. Tokens already live in tokens.css.
+   The handoff used `.kapp[data-state]` as the scope; renamed here to
+   `.ksentence[data-state]` so it doesn't collide with the app-wide
+   .kapp shell.
+   ============================================================ */
+
+.ksentence {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 28px 48px 40px;
+}
+
+/* ---- Chapter bar ------------------------------------------- */
+.k-chapter {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.k-chapter__exit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  justify-self: start;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.k-chapter__exit:hover { color: var(--ink); }
+.k-chapter__title { display: inline-flex; align-items: baseline; gap: 8px; }
+.k-chapter__k { font-family: var(--font-serif); font-style: italic; font-size: 14px; }
+.k-chapter__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.k-chapter__level {
+  justify-self: end;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+
+/* ---- Progress --------------------------------------------- */
+.k-prog {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.k-prog__count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-2);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.k-prog__slash { color: var(--ink-4); margin: 0 2px; }
+.k-prog__track { flex: 1; display: flex; gap: 6px; }
+.k-prog__pip {
+  flex: 1;
+  height: 2px;
+  background: var(--rule);
+  transition: background 240ms;
+}
+.k-prog__pip[data-state="done"] { background: var(--ink-2); }
+.k-prog__pip[data-state="now"]  { background: var(--ink); }
+
+/* ---- Stage — the audio-centric centerpiece ---------------- */
+.k-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 26px;
+  padding: 14px 60px;
+  text-align: center;
+}
+
+/* The handoff names these `__de` and `__es` for legacy reasons (the original
+   design assumed DE→ES). In practice `__de` is *target_language* (whatever
+   the user is learning) and `__es` is *native_language*. Renaming would
+   break diff traceability with the handoff; the comment is the docs. */
+.k-stage__de {
+  font-family: var(--font-serif);
+  font-size: 64px;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin: 0;
+  color: var(--ink);
+  text-wrap: balance;
+  font-weight: 400;
+}
+.k-stage__es {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+/* ---- Word tokens (tappable for translation, score underlines) -- */
+.k-tok {
+  display: inline;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: box-shadow 220ms, background 220ms;
+  /* Inherit the serif from .k-stage__de — buttons would otherwise
+     reset to the system UI font. */
+}
+.k-tok:disabled { cursor: default; }
+.k-tok[data-matched="true"]:hover { color: var(--accent-ink); }
+.k-tok[data-active="true"] { background: var(--paper-3); }
+.k-tok[data-score="good"] { box-shadow: inset 0 -3px 0 oklch(0.62 0.13 145); }
+.k-tok[data-score="ok"]   { box-shadow: inset 0 -3px 0 oklch(0.74 0.13 80); }
+.k-tok[data-score="bad"]  {
+  box-shadow: inset 0 -3px 0 var(--accent);
+  background: var(--accent-wash);
+}
+.k-tok-space, .k-tok-punct { white-space: pre; }
+
+/* ---- Waveform — playback timeline ------------------------- */
+.k-wave {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+.k-wave__bars {
+  position: relative;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 4px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.k-wave__bar {
+  flex: 1;
+  min-width: 2px;
+  background: var(--ink-4);
+  border-radius: 1px;
+  transition: background 200ms;
+}
+.k-wave__bar[data-active="true"] { background: var(--ink); }
+.k-wave__playhead {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 1px;
+  background: var(--accent);
+  left: 0%;
+  transition: left 200ms linear;
+  pointer-events: none;
+}
+.k-wave__playhead::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.k-wave__foot {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Toolbar — speed · play · mic ------------------------- */
+.k-toolbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.k-tool--speed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color 140ms, color 140ms;
+}
+.k-tool--speed:hover { border-color: var(--ink); color: var(--ink); }
+
+.k-tool--play {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 140ms;
+}
+.k-tool--play:hover { transform: scale(1.04); }
+.k-tool--play [data-icon="pause"] { display: none; }
+.ksentence[data-state="playing"] .k-tool--play [data-icon="play"] { display: none; }
+.ksentence[data-state="playing"] .k-tool--play [data-icon="pause"] { display: inline-block; }
+.k-pause {
+  width: 10px;
+  height: 14px;
+  border-left: 3px solid currentColor;
+  border-right: 3px solid currentColor;
+}
+
+.k-tool--mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 22px 16px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 140ms, background 140ms;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none; /* prevent the browser scrolling on touch-and-hold */
+}
+.k-tool--mic:hover { transform: translateY(-1px); }
+.k-tool--mic:active { background: var(--accent); }
+
+/* triangle / mic glyphs (CSS-only) */
+.k-tri {
+  width: 0; height: 0;
+  border-left: 8px solid currentColor;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  display: inline-block;
+  margin-left: 2px;
+}
+.k-tri--lg {
+  border-left-width: 13px;
+  border-top-width: 8px;
+  border-bottom-width: 8px;
+}
+.k-mic {
+  position: relative;
+  width: 14px;
+  height: 22px;
+  background: currentColor;
+  border-radius: 6px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.k-mic::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-top: 0;
+  border-radius: 0 0 11px 11px;
+}
+
+/* ---- Idle hint ------------------------------------------- */
+.k-hint {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin: 0;
+}
+.k-hint kbd {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--ink-2);
+  margin: 0 2px;
+}
+
+/* ---- Recording pill (replaces toolbar) -------------------- */
+.k-rec {
+  display: inline-grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--accent-wash);
+  border: 1px solid color-mix(in oklch, var(--accent) 25%, transparent);
+  border-radius: 999px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.k-rec__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: rec-pulse 1.1s ease-in-out infinite;
+}
+@keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.k-rec__bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+  width: 240px;
+}
+.k-rec__bar {
+  flex: 1;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  height: 30%;
+  transition: height 60ms linear;
+}
+.k-rec__lbl {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  font-weight: 500;
+}
+.k-rec__stop {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid color-mix(in oklch, var(--accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+/* ---- Feedback panel (replaces toolbar) -------------------- */
+.k-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  padding: 22px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.k-feedback__head {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.k-feedback__score {
+  font-family: var(--font-serif);
+  font-size: 48px;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.k-feedback__unit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-left: 4px;
+}
+.k-feedback__verdict {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-2);
+  text-align: left;
+}
+.k-feedback__verdict em { color: var(--accent-ink); font-style: italic; }
+.k-feedback__legend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.k-feedback__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+}
+.k-feedback__pill::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.k-feedback__pill[data-tone="good"]::before { background: oklch(0.62 0.13 145); }
+.k-feedback__pill[data-tone="ok"]::before   { background: oklch(0.74 0.13 80); }
+.k-feedback__pill[data-tone="bad"]::before  { background: var(--accent); }
+.k-feedback__actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.k-feedback__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.k-feedback__btn:hover { border-color: var(--ink); color: var(--ink); }
+.k-feedback__btn--strong {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.k-feedback__btn--strong:hover { background: var(--ink); color: var(--paper); }
+
+/* ---- State visibility ------------------------------------ */
+.ksentence [data-show]                                   { display: none; }
+.ksentence[data-state="idle"]      [data-show~="idle"]      { display: flex; }
+.ksentence[data-state="playing"]   [data-show~="playing"]   { display: flex; }
+.ksentence[data-state="recording"] [data-show~="recording"] { display: inline-grid; }
+.ksentence[data-state="feedback"]  [data-show~="feedback"]  { display: flex; }
+.ksentence[data-state="idle"]      .k-hint                  { display: block; }
+
+/* ---- Bottom step navigation ------------------------------ */
+.k-stepnav {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+.k-stepnav__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.k-stepnav__btn:hover:not(:disabled) { border-color: var(--ink); color: var(--ink); }
+.k-stepnav__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.k-stepnav__btn--next {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+.k-stepnav__btn--next:hover:not(:disabled) {
+  background: var(--ink);
+  color: var(--paper);
+}
+.k-stepnav__arrow { font-family: var(--font-serif); font-style: italic; }
+
+/* ---- Responsive — ≤720px --------------------------------- */
+@media (max-width: 720px) {
+  .ksentence { padding: 22px 18px 30px; }
+  .k-stage { padding: 8px 0; gap: 18px; }
+  .k-stage__de { font-size: 38px; }
+  .k-stage__es { font-size: 17px; }
+  .k-toolbar { flex-wrap: wrap; gap: 12px; }
+  .k-tool--mic { font-size: 15px; padding: 14px 18px; }
+  .k-feedback__head { flex-direction: column; gap: 8px; }
+  .k-rec__bars { width: 140px; }
+}

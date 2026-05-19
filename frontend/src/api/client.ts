@@ -3,6 +3,7 @@ import type {
   CardOut,
   Invitation,
   InvitationCreate,
+  PhoneticHintsResponse,
   PronunciationScoreResponse,
   Story,
   StoryListItem,
@@ -225,4 +226,15 @@ export const api = {
     }
     return resp.json() as Promise<PronunciationScoreResponse>;
   },
+
+  /**
+   * Best-effort: returns `{}` if the LLM is unreachable, the response was
+   * malformed, etc. The endpoint itself swallows errors and returns 200
+   * with an empty `hints` object.
+   */
+  getPhoneticHints: (words: string[], language: string) =>
+    request<PhoneticHintsResponse>("/pronunciation/phonetic-hints", {
+      method: "POST",
+      body: JSON.stringify({ words, language }),
+    }),
 };

@@ -124,6 +124,39 @@
       "nextAria": "Próxima frase",
       "finishAria": "Terminar"
     },
+    "sentence": {
+      "verdict": {
+        "excellent": "Excelente.",
+        "good": "Muito bem.",
+        "close": "Quase.",
+        "retry": "Vamos tentar de novo."
+      },
+      "hint": {
+        "listen": "ouvir",
+        "talk": "falar",
+        "navigate": "navegar"
+      },
+      "feedback": {
+        "tipPrefix": "Revê",
+        "listen": "Ouvir a Klara",
+        "retry": "De novo",
+        "legend": {
+          "clear_one": "{{count}} clara",
+          "clear_other": "{{count}} claras",
+          "ok_one": "{{count}} aproximada",
+          "ok_other": "{{count}} aproximadas",
+          "bad_one": "{{count}} a rever",
+          "bad_other": "{{count}} a rever"
+        }
+      },
+      "listening": "A ouvir",
+      "stop": "Parar",
+      "stopAria": "Parar gravação",
+      "playAria": "Ouvir a Klara",
+      "pauseAria": "Pausar",
+      "speedAria": "Velocidade {{rate}}",
+      "micAria": "Pronunciar — mantém premido para gravar"
+    },
     "end": {
       "kicker": "Fim da história",
       "dek": {
@@ -169,28 +202,7 @@
       "other": ""
     }
   },
-  "recbar": {
-    "listening": "A ouvir…"
-  },
   "pron": {
-    "verdict": {
-      "again": "Vamos tentar outra vez.",
-      "almost": "Quase.",
-      "good": "Muito bem.",
-      "excellent": "Excelente."
-    },
-    "pill": {
-      "clear_one": "{{count}} clara",
-      "clear_other": "{{count}} claras",
-      "approx_one": "{{count}} aproximada",
-      "approx_other": "{{count}} aproximadas",
-      "review_one": "{{count}} a rever",
-      "review_other": "{{count}} a rever"
-    },
-    "btn": {
-      "listen": "Ouvir a Klara",
-      "retry": "Outra vez"
-    },
     "evaluating": "A avaliar a tua pronúncia…",
     "error": {
       "mic_denied": "Precisamos de permissão para usar o microfone.",
