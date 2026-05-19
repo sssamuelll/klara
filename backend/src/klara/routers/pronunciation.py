@@ -134,9 +134,7 @@ async def phonetic_hints(
     without a tip.
     """
     try:
-        hints = await generate_phonetic_hints(
-            llm, words=payload.words, language=payload.language
-        )
+        hints = await generate_phonetic_hints(llm, words=payload.words, language=payload.language)
     except Exception:
         hints = {}
     return PhoneticHintsResponse(hints=hints)

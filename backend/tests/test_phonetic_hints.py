@@ -17,7 +17,9 @@ class FakeLLM:
         self.content = content
         self.last_messages = None
 
-    async def complete(self, *, messages, model=None, max_tokens=1024, temperature=0.7, response_format=None):
+    async def complete(
+        self, *, messages, model=None, max_tokens=1024, temperature=0.7, response_format=None
+    ):
         self.last_messages = messages
         return LLMResponse(content=self.content, model="fake", provider="fake")
 
