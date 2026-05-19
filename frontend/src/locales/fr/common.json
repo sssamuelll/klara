@@ -155,7 +155,9 @@
       "playAria": "Écouter Klara",
       "pauseAria": "Pause",
       "speedAria": "Vitesse {{rate}}",
-      "micAria": "Prononcer — maintenir pour enregistrer"
+      "micAria": "Prononcer",
+      "micAriaRecording": "Arrêter l'enregistrement",
+      "evaluating": "Évaluation"
     },
     "end": {
       "kicker": "Fin de l'histoire",

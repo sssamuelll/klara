@@ -155,7 +155,9 @@
       "playAria": "Klara anhören",
       "pauseAria": "Pause",
       "speedAria": "Geschwindigkeit {{rate}}",
-      "micAria": "Aussprechen — gedrückt halten zum Aufnehmen"
+      "micAria": "Aussprechen",
+      "micAriaRecording": "Aufnahme beenden",
+      "evaluating": "Wird bewertet"
     },
     "end": {
       "kicker": "Ende der Geschichte",

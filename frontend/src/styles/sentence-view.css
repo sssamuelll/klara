@@ -255,12 +255,9 @@
   font-weight: 500;
   cursor: pointer;
   transition: transform 140ms, background 140ms;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: none; /* prevent the browser scrolling on touch-and-hold */
 }
 .k-tool--mic:hover { transform: translateY(-1px); }
-.k-tool--mic:active { background: var(--accent); }
+.k-tool--mic:active { transform: scale(0.97); }
 
 /* triangle / mic glyphs (CSS-only) */
 .k-tri {
@@ -375,6 +372,39 @@
   cursor: pointer;
 }
 
+/* ---- Evaluating pill (replaces toolbar between mic release and feedback) -- */
+.k-eval {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+}
+.k-eval__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-4);
+  border-top-color: var(--ink);
+  animation: k-eval-spin 800ms linear infinite;
+}
+@keyframes k-eval-spin {
+  to { transform: rotate(360deg); }
+}
+.k-eval__lbl {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
 /* ---- Feedback panel (replaces toolbar) -------------------- */
 .k-feedback {
   display: flex;
@@ -463,12 +493,13 @@
 .k-feedback__btn--strong:hover { background: var(--ink); color: var(--paper); }
 
 /* ---- State visibility ------------------------------------ */
-.ksentence [data-show]                                   { display: none; }
-.ksentence[data-state="idle"]      [data-show~="idle"]      { display: flex; }
-.ksentence[data-state="playing"]   [data-show~="playing"]   { display: flex; }
-.ksentence[data-state="recording"] [data-show~="recording"] { display: inline-grid; }
-.ksentence[data-state="feedback"]  [data-show~="feedback"]  { display: flex; }
-.ksentence[data-state="idle"]      .k-hint                  { display: block; }
+.ksentence [data-show]                                       { display: none; }
+.ksentence[data-state="idle"]       [data-show~="idle"]      { display: flex; }
+.ksentence[data-state="playing"]    [data-show~="playing"]   { display: flex; }
+.ksentence[data-state="recording"]  [data-show~="recording"] { display: inline-grid; }
+.ksentence[data-state="evaluating"] [data-show~="evaluating"]{ display: inline-flex; }
+.ksentence[data-state="feedback"]   [data-show~="feedback"]  { display: flex; }
+.ksentence[data-state="idle"]       .k-hint                  { display: block; }
 
 /* ---- Bottom step navigation ------------------------------ */
 .k-stepnav {

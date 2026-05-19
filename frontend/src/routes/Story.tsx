@@ -425,6 +425,7 @@ export default function StoryView() {
   }
 
   const recording = recordingIndex === currentIndex;
+  const evaluating = evaluatingIndex === currentIndex;
   const feedback = scoresBySentence[currentIndex];
   const phoneticHints = phoneticHintsBySentence[currentIndex];
   const sentencePlaying = playingIndex === currentIndex && tts.playing;
@@ -452,6 +453,7 @@ export default function StoryView() {
           duration={tts.duration}
           recording={recording}
           micAnalyser={recording ? micAnalyser : null}
+          evaluating={evaluating}
           feedback={feedback}
           phoneticHints={phoneticHints}
           rate={rate}
@@ -459,7 +461,6 @@ export default function StoryView() {
           onCycleSpeed={cycleSpeed}
           onRecordStart={startRecording}
           onRecordStop={stopRecording}
-          onRecordCancel={cancelRecording}
           onRetry={onRetry}
           onListenFromFeedback={handleListenFromFeedback}
           onPrev={goPrev}
@@ -469,11 +470,6 @@ export default function StoryView() {
         />
       )}
 
-      {evaluatingIndex === currentIndex && (
-        <div className="k-mono story__evaluating" role="status" aria-live="polite">
-          {t("pron.evaluating")}
-        </div>
-      )}
       {pronError && (
         <div className="k-error story__pron-error" role="alert">
           {t(`pron.error.${pronError.kind}`)}

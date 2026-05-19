@@ -16,20 +16,13 @@
  * owns audio, recording, scoring, and navigation.
  */
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { StorySentence, StoryWord } from "../api/types";
 import type { ScoreBand } from "../lib/pronunciation";
 import { getWaveform } from "../lib/waveform";
 
-type SentenceState = "idle" | "playing" | "recording" | "feedback";
+type SentenceState = "idle" | "playing" | "recording" | "evaluating" | "feedback";
 
 interface Props {
   // Chapter context
@@ -58,6 +51,12 @@ interface Props {
   recording: boolean;
   micAnalyser: AnalyserNode | null;
 
+  // Evaluating state — between mic release and feedback arrival. Shows a
+  // spinner pill in the same slot as the recording pill so the user has a
+  // continuous visual thread: pill (recording) → pill (evaluating) → panel
+  // (feedback), instead of pill → idle → panel.
+  evaluating: boolean;
+
   // Feedback state
   feedback?: Record<number, ScoreBand>;
   phoneticHints?: Record<string, string>;
@@ -70,7 +69,6 @@ interface Props {
   onCycleSpeed: () => void;
   onRecordStart: () => void;
   onRecordStop: () => void;
-  onRecordCancel: () => void;
   onRetry: () => void;
   onListenFromFeedback: () => void;
   onPrev: () => void;
@@ -120,10 +118,16 @@ function formatTime(seconds: number): string {
 
 function deriveState(args: {
   recording: boolean;
+  evaluating: boolean;
   feedback: boolean;
   playing: boolean;
 }): SentenceState {
+  // Order matters: recording beats everything (user is mid-take); evaluating
+  // beats feedback (a fresh take is being scored even if a previous panel
+  // was up); feedback beats playing (the panel takes the slot back from
+  // the toolbar); playing beats idle.
   if (args.recording) return "recording";
+  if (args.evaluating) return "evaluating";
   if (args.feedback) return "feedback";
   if (args.playing) return "playing";
   return "idle";
@@ -155,6 +159,7 @@ export default function SentenceView({
   duration,
   recording,
   micAnalyser,
+  evaluating,
   feedback,
   phoneticHints,
   rate,
@@ -162,7 +167,6 @@ export default function SentenceView({
   onCycleSpeed,
   onRecordStart,
   onRecordStop,
-  onRecordCancel,
   onRetry,
   onListenFromFeedback,
   onPrev,
@@ -173,8 +177,13 @@ export default function SentenceView({
   const { t } = useTranslation();
 
   const tokens = useMemo(() => tokenize(sentence.target), [sentence.target]);
-  const showFeedback = Boolean(feedback) && !recording;
-  const state = deriveState({ recording, feedback: showFeedback, playing });
+  const showFeedback = Boolean(feedback) && !recording && !evaluating;
+  const state = deriveState({
+    recording,
+    evaluating: evaluating && !recording,
+    feedback: showFeedback,
+    playing,
+  });
 
   // ---- Waveform (Klara's voice, 64 buckets) -------------------------------
   const [bars, setBars] = useState<number[]>(FALLBACK_BARS);
@@ -285,35 +294,16 @@ export default function SentenceView({
   const currentTimeLabel = formatTime((duration || 0) * progress);
   const totalTimeLabel = formatTime(duration || 0);
 
-  // ---- Hold-to-talk for the mic button -----------------------------------
-  // Pointer events let us handle mouse + touch + pen in one path. We only
-  // start on the *first* pointer down to avoid double-starts from a click
-  // synthesized after a touch.
-  const recordingRef = useRef(recording);
-  recordingRef.current = recording;
-  const pointerDownRef = useRef(false);
-  const onMicPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (recordingRef.current) return;
-      pointerDownRef.current = true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-      onRecordStart();
-    },
-    [onRecordStart],
-  );
-  const onMicPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (!pointerDownRef.current) return;
-      pointerDownRef.current = false;
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // pointer already released by the browser
-      }
-      if (recordingRef.current) onRecordStop();
-    },
-    [onRecordStop],
-  );
+  // ---- Mic button (tap-to-toggle) ----------------------------------------
+  // The button is tap-to-toggle: one tap starts recording, another stops.
+  // Hold-to-talk lives on the M key (handled in Story.tsx) — using
+  // hold-to-talk on the button was fragile (pointer drift off the button
+  // cancelled the take). The pill's ⏹ Detener button is an additional
+  // stop affordance during recording.
+  const onMicClick = () => {
+    if (recording) onRecordStop();
+    else onRecordStart();
+  };
 
   // ---- Speed pill display label -------------------------------------------
   const rateLabel = `${rate}×`;
@@ -442,11 +432,12 @@ export default function SentenceView({
           <button
             type="button"
             className="k-tool k-tool--mic"
-            onPointerDown={onMicPointerDown}
-            onPointerUp={onMicPointerUp}
-            onPointerCancel={onMicPointerUp}
-            onPointerLeave={onMicPointerUp}
-            aria-label={t("story.sentence.micAria")}
+            onClick={onMicClick}
+            aria-label={
+              recording
+                ? t("story.sentence.micAriaRecording")
+                : t("story.sentence.micAria")
+            }
           >
             <span className="k-mic" />
             <span className="k-tool__lbl">{t("story.step.pronounce")}</span>
@@ -472,11 +463,23 @@ export default function SentenceView({
           <button
             type="button"
             className="k-rec__stop"
-            onClick={onRecordCancel}
+            onClick={onRecordStop}
             aria-label={t("story.sentence.stopAria")}
           >
             ⏹ {t("story.sentence.stop")}
           </button>
+        </div>
+
+        {/* Evaluating pill — shown between mic release and feedback arrival.
+            Same slot as the recording pill so the transition feels continuous. */}
+        <div
+          className="k-eval"
+          data-show="evaluating"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="k-eval__spinner" aria-hidden="true" />
+          <span className="k-eval__lbl">{t("story.sentence.evaluating")}</span>
         </div>
 
         {/* Feedback panel */}
