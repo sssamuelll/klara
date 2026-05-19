@@ -30,3 +30,15 @@ class ScoreResponse(BaseModel):
     language: str
     scores: PronunciationScores
     words: list[WordScore]
+
+
+class PhoneticHintsRequest(BaseModel):
+    words: list[str] = Field(..., min_length=1, max_length=12)
+    language: str = Field(..., min_length=2, max_length=8)
+
+
+class PhoneticHintsResponse(BaseModel):
+    hints: dict[str, str] = Field(
+        default_factory=dict,
+        description="Map of input word → hyphenated stress hint (au-to-BÚS).",
+    )

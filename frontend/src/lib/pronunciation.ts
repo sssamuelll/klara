@@ -14,9 +14,9 @@ export function scoreBand(accuracy: number): ScoreBand {
 }
 
 /**
- * Tokenize the reference text the same way SentenceStep does. Returns the
+ * Tokenize the reference text the same way SentenceView does. Returns the
  * index of every word token (skipping spaces and punctuation), so the result
- * lines up with what SentenceStep renders.
+ * lines up with what SentenceView renders.
  */
 export function wordTokenIndices(text: string): number[] {
   const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
@@ -73,15 +73,24 @@ export interface PronunciationError {
   detail?: string;
 }
 
+export interface MicRecorder {
+  stop: () => Promise<Blob>;
+  cancel: () => void;
+  /**
+   * AnalyserNode wired to the mic stream. Read frequency / time-domain data
+   * each frame to visualize the live waveform. Disconnects automatically
+   * when stop() or cancel() fires.
+   */
+  analyser: AnalyserNode;
+}
+
 /**
  * Single-shot: opens the mic, returns a stop() function. Caller stops the
  * recording when the user clicks again (or after a timeout), receives the
- * Blob, and uploads it.
+ * Blob, and uploads it. Also exposes an AnalyserNode so the UI can render
+ * a live waveform driven by the actual voice signal.
  */
-export async function startMicRecording(): Promise<{
-  stop: () => Promise<Blob>;
-  cancel: () => void;
-}> {
+export async function startMicRecording(): Promise<MicRecorder> {
   if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
     const err: PronunciationError = { kind: "mic_unavailable" };
     throw err;
@@ -108,6 +117,19 @@ export async function startMicRecording(): Promise<{
     candidates.find((m) => (window as any).MediaRecorder?.isTypeSupported?.(m)) ??
     "audio/webm";
 
+  // AnalyserNode lives on its own AudioContext so we can tear it down
+  // without touching the MediaRecorder. fftSize 64 gives 32 frequency bins,
+  // matching the handoff's 16 visible bars after we pair-average.
+  const AudioCtx = (window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext) as typeof AudioContext;
+  const audioCtx = new AudioCtx();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 64;
+  analyser.smoothingTimeConstant = 0.6;
+  source.connect(analyser);
+
   const chunks: Blob[] = [];
   const recorder = new MediaRecorder(stream, { mimeType });
   recorder.ondataavailable = (e) => {
@@ -116,6 +138,12 @@ export async function startMicRecording(): Promise<{
 
   return new Promise((resolve) => {
     const cleanup = () => {
+      try {
+        source.disconnect();
+      } catch {
+        // already disconnected
+      }
+      void audioCtx.close?.();
       for (const t of stream.getTracks()) t.stop();
     };
     const stop = (): Promise<Blob> =>
@@ -125,7 +153,10 @@ export async function startMicRecording(): Promise<{
           res(new Blob(chunks, { type: mimeType }));
         };
         if (recorder.state !== "inactive") recorder.stop();
-        else res(new Blob(chunks, { type: mimeType }));
+        else {
+          cleanup();
+          res(new Blob(chunks, { type: mimeType }));
+        }
       });
     const cancel = () => {
       try {
@@ -134,7 +165,7 @@ export async function startMicRecording(): Promise<{
         cleanup();
       }
     };
-    recorder.onstart = () => resolve({ stop, cancel });
+    recorder.onstart = () => resolve({ stop, cancel, analyser });
     recorder.start();
   });
 }

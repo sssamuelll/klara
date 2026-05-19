@@ -145,6 +145,11 @@ export interface PronunciationScoreResponse {
   words: WordScore[];
 }
 
+export interface PhoneticHintsResponse {
+  /** Map of original word → hyphenated stress hint, e.g. "au-to-BÚS". */
+  hints: Record<string, string>;
+}
+
 export interface UserUpdate {
   display_name?: string;
   level?: CEFRLevel;

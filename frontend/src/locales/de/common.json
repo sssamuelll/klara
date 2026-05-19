@@ -124,6 +124,39 @@
       "nextAria": "Nächster Satz",
       "finishAria": "Beenden"
     },
+    "sentence": {
+      "verdict": {
+        "excellent": "Ausgezeichnet.",
+        "good": "Sehr gut.",
+        "close": "Fast.",
+        "retry": "Versuchen wir's nochmal."
+      },
+      "hint": {
+        "listen": "hören",
+        "talk": "sprechen",
+        "navigate": "navigieren"
+      },
+      "feedback": {
+        "tipPrefix": "Achte auf",
+        "listen": "Klara anhören",
+        "retry": "Nochmal",
+        "legend": {
+          "clear_one": "{{count}} klar",
+          "clear_other": "{{count}} klar",
+          "ok_one": "{{count}} fast",
+          "ok_other": "{{count}} fast",
+          "bad_one": "{{count}} unklar",
+          "bad_other": "{{count}} unklar"
+        }
+      },
+      "listening": "Höre zu",
+      "stop": "Stopp",
+      "stopAria": "Aufnahme beenden",
+      "playAria": "Klara anhören",
+      "pauseAria": "Pause",
+      "speedAria": "Geschwindigkeit {{rate}}",
+      "micAria": "Aussprechen — gedrückt halten zum Aufnehmen"
+    },
     "end": {
       "kicker": "Ende der Geschichte",
       "dek": {
@@ -169,28 +202,7 @@
       "other": ""
     }
   },
-  "recbar": {
-    "listening": "Höre zu…"
-  },
   "pron": {
-    "verdict": {
-      "again": "Versuchen wir es noch einmal.",
-      "almost": "Fast.",
-      "good": "Sehr gut.",
-      "excellent": "Ausgezeichnet."
-    },
-    "pill": {
-      "clear_one": "{{count}} klar",
-      "clear_other": "{{count}} klar",
-      "approx_one": "{{count}} ungefähr",
-      "approx_other": "{{count}} ungefähr",
-      "review_one": "{{count}} zu überprüfen",
-      "review_other": "{{count}} zu überprüfen"
-    },
-    "btn": {
-      "listen": "Klara anhören",
-      "retry": "Noch einmal"
-    },
     "evaluating": "Aussprache wird ausgewertet…",
     "error": {
       "mic_denied": "Wir brauchen die Erlaubnis, dein Mikrofon zu nutzen.",

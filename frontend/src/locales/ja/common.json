@@ -124,6 +124,39 @@
       "nextAria": "次の文",
       "finishAria": "終了"
     },
+    "sentence": {
+      "verdict": {
+        "excellent": "完璧です。",
+        "good": "上手です。",
+        "close": "もう少し。",
+        "retry": "もう一度やってみましょう。"
+      },
+      "hint": {
+        "listen": "聞く",
+        "talk": "話す",
+        "navigate": "移動"
+      },
+      "feedback": {
+        "tipPrefix": "確認",
+        "listen": "Klaraを聞く",
+        "retry": "もう一度",
+        "legend": {
+          "clear_one": "{{count}} 明瞭",
+          "clear_other": "{{count}} 明瞭",
+          "ok_one": "{{count}} 近い",
+          "ok_other": "{{count}} 近い",
+          "bad_one": "{{count}} 要確認",
+          "bad_other": "{{count}} 要確認"
+        }
+      },
+      "listening": "聞き取り中",
+      "stop": "停止",
+      "stopAria": "録音を停止",
+      "playAria": "Klaraを聞く",
+      "pauseAria": "一時停止",
+      "speedAria": "速度 {{rate}}",
+      "micAria": "発音 — 長押しで録音"
+    },
     "end": {
       "kicker": "物語の終わり",
       "dek": {
@@ -169,28 +202,7 @@
       "other": ""
     }
   },
-  "recbar": {
-    "listening": "聞いています…"
-  },
   "pron": {
-    "verdict": {
-      "again": "もう一度やってみよう。",
-      "almost": "もう少し。",
-      "good": "とても良い。",
-      "excellent": "素晴らしい。"
-    },
-    "pill": {
-      "clear_one": "明瞭 {{count}}",
-      "clear_other": "明瞭 {{count}}",
-      "approx_one": "おおむね {{count}}",
-      "approx_other": "おおむね {{count}}",
-      "review_one": "要確認 {{count}}",
-      "review_other": "要確認 {{count}}"
-    },
-    "btn": {
-      "listen": "Klara を聞く",
-      "retry": "もう一度"
-    },
     "evaluating": "発音を評価しています…",
     "error": {
       "mic_denied": "マイクの使用許可が必要です。",

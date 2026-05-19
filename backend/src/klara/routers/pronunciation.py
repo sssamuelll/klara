@@ -14,7 +14,7 @@ from typing import Annotated
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
-from klara.dependencies import CurrentUser, LocaleDep, SettingsDep
+from klara.dependencies import ChatLLM, CurrentUser, LocaleDep, SettingsDep
 from klara.i18n import t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.pronunciation.audio import (
@@ -23,7 +23,12 @@ from klara.pronunciation.audio import (
     transcode_to_wav,
 )
 from klara.pronunciation.azure_client import AzureSpeechError, score_pronunciation
-from klara.pronunciation.schemas import ScoreResponse
+from klara.pronunciation.schemas import (
+    PhoneticHintsRequest,
+    PhoneticHintsResponse,
+    ScoreResponse,
+)
+from klara.services.phonetic_hints import generate_phonetic_hints
 
 router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
 
@@ -114,3 +119,22 @@ async def score(
         ) from e
     finally:
         wav_path.unlink(missing_ok=True)
+
+
+@router.post("/phonetic-hints", response_model=PhoneticHintsResponse)
+async def phonetic_hints(
+    user: CurrentUser,
+    llm: ChatLLM,
+    payload: PhoneticHintsRequest,
+) -> PhoneticHintsResponse:
+    """Return hyphenated stress hints for a handful of mispronounced words.
+
+    Best-effort: if the LLM call fails or returns malformed JSON, this still
+    succeeds with `hints={}` so the UI can fall back to showing the verdict
+    without a tip.
+    """
+    try:
+        hints = await generate_phonetic_hints(llm, words=payload.words, language=payload.language)
+    except Exception:
+        hints = {}
+    return PhoneticHintsResponse(hints=hints)
