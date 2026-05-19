@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
@@ -5,7 +6,7 @@ from sqlalchemy import select
 
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import t
-from klara.models import PronunciationAttempt, QuizAttempt, Story, VocabItem
+from klara.models import PronunciationAttempt, QuizAttempt, Story, UserCard, VocabItem
 from klara.schemas.finish import (
     InsightOut,
     PronunciationAttemptIn,
@@ -13,6 +14,9 @@ from klara.schemas.finish import (
     QuizAttemptIn,
     QuizAttemptOut,
     QuizOut,
+    ScheduleBucket,
+    ScheduleEntry,
+    ScheduleOut,
 )
 from klara.schemas.story import (
     ComprehensionQuestionOut,
@@ -216,6 +220,75 @@ async def record_pronunciation_attempt(
         overall_score=row.overall_score,
         attempted_at=row.attempted_at,
     )
+
+
+def _bucket_for(next_review_at: datetime | None) -> ScheduleBucket:
+    """Map a card's next_review_at to one of the human-label buckets the
+    frontend renders. Thresholds live here so all clients format identically.
+    """
+    if next_review_at is None:
+        return "due_now"
+    if next_review_at.tzinfo is None:
+        next_review_at = next_review_at.replace(tzinfo=UTC)
+    delta = (next_review_at - datetime.now(UTC)).total_seconds() / 86400.0  # days
+    if delta <= 1:
+        return "due_now"
+    if delta <= 3:
+        return "soon"
+    if delta <= 7:
+        return "this_week"
+    if delta <= 14:
+        return "next_week"
+    return "later"
+
+
+@router.get("/{story_id}/schedule", response_model=ScheduleOut)
+async def get_story_schedule(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> ScheduleOut:
+    """Per-target-word SRS state for the Finish summary's Schedule section.
+
+    Returns one entry per vocab_item_id in the story's `target_vocab_item_ids`,
+    preserving order. The frontend localises the bucket into a label and
+    overlays an in-session "struggled" tag from this-session scores.
+    """
+    story = await _load_or_404(db, story_id, user.id, locale)
+    target_ids = list(story.target_vocab_item_ids or [])
+    if not target_ids:
+        return ScheduleOut(entries=[])
+
+    cards = (
+        (
+            await db.execute(
+                select(UserCard).where(
+                    UserCard.user_id == user.id,
+                    UserCard.vocab_item_id.in_(target_ids),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    by_vocab: dict[UUID, UserCard] = {c.vocab_item_id: c for c in cards}
+
+    entries: list[ScheduleEntry] = []
+    for vid in target_ids:
+        card = by_vocab.get(vid)
+        if card is None:
+            entries.append(ScheduleEntry(vocab_item_id=vid, has_card=False, bucket="not_in_srs"))
+            continue
+        entries.append(
+            ScheduleEntry(
+                vocab_item_id=vid,
+                has_card=True,
+                bucket=_bucket_for(card.next_review_at),
+                next_review_at=card.next_review_at,
+            )
+        )
+    return ScheduleOut(entries=entries)
 
 
 @router.post(

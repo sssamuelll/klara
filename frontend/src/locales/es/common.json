@@ -235,7 +235,12 @@
           "struggled": "se atascó hoy",
           "nextSession": "Próxima sesión",
           "later": "Más adelante",
-          "added": "En repaso"
+          "added": "En repaso",
+          "dueNow": "Para hoy",
+          "soon": "En unos días",
+          "thisWeek": "Esta semana",
+          "nextWeek": "En 2 semanas",
+          "notInSrs": "Sin añadir"
         },
         "insight": {
           "title": "Una cosa a notar",

@@ -235,7 +235,12 @@
           "struggled": "今日詰まった",
           "nextSession": "次のセッション",
           "later": "あとで",
-          "added": "復習中"
+          "added": "復習中",
+          "dueNow": "今日",
+          "soon": "数日以内",
+          "thisWeek": "今週",
+          "nextWeek": "2週間後",
+          "notInSrs": "未追加"
         },
         "insight": {
           "title": "気づきポイント",

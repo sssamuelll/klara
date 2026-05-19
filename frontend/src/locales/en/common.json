@@ -235,7 +235,12 @@
           "struggled": "stuck today",
           "nextSession": "Next session",
           "later": "Later",
-          "added": "In review"
+          "added": "In review",
+          "dueNow": "Due today",
+          "soon": "In a few days",
+          "thisWeek": "This week",
+          "nextWeek": "In 2 weeks",
+          "notInSrs": "Not yet"
         },
         "insight": {
           "title": "One thing to notice",

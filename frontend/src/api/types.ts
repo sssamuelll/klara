@@ -206,6 +206,25 @@ export interface QuizAttemptIn {
   detail?: Record<string, unknown> | null;
 }
 
+export type ScheduleBucket =
+  | "not_in_srs"
+  | "due_now"
+  | "soon"
+  | "this_week"
+  | "next_week"
+  | "later";
+
+export interface ScheduleEntry {
+  vocab_item_id: string;
+  has_card: boolean;
+  bucket: ScheduleBucket;
+  next_review_at: string | null;
+}
+
+export interface ScheduleResponse {
+  entries: ScheduleEntry[];
+}
+
 export interface UserUpdate {
   display_name?: string;
   level?: CEFRLevel;

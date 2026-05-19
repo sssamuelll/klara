@@ -235,7 +235,12 @@
           "struggled": "coincé aujourd’hui",
           "nextSession": "Prochaine séance",
           "later": "Plus tard",
-          "added": "En révision"
+          "added": "En révision",
+          "dueNow": "Aujourd’hui",
+          "soon": "Dans quelques jours",
+          "thisWeek": "Cette semaine",
+          "nextWeek": "Dans 2 semaines",
+          "notInSrs": "Pas encore"
         },
         "insight": {
           "title": "Une chose à remarquer",

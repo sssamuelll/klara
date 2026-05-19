@@ -89,3 +89,29 @@ class QuizAttemptOut(BaseModel):
     was_correct: bool
     was_revealed: bool
     attempted_at: datetime
+
+
+# ---- Schedule entries — per-target-word SRS state for the Finish summary -
+
+
+# Coarse buckets the frontend turns into localized labels. The exact day
+# thresholds live on the backend so all clients format identically.
+ScheduleBucket = Literal[
+    "not_in_srs",  # never added a card for this word
+    "due_now",  # overdue OR due within 24h
+    "soon",  # due in 1-3 days
+    "this_week",  # due in 4-7 days
+    "next_week",  # due in 8-14 days
+    "later",  # due in 15+ days
+]
+
+
+class ScheduleEntry(BaseModel):
+    vocab_item_id: UUID
+    has_card: bool
+    bucket: ScheduleBucket
+    next_review_at: datetime | None = None
+
+
+class ScheduleOut(BaseModel):
+    entries: list[ScheduleEntry]

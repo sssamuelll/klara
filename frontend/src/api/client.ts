@@ -9,6 +9,7 @@ import type {
   PronunciationScoreResponse,
   QuizAttemptIn,
   QuizResponse,
+  ScheduleResponse,
   Story,
   StoryListItem,
   User,
@@ -260,4 +261,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  getStorySchedule: (storyId: string) =>
+    request<ScheduleResponse>(`/stories/${storyId}/schedule`),
 };
