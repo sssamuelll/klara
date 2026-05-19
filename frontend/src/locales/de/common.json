@@ -235,7 +235,12 @@
           "struggled": "heute hängen geblieben",
           "nextSession": "Nächste Sitzung",
           "later": "Später",
-          "added": "Im Repertoire"
+          "added": "Im Repertoire",
+          "dueNow": "Heute fällig",
+          "soon": "In ein paar Tagen",
+          "thisWeek": "Diese Woche",
+          "nextWeek": "In 2 Wochen",
+          "notInSrs": "Noch nicht"
         },
         "insight": {
           "title": "Eine Sache zum Beachten",

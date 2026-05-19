@@ -25,6 +25,8 @@ import type {
   InsightResponse,
   MCQuizItem,
   QuizItem,
+  ScheduleBucket,
+  ScheduleEntry,
   ShadowQuizItem,
   Story,
   StoryWord,
@@ -839,6 +841,25 @@ function Summary({
     };
   }, [story.id]);
 
+  // Schedule: real SRS state per target word. While loading, fall back to
+  // the heuristic so the section doesn't pop in late.
+  const [schedule, setSchedule] = useState<Map<string, ScheduleEntry> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getStorySchedule(story.id)
+      .then((r) => {
+        if (cancelled) return;
+        setSchedule(new Map(r.entries.map((e) => [e.vocab_item_id, e])));
+      })
+      .catch(() => {
+        // best-effort: stays on heuristic labels
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [story.id]);
+
   return (
     <main className="k-page finish-flow">
       <div className="fin-back-row">
@@ -921,6 +942,11 @@ function Summary({
               const showArticle = story.target_language === "de";
               const article = showArticle ? w.gender : null;
               const added = reviewIds.has(w.id);
+              const entry = schedule?.get(w.id) ?? null;
+              const label = scheduleLabel(t, entry, {
+                struggled: isStruggled,
+                justAdded: added,
+              });
               return (
                 <li
                   key={w.id}
@@ -939,12 +965,8 @@ function Summary({
                   <span className="fin-sched__tx">{w.translation ?? ""}</span>
                   <span className="fin-sched__next">
                     <span className="fin-sched__next-dot" />
-                    {added
-                      ? t("story.finish.summary.schedule.added")
-                      : isStruggled
-                        ? t("story.finish.summary.schedule.nextSession")
-                        : t("story.finish.summary.schedule.later")}
-                    {!added && (
+                    {label}
+                    {!added && entry && !entry.has_card && (
                       <button
                         type="button"
                         className="qcard__ghost"
@@ -1023,6 +1045,41 @@ function tokenizeWords(text: string): Tok[] {
 
 function countBand(bands: Record<number, ScoreBand>, band: ScoreBand): number {
   return Object.values(bands).filter((v) => v === band).length;
+}
+
+/**
+ * Render the SRS schedule label for one word.
+ *
+ * Priority (overrides cascade down):
+ *   1. Just-added in this session   → "Añadida"
+ *   2. Schedule data not yet loaded → fall back to the in-session heuristic
+ *      (struggled → "Próxima sesión" else "Pendiente")
+ *   3. No SRS card at all           → "+ Añadir a repaso" CTA caller renders
+ *   4. Real bucket from the backend → localised label per bucket
+ */
+function scheduleLabel(
+  t: (key: string) => string,
+  entry: ScheduleEntry | null,
+  ctx: { struggled: boolean; justAdded: boolean },
+): string {
+  if (ctx.justAdded) return t("story.finish.summary.schedule.added");
+  if (entry === null) {
+    return ctx.struggled
+      ? t("story.finish.summary.schedule.nextSession")
+      : t("story.finish.summary.schedule.later");
+  }
+  if (!entry.has_card) {
+    return t("story.finish.summary.schedule.notInSrs");
+  }
+  const map: Record<ScheduleBucket, string> = {
+    not_in_srs: t("story.finish.summary.schedule.notInSrs"),
+    due_now: t("story.finish.summary.schedule.dueNow"),
+    soon: t("story.finish.summary.schedule.soon"),
+    this_week: t("story.finish.summary.schedule.thisWeek"),
+    next_week: t("story.finish.summary.schedule.nextWeek"),
+    later: t("story.finish.summary.schedule.later"),
+  };
+  return map[entry.bucket];
 }
 
 /** Case + diacritic insensitive equality. "AUTOBÚS" === "autobus". */
