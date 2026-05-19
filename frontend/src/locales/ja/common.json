@@ -155,7 +155,9 @@
       "playAria": "Klaraを聞く",
       "pauseAria": "一時停止",
       "speedAria": "速度 {{rate}}",
-      "micAria": "発音 — 長押しで録音"
+      "micAria": "発音",
+      "micAriaRecording": "録音を停止",
+      "evaluating": "評価中"
     },
     "end": {
       "kicker": "物語の終わり",
