@@ -322,7 +322,6 @@
         "body": "Der Zugang zu Klara ist nur auf Einladung. Bitte den Admin um einen Link und öffne ihn hier."
       },
       "error": {
-        "allowlist": "Diese E-Mail ist nicht für die Registrierung freigeschaltet.",
         "passwordMismatch": "Die Passwörter stimmen nicht überein.",
         "inviteInvalid": "Dieser Einladungslink ist ungültig.",
         "inviteExpired": "Dieser Einladungslink ist abgelaufen.",
@@ -363,7 +362,6 @@
   "errors": {
     "unauthorized": "Du musst dich anmelden.",
     "session_expired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
-    "not_in_allowlist": "Diese E-Mail ist nicht freigeschaltet.",
     "invalid_credentials": "E-Mail oder Passwort ungültig.",
     "email_not_verified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
   }

@@ -155,14 +155,6 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ja": "この招待は別のメールアドレス宛です。",
         "pt": "Este convite está associado a outro email.",
     },
-    "auth.allowlist_blocked": {
-        "es": "Este correo no está autorizado para registrarse.",
-        "en": "This email is not authorized to sign up.",
-        "de": "Diese E-Mail ist nicht für die Registrierung freigeschaltet.",
-        "fr": "Cet e-mail n'est pas autorisé à s'inscrire.",
-        "ja": "このメールアドレスは登録を許可されていません。",
-        "pt": "Este email não está autorizado a registar-se.",
-    },
     "auth.invalid_credentials": {
         "es": "Correo o contraseña incorrectos.",
         "en": "Invalid email or password.",

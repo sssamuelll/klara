@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.asyncio
 async def test_verify_flow_with_token(client, app_settings, captured_emails, seed_invite):
     """Register → captured verify token → POST /verify → user.is_verified=True."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     token_invite = await seed_invite(email=None)
 
     r = await client.post(
@@ -29,7 +29,7 @@ async def test_verify_flow_with_token(client, app_settings, captured_emails, see
 
 @pytest.mark.asyncio
 async def test_verify_with_bad_token(client, app_settings):
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     r = await client.post("/api/v1/auth/verify", json={"token": "not-a-real-token"})
     assert r.status_code in (400, 422)
 
@@ -37,7 +37,7 @@ async def test_verify_with_bad_token(client, app_settings):
 @pytest.mark.asyncio
 async def test_reset_password_flow(client, app_settings, captured_emails, seed_invite):
     """Register → forgot-password → captured reset token → reset → new password logs in."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     invite_token = await seed_invite(email=None)
 
     email = "reset@example.com"
@@ -89,7 +89,7 @@ async def test_reset_password_flow(client, app_settings, captured_emails, seed_i
 @pytest.mark.asyncio
 async def test_forgot_password_unknown_email_is_silent(client, app_settings, captured_emails):
     """Anti-enumeration: forgot-password for a missing email must NOT email anyone."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     r = await client.post(
         "/api/v1/auth/forgot-password",
         json={"email": "ghost@example.com"},

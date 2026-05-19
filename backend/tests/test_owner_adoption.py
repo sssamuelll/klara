@@ -13,10 +13,7 @@ async def test_initial_owner_adopts_legacy_user(
     instead of creating a new one. The user's id, and any stories owned by
     that id, must survive intact.
     """
-    app_settings(
-        ALLOWED_SIGNUP_EMAILS="samuel@klara.app",
-        INITIAL_OWNER_EMAIL="samuel@klara.app",
-    )
+    app_settings(INITIAL_OWNER_EMAIL="samuel@klara.app")
 
     pre_user_id = legacy_owner_with_story["user_id"]
     pre_story_id = legacy_owner_with_story["story_id"]
@@ -54,10 +51,7 @@ async def test_non_owner_email_does_not_adopt(
     client, app_settings, legacy_owner_with_story, db_session, seed_invite
 ):
     """A non-owner email (with a valid invite) must NOT touch the legacy row."""
-    app_settings(
-        ALLOWED_SIGNUP_EMAILS="other@klara.app,samuel@klara.app",
-        INITIAL_OWNER_EMAIL="samuel@klara.app",
-    )
+    app_settings(INITIAL_OWNER_EMAIL="samuel@klara.app")
     token = await seed_invite(email="other@klara.app")
 
     r = await client.post(

@@ -13,7 +13,7 @@ import pytest
 
 
 async def _register_and_login(client, app_settings, seed_invite) -> str:
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="", AZURE_SPEECH_KEY="dummy-key")
+    app_settings(INITIAL_OWNER_EMAIL="", AZURE_SPEECH_KEY="dummy-key")
     token = await seed_invite(email=None)
     r = await client.post(
         "/api/v1/auth/register",

@@ -104,8 +104,8 @@ def _reset_settings_cache() -> None:
 @pytest.fixture
 def app_settings():
     """
-    Mutates env vars and resets the cached Settings singleton. Use as a
-    parametrized fixture to test allowlist / owner email scenarios.
+    Mutates env vars and resets the cached Settings singleton. Use to test
+    owner-email and other config-dependent scenarios.
     """
 
     snapshot: dict[str, str | None] = {}

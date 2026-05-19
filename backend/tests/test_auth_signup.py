@@ -3,8 +3,8 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_signup_requires_invite_token(client, app_settings):
-    """No invite + not bootstrap owner -> 400. The new primary gate."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    """No invite + not bootstrap owner -> 400. The only gate."""
+    app_settings(INITIAL_OWNER_EMAIL="")
     resp = await client.post(
         "/api/v1/auth/register",
         json={"email": "anyone@example.com", "password": "hunter2hunter2"},
@@ -16,27 +16,8 @@ async def test_signup_requires_invite_token(client, app_settings):
 
 
 @pytest.mark.asyncio
-async def test_signup_blocked_by_allowlist_even_with_invite(client, app_settings, seed_invite):
-    """Allowlist runs before invite — defense-in-depth: a stale invite for an
-    email outside the allowlist still gets 403."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="ok@example.com")
-    token = await seed_invite(email=None)
-    resp = await client.post(
-        "/api/v1/auth/register",
-        json={
-            "email": "intruder@example.com",
-            "password": "hunter2hunter2",
-            "invite_token": token,
-        },
-    )
-    assert resp.status_code == 403
-    body = resp.json()
-    assert "autorizado" in body["detail"].lower() or "authorized" in body["detail"].lower()
-
-
-@pytest.mark.asyncio
 async def test_signup_ok_with_invite_then_login(client, app_settings, seed_invite):
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     token = await seed_invite(email=None)
 
     r1 = await client.post(
@@ -75,8 +56,7 @@ async def test_me_requires_auth(client):
 
 
 @pytest.mark.asyncio
-async def test_email_is_case_insensitive(client, app_settings, seed_invite):
-    app_settings(ALLOWED_SIGNUP_EMAILS="case@example.com")
+async def test_email_is_case_insensitive(client, seed_invite):
     token = await seed_invite(email=None)
     r1 = await client.post(
         "/api/v1/auth/register",
@@ -101,7 +81,7 @@ async def test_signup_rejects_short_password_via_validate_password(
     client, app_settings, seed_invite
 ):
     """Regresión: el override de UserManager.validate_password aplica también en signup."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     token = await seed_invite(email=None)
     resp = await client.post(
         "/api/v1/auth/register",

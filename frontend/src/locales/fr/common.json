@@ -322,7 +322,6 @@
         "body": "L'accès à Klara se fait uniquement sur invitation. Demande un lien à l'administrateur et ouvre-le ici."
       },
       "error": {
-        "allowlist": "Cet e-mail n'est pas autorisé à s'inscrire.",
         "passwordMismatch": "Les mots de passe ne correspondent pas.",
         "inviteInvalid": "Ce lien d'invitation n'est pas valide.",
         "inviteExpired": "Ce lien d'invitation a expiré.",
@@ -363,7 +362,6 @@
   "errors": {
     "unauthorized": "Tu dois te connecter.",
     "session_expired": "Ta session a expiré. Reconnecte-toi.",
-    "not_in_allowlist": "Cet e-mail n'est pas autorisé.",
     "invalid_credentials": "E-mail ou mot de passe invalide.",
     "email_not_verified": "Vérifie ton e-mail avant de continuer."
   }

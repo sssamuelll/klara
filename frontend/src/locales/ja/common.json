@@ -322,7 +322,6 @@
         "body": "Klara への登録は招待制です。管理者にリンクをリクエストし、ここで開いてください。"
       },
       "error": {
-        "allowlist": "このメールアドレスは登録を許可されていません。",
         "passwordMismatch": "パスワードが一致しません。",
         "inviteInvalid": "この招待リンクは無効です。",
         "inviteExpired": "この招待リンクは期限切れです。",
@@ -363,7 +362,6 @@
   "errors": {
     "unauthorized": "ログインが必要です。",
     "session_expired": "セッションの期限が切れました。もう一度ログインしてください。",
-    "not_in_allowlist": "このメールアドレスは許可されていません。",
     "invalid_credentials": "メールアドレスまたはパスワードが正しくありません。",
     "email_not_verified": "続行する前にメールアドレスを確認してください。"
   }

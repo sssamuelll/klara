@@ -133,8 +133,8 @@ def create_app() -> FastAPI:
 
     auth_prefix = "/api/v1/auth"
     # TODO(security): wire slowapi rate limiting on /jwt/login and /register
-    # (e.g. 5 req/min per IP). Currently relying on the email allowlist as the
-    # primary brute-force defense; fine while the gate is on, weak if ever off.
+    # (e.g. 5 req/min per IP). Invite-only signup limits account creation but
+    # doesn't slow password-spray against /jwt/login.
     app.include_router(
         fastapi_users.get_auth_router(auth_backend),
         prefix=f"{auth_prefix}/jwt",

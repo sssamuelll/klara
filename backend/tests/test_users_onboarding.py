@@ -71,7 +71,7 @@ async def test_seed_oauth_account_fixture_works(db_session, seed_oauth_account):
 @pytest.mark.asyncio
 async def test_get_me_auth_methods_password_only(client, app_settings, seed_invite):
     """Usuario creado via signup -> auth_methods == ["password"], no google."""
-    app_settings(ALLOWED_SIGNUP_EMAILS="", INITIAL_OWNER_EMAIL="")
+    app_settings(INITIAL_OWNER_EMAIL="")
     token = await seed_invite(email=None)
     await client.post(
         "/api/v1/auth/register",
