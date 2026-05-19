@@ -23,9 +23,7 @@ class ElevenLabsTTS:
         self._default_voice = settings.elevenlabs_voice_id
         # Only keep entries with a configured voice; an empty string would
         # masquerade as a real voice_id and 404 against the API.
-        self._voices_by_lang = {
-            k: v for k, v in settings.elevenlabs_voices_by_lang.items() if v
-        }
+        self._voices_by_lang = {k: v for k, v in settings.elevenlabs_voices_by_lang.items() if v}
 
     @property
     def name(self) -> str:

@@ -177,9 +177,7 @@ def test_voice_for_lang_case_insensitive():
 
 
 def test_voice_for_lang_picks_per_lang_over_fallback():
-    tts = InworldTTS(
-        _settings(inworld_voice_id="Aria", inworld_voice_id_es="Diego")
-    )
+    tts = InworldTTS(_settings(inworld_voice_id="Aria", inworld_voice_id_es="Diego"))
     assert tts.voice_for_lang("es") == "Diego"
     assert tts.voice_for_lang("de") == "Aria"  # no de override → fallback
 

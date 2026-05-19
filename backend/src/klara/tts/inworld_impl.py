@@ -43,9 +43,7 @@ class InworldTTS:
         self._timeout = settings.tts_request_timeout_seconds
         self._model = settings.inworld_model
         self._default_voice = settings.inworld_voice_id
-        self._voices_by_lang = {
-            k: v for k, v in settings.inworld_voices_by_lang.items() if v
-        }
+        self._voices_by_lang = {k: v for k, v in settings.inworld_voices_by_lang.items() if v}
         # Inworld voices are language-locked, so requiring at least *some*
         # voice up-front catches "I forgot to configure anything" failures
         # at startup instead of at the first synthesize call.
@@ -109,7 +107,9 @@ class InworldTTS:
         try:
             audio_b64 = resp.json()["audioContent"]
         except (ValueError, KeyError) as e:
-            raise InworldTTSError(f"Inworld response missing audioContent: {resp.text[:200]}") from e
+            raise InworldTTSError(
+                f"Inworld response missing audioContent: {resp.text[:200]}"
+            ) from e
         try:
             audio = base64.b64decode(audio_b64)
         except (ValueError, TypeError) as e:

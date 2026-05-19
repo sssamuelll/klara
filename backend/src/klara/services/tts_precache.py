@@ -49,9 +49,7 @@ def collect_story_texts(story_content: dict, target_words: list[dict] | None = N
     return deduped
 
 
-async def precache_texts(
-    settings: Settings, texts: list[str], lang: str | None = None
-) -> None:
+async def precache_texts(settings: Settings, texts: list[str], lang: str | None = None) -> None:
     if not texts:
         return
     provider = _build_provider(settings)
@@ -70,9 +68,7 @@ async def precache_texts(
         async with semaphore:
             async with sm() as session:
                 try:
-                    _, _, hit = await get_or_synthesize(
-                        session, provider, text=text, lang=lang
-                    )
+                    _, _, hit = await get_or_synthesize(session, provider, text=text, lang=lang)
                     log.debug("tts.precache.done", chars=len(text), cache_hit=hit)
                 except TTSError as e:
                     log.warning("tts.precache.failed", error=str(e), chars=len(text))

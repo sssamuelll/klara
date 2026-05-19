@@ -65,9 +65,7 @@ def test_voice_for_lang_case_insensitive():
 def test_empty_string_override_is_ignored():
     """Empty env-var values must NOT mask the fallback — an empty voice_id
     would 404 against ElevenLabs."""
-    tts = ElevenLabsTTS(
-        _settings(elevenlabs_voice_id="FALLBACK", elevenlabs_voice_id_de="")
-    )
+    tts = ElevenLabsTTS(_settings(elevenlabs_voice_id="FALLBACK", elevenlabs_voice_id_de=""))
     assert tts.voice_for_lang("de") == "FALLBACK"
 
 
