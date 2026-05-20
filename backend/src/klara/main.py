@@ -115,7 +115,7 @@ class OAuthCallbackRedirectMiddleware(BaseHTTPMiddleware):
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="German Learning App",
+        title="Klara",
         version="0.1.0",
         lifespan=lifespan,
     )
