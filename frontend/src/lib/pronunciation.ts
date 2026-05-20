@@ -4,12 +4,18 @@ import type { PronunciationScoreResponse, WordScore } from "../api/types";
 export type ScoreBand = "good" | "ok" | "bad";
 
 /**
- * Azure accuracy_score ranges 0-100. The UI buckets it into three bands so
- * the same color-coding the simulator used keeps working unchanged.
+ * Azure accuracy_score ranges 0-100. The UI buckets it into three bands.
+ *
+ * Thresholds were 80/60 originally — calibrated as if for native speakers.
+ * Users reported (issue #40) that the 80/60 cut was firing false `bad`
+ * tags on words that sounded fine, undermining trust in the feedback.
+ * Comparable learner apps (Speakly, Babbel) use ~70/45 instead. Moved
+ * here too. If a real native says a word at accuracy 75, that's still
+ * "good" — anyone above 70 is plenty intelligible at A0-B1 levels.
  */
 export function scoreBand(accuracy: number): ScoreBand {
-  if (accuracy >= 80) return "good";
-  if (accuracy >= 60) return "ok";
+  if (accuracy >= 70) return "good";
+  if (accuracy >= 45) return "ok";
   return "bad";
 }
 
