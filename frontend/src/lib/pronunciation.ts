@@ -4,12 +4,18 @@ import type { PronunciationScoreResponse, WordScore } from "../api/types";
 export type ScoreBand = "good" | "ok" | "bad";
 
 /**
- * Azure accuracy_score ranges 0-100. The UI buckets it into three bands so
- * the same color-coding the simulator used keeps working unchanged.
+ * Azure accuracy_score ranges 0-100. The UI buckets it into three bands.
+ *
+ * Thresholds were 80/60 originally — calibrated as if for native speakers.
+ * Users reported (issue #40) that the 80/60 cut was firing false `bad`
+ * tags on words that sounded fine, undermining trust in the feedback.
+ * Comparable learner apps (Speakly, Babbel) use ~70/45 instead. Moved
+ * here too. If a real native says a word at accuracy 75, that's still
+ * "good" — anyone above 70 is plenty intelligible at A0-B1 levels.
  */
 export function scoreBand(accuracy: number): ScoreBand {
-  if (accuracy >= 80) return "good";
-  if (accuracy >= 60) return "ok";
+  if (accuracy >= 70) return "good";
+  if (accuracy >= 45) return "ok";
   return "bad";
 }
 
@@ -97,7 +103,14 @@ export async function startMicRecording(): Promise<MicRecorder> {
   }
   let stream: MediaStream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Ask the browser for mono @ 16kHz to match what Azure ultimately
+    // consumes after ffmpeg transcodes. Browsers may decline (some default
+    // to 48kHz stereo) but requesting it saves a downsample step when they
+    // do honour it, and channelCount=1 is widely respected. Keep NS / EC /
+    // AGC at browser defaults — most users aren't recording in studios.
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, sampleRate: 16000 },
+    });
   } catch (e) {
     const err: PronunciationError = {
       kind: "mic_denied",

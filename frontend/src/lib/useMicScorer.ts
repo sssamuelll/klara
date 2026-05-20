@@ -99,7 +99,11 @@ export function useMicScorer(
       }
       const resp = await scoreAudio(blob, referenceText, language);
       setResult({
-        overallScore: resp.scores.pronunciation,
+        // Use pure phoneme accuracy, not Azure's `pronunciation` compositum
+        // (which blends accuracy + fluency + completeness). Compositum was
+        // penalising slow learners who paused between words — the user said
+        // the right phonemes but the score said otherwise. Issue #40.
+        overallScore: resp.scores.accuracy,
         recognizedText: resp.recognized_text,
         words: resp.words,
         bands: bandsByTokenIndex(referenceText, resp.words),

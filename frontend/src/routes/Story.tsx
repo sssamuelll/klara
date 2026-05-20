@@ -268,7 +268,8 @@ export default function StoryView() {
           sentence_index: idxAtStart,
           reference_text: sentence.target,
           recognized_text: resp.recognized_text,
-          overall_score: resp.scores.pronunciation,
+          // Pure phoneme accuracy, not Azure's compositum — see useMicScorer.
+          overall_score: resp.scores.accuracy,
           word_bands: Object.fromEntries(
             Object.entries(bands).map(([k, v]) => [k, v]),
           ),
