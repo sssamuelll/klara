@@ -550,3 +550,12 @@
   .k-feedback__head { flex-direction: column; gap: 8px; }
   .k-rec__bars { width: 140px; }
 }
+
+/* ---- Touch devices: hide keyboard hints ------------------- */
+/* `hover: none` + `pointer: coarse` matches phones, tablets, and pen-only
+   devices — but NOT a Surface in tablet-mode-with-attached-keyboard
+   (which keeps the hint, which is correct). Viewport-based queries
+   would false-positive on landscape tablets. */
+@media (hover: none) and (pointer: coarse) {
+  .k-hint { display: none; }
+}
