@@ -89,10 +89,13 @@ async def test_cached_skips_llm(db_session, _user):
 async def test_generates_and_persists(db_session, _user):
     story = await _make_story(db_session, _user)
 
-    llm = FakeLLM('{"body": "Mañana, otra. Tal vez en un café."}')
+    # Service strips trailing punctuation/quotes (covered separately by
+    # test_strips_outer_quotes_and_periods). Use a body without a trailing
+    # period here so the equality check focuses on the persistence path.
+    llm = FakeLLM('{"body": "Mañana, otra; tal vez más larga"}')
     out = await ensure_klara_note(db_session, story, llm)
-    assert out == "Mañana, otra. Tal vez en un café."
-    assert story.klara_note == "Mañana, otra. Tal vez en un café."
+    assert out == "Mañana, otra; tal vez más larga"
+    assert story.klara_note == "Mañana, otra; tal vez más larga"
     assert llm.calls == 1
 
 
