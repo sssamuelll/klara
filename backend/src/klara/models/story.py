@@ -45,6 +45,10 @@ class Story(Base):
     # explaining the rule, both in the user's native_language.
     insight_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
     insight_body: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    # One-line teaser (italic, signed K) shown at the bottom of the Finish
+    # summary, previewing tomorrow's lesson at a tonal/level register. The
+    # next story isn't pre-generated; this is a vibe-set, not a spoiler.
+    klara_note: Mapped[str | None] = mapped_column(String(400), nullable=True)
     created_at: Mapped[created_ts]
 
 

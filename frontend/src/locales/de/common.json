@@ -248,6 +248,9 @@
         "insight": {
           "title": "Eine Sache zum Beachten",
           "unavailable": "Klara hat dieses Mal kein klares Muster gefunden."
+        },
+        "note": {
+          "aria": "Klaras Notiz"
         }
       }
     }

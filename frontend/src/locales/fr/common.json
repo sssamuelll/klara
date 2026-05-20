@@ -248,6 +248,9 @@
         "insight": {
           "title": "Une chose à remarquer",
           "unavailable": "Klara n’a pas trouvé de motif clair cette fois."
+        },
+        "note": {
+          "aria": "Note de Klara"
         }
       }
     }

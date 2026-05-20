@@ -53,6 +53,10 @@ class InsightOut(BaseModel):
     body: str
 
 
+class KlaraNoteOut(BaseModel):
+    body: str
+
+
 # ---- Attempt records ----------------------------------------------------
 
 

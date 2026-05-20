@@ -23,6 +23,7 @@ import { api } from "../api/client";
 import type {
   ClozeQuizItem,
   InsightResponse,
+  KlaraNoteResponse,
   MCQuizItem,
   QuizItem,
   ScheduleBucket,
@@ -1020,6 +1021,28 @@ function Summary({
     };
   }, [story.id]);
 
+  // Klara Note: one-line teaser for tomorrow. Skeleton while loading;
+  // nothing rendered if generation fails.
+  const [klaraNote, setKlaraNote] = useState<KlaraNoteResponse | null>(null);
+  const [klaraNoteLoading, setKlaraNoteLoading] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getStoryKlaraNote(story.id)
+      .then((r) => {
+        if (!cancelled) setKlaraNote(r);
+      })
+      .catch(() => {
+        // best-effort
+      })
+      .finally(() => {
+        if (!cancelled) setKlaraNoteLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [story.id]);
+
   return (
     <main className="k-page finish-flow">
       <div className="fin-back-row">
@@ -1167,6 +1190,28 @@ function Summary({
           )}
         </section>
       </div>
+
+      {(klaraNoteLoading || klaraNote) && (
+        <>
+          <hr className="fin-rule" />
+          <section className="fin-note" aria-label={t("story.finish.summary.note.aria")}>
+            {klaraNoteLoading ? (
+              <div className="fin-note__skeleton" aria-busy="true">
+                <div className="fin-note__skeleton-row" />
+              </div>
+            ) : klaraNote ? (
+              <>
+                <p className="fin-note__body">
+                  <span className="fin-note__open">«</span>
+                  {klaraNote.body}
+                  <span className="fin-note__close">»</span>
+                </p>
+                <p className="fin-note__sign">— K</p>
+              </>
+            ) : null}
+          </section>
+        </>
+      )}
 
       <hr className="fin-rule" />
 
