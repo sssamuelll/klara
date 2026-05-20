@@ -5,9 +5,10 @@ from __future__ import annotations
 import uuid
 
 import pytest
+import pytest_asyncio
 
 from klara.llm.base import LLMResponse
-from klara.models import Story
+from klara.models import Story, User
 from klara.models.enums import CEFRLevel
 from klara.services.finish_lessons import ensure_klara_note
 
@@ -27,10 +28,30 @@ class FakeLLM:
         raise NotImplementedError
 
 
-def _new_story() -> Story:
-    return Story(
+@pytest_asyncio.fixture
+async def _user(db_session):
+    """Seed a real user so Story's FK to users.id is satisfied."""
+    user = User(
         id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
+        email=f"test-{uuid.uuid4().hex[:6]}@klara.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="Test",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+
+async def _make_story(db_session, user: User) -> Story:
+    story = Story(
+        id=uuid.uuid4(),
+        user_id=user.id,
         level=CEFRLevel.A0,
         target_language="de",
         native_language="es",
@@ -43,15 +64,18 @@ def _new_story() -> Story:
         },
         target_vocab_item_ids=[],
     )
+    db_session.add(story)
+    await db_session.commit()
+    await db_session.refresh(story)
+    return story
 
 
 @pytest.mark.asyncio
-async def test_cached_skips_llm(db_session):
+async def test_cached_skips_llm(db_session, _user):
     """If story.klara_note is already set, the service returns it without
     calling the LLM."""
-    story = _new_story()
+    story = await _make_story(db_session, _user)
     story.klara_note = "Mañana, otra. Probablemente más larga."
-    db_session.add(story)
     await db_session.commit()
     await db_session.refresh(story)
 
@@ -62,11 +86,8 @@ async def test_cached_skips_llm(db_session):
 
 
 @pytest.mark.asyncio
-async def test_generates_and_persists(db_session):
-    story = _new_story()
-    db_session.add(story)
-    await db_session.commit()
-    await db_session.refresh(story)
+async def test_generates_and_persists(db_session, _user):
+    story = await _make_story(db_session, _user)
 
     llm = FakeLLM('{"body": "Mañana, otra. Tal vez en un café."}')
     out = await ensure_klara_note(db_session, story, llm)
@@ -76,11 +97,8 @@ async def test_generates_and_persists(db_session):
 
 
 @pytest.mark.asyncio
-async def test_strips_outer_quotes_and_periods(db_session):
-    story = _new_story()
-    db_session.add(story)
-    await db_session.commit()
-    await db_session.refresh(story)
+async def test_strips_outer_quotes_and_periods(db_session, _user):
+    story = await _make_story(db_session, _user)
 
     llm = FakeLLM('{"body": "«Mañana, otra.» "}')
     out = await ensure_klara_note(db_session, story, llm)
@@ -89,11 +107,8 @@ async def test_strips_outer_quotes_and_periods(db_session):
 
 
 @pytest.mark.asyncio
-async def test_malformed_json_returns_none(db_session):
-    story = _new_story()
-    db_session.add(story)
-    await db_session.commit()
-    await db_session.refresh(story)
+async def test_malformed_json_returns_none(db_session, _user):
+    story = await _make_story(db_session, _user)
 
     llm = FakeLLM("not valid json at all")
     out = await ensure_klara_note(db_session, story, llm)
@@ -102,11 +117,8 @@ async def test_malformed_json_returns_none(db_session):
 
 
 @pytest.mark.asyncio
-async def test_empty_body_returns_none(db_session):
-    story = _new_story()
-    db_session.add(story)
-    await db_session.commit()
-    await db_session.refresh(story)
+async def test_empty_body_returns_none(db_session, _user):
+    story = await _make_story(db_session, _user)
 
     llm = FakeLLM('{"body": "   "}')
     out = await ensure_klara_note(db_session, story, llm)
