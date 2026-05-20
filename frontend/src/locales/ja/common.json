@@ -248,6 +248,9 @@
         "insight": {
           "title": "気づきポイント",
           "unavailable": "Klaraは今回明確なパターンを見つけませんでした。"
+        },
+        "note": {
+          "aria": "Klaraからのメモ"
         }
       }
     }

@@ -248,6 +248,9 @@
         "insight": {
           "title": "One thing to notice",
           "unavailable": "Klara didn’t find a clear pattern this time."
+        },
+        "note": {
+          "aria": "Klara’s note"
         }
       }
     }

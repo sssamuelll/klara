@@ -78,6 +78,29 @@ Devuelve SOLO este JSON, sin markdown ni texto extra:
 }}"""
 
 
+_NOTE_PROMPT = """Eres Klara, profesora editorial de {target_label}. El estudiante acaba de terminar esta lección. Escribe UNA línea breve, italic, como teaser de la próxima sesión.
+
+Historia recién leída (en {target_label}):
+{story_text}
+
+Reglas:
+- UNA sola línea, máximo 18 palabras, en {native_label}.
+- NO reveles una historia específica de mañana (no hay ninguna en cola). El tono es vibe-set, no spoiler.
+- Referencia tonalmente el nivel y temática de la actual: si fue cotidiana, sugiere algo cotidiano; si fue corta, sugiere que la siguiente puede ser más larga.
+- Tono: columnista cálida, despedida breve. Sin "te veo mañana", sin emojis, sin signos de exclamación.
+- Sin firma ni "— K" al final — eso lo añade el UI.
+
+Ejemplos del estilo (en español, para inspirarte; ajusta al idioma del estudiante):
+- "Mañana, otra. Tal vez con frases más largas."
+- "La que sigue puede que pase en una panadería."
+- "Mañana volvemos sobre «autobús». Y conocemos a alguien nuevo."
+
+Devuelve SOLO este JSON, sin markdown:
+{{
+  "body": "tu línea en {native_label}"
+}}"""
+
+
 _INSIGHT_PROMPT = """Eres Klara, profesora de {target_label}. El estudiante acaba de terminar esta historia. Selecciona UN aspecto lingüístico concreto que aparezca en ella y escríbele una nota al margen (NO un libro de gramática).
 
 Historia (en {target_label}):
@@ -163,6 +186,48 @@ async def ensure_quiz_items(
     await db.commit()
     await db.refresh(story)
     return story.quiz_items
+
+
+async def ensure_klara_note(
+    db: AsyncSession,
+    story: Story,
+    llm: LLMClient,
+) -> str | None:
+    """Return the Klara teaser line, generating + persisting once if missing."""
+    if story.klara_note:
+        return story.klara_note
+
+    target_label = language_label(story.target_language)
+    native_label = language_label(story.native_language)
+    prompt = _NOTE_PROMPT.format(
+        target_label=target_label,
+        native_label=native_label,
+        story_text=_story_text_for_prompt(story),
+    )
+
+    try:
+        resp = await llm.complete(
+            messages=[Message(role="user", content=prompt)],
+            max_tokens=200,
+            temperature=0.85,
+            response_format={"type": "json_object"},
+        )
+        data = _extract_json(resp.content)
+        body = data.get("body")
+        if not isinstance(body, str):
+            log.warning("finish.note.bad_shape", story_id=str(story.id))
+            return None
+        body = body.strip().strip("«»\"'.").strip()[:400]
+        if not body:
+            return None
+    except Exception as e:
+        log.warning("finish.note.gen_failed", story_id=str(story.id), error=str(e))
+        return None
+
+    story.klara_note = body
+    await db.commit()
+    await db.refresh(story)
+    return body
 
 
 async def ensure_insight(

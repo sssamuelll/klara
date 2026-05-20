@@ -859,6 +859,55 @@
 @keyframes fin-skel-pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.35; } }
 
 /* ============================================================
+   KLARA NOTE — italic sign-off teasing tomorrow's lesson
+   ============================================================ */
+.fin-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 12px 0;
+  text-align: right;
+}
+.fin-note__body {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink-2);
+  margin: 0;
+  max-width: 50ch;
+}
+.fin-note__open, .fin-note__close {
+  color: var(--ink-4);
+  margin: 0 4px;
+}
+.fin-note__sign {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-3);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+.fin-note__skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 12px 0;
+  width: 100%;
+}
+.fin-note__skeleton-row {
+  height: 20px;
+  border-radius: 3px;
+  background: var(--paper-3);
+  animation: fin-skel-pulse 1.4s ease-in-out infinite;
+  width: 60%;
+  max-width: 50ch;
+}
+
+/* ============================================================
    NEXT STEPS
    ============================================================ */
 .fin-cta {
@@ -873,6 +922,9 @@
    RESPONSIVE
    ============================================================ */
 @media (max-width: 980px) {
+  .fin-note { align-items: flex-start; text-align: left; }
+  .fin-note__skeleton { align-items: flex-start; }
+  .fin-note__skeleton-row { width: 90%; }
   .finish-flow { padding: 24px 22px 80px; gap: 32px; }
   .fin-hero__title { font-size: 56px; }
   .fin-souvenir__quote { font-size: 38px; }

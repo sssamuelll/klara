@@ -4,6 +4,7 @@ import type {
   InsightResponse,
   Invitation,
   InvitationCreate,
+  KlaraNoteResponse,
   MCResolveResponse,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
@@ -250,6 +251,9 @@ export const api = {
 
   getStoryInsight: (storyId: string) =>
     request<InsightResponse | null>(`/stories/${storyId}/insight`),
+
+  getStoryKlaraNote: (storyId: string) =>
+    request<KlaraNoteResponse | null>(`/stories/${storyId}/klara-note`),
 
   recordPronunciationAttempt: (storyId: string, payload: PronunciationAttemptIn) =>
     request<void>(`/stories/${storyId}/pronunciation/attempts`, {

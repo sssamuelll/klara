@@ -190,6 +190,10 @@ export interface InsightResponse {
   body: string;
 }
 
+export interface KlaraNoteResponse {
+  body: string;
+}
+
 export interface PronunciationAttemptIn {
   sentence_index: number;
   reference_text: string;

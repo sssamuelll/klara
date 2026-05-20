@@ -26,6 +26,7 @@ from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
     InsightOut,
+    KlaraNoteOut,
     MCResolveOut,
     PronunciationAttemptIn,
     PronunciationAttemptOut,
@@ -45,7 +46,7 @@ from klara.schemas.story import (
     StorySentenceOut,
     StoryWordOut,
 )
-from klara.services.finish_lessons import ensure_insight, ensure_quiz_items
+from klara.services.finish_lessons import ensure_insight, ensure_klara_note, ensure_quiz_items
 from klara.services.story_gen import generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
@@ -206,6 +207,22 @@ async def get_story_insight(
         return None
     title, body = result
     return InsightOut(title=title, body=body)
+
+
+@router.get("/{story_id}/klara-note", response_model=KlaraNoteOut | None)
+async def get_story_klara_note(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+    llm: ChatLLM,
+) -> KlaraNoteOut | None:
+    """One-line teaser shown at the bottom of the Finish summary."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    body = await ensure_klara_note(db, story, llm)
+    if body is None:
+        return None
+    return KlaraNoteOut(body=body)
 
 
 @router.post(
