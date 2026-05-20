@@ -18,7 +18,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
-import type { StorySentence, StoryWord } from "../api/types";
+import type { StorySentence, StoryWord, WordBreakdown } from "../api/types";
 import { startAudioBars } from "../lib/audioBars";
 import type { ScoreBand } from "../lib/pronunciation";
 import { getWaveform } from "../lib/waveform";
@@ -42,6 +42,12 @@ interface Props {
   wordsById: Record<string, StoryWord>;
   activeWordKey: string | null;
   onWordTap: (word: StoryWord, key: string, el: HTMLElement) => void;
+  /**
+   * Tap handler for non-target words that came back in the sentence's
+   * breakdown. Optional so historical stories without breakdowns keep
+   * working — those words just stay non-clickable like before.
+   */
+  onBreakdownTap?: (entry: WordBreakdown, key: string, el: HTMLElement) => void;
 
   // Playback state
   playing: boolean;
@@ -109,6 +115,31 @@ function matchToken(text: string, lemmaIndex: Record<string, string>): string | 
   return null;
 }
 
+/**
+ * Map a sentence's breakdown into a per-word lookup. Multi-word entries
+ * (e.g. "por favor") get registered under each constituent so single-word
+ * tokens still resolve to the same multi-word translation. Trade-off: a
+ * tap on "por" vs "favor" both show the same popover. v1 limitation —
+ * proper multi-token grouping is a follow-up.
+ */
+function buildBreakdownMap(
+  breakdown: WordBreakdown[] | null | undefined,
+): Map<string, WordBreakdown> | null {
+  if (!breakdown || breakdown.length === 0) return null;
+  const map = new Map<string, WordBreakdown>();
+  for (const entry of breakdown) {
+    const parts = entry.word.split(/\s+/);
+    for (const part of parts) {
+      const key = part.replace(PUNCT_RE, "").toLowerCase();
+      if (!key) continue;
+      // First entry wins — preserves the LLM's intended grouping when
+      // the same word appears in multiple breakdown entries.
+      if (!map.has(key)) map.set(key, entry);
+    }
+  }
+  return map;
+}
+
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const total = Math.floor(seconds);
@@ -155,6 +186,7 @@ export default function SentenceView({
   wordsById,
   activeWordKey,
   onWordTap,
+  onBreakdownTap,
   playing,
   progress,
   duration,
@@ -178,6 +210,10 @@ export default function SentenceView({
   const { t } = useTranslation();
 
   const tokens = useMemo(() => tokenize(sentence.target), [sentence.target]);
+  const breakdownMap = useMemo(
+    () => buildBreakdownMap(sentence.breakdown),
+    [sentence.breakdown],
+  );
   const showFeedback = Boolean(feedback) && !recording && !evaluating;
   const state = deriveState({
     recording,
@@ -345,13 +381,21 @@ export default function SentenceView({
               );
             }
             const wordId = matchToken(tok.text, lemmaIndex);
+            const breakdownEntry =
+              breakdownMap && !wordId
+                ? breakdownMap.get(tok.text.replace(PUNCT_RE, "").toLowerCase()) ?? null
+                : null;
             const score = scoreByTokenIdx?.[i];
             const key = `${index}-${i}`;
             const isActive = activeWordKey === key;
             const onClick = wordId
               ? (e: React.MouseEvent<HTMLButtonElement>) =>
                   onWordTap(wordsById[wordId], key, e.currentTarget)
-              : undefined;
+              : breakdownEntry && onBreakdownTap
+                ? (e: React.MouseEvent<HTMLButtonElement>) =>
+                    onBreakdownTap(breakdownEntry, key, e.currentTarget)
+                : undefined;
+            const clickable = Boolean(wordId) || Boolean(breakdownEntry && onBreakdownTap);
             return (
               <button
                 key={i}
@@ -360,8 +404,9 @@ export default function SentenceView({
                 data-active={isActive ? "true" : undefined}
                 data-score={score}
                 data-matched={Boolean(wordId)}
+                data-breakdown={breakdownEntry ? "true" : undefined}
                 onClick={onClick}
-                disabled={!wordId}
+                disabled={!clickable}
               >
                 {tok.text}
               </button>

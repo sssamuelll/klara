@@ -18,10 +18,22 @@ export type PartOfSpeech =
 
 export type ReviewRating = "again" | "hard" | "good" | "easy";
 
+export interface WordBreakdown {
+  word: string;
+  translation: string;
+  pos?: string | null;
+}
+
 export interface StorySentence {
   target: string;
   native: string;
   new_words: string[];
+  /**
+   * Per-word translations for the in-sentence tooltip. Optional — older
+   * stories generated before this field existed don't have it; the UI
+   * falls back to making only LLM-flagged target_words tappable.
+   */
+  breakdown?: WordBreakdown[] | null;
 }
 
 export interface ComprehensionQuestion {

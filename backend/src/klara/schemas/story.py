@@ -16,10 +16,24 @@ class StoryWordOut(BaseModel):
     example_target: str | None = None
 
 
+class WordBreakdown(BaseModel):
+    """Per-word translation for the in-sentence tooltip (issue #24).
+
+    Optional on the parent sentence — old stories generated before this
+    field existed have `breakdown=None` and the UI falls back to making
+    only the LLM-flagged target_words tappable.
+    """
+
+    word: str = Field(..., min_length=1, max_length=80)
+    translation: str = Field(..., min_length=1, max_length=120)
+    pos: str | None = Field(default=None, max_length=20)
+
+
 class StorySentenceOut(BaseModel):
     target: str
     native: str
     new_words: list[str] = Field(default_factory=list)
+    breakdown: list[WordBreakdown] | None = None
 
 
 class ComprehensionQuestionOut(BaseModel):

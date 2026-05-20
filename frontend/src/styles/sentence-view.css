@@ -127,6 +127,7 @@
 }
 .k-tok:disabled { cursor: default; }
 .k-tok[data-matched="true"]:hover { color: var(--accent-ink); }
+.k-tok[data-breakdown="true"]:hover { color: var(--accent-ink); }
 .k-tok[data-active="true"] { background: var(--paper-3); }
 .k-tok[data-score="good"] { box-shadow: inset 0 -3px 0 oklch(0.62 0.13 145); }
 .k-tok[data-score="ok"]   { box-shadow: inset 0 -3px 0 oklch(0.74 0.13 80); }

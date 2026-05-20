@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import type { Story, StoryWord } from "../api/types";
+import type { Story, StoryWord, WordBreakdown } from "../api/types";
+import BreakdownPopover from "../components/BreakdownPopover";
 import SentenceView from "../components/SentenceView";
 import StoryFinish from "../components/StoryFinish";
 import WordPopover from "../components/WordPopover";
@@ -18,11 +19,12 @@ import {
 import { startSilenceDetector } from "../lib/silenceDetector";
 import { speak, stop, useTTS } from "../lib/tts";
 
-interface ActiveWord {
-  word: StoryWord;
-  key: string;
-  rect: DOMRect;
-}
+// Tap state for the in-sentence popovers. Two flavours:
+//   target    → full WordPopover with example + Repaso button + POS panel.
+//   breakdown → BreakdownPopover with just translation + audio.
+type ActivePopover =
+  | { kind: "target"; word: StoryWord; key: string; rect: DOMRect }
+  | { kind: "breakdown"; entry: WordBreakdown; key: string; rect: DOMRect };
 
 type PronScores = Record<number, ScoreBand>;
 
@@ -52,7 +54,7 @@ export default function StoryView() {
   const [story, setStory] = useState<Story | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fontScale] = useFontScale();
-  const [active, setActive] = useState<ActiveWord | null>(null);
+  const [active, setActive] = useState<ActivePopover | null>(null);
   const [reviewIds, setReviewIds] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState<string | null>(null);
 
@@ -156,7 +158,14 @@ export default function StoryView() {
 
   const handleWordTap = useCallback(
     (word: StoryWord, key: string, el: HTMLElement) => {
-      setActive({ word, key, rect: el.getBoundingClientRect() });
+      setActive({ kind: "target", word, key, rect: el.getBoundingClientRect() });
+    },
+    [],
+  );
+
+  const handleBreakdownTap = useCallback(
+    (entry: WordBreakdown, key: string, el: HTMLElement) => {
+      setActive({ kind: "breakdown", entry, key, rect: el.getBoundingClientRect() });
     },
     [],
   );
@@ -474,6 +483,7 @@ export default function StoryView() {
           wordsById={wordsById}
           activeWordKey={active?.key ?? null}
           onWordTap={handleWordTap}
+          onBreakdownTap={handleBreakdownTap}
           playing={sentencePlaying}
           progress={sentencePlaying ? tts.progress : 0}
           duration={tts.duration}
@@ -502,7 +512,7 @@ export default function StoryView() {
         </div>
       )}
 
-      {active && (
+      {active?.kind === "target" && (
         <WordPopover
           word={active.word}
           anchorRect={active.rect}
@@ -516,6 +526,14 @@ export default function StoryView() {
               return n;
             })
           }
+        />
+      )}
+      {active?.kind === "breakdown" && (
+        <BreakdownPopover
+          entry={active.entry}
+          anchorRect={active.rect}
+          targetLanguage={story.target_language}
+          onClose={closePopover}
         />
       )}
     </main>
