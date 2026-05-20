@@ -4,6 +4,7 @@ import type {
   InsightResponse,
   Invitation,
   InvitationCreate,
+  MCResolveResponse,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
   PronunciationScoreResponse,
@@ -264,4 +265,37 @@ export const api = {
 
   getStorySchedule: (storyId: string) =>
     request<ScheduleResponse>(`/stories/${storyId}/schedule`),
+
+  resolveMC: async (
+    storyId: string,
+    audio: Blob,
+    options: string[],
+    language: string,
+  ): Promise<MCResolveResponse> => {
+    const fd = new FormData();
+    fd.append("audio", audio, "mc.webm");
+    fd.append("options", JSON.stringify(options));
+    fd.append("language", language);
+    const resp = await fetch(`${API_BASE}/stories/${storyId}/quiz/resolve-mc`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Accept-Language": i18n.language || "es" },
+      body: fd,
+    });
+    if (resp.status === 401) {
+      for (const fn of unauthorizedListeners) fn();
+      throw new AuthRequiredError();
+    }
+    if (!resp.ok) {
+      let detail: string;
+      try {
+        const body = await resp.json();
+        detail = body.detail ?? JSON.stringify(body);
+      } catch {
+        detail = await resp.text();
+      }
+      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
+    }
+    return resp.json() as Promise<MCResolveResponse>;
+  },
 };

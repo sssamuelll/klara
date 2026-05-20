@@ -186,7 +186,10 @@
         "title": "Avant de conclure, quatre questions.",
         "sub": "Une pour fixer la compréhension, une pour la produire. Si tu ne l’as pas, tu peux voir la réponse.",
         "mc": {
-          "pick": "Choisis la bonne réponse"
+          "readAloud": "Lis-la à voix haute ou touche",
+          "heardButNoMatch": "J’ai entendu « {{transcript}} », mais ça ne correspond à aucune option.",
+          "noSpeech": "Je n’ai rien entendu. Réessayons.",
+          "tryAgain": "Réessayer"
         },
         "cloze": {
           "klaraSays": "Klara dit :",

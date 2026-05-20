@@ -115,3 +115,15 @@ class ScheduleEntry(BaseModel):
 
 class ScheduleOut(BaseModel):
     entries: list[ScheduleEntry]
+
+
+class MCResolveOut(BaseModel):
+    """Result of voice-resolving an MC quiz answer.
+
+    `picked_index` is null when nothing matches well enough — the UI
+    should ask the user to repeat instead of guessing.
+    """
+
+    transcript: str
+    picked_index: int | None
+    option_scores: list[float] = Field(default_factory=list)

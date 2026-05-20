@@ -186,7 +186,10 @@
         "title": "Before we close, four questions.",
         "sub": "One to lock in comprehension, another to produce it. If you don’t have it on hand, you can reveal the answer.",
         "mc": {
-          "pick": "Pick the correct answer"
+          "readAloud": "Read it aloud or tap",
+          "heardButNoMatch": "I heard «{{transcript}}», but it doesn’t match any option.",
+          "noSpeech": "Didn’t catch that. Let’s try again.",
+          "tryAgain": "Try again"
         },
         "cloze": {
           "klaraSays": "Klara says:",

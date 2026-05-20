@@ -186,7 +186,10 @@
         "title": "Antes de cerrar, cuatro preguntas.",
         "sub": "Una para fijar la comprensión, otra para producirla. Si no la tienes a mano, puedes ver la respuesta.",
         "mc": {
-          "pick": "Elige la respuesta correcta"
+          "readAloud": "Léela en voz alta o tócala",
+          "heardButNoMatch": "Te oí decir «{{transcript}}», pero no coincide con ninguna opción.",
+          "noSpeech": "No te oí. Probemos de nuevo.",
+          "tryAgain": "Otra vez"
         },
         "cloze": {
           "klaraSays": "Klara dice:",
