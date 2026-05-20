@@ -32,7 +32,9 @@ import type {
   Story,
   StoryWord,
 } from "../api/types";
+import { startAudioBars } from "../lib/audioBars";
 import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
+import { startSilenceDetector } from "../lib/silenceDetector";
 import { speak, stop as stopTTS } from "../lib/tts";
 import { useMicScorer } from "../lib/useMicScorer";
 
@@ -346,28 +348,22 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   useEffect(() => {
     if (micPhase !== "recording" || !recAnalyserRef.current) return;
     const analyser = recAnalyserRef.current;
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-    let raf = 0;
-    const tick = () => {
-      analyser.getByteFrequencyData(buf);
-      for (let i = 0; i < 16; i++) {
-        const a = buf[i * 2] ?? 0;
-        const b = buf[i * 2 + 1] ?? 0;
-        const v = Math.max(0.05, ((a + b) / 2) / 255);
-        const el = recBarsRef.current[i];
-        if (el) el.style.height = `${(v * 100).toFixed(0)}%`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return startAudioBars(analyser, recBarsRef.current);
   }, [micPhase]);
 
-  // Auto-stop after 6s in case the user forgets
+  // Primary stop trigger: 1.5s of silence after the user has had ≥800ms
+  // to start speaking. Falls back to a 20s hard timeout in case the
+  // silence detector misbehaves (e.g. flaky mic feeding garbage samples).
   useEffect(() => {
-    if (micPhase !== "recording") return;
-    const id = window.setTimeout(() => void stopMic(), 6000);
-    return () => clearTimeout(id);
+    if (micPhase !== "recording" || !recAnalyserRef.current) return;
+    const cleanupSilence = startSilenceDetector(recAnalyserRef.current, () => {
+      void stopMic();
+    });
+    const safety = window.setTimeout(() => void stopMic(), 20_000);
+    return () => {
+      cleanupSilence();
+      clearTimeout(safety);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [micPhase]);
 
@@ -532,21 +528,7 @@ function ClozeQuestion({
   useEffect(() => {
     if (scorer.phase !== "recording" || !scorer.analyser) return;
     const analyser = scorer.analyser;
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-    let raf = 0;
-    const tick = () => {
-      analyser.getByteFrequencyData(buf);
-      for (let i = 0; i < 16; i++) {
-        const a = buf[i * 2] ?? 0;
-        const b = buf[i * 2 + 1] ?? 0;
-        const v = Math.max(0.05, ((a + b) / 2) / 255);
-        const el = recBarsRef.current[i];
-        if (el) el.style.height = `${(v * 100).toFixed(0)}%`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return startAudioBars(analyser, recBarsRef.current);
   }, [scorer.phase, scorer.analyser]);
 
   // Fire the attempt record + bubble result up once scoring lands.
@@ -725,21 +707,7 @@ function ShadowQuestion({
   useEffect(() => {
     if (scorer.phase !== "recording" || !scorer.analyser) return;
     const analyser = scorer.analyser;
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-    let raf = 0;
-    const tick = () => {
-      analyser.getByteFrequencyData(buf);
-      for (let i = 0; i < 16; i++) {
-        const a = buf[i * 2] ?? 0;
-        const b = buf[i * 2 + 1] ?? 0;
-        const v = Math.max(0.05, ((a + b) / 2) / 255);
-        const el = recBarsRef.current[i];
-        if (el) el.style.height = `${(v * 100).toFixed(0)}%`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return startAudioBars(analyser, recBarsRef.current);
   }, [scorer.phase, scorer.analyser]);
 
   // Persist + bubble up once scored

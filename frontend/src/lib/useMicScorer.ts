@@ -17,6 +17,7 @@ import {
   type PronunciationError,
   type ScoreBand,
 } from "./pronunciation";
+import { startSilenceDetector } from "./silenceDetector";
 
 export type MicScorerPhase = "idle" | "recording" | "scoring" | "scored" | "error";
 
@@ -43,7 +44,11 @@ export interface UseMicScorer {
   reset: () => void;
 }
 
-const AUTO_STOP_MS = 5000;
+// Safety net only — the silence detector usually stops well before this.
+// Set high enough that even slow speakers reciting a full sentence finish
+// inside it, but bounded so the recorder doesn't leak when something
+// upstream of the detector misbehaves.
+const HARD_TIMEOUT_MS = 20_000;
 
 export function useMicScorer(
   referenceText: string,
@@ -55,27 +60,32 @@ export function useMicScorer(
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
   const autoStopRef = useRef<number | null>(null);
+  const silenceCleanupRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<MicScorerPhase>("idle");
   phaseRef.current = phase;
 
-  const clearAutoStop = useCallback(() => {
+  const clearTimers = useCallback(() => {
     if (autoStopRef.current !== null) {
       clearTimeout(autoStopRef.current);
       autoStopRef.current = null;
     }
+    if (silenceCleanupRef.current !== null) {
+      silenceCleanupRef.current();
+      silenceCleanupRef.current = null;
+    }
   }, []);
 
   const cancel = useCallback(() => {
-    clearAutoStop();
+    clearTimers();
     recorderRef.current?.cancel();
     recorderRef.current = null;
     setAnalyser(null);
     setPhase("idle");
-  }, [clearAutoStop]);
+  }, [clearTimers]);
 
   const stop = useCallback(async () => {
     if (phaseRef.current !== "recording" || recorderRef.current === null) return;
-    clearAutoStop();
+    clearTimers();
     const rec = recorderRef.current;
     recorderRef.current = null;
     setAnalyser(null);
@@ -101,7 +111,7 @@ export function useMicScorer(
       setError(e as PronunciationError);
       setPhase("error");
     }
-  }, [clearAutoStop, language, referenceText]);
+  }, [clearTimers, language, referenceText]);
 
   const start = useCallback(async () => {
     if (phaseRef.current === "recording" || phaseRef.current === "scoring") return;
@@ -112,9 +122,17 @@ export function useMicScorer(
       recorderRef.current = rec;
       setAnalyser(rec.analyser);
       setPhase("recording");
+      // Primary stop trigger: 1.5s of silence after the user has had at
+      // least 800ms to start speaking. Wrapped as a ref so cancel() /
+      // stop() can tear it down without depending on this closure.
+      silenceCleanupRef.current = startSilenceDetector(rec.analyser, () => {
+        silenceCleanupRef.current = null;
+        void stop();
+      });
+      // Safety net in case the detector misbehaves on a flaky mic.
       autoStopRef.current = window.setTimeout(() => {
         void stop();
-      }, AUTO_STOP_MS);
+      }, HARD_TIMEOUT_MS);
     } catch (e) {
       setError(e as PronunciationError);
       setPhase("error");
@@ -130,11 +148,11 @@ export function useMicScorer(
 
   useEffect(() => {
     return () => {
-      clearAutoStop();
+      clearTimers();
       recorderRef.current?.cancel();
       recorderRef.current = null;
     };
-  }, [clearAutoStop]);
+  }, [clearTimers]);
 
   return { phase, analyser, result, error, start, stop, cancel, reset };
 }

@@ -19,6 +19,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import type { StorySentence, StoryWord } from "../api/types";
+import { startAudioBars } from "../lib/audioBars";
 import type { ScoreBand } from "../lib/pronunciation";
 import { getWaveform } from "../lib/waveform";
 
@@ -208,24 +209,7 @@ export default function SentenceView({
   const recBarsRef = useRef<HTMLSpanElement[]>([]);
   useEffect(() => {
     if (!recording || !micAnalyser) return;
-    const analyser = micAnalyser;
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-    let raf = 0;
-    const tick = () => {
-      analyser.getByteFrequencyData(buf);
-      // Bucket the 32 frequency bins into 16 visible bars (pairwise average),
-      // normalize to 0..1, floor at 0.05 so silence still shows a flat line.
-      for (let i = 0; i < 16; i++) {
-        const a = buf[i * 2] ?? 0;
-        const b = buf[i * 2 + 1] ?? 0;
-        const v = Math.max(0.05, ((a + b) / 2) / 255);
-        const el = recBarsRef.current[i];
-        if (el) el.style.height = `${(v * 100).toFixed(0)}%`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return startAudioBars(micAnalyser, recBarsRef.current);
   }, [recording, micAnalyser]);
 
   // ---- Per-word score → underline class -----------------------------------
