@@ -118,15 +118,21 @@ export async function startMicRecording(): Promise<MicRecorder> {
     "audio/webm";
 
   // AnalyserNode lives on its own AudioContext so we can tear it down
-  // without touching the MediaRecorder. fftSize 64 gives 32 frequency bins,
-  // matching the handoff's 16 visible bars after we pair-average.
+  // without touching the MediaRecorder.
+  //
+  // fftSize was 64 (1.5ms of audio per read @ 44.1kHz) — fine for the visual
+  // bars but useless for RMS-based silence detection because each read sees
+  // a microscopic slice and RMS oscillates wildly. Bumped to 1024 (~23ms
+  // per read) so the same AnalyserNode powers both:
+  //   - 16 visible bars (binsPerBar = frequencyBinCount/16 = 32)
+  //   - getByteTimeDomainData → stable RMS for silence detection
   const AudioCtx = (window.AudioContext ||
     (window as unknown as { webkitAudioContext: typeof AudioContext })
       .webkitAudioContext) as typeof AudioContext;
   const audioCtx = new AudioCtx();
   const source = audioCtx.createMediaStreamSource(stream);
   const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 64;
+  analyser.fftSize = 1024;
   analyser.smoothingTimeConstant = 0.6;
   source.connect(analyser);
 

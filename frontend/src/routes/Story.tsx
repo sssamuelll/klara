@@ -15,6 +15,7 @@ import {
   type PronunciationError,
   type ScoreBand,
 } from "../lib/pronunciation";
+import { startSilenceDetector } from "../lib/silenceDetector";
 import { speak, stop, useTTS } from "../lib/tts";
 
 interface ActiveWord {
@@ -286,6 +287,18 @@ export default function StoryView() {
     setMicAnalyser(null);
     setPronError(null);
   }, []);
+
+  // Primary stop trigger for the sentence pronunciation flow: 1.5s of
+  // silence (after a 800ms grace period) auto-stops the take. Manual
+  // stops still work — clicking the mic again, pressing ESC, or
+  // releasing M (hold-to-talk) all short-circuit ahead of the detector.
+  // stopRecording is idempotent so a race between manual + auto is fine.
+  useEffect(() => {
+    if (recordingIndex === null || !micAnalyser) return;
+    return startSilenceDetector(micAnalyser, () => {
+      void stopRecording();
+    });
+  }, [recordingIndex, micAnalyser, stopRecording]);
 
   const goNext = useCallback(() => {
     if (currentIndex >= total - 1) {
