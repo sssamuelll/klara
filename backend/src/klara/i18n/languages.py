@@ -12,13 +12,17 @@ LanguageCode = Literal["de", "en", "fr", "ja", "pt", "es"]
 # Keep in sync with frontend/src/lib/languages.ts (and bump both together when
 # adding/removing a code). The /api/v1/me/languages endpoint exposes this so
 # the frontend *could* fetch it, but today it just mirrors the constants.
+# Speech locales target Latin American Spanish and Brazilian Portuguese rather
+# than the European variants. Azure's es-ES expects ceceo (`/θ/` for c/z) and
+# pt-PT expects European Portuguese phonology — both produce systematic
+# false-low scores for LatAm/BR speakers reciting correctly pronounced words.
 SUPPORTED_LANGUAGES: dict[str, LanguageInfo] = {
     "de": {"label": "Deutsch", "speech_locale": "de-DE"},
     "en": {"label": "English", "speech_locale": "en-US"},
     "fr": {"label": "Français", "speech_locale": "fr-FR"},
     "ja": {"label": "日本語", "speech_locale": "ja-JP"},
-    "pt": {"label": "Português", "speech_locale": "pt-PT"},
-    "es": {"label": "Español", "speech_locale": "es-ES"},
+    "pt": {"label": "Português", "speech_locale": "pt-BR"},
+    "es": {"label": "Español", "speech_locale": "es-MX"},
 }
 
 

@@ -103,7 +103,14 @@ export async function startMicRecording(): Promise<MicRecorder> {
   }
   let stream: MediaStream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Ask the browser for mono @ 16kHz to match what Azure ultimately
+    // consumes after ffmpeg transcodes. Browsers may decline (some default
+    // to 48kHz stereo) but requesting it saves a downsample step when they
+    // do honour it, and channelCount=1 is widely respected. Keep NS / EC /
+    // AGC at browser defaults — most users aren't recording in studios.
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, sampleRate: 16000 },
+    });
   } catch (e) {
     const err: PronunciationError = {
       kind: "mic_denied",

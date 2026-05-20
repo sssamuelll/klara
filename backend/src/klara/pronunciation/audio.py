@@ -26,6 +26,12 @@ def transcode_to_wav(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
     src.close()
     dst = Path(src.name).with_suffix(".wav")
     try:
+        # -acodec pcm_s16le: Azure pronunciation assessment expects signed
+        #   16-bit little-endian PCM. ffmpeg usually defaults to this for the
+        #   wav muxer but the default depends on the build, so we pin it.
+        # -af highpass=f=80: filter out sub-voice hum (fans, AC, 60Hz mains)
+        #   without touching the human voice band (~85Hz and up). Cleaner
+        #   signal → fewer phantom phonemes and better accuracy scores.
         subprocess.run(
             [
                 "ffmpeg",
@@ -36,6 +42,10 @@ def transcode_to_wav(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
                 str(sample_rate),
                 "-ac",
                 "1",
+                "-acodec",
+                "pcm_s16le",
+                "-af",
+                "highpass=f=80",
                 "-f",
                 "wav",
                 str(dst),

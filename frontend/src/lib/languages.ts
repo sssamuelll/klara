@@ -13,8 +13,8 @@ export const SUPPORTED_LANGUAGES: Record<LanguageCode, LanguageInfo> = {
   en: { label: "English", speechLocale: "en-US" },
   fr: { label: "Français", speechLocale: "fr-FR" },
   ja: { label: "日本語", speechLocale: "ja-JP" },
-  pt: { label: "Português", speechLocale: "pt-PT" },
-  es: { label: "Español", speechLocale: "es-ES" },
+  pt: { label: "Português", speechLocale: "pt-BR" },
+  es: { label: "Español", speechLocale: "es-MX" },
 };
 
 export const LANGUAGE_CODES: LanguageCode[] = ["de", "en", "fr", "ja", "pt", "es"];
