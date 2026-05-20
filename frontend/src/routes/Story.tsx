@@ -28,7 +28,10 @@ type ActivePopover =
 
 type PronScores = Record<number, ScoreBand>;
 
-const RATES = [0.7, 1, 1.3] as const;
+// Cuando estás aprendiendo, lo que falta es más lento — nunca más rápido.
+// El pill cicla entre normal y 0.7× (toggle binario). El 1.3× anterior se
+// removió porque pedagógicamente no aplicaba al caso de uso.
+const RATES = [0.7, 1] as const;
 type Rate = (typeof RATES)[number];
 
 // Word-token regex shared with SentenceView; used here to extract bad-word
