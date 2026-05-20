@@ -201,7 +201,7 @@ async def generate_story(
     response = await llm.complete(
         messages=[Message("system", system), Message("user", user)],
         model=model,
-        max_tokens=2800,
+        max_tokens=4000,
         temperature=0.8,
         response_format={"type": "json_object"},
     )

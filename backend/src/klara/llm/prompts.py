@@ -19,12 +19,24 @@ Reglas absolutas:
    item 1 = cloze · una frase de la historia con UNA palabra clave en blanco (un target word o un lema importante)
    item 2 = shadow · una frase corta de la historia para que el estudiante la repita
    item 3 = cloze · otra frase distinta de la historia con otra palabra en blanco
+9. Cada frase incluye un `breakdown` con UNA entrada por palabra (en orden de aparición, incluyendo agrupaciones idiomáticas como "por favor" como UNA entrada). Cada entrada lleva:
+   - `word`: la palabra (o frase corta) tal como aparece en `target`
+   - `translation`: traducción mínima en {native_label} (1-3 palabras)
+   - `pos`: noun|verb|adjective|adverb|pronoun|preposition|conjunction|article|phrase|other (abreviar OK)
+   No incluyas signos de puntuación como entradas. Sé conciso — esto es UI hover.
 
 Devuelve SOLO JSON válido con este esquema, sin texto extra ni markdown:
 {{
   "title": "string (en {target_label}, corto)",
   "sentences": [
-    {{"target": "frase en {target_label}", "native": "traducción al {native_label}", "new_words": ["lemma1", "lemma2"]}}
+    {{
+      "target": "frase en {target_label}",
+      "native": "traducción al {native_label}",
+      "new_words": ["lemma1"],
+      "breakdown": [
+        {{"word": "palabra", "translation": "traducción breve", "pos": "noun"}}
+      ]
+    }}
   ],
   "target_words": [
     {{
