@@ -537,7 +537,9 @@ async def test_queue_review_falls_back_when_lemma_inflected_in_story(
 ):
     """The lemma is a target vocab of a story, but only an INFLECTED form shows
     in the breakdown (lemma itself never matches). We fall back to
-    example_target, but keep the origin story's title as `source`."""
+    example_target; `source` is BLANK because the line being practised
+    (example_target) does NOT come from that story — it would be a false
+    attribution to credit a story that doesn't contain the sentence."""
     cookie = await _register_and_login(client, seed_invite)
     uid = await _user_id_by_email(db_session, "practice@example.com")
 
@@ -574,7 +576,8 @@ async def test_queue_review_falls_back_when_lemma_inflected_in_story(
     assert item["reason"] == "review"
     assert item["sentence"]["target"] == "Wir laufen schnell."  # example fallback
     assert item["sentence"]["native"] == "correr"  # lemma gloss, documented
-    assert item["source"] == "Lauf-Geschichte"  # origin story still credited
+    # example_target is NOT the story's sentence → no story attribution.
+    assert item["source"] == ""
 
 
 @pytest.mark.asyncio
@@ -780,3 +783,100 @@ async def test_queue_review_picks_most_recent_story(client, seed_invite, db_sess
     assert item["reason"] == "review"
     assert item["sentence"]["target"] == f"Das neue {lemma} ist gut."
     assert item["source"] == "Neue Geschichte"
+
+
+@pytest.mark.asyncio
+async def test_queue_review_unusable_due_cards_dont_underfill(client, seed_invite, db_session):
+    """Regression (CodeRabbit Major): the review query must NOT pre-limit at
+    SQL level. Earlier-due cards that yield no item (no story AND no
+    example_target → skipped) must not crowd usable cards out of the queue.
+
+    Seed two unusable due cards with the SOONEST next_review_at (they'd be the
+    first `limit` rows under a SQL `.limit(limit)`), then two usable ones due
+    later. With limit=2 and a SQL pre-limit the queue would come back EMPTY;
+    with the in-memory guard as the only cut it fills with the two usable cards.
+    """
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+
+    now = datetime.now(UTC)
+    # Two unusable cards (no story, no example_target) due FIRST.
+    for i in range(2):
+        await _seed_due_card(
+            db_session,
+            user_id=uid,
+            lemma=f"Leer-{i}-{uuid.uuid4().hex[:8]}",
+            translation="vacío",
+            example_target=None,
+            next_review_at=now - timedelta(days=10 + i),
+        )
+    # Two usable cards (example_target present) due LATER.
+    usable_lemmas = []
+    for i in range(2):
+        lemma = f"Voll-{i}-{uuid.uuid4().hex[:8]}"
+        usable_lemmas.append(lemma)
+        await _seed_due_card(
+            db_session,
+            user_id=uid,
+            lemma=lemma,
+            translation="lleno",
+            example_target=f"Ein Satz Nummer {i}.",
+            next_review_at=now - timedelta(days=1 + i),
+        )
+
+    r = await client.get("/api/v1/practice/queue?limit=2", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # Filled with the two USABLE cards, not under-filled by the unusable ones.
+    assert len(body["items"]) == 2
+    assert {it["focusText"] for it in body["items"]} == set(usable_lemmas)
+    assert all(it["reason"] == "review" for it in body["items"])
+
+
+@pytest.mark.asyncio
+async def test_queue_review_source_blank_for_example_target_despite_matching_story(
+    client, seed_invite, db_session
+):
+    """Regression (CodeRabbit Minor): when the line comes from `example_target`
+    (lemma absent from every breakdown), `source` is "" even though a story
+    matched the lemma as a target vocab item. The matched story does not
+    contain the example sentence, so attributing it would be false provenance.
+    """
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+
+    lemma = f"singen-{uuid.uuid4().hex[:8]}"
+    vocab_id = await _seed_due_card(
+        db_session,
+        user_id=uid,
+        lemma=lemma,
+        translation="cantar",
+        example_target="Wir singen zusammen.",
+        pos=PartOfSpeech.VERB,
+    )
+    # Story references the vocab but its breakdown only has an inflected form,
+    # so the lemma never matches → fallback to example_target.
+    await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Sing-Geschichte",
+        sentences=[
+            {
+                "target": "Sie singt allein.",
+                "native": "Ella canta sola.",
+                "new_words": [],
+                "breakdown": [
+                    {"word": "singt", "translation": "canta", "pos": "verb"},
+                ],
+            }
+        ],
+        target_vocab_item_ids=[vocab_id],
+    )
+
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    item = r.json()["items"][0]
+    assert item["reason"] == "review"
+    assert item["sentence"]["target"] == "Wir singen zusammen."  # example fallback
+    # The matched story does NOT contain this sentence → no attribution.
+    assert item["source"] == ""

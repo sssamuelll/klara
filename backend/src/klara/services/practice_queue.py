@@ -291,12 +291,19 @@ async def build_review_items(
          nullsfirst), joined to VocabItem, filtered to the user's current
          target_language. The language filter keeps the queue single-language;
          see the module docstring on the VocabItem.language data fragility.
+         We do NOT pre-limit the query: a due card can fail to yield an item
+         (no story line AND no `example_target`), so capping the SQL at `limit`
+         would let unusable cards crowd out usable ones further down the
+         due-order and under-fill the queue. Due cards per user are bounded by
+         the vocabulary size, so loading them all is harmless; the in-memory
+         guard below is the single cut, and the next_review_at ASC order makes
+         it cut by soonest-due.
       2. For each due lemma, find its most-recent story (Story.created_at DESC)
          whose target_vocab_item_ids contains the vocab id, then the first
          sentence in that story whose breakdown contains the lemma.
       3. If no such sentence exists (inflected form, or lemma absent from every
          breakdown), fall back to the vocab item's own `example_target`.
-      4. Cap at `limit`.
+      4. Cap at `limit` in memory (the only cut), after filtering unusable cards.
     """
     now = datetime.now(UTC)
     stmt = (
@@ -308,7 +315,6 @@ async def build_review_items(
             or_(UserCard.next_review_at.is_(None), UserCard.next_review_at <= now),
         )
         .order_by(UserCard.next_review_at.asc().nullsfirst())
-        .limit(limit)
     )
     rows = (await db.execute(stmt)).all()
     if not rows:
@@ -331,6 +337,11 @@ async def build_review_items(
         ).scalar_one_or_none()
 
         sentence = _resolve_review_sentence(story, lemma)
+        # Capture provenance BEFORE the fallback reassigns `sentence`: the line
+        # is story-sourced only when it was resolved FROM the story breakdown.
+        # A line that comes from `example_target` must never be attributed to a
+        # story that merely matched the lemma but doesn't contain that sentence.
+        from_story = sentence is not None and story is not None
         # Clean per-word gloss for the focus lemma, when the resolved sentence
         # came from a story breakdown; else the vocab translation.
         focus_tx = vocab.translations.get(native_language) if vocab.translations else None
@@ -365,7 +376,7 @@ async def build_review_items(
             PracticeItemOut(
                 sentence=sentence,
                 variants=[],
-                source=story.title if story is not None else "",
+                source=story.title if (story is not None and from_story) else "",
                 focus_text=lemma,
                 focus_tx=focus_tx or "",
                 reason="review",
