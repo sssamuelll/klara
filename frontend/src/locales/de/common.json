@@ -271,7 +271,8 @@
       },
       "start": "Mit dem Aussprechen beginnen",
       "later": "Später",
-      "from": "aus „{{title}}“"
+      "from": "aus „{{title}}“",
+      "fromMany": "aus mehreren Geschichten"
     },
     "loading": {
       "wait": "Deine Übung wird vorbereitet…",

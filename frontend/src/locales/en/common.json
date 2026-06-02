@@ -271,7 +271,8 @@
       },
       "start": "Start pronouncing",
       "later": "Later",
-      "from": "from “{{title}}”"
+      "from": "from “{{title}}”",
+      "fromMany": "from several stories"
     },
     "loading": {
       "wait": "Getting your practice ready…",

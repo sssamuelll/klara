@@ -271,7 +271,8 @@
       },
       "start": "Começar a pronunciar",
       "later": "Mais tarde",
-      "from": "de «{{title}}»"
+      "from": "de «{{title}}»",
+      "fromMany": "de várias histórias"
     },
     "loading": {
       "wait": "A preparar a tua prática…",

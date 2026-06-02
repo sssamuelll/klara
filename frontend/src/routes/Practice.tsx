@@ -206,14 +206,15 @@ export default function Practice() {
 
         <div className="kp-sign">
           <KlaraMark size={13} />
-          {/* The "from <story>" signature only makes sense when the whole
-              queue comes from one story; the backend blanks sourceTitle for
-              mixed-story (or empty) queues, so we omit the line then. */}
-          {queue.sourceTitle && (
-            <span className="k-mono">
-              {t("practice.setup.from", { title: queue.sourceTitle })}
-            </span>
-          )}
+          {/* The signature always renders. Single-story queues get the
+              quoted title ("de «X»"); the backend blanks sourceTitle for
+              mixed-story queues, so we fall back to an explicit, unquoted
+              "from several stories" line instead of dropping it. */}
+          <span className="k-mono">
+            {queue.sourceTitle
+              ? t("practice.setup.from", { title: queue.sourceTitle })
+              : t("practice.setup.fromMany")}
+          </span>
         </div>
       </main>
     );
