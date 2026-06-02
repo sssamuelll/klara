@@ -4,7 +4,7 @@
  * The queue is served by `GET /api/v1/practice/queue` and deserializes
  * straight into `PracticeQueue` (the backend emits the camelCase field names
  * this contract expects). The component layer is endpoint-agnostic: it calls
- * `buildMockQueue()` and renders whatever `PracticeItem[]` comes back.
+ * `loadPracticeQueue()` and renders whatever `PracticeItem[]` comes back.
  *
  * The scheduler (backend) produces the queue from two sources:
  *   - reason "struggled" → words the learner mispronounced recently.
@@ -61,7 +61,7 @@ export interface PracticeQueue {
  * is already in `PracticeQueue` shape, so this is a thin pass-through; the
  * function exists as the single seam the component talks to.
  */
-export async function buildMockQueue(): Promise<PracticeQueue> {
+export async function loadPracticeQueue(): Promise<PracticeQueue> {
   return api.getPracticeQueue();
 }
 

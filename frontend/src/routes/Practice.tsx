@@ -14,7 +14,7 @@
  *     behave identically to Story.
  *
  * Queue source: GET /api/v1/practice/queue, fetched once on mount via
- * buildMockQueue(). This component is endpoint-agnostic — it renders whatever
+ * loadPracticeQueue(). This component is endpoint-agnostic — it renders whatever
  * PracticeItem[] comes back.
  */
 
@@ -26,7 +26,7 @@ import KlaraMark from "../components/KlaraMark";
 import SentenceView from "../components/SentenceView";
 import { useFontScale } from "../lib/preferences";
 import {
-  buildMockQueue,
+  loadPracticeQueue,
   countByReason,
   type PracticeItem,
   type PracticeQueue,
@@ -82,7 +82,7 @@ export default function Practice() {
   const [loadFailed, setLoadFailed] = useState(false);
   useEffect(() => {
     let alive = true;
-    buildMockQueue()
+    loadPracticeQueue()
       .then((q) => {
         if (alive) setQueue(q);
       })
@@ -206,7 +206,14 @@ export default function Practice() {
 
         <div className="kp-sign">
           <KlaraMark size={13} />
-          <span className="k-mono">{t("practice.setup.from", { title: queue.sourceTitle })}</span>
+          {/* The "from <story>" signature only makes sense when the whole
+              queue comes from one story; the backend blanks sourceTitle for
+              mixed-story (or empty) queues, so we omit the line then. */}
+          {queue.sourceTitle && (
+            <span className="k-mono">
+              {t("practice.setup.from", { title: queue.sourceTitle })}
+            </span>
+          )}
         </div>
       </main>
     );

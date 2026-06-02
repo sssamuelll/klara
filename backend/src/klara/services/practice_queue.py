@@ -178,10 +178,21 @@ async def build_struggled_queue(
     stories_by_id = {s.id: s for s in story_rows}
 
     items: list[PracticeItemOut] = []
-    source_title = ""
+    # Collect the distinct source titles actually emitted. A queue-level
+    # source_title only makes sense when every item comes from ONE story;
+    # the moment we mix stories, a single title mislabels the set, so we
+    # leave it blank and the frontend omits the "from <story>" signature.
+    source_titles: set[str] = set()
     for (story_id, sentence_index), attempt in latest_by_sentence.items():
         story = stories_by_id.get(story_id)
         if story is None:
+            continue
+        # The queue advertises the user's CURRENT target_language. A user who
+        # switched learning languages can still have recent attempts on stories
+        # in an older language; emitting those would produce a mixed-language
+        # queue under a single top-level targetLanguage. Skip foreign-language
+        # stories so the queue stays consistent with its advertised metadata.
+        if story.target_language != target_language:
             continue
         sentences = (story.content or {}).get("sentences") or []
         if not (0 <= sentence_index < len(sentences)):
@@ -201,8 +212,7 @@ async def build_struggled_queue(
             continue
         focus_tx = _focus_translation(sentence, focus)
 
-        if not source_title:
-            source_title = story.title
+        source_titles.add(story.title)
 
         items.append(
             PracticeItemOut(
@@ -220,5 +230,6 @@ async def build_struggled_queue(
     return PracticeQueueOut(
         items=items,
         target_language=target_language,
-        source_title=source_title,
+        # Single story → its title; mixed (or none) → blank, the front omits it.
+        source_title=next(iter(source_titles)) if len(source_titles) == 1 else "",
     )

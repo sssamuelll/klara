@@ -274,9 +274,9 @@
       "from": "de «{{title}}»"
     },
     "loading": {
-      "wait": "Preparando sua prática…",
-      "error": "Não foi possível carregar sua prática. Tente de novo.",
-      "empty": "Nada para praticar por enquanto. Volte depois de ler uma história."
+      "wait": "A preparar a tua prática…",
+      "error": "Não foi possível carregar a tua prática. Tenta de novo.",
+      "empty": "Nada para praticar de momento. Volta depois de leres uma história."
     },
     "session": {
       "chapterTitle": "Prática"

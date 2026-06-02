@@ -278,6 +278,104 @@ async def test_queue_respects_limit(client, seed_invite, db_session):
 
 
 @pytest.mark.asyncio
+async def test_queue_excludes_other_target_language(client, seed_invite, db_session):
+    """A user who switched learning languages must not get foreign-language
+    items. The seeded user's target_language is "de" (registration default);
+    a recent struggled attempt on an old "fr" story must be filtered out."""
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+
+    # Old story in a DIFFERENT target language (user used to learn French).
+    fr_ref = "Le chat dort."
+    fr_story = await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Une histoire",
+        sentences=[{"target": fr_ref, "native": "El gato duerme.", "new_words": []}],
+        target_language="fr",
+    )
+    await _seed_attempt(
+        db_session,
+        user_id=uid,
+        story_id=fr_story,
+        sentence_index=0,
+        reference_text=fr_ref,
+        overall_score=35.0,
+        word_bands={"0": "bad"},
+    )
+
+    # Current-language (de) story with a struggled attempt — this one stays.
+    de_ref = "Der Hund schläft."
+    de_story = await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Eine Geschichte",
+        sentences=[{"target": de_ref, "native": "El perro duerme.", "new_words": []}],
+        target_language="de",
+    )
+    await _seed_attempt(
+        db_session,
+        user_id=uid,
+        story_id=de_story,
+        sentence_index=0,
+        reference_text=de_ref,
+        overall_score=35.0,
+        word_bands={"0": "bad"},
+    )
+
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    # Only the German item survives; the French one is filtered by language.
+    assert len(body["items"]) == 1
+    assert body["items"][0]["sentence"]["target"] == de_ref
+    assert body["targetLanguage"] == "de"
+    assert body["sourceTitle"] == "Eine Geschichte"
+
+
+@pytest.mark.asyncio
+async def test_queue_blanks_source_title_for_mixed_stories(client, seed_invite, db_session):
+    """A queue-level sourceTitle only makes sense for a single-story queue.
+    When items span multiple stories, the field is blanked so the frontend
+    omits the (now-ambiguous) 'from <story>' signature."""
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+
+    ref_a = "Der Hund schläft."
+    story_a = await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Geschichte A",
+        sentences=[{"target": ref_a, "native": "El perro duerme.", "new_words": []}],
+    )
+    ref_b = "Die Katze springt."
+    story_b = await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Geschichte B",
+        sentences=[{"target": ref_b, "native": "El gato salta.", "new_words": []}],
+    )
+    for sid, ref in ((story_a, ref_a), (story_b, ref_b)):
+        await _seed_attempt(
+            db_session,
+            user_id=uid,
+            story_id=sid,
+            sentence_index=0,
+            reference_text=ref,
+            overall_score=35.0,
+            word_bands={"0": "bad"},
+        )
+
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert len(body["items"]) == 2
+    # Mixed stories → blank queue-level title; per-item source stays correct.
+    assert body["sourceTitle"] == ""
+    assert {it["source"] for it in body["items"]} == {"Geschichte A", "Geschichte B"}
+
+
+@pytest.mark.asyncio
 async def test_queue_focus_tx_empty_without_breakdown(client, seed_invite, db_session):
     cookie = await _register_and_login(client, seed_invite)
     uid = await _user_id_by_email(db_session, "practice@example.com")
