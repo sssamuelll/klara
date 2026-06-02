@@ -273,6 +273,11 @@
       "later": "Later",
       "from": "from “{{title}}”"
     },
+    "loading": {
+      "wait": "Getting your practice ready…",
+      "error": "Couldn't load your practice. Try again.",
+      "empty": "Nothing to practise yet. Come back after reading a story."
+    },
     "session": {
       "chapterTitle": "Practice"
     },

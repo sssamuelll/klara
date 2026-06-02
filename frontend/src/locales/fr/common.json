@@ -273,6 +273,11 @@
       "later": "Plus tard",
       "from": "de « {{title}} »"
     },
+    "loading": {
+      "wait": "Préparation de ta pratique…",
+      "error": "Impossible de charger ta pratique. Réessaie.",
+      "empty": "Rien à pratiquer pour l'instant. Reviens après avoir lu une histoire."
+    },
     "session": {
       "chapterTitle": "Pratique"
     },

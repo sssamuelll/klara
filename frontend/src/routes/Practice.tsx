@@ -13,12 +13,12 @@
  *     useSentencePractice hook, so mic / TTS / scoring / hints / keyboard
  *     behave identically to Story.
  *
- * Queue source: a MOCK (buildMockQueue) shaped like the future
- * GET /api/v1/practice/queue payload. Swapping to the endpoint is a one-line
- * change in practiceQueue.ts; this component is endpoint-agnostic.
+ * Queue source: GET /api/v1/practice/queue, fetched once on mount via
+ * buildMockQueue(). This component is endpoint-agnostic — it renders whatever
+ * PracticeItem[] comes back.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { StorySentence } from "../api/types";
@@ -29,6 +29,7 @@ import {
   buildMockQueue,
   countByReason,
   type PracticeItem,
+  type PracticeQueue,
 } from "../lib/practiceQueue";
 import { useSentencePractice, type PronScores } from "../lib/useSentencePractice";
 
@@ -76,9 +77,24 @@ export default function Practice() {
   const { t } = useTranslation();
   const [fontScale] = useFontScale();
 
-  // Queue is mock; stable for the lifetime of the screen.
-  const queue = useMemo(() => buildMockQueue(), []);
-  const items = queue.items;
+  // Queue is fetched once on mount; stable for the lifetime of the screen.
+  const [queue, setQueue] = useState<PracticeQueue | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    buildMockQueue()
+      .then((q) => {
+        if (alive) setQueue(q);
+      })
+      .catch(() => {
+        if (alive) setLoadFailed(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const items = queue?.items ?? [];
   const total = items.length;
   const struggledN = useMemo(() => countByReason(items, "struggled"), [items]);
   const reviewN = total - struggledN;
@@ -90,7 +106,7 @@ export default function Practice() {
 
   const practice = useSentencePractice({
     sentences,
-    targetLanguage: queue.targetLanguage,
+    targetLanguage: queue?.targetLanguage ?? "de",
     persistStoryId: null, // mock queue → nothing persisted (no real story id)
     onFinish: () => {
       setPhase("summary");
@@ -101,6 +117,30 @@ export default function Practice() {
   });
 
   const item = items[practice.currentIndex];
+
+  // ---- LOADING / ERROR / EMPTY -------------------------------------------
+  if (phase === "setup" && (queue === null || loadFailed || total === 0)) {
+    const message = loadFailed
+      ? t("practice.loading.error")
+      : queue === null
+        ? t("practice.loading.wait")
+        : t("practice.loading.empty");
+    return (
+      <main className="k-page kp-setup">
+        <button className="story__back k-mono" onClick={() => navigate("/")}>
+          {t("common.back")}
+        </button>
+        <div className="kp-sign">
+          <KlaraMark size={13} />
+          <span className="k-mono">{message}</span>
+        </div>
+      </main>
+    );
+  }
+
+  // Past this point the queue is loaded and non-empty (guarded above). The
+  // explicit null check narrows the type for the render branches below.
+  if (queue === null) return null;
 
   // ---- SETUP --------------------------------------------------------------
   if (phase === "setup") {

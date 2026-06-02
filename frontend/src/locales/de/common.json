@@ -273,6 +273,11 @@
       "later": "Später",
       "from": "aus „{{title}}“"
     },
+    "loading": {
+      "wait": "Deine Übung wird vorbereitet…",
+      "error": "Übung konnte nicht geladen werden. Versuch es noch einmal.",
+      "empty": "Noch nichts zu üben. Komm wieder, wenn du eine Geschichte gelesen hast."
+    },
     "session": {
       "chapterTitle": "Übung"
     },
