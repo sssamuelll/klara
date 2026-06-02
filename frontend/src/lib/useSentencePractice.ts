@@ -18,9 +18,15 @@
  * navigation and decides what to render around the SentenceView.
  *
  * Two integration points are parameterised so the queue source can differ:
- *   - `persistStoryId`: when set, scored takes are POSTed to the story's
- *     pronunciation-attempts endpoint (best-effort). Practice's mock queue
- *     passes null → nothing is persisted.
+ *   - `persistTargets`: a per-item array, indexed identically to `sentences`.
+ *     Each entry is `{ storyId, sentenceIndex }` when that line is a real story
+ *     sentence (a scored take is POSTed to that story's pronunciation-attempts
+ *     endpoint, best-effort), or `null` when it isn't (Practice's `example_target`
+ *     fallback items) → that take is not persisted. `sentenceIndex` is the index
+ *     INTO the origin story, which in a Practice queue is NOT the item's queue
+ *     position — persisting the queue position would corrupt the struggled
+ *     grouping the backend reads. In the reading view (Story) the two coincide.
+ *     Omit entirely (or pass undefined) to persist nothing at all.
  *   - the caller supplies the sentence list + target language.
  */
 
@@ -84,16 +90,29 @@ function simulatedBands(text: string): PronScores {
   return out;
 }
 
+/**
+ * Where a scored take is persisted: the origin story and the index of this
+ * line WITHIN that story (`Story.content.sentences[sentenceIndex]`). NOT a
+ * queue position — see `persistTargets` below.
+ */
+export interface PersistTarget {
+  storyId: string;
+  sentenceIndex: number;
+}
+
 export interface UseSentencePracticeArgs {
   /** Sentences in order; `target` is scored + spoken. */
   sentences: PracticeSentence[];
   /** Target language code (e.g. "de"). */
   targetLanguage: string;
   /**
-   * When set, scored takes are persisted to this story's attempts endpoint
-   * (best-effort, fire-and-forget). Pass null for the mock Practice queue.
+   * Per-item persistence targets, indexed identically to `sentences`. A
+   * non-null entry persists that line's scored take (best-effort,
+   * fire-and-forget) to its origin story at its ORIGINAL story index; a `null`
+   * entry (e.g. a Practice `example_target` fallback) persists nothing for that
+   * item. Omit / undefined → persist nothing at all.
    */
-  persistStoryId: string | null;
+  persistTargets?: Array<PersistTarget | null>;
   /**
    * Called when navigation would advance past the last sentence (Story →
    * finish screen, Practice → summary phase). The host owns what happens.
@@ -148,7 +167,7 @@ export interface UseSentencePractice {
 export function useSentencePractice({
   sentences,
   targetLanguage,
-  persistStoryId,
+  persistTargets,
   onFinish,
   keyboardEnabled = true,
 }: UseSentencePracticeArgs): UseSentencePractice {
@@ -276,12 +295,16 @@ export function useSentencePractice({
       setScoresBySentence((s) => ({ ...s, [idxAtStart]: bands }));
       setPronError(null);
       // Best-effort: persist the attempt so SRS + souvenir picker can use it
-      // across sessions. Failure here doesn't affect the UX. Only the reading
-      // view (real story) persists; the Practice mock queue passes null.
-      if (persistStoryId) {
+      // across sessions. Failure here doesn't affect the UX. We persist against
+      // the line's ORIGIN story at its ORIGINAL story index — NOT idxAtStart
+      // (the queue position), which only coincides with the story index in the
+      // reading view. A null target (Practice `example_target` fallback, or no
+      // targets supplied) persists nothing.
+      const target = persistTargets?.[idxAtStart] ?? null;
+      if (target) {
         void api
-          .recordPronunciationAttempt(persistStoryId, {
-            sentence_index: idxAtStart,
+          .recordPronunciationAttempt(target.storyId, {
+            sentence_index: target.sentenceIndex,
             reference_text: sentence.target,
             recognized_text: resp.recognized_text,
             // Pure phoneme accuracy, not Azure's compositum — see useMicScorer.
@@ -308,7 +331,7 @@ export function useSentencePractice({
     } finally {
       setEvaluatingIndex(null);
     }
-  }, [fetchAndStoreHints, persistStoryId, recordingIndex, sentences, targetLanguage]);
+  }, [fetchAndStoreHints, persistTargets, recordingIndex, sentences, targetLanguage]);
 
   const cancelRecording = useCallback(() => {
     recorderRef.current?.cancel();

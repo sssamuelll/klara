@@ -216,6 +216,10 @@ async def test_queue_surfaces_struggled_with_worst_token(client, seed_invite, db
     assert item["sentence"]["target"] == ref
     assert item["source"] == "El sello que tarda diez minutos."
     assert body["sourceTitle"] == "El sello que tarda diez minutos."
+    # PR #3b: struggled items carry their origin (storyId, sentenceIndex) so a
+    # Practice attempt persists against the same grouping the struggle came from.
+    assert item["storyId"] == str(story_id)
+    assert item["sentenceIndex"] == 0
 
 
 @pytest.mark.asyncio
@@ -466,11 +470,20 @@ async def test_queue_surfaces_review_item_from_story_breakdown(client, seed_invi
         example_target="Ein Bildschirm.",
     )
     target = f"Die Nummer auf dem {lemma} wechselt."
-    await _seed_story(
+    # Lemma sits in the SECOND sentence (index 1), not the first. PR #3b must
+    # persist the REAL story index, so this proves it isn't hard-coded to 0 nor
+    # confused with a queue position.
+    story_id = await _seed_story(
         db_session,
         user_id=uid,
         title="Geschichte mit Wort",
         sentences=[
+            {
+                "target": "Ein erster Satz ohne das Wort.",
+                "native": "Una primera frase sin la palabra.",
+                "new_words": [],
+                "breakdown": [],
+            },
             {
                 "target": target,
                 "native": "El número en la pantalla cambia.",
@@ -478,7 +491,7 @@ async def test_queue_surfaces_review_item_from_story_breakdown(client, seed_invi
                 "breakdown": [
                     {"word": lemma, "translation": "pantalla", "pos": "noun"},
                 ],
-            }
+            },
         ],
         target_vocab_item_ids=[vocab_id],
     )
@@ -494,6 +507,10 @@ async def test_queue_surfaces_review_item_from_story_breakdown(client, seed_invi
     assert item["sentence"]["target"] == target
     assert item["sentence"]["native"] == "El número en la pantalla cambia."
     assert item["source"] == "Geschichte mit Wort"
+    # PR #3b: a story-sourced review item carries the origin story id and the
+    # REAL index of the matched sentence within that story (1, not 0).
+    assert item["storyId"] == str(story_id)
+    assert item["sentenceIndex"] == 1
     # A review item present → queue-level sourceTitle blanked.
     assert body["sourceTitle"] == ""
 
@@ -529,6 +546,10 @@ async def test_queue_review_falls_back_to_example_target(client, seed_invite, db
     assert item["sentence"]["native"] == "paraguas"
     assert item["focusTx"] == "paraguas"
     assert item["source"] == ""  # no origin story
+    # PR #3b: a fallback example_target line has no real story sentence to
+    # attribute an attempt to → not persisted from Practice.
+    assert item["storyId"] is None
+    assert item["sentenceIndex"] is None
 
 
 @pytest.mark.asyncio
@@ -578,6 +599,9 @@ async def test_queue_review_falls_back_when_lemma_inflected_in_story(
     assert item["sentence"]["native"] == "correr"  # lemma gloss, documented
     # example_target is NOT the story's sentence → no story attribution.
     assert item["source"] == ""
+    # Same reasoning for persistence: the line isn't a real story sentence.
+    assert item["storyId"] is None
+    assert item["sentenceIndex"] is None
 
 
 @pytest.mark.asyncio
@@ -703,6 +727,12 @@ async def test_queue_combines_struggled_then_review(client, seed_invite, db_sess
     assert [it["reason"] for it in body["items"]] == ["struggled", "review"]
     assert body["items"][0]["focusText"] == "Hund"
     assert body["items"][1]["focusText"] == lemma
+    # Struggled carries its origin; the review here fell back to example_target
+    # (no story references the lemma) → no provenance, not persisted.
+    assert body["items"][0]["storyId"] == str(story_id)
+    assert body["items"][0]["sentenceIndex"] == 0
+    assert body["items"][1]["storyId"] is None
+    assert body["items"][1]["sentenceIndex"] is None
 
 
 @pytest.mark.asyncio

@@ -46,6 +46,21 @@ export interface PracticeItem {
   focusTx: string;
   /** Why this item is in today's set. */
   reason: PracticeReason;
+  /**
+   * Origin story id, when this line IS a real story sentence (struggled
+   * items, and review items resolved from a story breakdown). Absent for
+   * review items that fell back to the vocab item's `example_target` — those
+   * have no story sentence to persist an attempt against.
+   */
+  storyId?: string;
+  /**
+   * Index of the line WITHIN its origin story (`Story.content.sentences[i]`),
+   * paired with `storyId`. This is NOT the item's position in the Practice
+   * queue: a Practice attempt persists against (storyId, sentenceIndex) so it
+   * lands on the same struggled grouping the backend reads. Absent together
+   * with `storyId` for `example_target` fallback items.
+   */
+  sentenceIndex?: number;
 }
 
 export interface PracticeQueue {
