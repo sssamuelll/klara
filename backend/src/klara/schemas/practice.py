@@ -6,19 +6,17 @@ camelCase field names the TS expects (`focusText`, `focusTx`,
 `targetLanguage`, `sourceTitle`) are emitted via `serialization_alias`, while
 Python code constructs these models with snake/clean attribute names.
 
-Scope (this PR): the queue is STRUGGLED-ONLY. `variants` is always `[]`
-(variety-by-level is deferred to a later PR, mirroring the mock). `review`
-(SRS-due) items are NOT produced here — see `services/practice_queue.py` for
-the deferral notes.
+The queue mixes "struggled" and "review" items. `variants` is always `[]`
+(variety-by-level is deferred to a later PR, mirroring the mock) — see
+`services/practice_queue.py` for the full algorithm and deferral notes.
 """
 
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# `reason` mirrors the TS `PracticeReason` union. This PR only ever emits
-# "struggled"; "review" exists in the contract so the frontend type stays
-# stable when SRS items land in a later PR.
+# `reason` mirrors the TS `PracticeReason` union: a line is either a recently
+# mispronounced sentence ("struggled") or an SRS-due vocab line ("review").
 PracticeReason = Literal["struggled", "review"]
 
 
