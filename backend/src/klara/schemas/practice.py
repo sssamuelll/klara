@@ -43,6 +43,15 @@ class PracticeItemOut(BaseModel):
     focus_text: str = Field(serialization_alias="focusText")
     focus_tx: str = Field(serialization_alias="focusTx")
     reason: PracticeReason
+    # Provenance for attempt persistence FROM Practice (PR #3b). When BOTH are
+    # set, the frontend POSTs a scored take of this line back to
+    # /stories/{storyId}/pronunciation/attempts using `sentenceIndex` as the
+    # index INTO that story's sentences — NOT the item's position in the Practice
+    # queue. They are optional because a "review" item that fell back to the
+    # vocab item's `example_target` has no origin story sentence to attribute
+    # the attempt to (None → that item is not persisted).
+    story_id: str | None = Field(default=None, serialization_alias="storyId")
+    sentence_index: int | None = Field(default=None, serialization_alias="sentenceIndex")
 
 
 class PracticeQueueOut(BaseModel):

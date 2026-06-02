@@ -104,10 +104,29 @@ export default function Practice() {
   // SentenceView consumes StorySentence; map once.
   const sentences = useMemo(() => items.map(toStorySentence), [items]);
 
+  // Per-item persistence targets, indexed identically to `sentences`. An item
+  // backed by a REAL story sentence (struggled, or a review resolved from a
+  // story breakdown) persists its scored take against that story's ORIGINAL
+  // sentence index; an `example_target` fallback review item carries neither
+  // storyId nor sentenceIndex → null → not persisted. The index used is the
+  // item's own `sentenceIndex` (the story index), NOT its queue position.
+  const persistTargets = useMemo(
+    () =>
+      items.map((it) =>
+        // Backend serializes a fallback item's storyId/sentenceIndex as JSON
+        // `null` (not omitted), so the guard must catch null AND undefined.
+        // `!= null` narrows both away → storyId: string, sentenceIndex: number.
+        it.storyId != null && it.sentenceIndex != null
+          ? { storyId: it.storyId, sentenceIndex: it.sentenceIndex }
+          : null,
+      ),
+    [items],
+  );
+
   const practice = useSentencePractice({
     sentences,
     targetLanguage: queue?.targetLanguage ?? "de",
-    persistStoryId: null, // mock queue → nothing persisted (no real story id)
+    persistTargets,
     onFinish: () => {
       setPhase("summary");
       window.scrollTo({ top: 0 });

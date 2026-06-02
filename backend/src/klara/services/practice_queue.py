@@ -237,6 +237,11 @@ async def _build_struggled_items(
                 focus_text=focus,
                 focus_tx=focus_tx,
                 reason="struggled",
+                # Origin is resolved cleanly: this line IS Story.content[
+                # sentence_index], so a Practice attempt on it persists against
+                # the same (story_id, sentence_index) the struggle came from.
+                story_id=str(story_id),
+                sentence_index=sentence_index,
             )
         )
         if len(items) >= limit:
@@ -245,19 +250,23 @@ async def _build_struggled_items(
     return items, source_titles
 
 
-def _resolve_review_sentence(story: Story | None, lemma: str) -> PracticeSentenceOut | None:
+def _resolve_review_sentence(
+    story: Story | None, lemma: str
+) -> tuple[PracticeSentenceOut, int] | None:
     """Find the first sentence of `story` whose breakdown contains `lemma`.
 
     Match is casefold against breakdown `word` entries, mirroring
-    `_focus_translation`. Returns the sentence (target + native, both straight
-    from the story) or None when the lemma surfaces in no breakdown — the
-    caller then degrades to the vocab item's own example.
+    `_focus_translation`. Returns (sentence, sentence_index) where the index is
+    the position INTO Story.content["sentences"] — the same index a Practice
+    attempt must persist against (PR #3b) so it lands on the right struggled
+    grouping. Returns None when the lemma surfaces in no breakdown — the caller
+    then degrades to the vocab item's own example (which has no story index).
     """
     if story is None:
         return None
     sentences = (story.content or {}).get("sentences") or []
     target_norm = lemma.casefold()
-    for sentence in sentences:
+    for index, sentence in enumerate(sentences):
         if not isinstance(sentence, dict):
             continue
         breakdown = sentence.get("breakdown")
@@ -271,7 +280,8 @@ def _resolve_review_sentence(story: Story | None, lemma: str) -> PracticeSentenc
                 target = sentence.get("target") or ""
                 if not target:
                     continue
-                return PracticeSentenceOut(target=target, native=sentence.get("native") or "")
+                resolved = PracticeSentenceOut(target=target, native=sentence.get("native") or "")
+                return resolved, index
     return None
 
 
@@ -336,25 +346,33 @@ async def build_review_items(
             )
         ).scalar_one_or_none()
 
-        sentence = _resolve_review_sentence(story, lemma)
+        resolved = _resolve_review_sentence(story, lemma)
         # Capture provenance BEFORE the fallback reassigns `sentence`: the line
         # is story-sourced only when it was resolved FROM the story breakdown.
         # A line that comes from `example_target` must never be attributed to a
         # story that merely matched the lemma but doesn't contain that sentence.
-        from_story = sentence is not None and story is not None
+        from_story = resolved is not None and story is not None
+        # The sentence and its index INTO the origin story, when story-sourced.
+        # A fallback (example_target) item has neither → (storyId, sentenceIndex)
+        # stay None and that item is NOT persisted from Practice.
+        sentence = resolved[0] if resolved is not None else None
+        story_sentence_index = resolved[1] if resolved is not None else None
         # Clean per-word gloss for the focus lemma, when the resolved sentence
         # came from a story breakdown; else the vocab translation.
         focus_tx = vocab.translations.get(native_language) if vocab.translations else None
         if sentence is not None and story is not None:
             # Prefer the story-breakdown gloss to stay consistent with struggled
-            # items; the breakdown lives on the matched sentence.
+            # items; the breakdown lives on the RESOLVED sentence. Index DIRECTLY
+            # with story_sentence_index — re-scanning for the first sentence whose
+            # target matches grabs the wrong one when a story repeats an identical
+            # target. Degrade safely if the index is somehow out of range.
             sentences = (story.content or {}).get("sentences") or []
-            for s in sentences:
-                if isinstance(s, dict) and (s.get("target") or "") == sentence.target:
+            if story_sentence_index is not None and 0 <= story_sentence_index < len(sentences):
+                s = sentences[story_sentence_index]
+                if isinstance(s, dict):
                     tx = _focus_translation(s, lemma)
                     if tx:
                         focus_tx = tx
-                    break
         else:
             # Fallback: the vocab item's own canonical example.
             # `example_target` gives the TARGET line, but VocabItem carries no
@@ -380,6 +398,13 @@ async def build_review_items(
                 focus_text=lemma,
                 focus_tx=focus_tx or "",
                 reason="review",
+                # Persist provenance only for story-sourced review lines. The
+                # decision on file: a review item backed by a REAL story sentence
+                # persists its attempt against that (storyId, sentenceIndex),
+                # feeding the same struggled pipeline. A fallback example_target
+                # line has no real story sentence → None, None → not persisted.
+                story_id=str(story.id) if from_story and story is not None else None,
+                sentence_index=story_sentence_index if from_story else None,
             )
         )
         if len(items) >= limit:

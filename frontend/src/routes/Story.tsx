@@ -31,6 +31,17 @@ export default function StoryView() {
 
   const sentences = useMemo(() => story?.content.sentences ?? [], [story]);
 
+  // Per-item persistence targets for the shared hook (new per-item firma in
+  // PR #3b). In the reading view the queue index IS the story index — every
+  // sentence i belongs to this story at index i — so this is exactly the old
+  // single global `persistStoryId: story.id` behaviour, just expressed per
+  // line. Empty (and thus persisting nothing) until the story loads, matching
+  // the old `story?.id ?? null` guard.
+  const persistTargets = useMemo(
+    () => (story ? sentences.map((_, i) => ({ storyId: story.id, sentenceIndex: i })) : []),
+    [story, sentences],
+  );
+
   // Per-sentence pronunciation lifecycle (mic / TTS / scoring / hints /
   // keyboard) lives in the shared hook, extracted from this file so the
   // standalone Practice ("Pronunciar") session can reuse the exact same
@@ -39,7 +50,7 @@ export default function StoryView() {
   const practice = useSentencePractice({
     sentences,
     targetLanguage: story?.target_language ?? "de",
-    persistStoryId: story?.id ?? null,
+    persistTargets,
     onFinish: () => setFinished(true),
     keyboardEnabled: Boolean(story) && !finished,
   });
