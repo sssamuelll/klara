@@ -362,14 +362,17 @@ async def build_review_items(
         focus_tx = vocab.translations.get(native_language) if vocab.translations else None
         if sentence is not None and story is not None:
             # Prefer the story-breakdown gloss to stay consistent with struggled
-            # items; the breakdown lives on the matched sentence.
+            # items; the breakdown lives on the RESOLVED sentence. Index DIRECTLY
+            # with story_sentence_index — re-scanning for the first sentence whose
+            # target matches grabs the wrong one when a story repeats an identical
+            # target. Degrade safely if the index is somehow out of range.
             sentences = (story.content or {}).get("sentences") or []
-            for s in sentences:
-                if isinstance(s, dict) and (s.get("target") or "") == sentence.target:
+            if story_sentence_index is not None and 0 <= story_sentence_index < len(sentences):
+                s = sentences[story_sentence_index]
+                if isinstance(s, dict):
                     tx = _focus_translation(s, lemma)
                     if tx:
                         focus_tx = tx
-                    break
         else:
             # Fallback: the vocab item's own canonical example.
             # `example_target` gives the TARGET line, but VocabItem carries no

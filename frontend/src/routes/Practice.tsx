@@ -113,7 +113,10 @@ export default function Practice() {
   const persistTargets = useMemo(
     () =>
       items.map((it) =>
-        it.storyId !== undefined && it.sentenceIndex !== undefined
+        // Backend serializes a fallback item's storyId/sentenceIndex as JSON
+        // `null` (not omitted), so the guard must catch null AND undefined.
+        // `!= null` narrows both away → storyId: string, sentenceIndex: number.
+        it.storyId != null && it.sentenceIndex != null
           ? { storyId: it.storyId, sentenceIndex: it.sentenceIndex }
           : null,
       ),

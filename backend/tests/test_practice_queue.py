@@ -864,6 +864,74 @@ async def test_queue_review_unusable_due_cards_dont_underfill(client, seed_invit
 
 
 @pytest.mark.asyncio
+async def test_queue_review_focus_tx_uses_resolved_index_not_first_target_match(
+    client, seed_invite, db_session
+):
+    """Regression (CodeRabbit Minor): focus_tx must be read from the RESOLVED
+    sentence index, not re-scanned for the first sentence whose target matches.
+
+    The story has two sentences with an IDENTICAL `target`. The lemma's
+    breakdown lives ONLY in the SECOND (index 1); the first carries a different,
+    WRONG gloss for the same lemma. The old code re-scanned by matching target
+    and grabbed the first sentence → wrong gloss. Indexing directly with the
+    resolved story_sentence_index pulls the correct gloss from sentence 1.
+    """
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+
+    lemma = f"Schloss-{uuid.uuid4().hex[:8]}"
+    vocab_id = await _seed_due_card(
+        db_session,
+        user_id=uid,
+        lemma=lemma,
+        translation="castillo",  # vocab-level fallback gloss, must NOT win here
+        example_target="Ein Schloss.",
+    )
+    repeated_target = f"Das {lemma} steht dort."
+    story_id = await _seed_story(
+        db_session,
+        user_id=uid,
+        title="Doppelte Geschichte",
+        sentences=[
+            # Index 0: SAME target, but the lemma is NOT in its breakdown — it
+            # carries a different word with a WRONG gloss for the lemma. The old
+            # target re-scan would land here and read this wrong gloss.
+            {
+                "target": repeated_target,
+                "native": "Una traducción equivocada.",
+                "new_words": [],
+                "breakdown": [
+                    {"word": "steht", "translation": "ESTÁ-MAL", "pos": "verb"},
+                ],
+            },
+            # Index 1: SAME target, lemma present in the breakdown → resolves
+            # HERE. The correct gloss is "cerradura" (context-specific), not the
+            # vocab translation "castillo".
+            {
+                "target": repeated_target,
+                "native": "El cerrojo está ahí.",
+                "new_words": [],
+                "breakdown": [
+                    {"word": lemma, "translation": "cerradura", "pos": "noun"},
+                ],
+            },
+        ],
+        target_vocab_item_ids=[vocab_id],
+    )
+
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    item = r.json()["items"][0]
+    assert item["reason"] == "review"
+    assert item["focusText"] == lemma
+    # Resolved at index 1: the gloss must come from sentence 1's breakdown,
+    # not from sentence 0 (the first target match) nor the vocab fallback.
+    assert item["sentenceIndex"] == 1
+    assert item["storyId"] == str(story_id)
+    assert item["focusTx"] == "cerradura"
+
+
+@pytest.mark.asyncio
 async def test_queue_review_source_blank_for_example_target_despite_matching_story(
     client, seed_invite, db_session
 ):
