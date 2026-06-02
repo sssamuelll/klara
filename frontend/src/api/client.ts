@@ -1,4 +1,5 @@
 import i18n from "../i18n";
+import type { PracticeQueue } from "../lib/practiceQueue";
 import type {
   CardOut,
   InsightResponse,
@@ -180,6 +181,12 @@ export const api = {
     }),
 
   dueCards: (limit = 20) => request<CardOut[]>(`/srs/cards/due?limit=${limit}`),
+
+  // --- practice ("Pronunciar") ---
+  // Backend emits camelCase (focusText, focusTx, targetLanguage, sourceTitle)
+  // so the payload deserializes straight into PracticeQueue with no mapping.
+  getPracticeQueue: (limit = 6) =>
+    request<PracticeQueue>(`/practice/queue?limit=${limit}`),
 
   reviewCard: (cardId: string, rating: "again" | "hard" | "good" | "easy") =>
     request(`/srs/cards/${cardId}/review`, {

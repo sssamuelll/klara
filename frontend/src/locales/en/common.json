@@ -271,7 +271,13 @@
       },
       "start": "Start pronouncing",
       "later": "Later",
-      "from": "from “{{title}}”"
+      "from": "from “{{title}}”",
+      "fromMany": "from several stories"
+    },
+    "loading": {
+      "wait": "Getting your practice ready…",
+      "error": "Couldn't load your practice. Try again.",
+      "empty": "Nothing to practise yet. Come back after reading a story."
     },
     "session": {
       "chapterTitle": "Practice"

@@ -1,21 +1,23 @@
 /**
- * Practice ("Pronunciar") queue — data model + MOCK source.
+ * Practice ("Pronunciar") queue — data model + fetch.
  *
- * Scope (this PR): frontend only, with a hard-coded mock queue. In the next
- * PR this is swapped for `GET /api/v1/practice/queue`, which returns the same
- * `PracticeItem[]` shape — so the swap is trivial: replace `buildMockQueue`
- * with a fetch and keep everything downstream unchanged.
+ * The queue is served by `GET /api/v1/practice/queue` and deserializes
+ * straight into `PracticeQueue` (the backend emits the camelCase field names
+ * this contract expects). The component layer is endpoint-agnostic: it calls
+ * `loadPracticeQueue()` and renders whatever `PracticeItem[]` comes back.
  *
  * The scheduler (backend) produces the queue from two sources:
  *   - reason "struggled" → words the learner mispronounced recently.
  *   - reason "review"    → items due by spaced repetition (SRS).
  *
- * Per the product decision: the queue is modelled to carry an origin sentence
- * plus level-generated alternatives. The mock only fills the origin sentence
- * (`variants` empty); variety-by-level arrives with the endpoint. Origin
- * sentence first, variety later.
+ * Scope today: the endpoint is STRUGGLED-ONLY — `variants` arrives empty and
+ * no "review" items are produced yet (SRS-due items are deferred until the
+ * origin-sentence resolution for an SRS lemma is settled). The contract
+ * already carries both, so neither this type nor the component changes when
+ * review items and variety-by-level land.
  */
 
+import { api } from "../api/client";
 import type { LanguageCode } from "./languages";
 
 export type PracticeReason = "struggled" | "review";
@@ -54,88 +56,13 @@ export interface PracticeQueue {
   sourceTitle: string;
 }
 
-// ---------------------------------------------------------------------------
-// MOCK QUEUE — mirrors the handoff's SAMPLE_STORY (Bürgeramt, A2→B1) and the
-// hard-coded PRACTICE_PICK. Shaped exactly like the future endpoint payload
-// so the real fetch is a drop-in. DELETE-ME-ON-ENDPOINT marks the seam.
-// ---------------------------------------------------------------------------
-
-const MOCK_SOURCE_TITLE = "El sello que tarda diez minutos.";
-
-interface MockPick {
-  target: string;
-  native: string;
-  focusText: string;
-  focusTx: string;
-  reason: PracticeReason;
-}
-
-// Origin sentences + focus words, lifted from the handoff sample so the
-// mock reads like real content. Order = the scheduler's intended order.
-const MOCK_PICKS: MockPick[] = [
-  {
-    target: "Die Nummer auf dem Bildschirm wechselt. Ich bin dran.",
-    native: "El número en la pantalla cambia. Es mi turno.",
-    focusText: "dran",
-    focusTx: "es mi turno",
-    reason: "struggled",
-  },
-  {
-    target: "Guten Tag. Ich möchte mich anmelden.",
-    native: "Buenos días. Necesito registrar mi domicilio.",
-    focusText: "anmelden",
-    focusTx: "registrar(se)",
-    reason: "review",
-  },
-  {
-    target:
-      "Reisepass, Mietvertrag und Wohnungsgeberbestätigung?",
-    native: "¿Pasaporte, contrato de alquiler y la confirmación del propietario?",
-    focusText: "Wohnungsgeberbestätigung",
-    focusTx: "confirmación del propietario",
-    reason: "struggled",
-  },
-  {
-    target: "Sie nickt, ohne aufzusehen.",
-    native: "Ella asiente sin levantar la vista.",
-    focusText: "nickt",
-    focusTx: "asentir con la cabeza",
-    reason: "review",
-  },
-  {
-    target: "Ich reiche ihr die drei Papiere, geordnet, wie Klara es mir gesagt hat.",
-    native: "Le entrego los tres papeles, ordenados como Klara me dijo.",
-    focusText: "reiche",
-    focusTx: "alcanzar, entregar",
-    reason: "struggled",
-  },
-  {
-    target: "Zehn Minuten. Setzen Sie sich.",
-    native: "Diez minutos. Tome asiento.",
-    focusText: "Setzen",
-    focusTx: "sentar",
-    reason: "review",
-  },
-];
-
 /**
- * Build today's practice queue. MOCK: returns a fixed set shaped like the
- * future endpoint. Swap this body for `await api.getPracticeQueue()` in the
- * 2nd PR; nothing downstream changes.
+ * Fetch today's practice queue from `GET /api/v1/practice/queue`. The payload
+ * is already in `PracticeQueue` shape, so this is a thin pass-through; the
+ * function exists as the single seam the component talks to.
  */
-export function buildMockQueue(): PracticeQueue {
-  return {
-    targetLanguage: "de",
-    sourceTitle: MOCK_SOURCE_TITLE,
-    items: MOCK_PICKS.map((p) => ({
-      sentence: { target: p.target, native: p.native },
-      variants: [], // populated by the endpoint (2nd PR), not the mock.
-      source: MOCK_SOURCE_TITLE,
-      focusText: p.focusText,
-      focusTx: p.focusTx,
-      reason: p.reason,
-    })),
-  };
+export async function loadPracticeQueue(): Promise<PracticeQueue> {
+  return api.getPracticeQueue();
 }
 
 export function countByReason(items: PracticeItem[], reason: PracticeReason): number {

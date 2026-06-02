@@ -271,7 +271,13 @@
       },
       "start": "Empezar a pronunciar",
       "later": "Más tarde",
-      "from": "de «{{title}}»"
+      "from": "de «{{title}}»",
+      "fromMany": "de varias historias"
+    },
+    "loading": {
+      "wait": "Preparando tu práctica…",
+      "error": "No se pudo cargar tu práctica. Inténtalo de nuevo.",
+      "empty": "Nada que practicar por ahora. Vuelve después de leer una historia."
     },
     "session": {
       "chapterTitle": "Práctica"
