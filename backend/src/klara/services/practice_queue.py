@@ -1,31 +1,45 @@
-"""Builds the Practice ("Pronunciar") queue from recent pronunciation attempts.
+"""Builds the Practice ("Pronunciar") queue: struggled lines + SRS-due review.
 
-Scope (this PR): STRUGGLED-ONLY. The queue carries sentences the learner
-recently mispronounced, where the origin sentence is resolved cleanly from
-the source story (story_id + sentence_index → Story.content["sentences"][i]).
+The queue mixes two signals into one pronunciation set:
+
+  * STRUGGLED — sentences the learner recently mispronounced, origin resolved
+    cleanly from the source story (story_id + sentence_index →
+    Story.content["sentences"][i]). The worst token is the focus word.
+
+  * REVIEW — SRS-due vocab (UserCard due, same clause as routers/srs.py
+    due_cards), surfaced as a line to say aloud. The origin sentence is
+    resolved as "the last story where the lemma appeared"; if the lemma
+    never surfaces in a breakdown (inflected forms etc.), we fall back to the
+    vocab item's own `example_target` sentence.
+
+Dedup (decision on file): when a word is BOTH struggled AND SRS-due it appears
+ONCE, as reason "struggled" — the more urgent signal, it avoids burning two
+queue slots, and practising the struggled sentence already exercises the word.
+Matching is by focus_text.casefold() against the review lemma (we do NOT
+introduce a text→vocab_item resolution just for dedup).
+
+Ordering: struggled first, then review, capped at `limit`. The frontend only
+counts chips per reason, so any stable order is valid; struggled-first keeps
+the more urgent signal at the top of the set.
 
 Two deliberate deferrals, decided up front so the contract stays stable:
 
-  * `review` (SRS-due) items are OUT of this PR. They enter once we settle a
-    clean origin-sentence resolution for an SRS lemma (likely "the last story
-    where the lemma appeared"). Until then, mixing a synthetic sentence in
-    would dilute the "say the line you actually read" model. Pending.
-
-  * struggled ∩ review dedup is therefore N/A here (no review items exist).
-    Decision already taken for the PR that introduces review items: when a
-    word is BOTH struggled AND SRS-due, it appears ONCE with reason
-    "struggled" — the more urgent signal, it avoids burning two queue slots,
-    and practising the struggled sentence already exercises the word. Not
-    implemented now; documented so the future PR doesn't relitigate it.
-
-  * `variants` (variety-by-level alternatives) is also deferred — every item
-    here returns `variants=[]`, identical to the mock the frontend currently
-    ships. Variety arrives with its own LLM path in a later PR.
+  * `variants` (variety-by-level alternatives) is deferred — every item here
+    returns `variants=[]`, identical to the mock the frontend currently ships.
+    Variety arrives with its own LLM path in a later PR.
 
   * Persisting attempts FROM Practice (so practising feeds back into the
     struggled signal) is deferred too: it needs widening the PracticeItem
     contract with storyId/sentenceIndex and per-item persist in the hook.
-    Pending.
+    Pending (PR #3b).
+
+A known data fragility, documented not "fixed" here: VocabItem.language
+defaults to "de". Old lemmas seeded before the column was populated correctly
+carry "de" regardless of their true language, so the `language ==
+target_language` filter on review items can silently empty the review set for
+a non-German learner. This is a data-hygiene issue, not a query bug — do not
+paper over it by relaxing the filter (that would leak foreign-language lines
+into the queue). Fix the data, not the predicate.
 """
 
 from __future__ import annotations
@@ -34,10 +48,10 @@ import re
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from klara.models import PronunciationAttempt, Story
+from klara.models import PronunciationAttempt, Story, UserCard, VocabItem
 from klara.schemas.practice import (
     PracticeItemOut,
     PracticeQueueOut,
@@ -132,14 +146,14 @@ def _focus_translation(sentence: dict, focus_text: str) -> str:
     return ""
 
 
-async def build_struggled_queue(
+async def _build_struggled_items(
     db: AsyncSession,
     *,
     user_id: UUID,
     target_language: str,
-    limit: int = DEFAULT_QUEUE_LIMIT,
-) -> PracticeQueueOut:
-    """Assemble today's struggled-only practice queue for a user.
+    limit: int,
+) -> tuple[list[PracticeItemOut], set[str]]:
+    """Build struggled items, returning (items, distinct source titles).
 
     Algorithm:
       1. Pull recent (< window) attempts that scored below the struggle
@@ -150,6 +164,9 @@ async def build_struggled_queue(
       3. Resolve each group's origin sentence from Story.content, pick the
          worst-scored token as the focus word + its clean translation.
       4. Cap at `limit`.
+
+    `source_titles` is collected so the caller can decide the queue-level
+    sourceTitle (single story → its title; mixed → blank).
     """
     cutoff = datetime.now(UTC) - timedelta(days=RECENT_ATTEMPTS_WINDOW_DAYS)
     stmt = (
@@ -170,7 +187,7 @@ async def build_struggled_queue(
         latest_by_sentence.setdefault((a.story_id, a.sentence_index), a)
 
     if not latest_by_sentence:
-        return PracticeQueueOut(items=[], target_language=target_language, source_title="")
+        return [], set()
 
     # Batch-load the stories referenced, to resolve clean origin sentences.
     story_ids = {sid for (sid, _) in latest_by_sentence}
@@ -178,10 +195,8 @@ async def build_struggled_queue(
     stories_by_id = {s.id: s for s in story_rows}
 
     items: list[PracticeItemOut] = []
-    # Collect the distinct source titles actually emitted. A queue-level
-    # source_title only makes sense when every item comes from ONE story;
-    # the moment we mix stories, a single title mislabels the set, so we
-    # leave it blank and the frontend omits the "from <story>" signature.
+    # Collect the distinct source titles actually emitted, for the caller's
+    # queue-level sourceTitle decision (single story → title; mixed → blank).
     source_titles: set[str] = set()
     for (story_id, sentence_index), attempt in latest_by_sentence.items():
         story = stories_by_id.get(story_id)
@@ -227,9 +242,191 @@ async def build_struggled_queue(
         if len(items) >= limit:
             break
 
+    return items, source_titles
+
+
+def _resolve_review_sentence(story: Story | None, lemma: str) -> PracticeSentenceOut | None:
+    """Find the first sentence of `story` whose breakdown contains `lemma`.
+
+    Match is casefold against breakdown `word` entries, mirroring
+    `_focus_translation`. Returns the sentence (target + native, both straight
+    from the story) or None when the lemma surfaces in no breakdown — the
+    caller then degrades to the vocab item's own example.
+    """
+    if story is None:
+        return None
+    sentences = (story.content or {}).get("sentences") or []
+    target_norm = lemma.casefold()
+    for sentence in sentences:
+        if not isinstance(sentence, dict):
+            continue
+        breakdown = sentence.get("breakdown")
+        if not isinstance(breakdown, list):
+            continue
+        for entry in breakdown:
+            if not isinstance(entry, dict):
+                continue
+            word = entry.get("word")
+            if isinstance(word, str) and word.casefold() == target_norm:
+                target = sentence.get("target") or ""
+                if not target:
+                    continue
+                return PracticeSentenceOut(target=target, native=sentence.get("native") or "")
+    return None
+
+
+async def build_review_items(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    target_language: str,
+    native_language: str,
+    limit: int,
+) -> list[PracticeItemOut]:
+    """Build SRS-due review items as pronunciation lines.
+
+    Algorithm:
+      1. Load due UserCards (same clause + order as routers/srs.py due_cards:
+         next_review_at IS NULL OR <= now, ordered next_review_at ASC
+         nullsfirst), joined to VocabItem, filtered to the user's current
+         target_language. The language filter keeps the queue single-language;
+         see the module docstring on the VocabItem.language data fragility.
+      2. For each due lemma, find its most-recent story (Story.created_at DESC)
+         whose target_vocab_item_ids contains the vocab id, then the first
+         sentence in that story whose breakdown contains the lemma.
+      3. If no such sentence exists (inflected form, or lemma absent from every
+         breakdown), fall back to the vocab item's own `example_target`.
+      4. Cap at `limit`.
+    """
+    now = datetime.now(UTC)
+    stmt = (
+        select(UserCard, VocabItem)
+        .join(VocabItem, VocabItem.id == UserCard.vocab_item_id)
+        .where(
+            UserCard.user_id == user_id,
+            VocabItem.language == target_language,
+            or_(UserCard.next_review_at.is_(None), UserCard.next_review_at <= now),
+        )
+        .order_by(UserCard.next_review_at.asc().nullsfirst())
+        .limit(limit)
+    )
+    rows = (await db.execute(stmt)).all()
+    if not rows:
+        return []
+
+    items: list[PracticeItemOut] = []
+    for _card, vocab in rows:
+        lemma = vocab.lemma
+        # Most-recent story where this lemma is a target vocab item.
+        story = (
+            await db.execute(
+                select(Story)
+                .where(
+                    Story.user_id == user_id,
+                    Story.target_vocab_item_ids.any(vocab.id),
+                )
+                .order_by(Story.created_at.desc())
+                .limit(1)
+            )
+        ).scalar_one_or_none()
+
+        sentence = _resolve_review_sentence(story, lemma)
+        # Clean per-word gloss for the focus lemma, when the resolved sentence
+        # came from a story breakdown; else the vocab translation.
+        focus_tx = vocab.translations.get(native_language) if vocab.translations else None
+        if sentence is not None and story is not None:
+            # Prefer the story-breakdown gloss to stay consistent with struggled
+            # items; the breakdown lives on the matched sentence.
+            sentences = (story.content or {}).get("sentences") or []
+            for s in sentences:
+                if isinstance(s, dict) and (s.get("target") or "") == sentence.target:
+                    tx = _focus_translation(s, lemma)
+                    if tx:
+                        focus_tx = tx
+                    break
+        else:
+            # Fallback: the vocab item's own canonical example.
+            # `example_target` gives the TARGET line, but VocabItem carries no
+            # native translation OF THE FULL SENTENCE — only per-lemma
+            # translations. We use translations[native_language] as the native
+            # gloss (the lemma's meaning), which is honest about what it is (a
+            # word gloss, not a sentence translation) rather than fabricating a
+            # full-sentence translation we don't have. "" when even that is
+            # missing — never invent text.
+            if not vocab.example_target:
+                # No story line AND no example to say aloud → nothing to drill.
+                continue
+            sentence = PracticeSentenceOut(
+                target=vocab.example_target,
+                native=focus_tx or "",
+            )
+
+        items.append(
+            PracticeItemOut(
+                sentence=sentence,
+                variants=[],
+                source=story.title if story is not None else "",
+                focus_text=lemma,
+                focus_tx=focus_tx or "",
+                reason="review",
+            )
+        )
+        if len(items) >= limit:
+            break
+
+    return items
+
+
+async def build_practice_queue(
+    db: AsyncSession,
+    *,
+    user_id: UUID,
+    target_language: str,
+    native_language: str,
+    limit: int = DEFAULT_QUEUE_LIMIT,
+) -> PracticeQueueOut:
+    """Assemble the combined struggled + review practice queue.
+
+    Struggled items come first, then review items, deduped so a word that is
+    both struggled and SRS-due appears once (as struggled). Dedup is by
+    focus_text.casefold() against the review lemma — no text→vocab resolution.
+    The whole set is capped at `limit`.
+    """
+    struggled_items, source_titles = await _build_struggled_items(
+        db, user_id=user_id, target_language=target_language, limit=limit
+    )
+
+    items: list[PracticeItemOut] = list(struggled_items[:limit])
+    struggled_focus = {it.focus_text.casefold() for it in items}
+
+    remaining = limit - len(items)
+    if remaining > 0:
+        # Pull a few extra review candidates beyond `remaining`, since some may
+        # be dropped by dedup; cap the over-fetch so it stays cheap.
+        review_items = await build_review_items(
+            db,
+            user_id=user_id,
+            target_language=target_language,
+            native_language=native_language,
+            limit=remaining + len(struggled_focus),
+        )
+        for it in review_items:
+            if it.focus_text.casefold() in struggled_focus:
+                continue  # struggled ∩ review → keep the struggled item only
+            items.append(it)
+            if len(items) >= limit:
+                break
+
+    # Queue-level sourceTitle only makes sense for a homogeneous single-story
+    # queue. It stays set only when every emitted item is struggled AND from
+    # one story; the moment a review item lands (each carrying its own
+    # per-item `source`) or stories mix, blank it so the frontend omits the
+    # now-ambiguous "from <story>" signature.
+    any_review = any(it.reason == "review" for it in items)
+    source_title = next(iter(source_titles)) if len(source_titles) == 1 and not any_review else ""
+
     return PracticeQueueOut(
         items=items,
         target_language=target_language,
-        # Single story → its title; mixed (or none) → blank, the front omits it.
-        source_title=next(iter(source_titles)) if len(source_titles) == 1 else "",
+        source_title=source_title,
     )
