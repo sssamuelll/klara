@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Hoy",
-    "review": "Repaso",
+    "review": "Pronunciar",
     "chat": "Hablar",
     "settings": "Ajustes",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "PRONUNCIACIÓN",
+      "title_one": "Una frase que vale la pena volver a decir.",
+      "title_other": "{{count}} frases que vale la pena volver a decir.",
+      "dek": "No es un examen. Klara las eligió de lo que ya leíste — algunas se te atascaron, otras vuelven por repaso. Dilas en voz alta, a tu ritmo.",
+      "struggled": "traen palabras que <em>se te atascaron</em>",
+      "review": "vuelven por <em>repaso espaciado</em>",
+      "startBy": "EMPEZAR POR",
+      "chip": {
+        "all": "Todo · {{count}}",
+        "hard": "Difíciles · {{count}}",
+        "review": "Repaso · {{count}}"
+      },
+      "start": "Empezar a pronunciar",
+      "later": "Más tarde",
+      "from": "de «{{title}}»"
+    },
+    "session": {
+      "chapterTitle": "Práctica"
+    },
+    "summary": {
+      "kicker": "FIN DE LA PRÁCTICA",
+      "title_one": "Una frase, dicha.",
+      "title_other": "{{count}} frases, dichas.",
+      "dek": "Sin apuro y sin racha. Esto es lo que Klara guarda y cuándo vuelve.",
+      "stat": {
+        "clear": "CLARAS",
+        "ok": "APROXIMADAS",
+        "bad": "A REVISAR"
+      },
+      "returns": {
+        "title": "VUELVEN PRONTO",
+        "tomorrow": "mañana",
+        "inTwoDays": "en 2 días",
+        "thisWeek": "esta semana"
+      },
+      "again": "Otra ronda",
+      "home": "Volver al inicio"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "Escuchar palabra"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "Repaso",
-      "title": "Próximamente.",
-      "dek": "Klara repasa contigo las palabras de las historias que ya has leído. Sin contadores. Sin presión."
-    },
     "chat": {
       "kicker": "Hablar con Klara",
       "title": "Próximamente.",

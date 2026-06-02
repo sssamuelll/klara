@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Today",
-    "review": "Review",
+    "review": "Pronounce",
     "chat": "Speak",
     "settings": "Settings",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "PRONUNCIATION",
+      "title_one": "One line worth saying again.",
+      "title_other": "{{count}} lines worth saying again.",
+      "dek": "It’s not a test. Klara picked these from what you’ve already read — some tripped you up, others come back for review. Say them out loud, at your own pace.",
+      "struggled": "carry words that <em>tripped you up</em>",
+      "review": "come back for <em>spaced review</em>",
+      "startBy": "START WITH",
+      "chip": {
+        "all": "All · {{count}}",
+        "hard": "Hard · {{count}}",
+        "review": "Review · {{count}}"
+      },
+      "start": "Start pronouncing",
+      "later": "Later",
+      "from": "from “{{title}}”"
+    },
+    "session": {
+      "chapterTitle": "Practice"
+    },
+    "summary": {
+      "kicker": "END OF PRACTICE",
+      "title_one": "One line, said.",
+      "title_other": "{{count}} lines, said.",
+      "dek": "No rush and no streak. Here’s what Klara keeps and when it comes back.",
+      "stat": {
+        "clear": "CLEAR",
+        "ok": "CLOSE",
+        "bad": "TO REVISIT"
+      },
+      "returns": {
+        "title": "BACK SOON",
+        "tomorrow": "tomorrow",
+        "inTwoDays": "in 2 days",
+        "thisWeek": "this week"
+      },
+      "again": "Another round",
+      "home": "Back home"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "Listen to word"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "Review",
-      "title": "Coming soon.",
-      "dek": "Klara reviews with you the words from stories you've already read. No counters. No pressure."
-    },
     "chat": {
       "kicker": "Talk with Klara",
       "title": "Coming soon.",

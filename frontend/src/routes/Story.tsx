@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
@@ -8,16 +8,7 @@ import SentenceView from "../components/SentenceView";
 import StoryFinish from "../components/StoryFinish";
 import WordPopover from "../components/WordPopover";
 import { useFontScale } from "../lib/preferences";
-import {
-  bandsByTokenIndex,
-  scoreAudio,
-  startMicRecording,
-  type MicRecorder,
-  type PronunciationError,
-  type ScoreBand,
-} from "../lib/pronunciation";
-import { startSilenceDetector } from "../lib/silenceDetector";
-import { speak, stop, useTTS } from "../lib/tts";
+import { useSentencePractice } from "../lib/useSentencePractice";
 
 // Tap state for the in-sentence popovers. Two flavours:
 //   target    → full WordPopover with example + Repaso button + POS panel.
@@ -25,30 +16,6 @@ import { speak, stop, useTTS } from "../lib/tts";
 type ActivePopover =
   | { kind: "target"; word: StoryWord; key: string; rect: DOMRect }
   | { kind: "breakdown"; entry: WordBreakdown; key: string; rect: DOMRect };
-
-type PronScores = Record<number, ScoreBand>;
-
-// Cuando estás aprendiendo, lo que falta es más lento — nunca más rápido.
-// El pill cicla entre normal y 0.7× (toggle binario). El 1.3× anterior se
-// removió porque pedagógicamente no aplicaba al caso de uso.
-const RATES = [0.7, 1] as const;
-type Rate = (typeof RATES)[number];
-
-// Word-token regex shared with SentenceView; used here to extract bad-word
-// strings for the phonetic-hints request.
-const WORD_RE = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
-
-function badWordsFromBands(text: string, bands: PronScores): string[] {
-  const out: string[] = [];
-  let i = 0;
-  let m: RegExpExecArray | null;
-  WORD_RE.lastIndex = 0;
-  while ((m = WORD_RE.exec(text)) !== null) {
-    if (m[3] && bands[i] === "bad") out.push(m[3]);
-    i++;
-  }
-  return out;
-}
 
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
@@ -60,23 +27,26 @@ export default function StoryView() {
   const [active, setActive] = useState<ActivePopover | null>(null);
   const [reviewIds, setReviewIds] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState<string | null>(null);
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [recordingIndex, setRecordingIndex] = useState<number | null>(null);
-  const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
-  const [scoresBySentence, setScoresBySentence] = useState<Record<number, PronScores>>({});
-  const [phoneticHintsBySentence, setPhoneticHintsBySentence] = useState<
-    Record<number, Record<string, string>>
-  >({});
-  const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [finished, setFinished] = useState(false);
-  const [rate, setRate] = useState<Rate>(1);
-  const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
 
-  // While set, recorder is live; calling stop() returns the captured Blob.
-  const recorderRef = useRef<MicRecorder | null>(null);
+  const sentences = useMemo(() => story?.content.sentences ?? [], [story]);
 
-  const tts = useTTS();
+  // Per-sentence pronunciation lifecycle (mic / TTS / scoring / hints /
+  // keyboard) lives in the shared hook, extracted from this file so the
+  // standalone Practice ("Pronunciar") session can reuse the exact same
+  // behaviour. SentenceView stays presentational; navigation + popovers +
+  // the finish screen stay here (reading-view-specific).
+  const practice = useSentencePractice({
+    sentences,
+    targetLanguage: story?.target_language ?? "de",
+    persistStoryId: story?.id ?? null,
+    onFinish: () => setFinished(true),
+    keyboardEnabled: Boolean(story) && !finished,
+  });
+
+  const closePopover = useCallback(() => {
+    setActive(null);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -85,11 +55,8 @@ export default function StoryView() {
     setError(null);
     setActive(null);
     setReviewIds(new Set());
-    setCurrentIndex(0);
-    setRecordingIndex(null);
-    setScoresBySentence({});
-    setPhoneticHintsBySentence({});
     setFinished(false);
+    practice.reset();
     api
       .getStory(id)
       .then((s) => {
@@ -100,13 +67,15 @@ export default function StoryView() {
       });
     return () => {
       cancelled = true;
-      stop();
+      practice.stopAudio();
     };
+    // practice.reset / stopAudio are stable callbacks; depending on `id`/`t`
+    // matches the original effect (which re-ran only when story id changed).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, t]);
 
-  const sentences = story?.content.sentences ?? [];
   const total = sentences.length;
-  const current = sentences[currentIndex];
+  const current = sentences[practice.currentIndex];
 
   const wordsById = useMemo<Record<string, StoryWord>>(() => {
     if (!story) return {};
@@ -122,43 +91,6 @@ export default function StoryView() {
     return idx;
   }, [story]);
 
-  // Which sentence (if any) is currently being read aloud by Klara?
-  const playingIndex = useMemo(() => {
-    if (!tts.text) return -1;
-    return sentences.findIndex((s) => s.target === tts.text);
-  }, [sentences, tts.text]);
-
-  // Cleanup any in-flight recording when the story or component unmounts.
-  useEffect(() => {
-    return () => {
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
-      setMicAnalyser(null);
-    };
-  }, []);
-
-  // Fallback used only if the backend signals it can't score (e.g. 503 because
-  // no Azure key in dev). Produces simulated bands keyed by FULL token index
-  // so the UI still feels alive.
-  function simulatedBands(text: string): PronScores {
-    const out: PronScores = {};
-    let i = 0;
-    let m: RegExpExecArray | null;
-    WORD_RE.lastIndex = 0;
-    while ((m = WORD_RE.exec(text)) !== null) {
-      if (m[3]) {
-        const r = Math.random();
-        out[i] = r < 0.62 ? "good" : r < 0.88 ? "ok" : "bad";
-      }
-      i++;
-    }
-    return out;
-  }
-
-  const closePopover = useCallback(() => {
-    setActive(null);
-  }, []);
-
   const handleWordTap = useCallback(
     (word: StoryWord, key: string, el: HTMLElement) => {
       setActive({ kind: "target", word, key, rect: el.getBoundingClientRect() });
@@ -173,230 +105,17 @@ export default function StoryView() {
     [],
   );
 
-  const handlePlayPause = useCallback(() => {
-    if (!current || !story) return;
-    if (playingIndex === currentIndex && tts.playing) {
-      stop();
-    } else {
-      speak(current.target, story.target_language, { rate });
-    }
-  }, [current, currentIndex, playingIndex, rate, story, tts.playing]);
-
-  const handleListenFromFeedback = useCallback(() => {
-    if (!current || !story) return;
-    speak(current.target, story.target_language, { rate });
-  }, [current, rate, story]);
-
-  const cycleSpeed = useCallback(() => {
-    setRate((r) => {
-      const idx = RATES.indexOf(r);
-      return RATES[(idx + 1) % RATES.length];
-    });
-  }, []);
-
-  const clearFeedback = useCallback(() => {
-    setScoresBySentence((s) => {
-      if (!(currentIndex in s)) return s;
-      const next = { ...s };
-      delete next[currentIndex];
-      return next;
-    });
-    setPhoneticHintsBySentence((s) => {
-      if (!(currentIndex in s)) return s;
-      const next = { ...s };
-      delete next[currentIndex];
-      return next;
-    });
-  }, [currentIndex]);
-
-  const fetchAndStoreHints = useCallback(
-    async (idx: number, sentenceText: string, bands: PronScores, language: string) => {
-      const badWords = badWordsFromBands(sentenceText, bands);
-      if (badWords.length === 0) return;
-      try {
-        const resp = await api.getPhoneticHints(badWords, language);
-        if (Object.keys(resp.hints).length === 0) return;
-        setPhoneticHintsBySentence((s) => ({ ...s, [idx]: resp.hints }));
-      } catch {
-        // best-effort: an empty hints map just means the verdict shows
-        // without a phonetic tip.
-      }
-    },
-    [],
-  );
-
-  const startRecording = useCallback(async () => {
-    // Ignore if we're already recording or no sentence yet.
-    if (recordingIndex !== null || !current || !story) return;
-    stop(); // any Klara playback stops when the mic opens
-    clearFeedback();
-    setPronError(null);
-    try {
-      const rec = await startMicRecording();
-      recorderRef.current = rec;
-      setMicAnalyser(rec.analyser);
-      setRecordingIndex(currentIndex);
-    } catch (e) {
-      setPronError(e as PronunciationError);
-    }
-  }, [clearFeedback, current, currentIndex, recordingIndex, story]);
-
-  const stopRecording = useCallback(async () => {
-    const rec = recorderRef.current;
-    if (rec === null || recordingIndex === null || !story) return;
-    const idxAtStart = recordingIndex;
-    recorderRef.current = null;
-    setRecordingIndex(null);
-    setMicAnalyser(null);
-    setEvaluatingIndex(idxAtStart);
-    try {
-      const blob = await rec.stop();
-      if (!blob || blob.size === 0) {
-        setPronError({ kind: "no_speech" });
-        return;
-      }
-      const sentence = sentences[idxAtStart];
-      if (!sentence) return;
-      const resp = await scoreAudio(blob, sentence.target, story.target_language);
-      const bands = bandsByTokenIndex(sentence.target, resp.words);
-      setScoresBySentence((s) => ({ ...s, [idxAtStart]: bands }));
-      setPronError(null);
-      // Best-effort: persist the attempt so SRS + souvenir picker can use it
-      // across sessions. Failure here doesn't affect the UX.
-      void api
-        .recordPronunciationAttempt(story.id, {
-          sentence_index: idxAtStart,
-          reference_text: sentence.target,
-          recognized_text: resp.recognized_text,
-          // Pure phoneme accuracy, not Azure's compositum — see useMicScorer.
-          overall_score: resp.scores.accuracy,
-          word_bands: Object.fromEntries(
-            Object.entries(bands).map(([k, v]) => [k, v]),
-          ),
-        })
-        .catch(() => undefined);
-      // Fire-and-forget: hints arrive after the panel is already on screen.
-      void fetchAndStoreHints(idxAtStart, sentence.target, bands, story.target_language);
-    } catch (e) {
-      const perr = e as PronunciationError;
-      if (perr.kind === "service_unavailable") {
-        const sentence = sentences[idxAtStart];
-        if (sentence) {
-          setScoresBySentence((s) => ({ ...s, [idxAtStart]: simulatedBands(sentence.target) }));
-        }
-        setPronError(null);
-      } else {
-        setPronError(perr);
-      }
-    } finally {
-      setEvaluatingIndex(null);
-    }
-  }, [fetchAndStoreHints, recordingIndex, sentences, story]);
-
-  const cancelRecording = useCallback(() => {
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    setRecordingIndex(null);
-    setMicAnalyser(null);
-    setPronError(null);
-  }, []);
-
-  // Primary stop trigger for the sentence pronunciation flow: 1.5s of
-  // silence (after a 800ms grace period) auto-stops the take. Manual
-  // stops still work — clicking the mic again, pressing ESC, or
-  // releasing M (hold-to-talk) all short-circuit ahead of the detector.
-  // stopRecording is idempotent so a race between manual + auto is fine.
-  useEffect(() => {
-    if (recordingIndex === null || !micAnalyser) return;
-    return startSilenceDetector(micAnalyser, () => {
-      void stopRecording();
-    });
-  }, [recordingIndex, micAnalyser, stopRecording]);
-
+  // Wrap navigation so popovers close on every sentence change, matching the
+  // original goNext/goPrev which called closePopover().
   const goNext = useCallback(() => {
-    if (currentIndex >= total - 1) {
-      stop();
-      setFinished(true);
-      return;
-    }
-    stop();
-    cancelRecording();
-    setEvaluatingIndex(null);
     closePopover();
-    setCurrentIndex((i) => i + 1);
-  }, [cancelRecording, closePopover, currentIndex, total]);
+    practice.goNext();
+  }, [closePopover, practice]);
 
   const goPrev = useCallback(() => {
-    if (currentIndex <= 0) return;
-    stop();
-    cancelRecording();
-    setEvaluatingIndex(null);
     closePopover();
-    setCurrentIndex((i) => i - 1);
-  }, [cancelRecording, closePopover, currentIndex]);
-
-  const onRetry = useCallback(() => {
-    clearFeedback();
-    // The retry button doesn't start recording immediately — user holds the
-    // mic (or presses M) to re-attempt. This matches the hold-to-talk model.
-  }, [clearFeedback]);
-
-  // Keyboard: SPACE play/pause · M hold-to-talk · ←/→ navigate · ESC cancel
-  useEffect(() => {
-    if (finished || !story) return;
-    function isTypingTarget(el: EventTarget | null): boolean {
-      if (!(el instanceof HTMLElement)) return false;
-      return el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable;
-    }
-    function onKey(e: KeyboardEvent) {
-      if (isTypingTarget(e.target)) return;
-      if (e.key === "ArrowRight" || e.key === "Enter") {
-        e.preventDefault();
-        goNext();
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        goPrev();
-      } else if (e.key === " ") {
-        e.preventDefault();
-        handlePlayPause();
-      } else if (e.key === "m" || e.key === "M") {
-        // Hold-to-talk: ignore autorepeat firings of keydown.
-        if (e.repeat) return;
-        e.preventDefault();
-        void startRecording();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        if (recordingIndex !== null) cancelRecording();
-        else if (currentIndex in scoresBySentence) clearFeedback();
-      }
-    }
-    function onKeyUp(e: KeyboardEvent) {
-      if (isTypingTarget(e.target)) return;
-      if (e.key === "m" || e.key === "M") {
-        e.preventDefault();
-        void stopRecording();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, [
-    cancelRecording,
-    clearFeedback,
-    currentIndex,
-    finished,
-    goNext,
-    goPrev,
-    handlePlayPause,
-    recordingIndex,
-    scoresBySentence,
-    startRecording,
-    stopRecording,
-    story,
-  ]);
+    practice.goPrev();
+  }, [closePopover, practice]);
 
   async function toggleReview(word: StoryWord) {
     if (reviewIds.has(word.id) || adding === word.id) return;
@@ -448,12 +167,9 @@ export default function StoryView() {
         story={story}
         reviewIds={reviewIds}
         adding={adding}
-        scoresBySentence={scoresBySentence}
+        scoresBySentence={practice.scoresBySentence}
         onRestart={() => {
-          stop();
-          setCurrentIndex(0);
-          setScoresBySentence({});
-          setPhoneticHintsBySentence({});
+          practice.reset();
           setFinished(false);
         }}
         onNew={() => navigate("/story/new")}
@@ -462,12 +178,6 @@ export default function StoryView() {
       />
     );
   }
-
-  const recording = recordingIndex === currentIndex;
-  const evaluating = evaluatingIndex === currentIndex;
-  const feedback = scoresBySentence[currentIndex];
-  const phoneticHints = phoneticHintsBySentence[currentIndex];
-  const sentencePlaying = playingIndex === currentIndex && tts.playing;
 
   return (
     <main
@@ -480,7 +190,7 @@ export default function StoryView() {
           storyLevel={story.level}
           onExit={() => navigate("/")}
           sentence={current}
-          index={currentIndex}
+          index={practice.currentIndex}
           total={total}
           targetLanguage={story.target_language}
           lemmaIndex={lemmaIndex}
@@ -488,31 +198,31 @@ export default function StoryView() {
           activeWordKey={active?.key ?? null}
           onWordTap={handleWordTap}
           onBreakdownTap={handleBreakdownTap}
-          playing={sentencePlaying}
-          progress={sentencePlaying ? tts.progress : 0}
-          duration={tts.duration}
-          recording={recording}
-          micAnalyser={recording ? micAnalyser : null}
-          evaluating={evaluating}
-          feedback={feedback}
-          phoneticHints={phoneticHints}
-          rate={rate}
-          onPlayPause={handlePlayPause}
-          onCycleSpeed={cycleSpeed}
-          onRecordStart={startRecording}
-          onRecordStop={stopRecording}
-          onRetry={onRetry}
-          onListenFromFeedback={handleListenFromFeedback}
+          playing={practice.sentencePlaying}
+          progress={practice.progress}
+          duration={practice.duration}
+          recording={practice.recording}
+          micAnalyser={practice.micAnalyser}
+          evaluating={practice.evaluating}
+          feedback={practice.feedback}
+          phoneticHints={practice.phoneticHints}
+          rate={practice.rate}
+          onPlayPause={practice.handlePlayPause}
+          onCycleSpeed={practice.cycleSpeed}
+          onRecordStart={practice.startRecording}
+          onRecordStop={practice.stopRecording}
+          onRetry={practice.onRetry}
+          onListenFromFeedback={practice.handleListenFromFeedback}
           onPrev={goPrev}
           onNext={goNext}
-          canPrev={currentIndex > 0}
-          canNext={currentIndex < total - 1}
+          canPrev={practice.currentIndex > 0}
+          canNext={practice.currentIndex < total - 1}
         />
       )}
 
-      {pronError && (
+      {practice.pronError && (
         <div className="k-error story__pron-error" role="alert">
-          {t(`pron.error.${pronError.kind}`)}
+          {t(`pron.error.${practice.pronError.kind}`)}
         </div>
       )}
 
@@ -543,4 +253,3 @@ export default function StoryView() {
     </main>
   );
 }
-

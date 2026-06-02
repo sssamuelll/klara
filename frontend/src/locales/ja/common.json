@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "今日",
-    "review": "復習",
+    "review": "発音",
     "chat": "話す",
     "settings": "設定",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "発音",
+      "title_one": "もう一度言う価値のある一文。",
+      "title_other": "もう一度言う価値のある{{count}}文。",
+      "dek": "テストではありません。すでに読んだものから Klara が選びました — つまずいたものもあれば、復習で戻ってくるものもあります。自分のペースで、声に出して言ってみましょう。",
+      "struggled": "<em>つまずいた</em>単語が含まれています",
+      "review": "<em>間隔をあけた復習</em>で戻ってきます",
+      "startBy": "ここから始める",
+      "chip": {
+        "all": "すべて · {{count}}",
+        "hard": "難しい · {{count}}",
+        "review": "復習 · {{count}}"
+      },
+      "start": "発音を始める",
+      "later": "あとで",
+      "from": "「{{title}}」より"
+    },
+    "session": {
+      "chapterTitle": "練習"
+    },
+    "summary": {
+      "kicker": "練習の終わり",
+      "title_one": "一文、言いました。",
+      "title_other": "{{count}}文、言いました。",
+      "dek": "急がず、連続記録もなし。これが Klara が残すものと、戻ってくる時期です。",
+      "stat": {
+        "clear": "クリア",
+        "ok": "おしい",
+        "bad": "要確認"
+      },
+      "returns": {
+        "title": "まもなく戻る",
+        "tomorrow": "明日",
+        "inTwoDays": "2日後",
+        "thisWeek": "今週"
+      },
+      "again": "もう一巡",
+      "home": "ホームに戻る"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "単語を聞く"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "復習",
-      "title": "近日公開。",
-      "dek": "Klara が、あなたが読んだ物語の単語を一緒に復習します。カウンターなし。プレッシャーなし。"
-    },
     "chat": {
       "kicker": "Klara と話す",
       "title": "近日公開。",
