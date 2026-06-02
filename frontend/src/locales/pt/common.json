@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Hoje",
-    "review": "Revisão",
+    "review": "Pronunciar",
     "chat": "Falar",
     "settings": "Ajustes",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "PRONÚNCIA",
+      "title_one": "Uma frase que vale a pena dizer de novo.",
+      "title_other": "{{count}} frases que valem a pena dizer de novo.",
+      "dek": "Não é um exame. A Klara escolheu-as do que já leste — algumas prenderam-te, outras voltam por revisão. Di-las em voz alta, ao teu ritmo.",
+      "struggled": "trazem palavras que <em>te prenderam</em>",
+      "review": "voltam por <em>revisão espaçada</em>",
+      "startBy": "COMEÇAR POR",
+      "chip": {
+        "all": "Tudo · {{count}}",
+        "hard": "Difíceis · {{count}}",
+        "review": "Revisão · {{count}}"
+      },
+      "start": "Começar a pronunciar",
+      "later": "Mais tarde",
+      "from": "de «{{title}}»"
+    },
+    "session": {
+      "chapterTitle": "Prática"
+    },
+    "summary": {
+      "kicker": "FIM DA PRÁTICA",
+      "title_one": "Uma frase, dita.",
+      "title_other": "{{count}} frases, ditas.",
+      "dek": "Sem pressa e sem sequência. Isto é o que a Klara guarda e quando volta.",
+      "stat": {
+        "clear": "CLARAS",
+        "ok": "QUASE",
+        "bad": "A REVER"
+      },
+      "returns": {
+        "title": "VOLTAM EM BREVE",
+        "tomorrow": "amanhã",
+        "inTwoDays": "em 2 dias",
+        "thisWeek": "esta semana"
+      },
+      "again": "Outra ronda",
+      "home": "Voltar ao início"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "Ouvir a palavra"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "Revisão",
-      "title": "Em breve.",
-      "dek": "A Klara revê contigo as palavras das histórias que já leste. Sem contadores. Sem pressão."
-    },
     "chat": {
       "kicker": "Falar com a Klara",
       "title": "Em breve.",

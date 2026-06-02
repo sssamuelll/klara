@@ -6,7 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./routes/Home";
 import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
-import ReviewStub from "./routes/ReviewStub";
+import Practice from "./routes/Practice";
 import ChatStub from "./routes/ChatStub";
 import Settings from "./routes/Settings";
 import Onboarding from "./onboarding/Onboarding";
@@ -81,7 +81,7 @@ function AppShell() {
             path="/review"
             element={
               <ProtectedRoute>
-                <ReviewStub />
+                <Practice />
               </ProtectedRoute>
             }
           />

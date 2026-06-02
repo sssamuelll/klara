@@ -619,6 +619,111 @@ select.snew__input option {
   margin: 0;
 }
 
+/* ===== PRACTICE — "Pronunciar" (kp-*) =====
+   Setup + summary phases. The session phase reuses the reading view's
+   <SentenceView> (.k-* classes), so only the setup/summary chrome lives here.
+   Ported from the design handoff; tokens unchanged. */
+.kp-page { gap: var(--space-5); }
+
+/* ----- SETUP ----- */
+.kp-setup { display: flex; flex-direction: column; gap: var(--space-6); }
+.kp-setup__head { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.kp-setup__title {
+  font-family: var(--font-serif);
+  font-size: var(--t-h1);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+  text-wrap: balance;
+  max-width: 18ch;
+}
+.kp-setup__dek {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  margin: 0;
+  max-width: 52ch;
+}
+.kp-sources { display: flex; flex-direction: column; gap: var(--space-3); }
+.kp-source {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.kp-source__n {
+  font-family: var(--font-serif);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  min-width: 1.4ch;
+}
+.kp-source__t { font-family: var(--font-serif); font-size: 18px; color: var(--ink-2); }
+.kp-source__t em { font-style: italic; color: var(--ink); }
+.kp-chips { display: flex; flex-direction: column; gap: var(--space-3); }
+.kp-chips__cap { color: var(--ink-3); }
+.kp-chips__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.kp-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 140ms, color 140ms, background 140ms;
+}
+.kp-chip:hover { border-color: var(--ink); color: var(--ink); }
+.kp-chip[data-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.kp-setup__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: var(--space-2); }
+.kp-sign { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: var(--space-4); }
+.kp-sign .k-mono { color: var(--ink-3); font-size: 11px; }
+
+/* ----- SUMMARY ----- */
+.kp-summary { display: flex; flex-direction: column; gap: var(--space-5); }
+.kp-sum__head { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+.kp-sum__sig { display: flex; align-items: center; gap: 10px; }
+.kp-sum__k { font-family: var(--font-serif); font-style: italic; font-size: 18px; color: var(--ink); }
+.kp-sum__title {
+  font-family: var(--font-serif);
+  font-size: var(--t-h1);
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+.kp-sum__dek { font-family: var(--font-serif); font-size: 19px; font-style: italic; color: var(--ink-2); margin: 0; max-width: 50ch; }
+.kp-sum__stats { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-4) 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.kp-stat { display: flex; flex-direction: column; gap: 4px; }
+.kp-stat__n { font-family: var(--font-serif); font-size: 48px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.kp-stat .k-mono { font-size: 10px; letter-spacing: 0.08em; color: var(--ink-3); }
+.kp-stat__rule { width: 1px; align-self: stretch; background: var(--rule); }
+.kp-returns { display: flex; flex-direction: column; gap: var(--space-4); }
+.kp-returns__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.kp-returns__count { color: var(--ink-3); }
+.kp-returns__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.kp-returns__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  align-items: baseline;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.kp-returns__item:last-child { border-bottom: 0; }
+.kp-returns__word { grid-column: 1; grid-row: 1; font-family: var(--font-serif); font-size: 22px; color: var(--ink); }
+.kp-returns__tx { grid-column: 1; grid-row: 2; font-style: italic; color: var(--ink-3); font-size: 14px; }
+.kp-returns__next { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; }
+.kp-sum__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: var(--space-2); }
+
+@media (max-width: 720px) {
+  .kp-setup__title, .kp-sum__title { font-size: 32px; }
+  .kp-sum__stats { gap: var(--space-4); }
+  .kp-stat__n { font-size: 38px; }
+}
+
 /* ===== SMALLER VIEWPORT (mobile + small tablet) ===== */
 @media (max-width: 600px) {
   :root {

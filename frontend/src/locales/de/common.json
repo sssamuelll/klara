@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Heute",
-    "review": "Wiederholung",
+    "review": "Aussprechen",
     "chat": "Sprechen",
     "settings": "Einstellungen",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "AUSSPRACHE",
+      "title_one": "Ein Satz, den es sich zu wiederholen lohnt.",
+      "title_other": "{{count}} Sätze, die es sich zu wiederholen lohnt.",
+      "dek": "Kein Test. Klara hat sie aus dem ausgewählt, was du schon gelesen hast — bei einigen bist du gestolpert, andere kommen zur Wiederholung zurück. Sprich sie laut aus, in deinem Tempo.",
+      "struggled": "enthalten Wörter, bei denen du <em>gestolpert bist</em>",
+      "review": "kommen zur <em>verteilten Wiederholung</em> zurück",
+      "startBy": "BEGINNEN MIT",
+      "chip": {
+        "all": "Alles · {{count}}",
+        "hard": "Schwierige · {{count}}",
+        "review": "Wiederholung · {{count}}"
+      },
+      "start": "Mit dem Aussprechen beginnen",
+      "later": "Später",
+      "from": "aus „{{title}}“"
+    },
+    "session": {
+      "chapterTitle": "Übung"
+    },
+    "summary": {
+      "kicker": "ENDE DER ÜBUNG",
+      "title_one": "Ein Satz, gesagt.",
+      "title_other": "{{count}} Sätze, gesagt.",
+      "dek": "Ohne Eile und ohne Serie. Das behält Klara — und wann es zurückkommt.",
+      "stat": {
+        "clear": "KLAR",
+        "ok": "FAST",
+        "bad": "ZU PRÜFEN"
+      },
+      "returns": {
+        "title": "BALD ZURÜCK",
+        "tomorrow": "morgen",
+        "inTwoDays": "in 2 Tagen",
+        "thisWeek": "diese Woche"
+      },
+      "again": "Noch eine Runde",
+      "home": "Zurück zum Start"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "Wort anhören"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "Wiederholung",
-      "title": "Bald verfügbar.",
-      "dek": "Klara wiederholt mit dir die Wörter aus den Geschichten, die du gelesen hast. Keine Zähler. Kein Druck."
-    },
     "chat": {
       "kicker": "Mit Klara sprechen",
       "title": "Bald verfügbar.",

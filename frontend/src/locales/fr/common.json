@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Aujourd'hui",
-    "review": "Révision",
+    "review": "Prononcer",
     "chat": "Parler",
     "settings": "Réglages",
     "theme": {
@@ -255,6 +255,47 @@
       }
     }
   },
+  "practice": {
+    "setup": {
+      "kicker": "PRONONCIATION",
+      "title_one": "Une phrase qui mérite d’être redite.",
+      "title_other": "{{count}} phrases qui méritent d’être redites.",
+      "dek": "Ce n’est pas un examen. Klara les a choisies dans ce que tu as déjà lu — certaines t’ont accroché, d’autres reviennent en révision. Dis-les à voix haute, à ton rythme.",
+      "struggled": "portent des mots qui <em>t’ont accroché</em>",
+      "review": "reviennent en <em>révision espacée</em>",
+      "startBy": "COMMENCER PAR",
+      "chip": {
+        "all": "Tout · {{count}}",
+        "hard": "Difficiles · {{count}}",
+        "review": "Révision · {{count}}"
+      },
+      "start": "Commencer à prononcer",
+      "later": "Plus tard",
+      "from": "de « {{title}} »"
+    },
+    "session": {
+      "chapterTitle": "Pratique"
+    },
+    "summary": {
+      "kicker": "FIN DE LA PRATIQUE",
+      "title_one": "Une phrase, dite.",
+      "title_other": "{{count}} phrases, dites.",
+      "dek": "Sans hâte et sans série. Voici ce que Klara garde et quand cela revient.",
+      "stat": {
+        "clear": "CLAIRES",
+        "ok": "PRESQUE",
+        "bad": "À REVOIR"
+      },
+      "returns": {
+        "title": "BIENTÔT DE RETOUR",
+        "tomorrow": "demain",
+        "inTwoDays": "dans 2 jours",
+        "thisWeek": "cette semaine"
+      },
+      "again": "Un autre tour",
+      "home": "Retour à l’accueil"
+    }
+  },
   "wpop": {
     "audio": {
       "aria": "Écouter le mot"
@@ -435,11 +476,6 @@
     }
   },
   "stub": {
-    "review": {
-      "kicker": "Révision",
-      "title": "Bientôt disponible.",
-      "dek": "Klara révise avec toi les mots des histoires que tu as déjà lues. Sans compteurs. Sans pression."
-    },
     "chat": {
       "kicker": "Parler avec Klara",
       "title": "Bientôt disponible.",
