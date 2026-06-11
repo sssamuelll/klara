@@ -338,6 +338,80 @@
       "unknown": "Algo salió mal. Inténtalo de nuevo."
     }
   },
+  "speak": {
+    "gate": {
+      "kicker": "Hablar con Klara",
+      "title": "Primero en alemán.",
+      "dek": "La conversación por voz abre primero en alemán. Tu idioma llegará pronto."
+    },
+    "opener": {
+      "native": "Hoy afinamos la {{sound}}. ¿Qué tal tu día? ¿Tuviste que esperar en algún sitio?"
+    },
+    "stage": {
+      "idleCap": "Foco de hoy",
+      "listeningCap": "Te escucho…",
+      "thinkingCap": "Escuchando tu sonido…",
+      "speakingCap": "Klara",
+      "thinkingAria": "Pensando"
+    },
+    "focus": {
+      "cap": "FOCO DE HOY",
+      "titleAttr": "El sonido que afinamos hoy",
+      "tip": {
+        "de_ue": "Redondea los labios como para «u», pero di «i»."
+      }
+    },
+    "controls": {
+      "exit": "← Salir",
+      "voice": "Voz",
+      "transcript": "Transcripción",
+      "micAria": "Hablar",
+      "endAria": "Terminar la charla",
+      "muteAria": "Silenciar a Klara",
+      "unmuteAria": "Activar la voz de Klara"
+    },
+    "correction": {
+      "cap": "TU PRONUNCIACIÓN",
+      "targetIpa": "objetivo",
+      "retry": "Dilo otra vez",
+      "how": "CÓMO",
+      "continue": "Seguir hablando",
+      "playAria": "Escuchar el modelo de Klara"
+    },
+    "transcript": {
+      "cap": "CONVERSACIÓN DE HOY · foco {{sound}}",
+      "you": "TÚ",
+      "fix": "{{sound}} en «{{word}}»: objetivo {{ipa}}",
+      "improved": "«{{word}}» mejoró — la {{sound}} más clara. ✓"
+    },
+    "hint": {
+      "idle": "Responde en voz alta — Klara escucha cómo suena la {{sound}}",
+      "listening": "Toca de nuevo para terminar tu turno",
+      "correction": "Repite la palabra o sigue la charla",
+      "speaking": "Klara te responde…",
+      "transcript": "Toca «Voz» para volver a la conversación",
+      "noSpeech": "No te escuchamos. Habla más fuerte e inténtalo de nuevo.",
+      "lowConfidence": "No te entendimos bien. ¿Lo dices otra vez?"
+    },
+    "summary": {
+      "kicker": "FIN DE LA CHARLA",
+      "titlePre": "El oído de hoy: la ",
+      "titlePost": ".",
+      "dek": "{{minutes}} min de charla. La {{sound}} ya suena más cerca — estas palabras vuelven a Práctica para fijarla.",
+      "stat": {
+        "clear": "{{sound}} CLARA",
+        "minutes": "MINUTOS",
+        "toPractice": "A PRÁCTICA"
+      },
+      "returns": "VUELVEN A PRÁCTICA",
+      "soon": "pronto",
+      "saveFailed": "No pudimos guardar estas palabras en Práctica esta vez.",
+      "partial_one": "1 palabra no se pudo preparar esta vez.",
+      "partial_other": "{{count}} palabras no se pudieron preparar esta vez.",
+      "again": "Otra charla",
+      "home": "Volver al inicio"
+    }
+  },
   "onboarding": {
     "kicker": "Onboarding",
     "continue": "Continuar →",
@@ -480,13 +554,6 @@
       "confirmLabel": "Repite la contraseña",
       "submit": "Cambiar contraseña",
       "success": "Listo. Ya puedes entrar con la nueva contraseña."
-    }
-  },
-  "stub": {
-    "chat": {
-      "kicker": "Hablar con Klara",
-      "title": "Próximamente.",
-      "dek": "Conversación libre. Voz a voz, cuando estés listo."
     }
   },
   "errors": {

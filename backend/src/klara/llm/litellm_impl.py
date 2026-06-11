@@ -31,15 +31,26 @@ class LiteLLMClient:
         max_tokens: int = 1024,
         temperature: float = 0.7,
         response_format: dict | None = None,
+        timeout_seconds: float | None = None,
+        num_retries: int | None = None,
     ) -> LLMResponse:
         target_model = model or self.default_model
+        # Per-call overrides exist for latency-bound callers (a user is staring
+        # at a "thinking" screen during /speak/turn — the settings-level 60s x
+        # 2-retries budget is for background generation, not conversation).
         payload: dict[str, Any] = {
             "model": target_model,
             "messages": [{"role": m.role, "content": m.content} for m in messages],
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "timeout": self.settings.llm_request_timeout_seconds,
-            "num_retries": self.settings.llm_max_retries,
+            "timeout": (
+                timeout_seconds
+                if timeout_seconds is not None
+                else self.settings.llm_request_timeout_seconds
+            ),
+            "num_retries": (
+                num_retries if num_retries is not None else self.settings.llm_max_retries
+            ),
         }
         if response_format is not None:
             payload["response_format"] = response_format

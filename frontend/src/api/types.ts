@@ -254,3 +254,68 @@ export interface UserUpdate {
   target_language?: LanguageCode;
   learning_context?: string | null;
 }
+
+// ---- Speak (voice conversation) — camelCase, serialized via aliases ------
+
+export type SpeakBand = "good" | "ok" | "bad";
+
+export interface SpeakToken {
+  t: string;
+  s: SpeakBand;
+  focus: boolean;
+}
+
+export interface SpeakTarget {
+  word: string;
+  gloss: string | null;
+  focusAccuracy: number;
+  shouldIpa: string;
+  modelSentence: string | null;
+}
+
+export interface SpeakReply {
+  target: string;
+  native: string;
+}
+
+/**
+ * Discriminated on noSpeech: when true, every other field is default/null —
+ * branch on it FIRST. lowConfidence carries the transcript but no
+ * target/reply (the recognition is too shaky to correct honestly).
+ */
+export interface SpeakTurnResponse {
+  noSpeech: boolean;
+  lowConfidence: boolean;
+  recognizedText: string;
+  tokens: SpeakToken[];
+  scores: { accuracy: number; fluency: number; pronunciation: number } | null;
+  target: SpeakTarget | null;
+  focusHit: boolean;
+  focusClear: boolean;
+  reply: SpeakReply | null;
+}
+
+export interface SpeakHistoryTurn {
+  who: "klara" | "you";
+  text: string;
+}
+
+export interface SpeakFinishWord {
+  word: string;
+  gloss: string | null;
+  modelSentence: string | null;
+}
+
+export interface SpeakFinishRequest {
+  language: string;
+  focusSound: string;
+  clearCount: number;
+  totalCount: number;
+  durationSeconds: number;
+  words: SpeakFinishWord[];
+}
+
+export interface SpeakFinishResponse {
+  added: number;
+  skipped: number;
+}

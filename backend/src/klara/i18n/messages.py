@@ -99,6 +99,14 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ja": "発音サービスでエラーが発生しました。少し経ってから再度試してください。",
         "pt": "O serviço de pronúncia falhou. Tenta novamente daqui a um momento.",
     },
+    "speak.language_unsupported": {
+        "es": "Hablar con Klara abre primero en alemán. Tu idioma llegará pronto.",
+        "en": "Speaking with Klara opens first in German. Your language is coming soon.",
+        "de": "Mit Klara sprechen startet zuerst auf Deutsch. Deine Sprache folgt bald.",
+        "fr": "Parler avec Klara ouvre d'abord en allemand. Ta langue arrive bientôt.",
+        "ja": "クララとの会話はまずドイツ語から始まります。あなたの言語も近日対応予定です。",
+        "pt": "Falar com a Klara abre primeiro em alemão. A tua língua chega em breve.",
+    },
     "pron.language_unsupported": {
         "es": "Este idioma no soporta evaluación de pronunciación.",
         "en": "Pronunciation scoring isn't supported for this language.",

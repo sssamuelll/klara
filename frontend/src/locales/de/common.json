@@ -338,6 +338,80 @@
       "unknown": "Etwas ist schiefgegangen. Versuche es noch einmal."
     }
   },
+  "speak": {
+    "gate": {
+      "kicker": "Mit Klara sprechen",
+      "title": "Zuerst auf Deutsch.",
+      "dek": "Die Sprachkonversation startet zuerst auf Deutsch. Deine Sprache folgt bald."
+    },
+    "opener": {
+      "native": "Heute feilen wir am {{sound}}. Wie war dein Tag? Musstest du irgendwo warten?"
+    },
+    "stage": {
+      "idleCap": "Fokus heute",
+      "listeningCap": "Ich höre zu…",
+      "thinkingCap": "Ich höre auf deinen Laut…",
+      "speakingCap": "Klara",
+      "thinkingAria": "Denkt nach"
+    },
+    "focus": {
+      "cap": "FOKUS HEUTE",
+      "titleAttr": "Der Laut, den wir heute üben",
+      "tip": {
+        "de_ue": "Runde die Lippen wie für „u“, aber sag „i“."
+      }
+    },
+    "controls": {
+      "exit": "← Verlassen",
+      "voice": "Stimme",
+      "transcript": "Transkript",
+      "micAria": "Sprechen",
+      "endAria": "Gespräch beenden",
+      "muteAria": "Klara stummschalten",
+      "unmuteAria": "Klaras Stimme aktivieren"
+    },
+    "correction": {
+      "cap": "DEINE AUSSPRACHE",
+      "targetIpa": "Ziel",
+      "retry": "Sag es noch einmal",
+      "how": "WIE",
+      "continue": "Weiterreden",
+      "playAria": "Klaras Modell anhören"
+    },
+    "transcript": {
+      "cap": "GESPRÄCH VON HEUTE · Fokus {{sound}}",
+      "you": "DU",
+      "fix": "{{sound}} in „{{word}}“: Ziel {{ipa}}",
+      "improved": "„{{word}}“ wurde besser — das {{sound}} klarer. ✓"
+    },
+    "hint": {
+      "idle": "Antworte laut — Klara hört, wie dein {{sound}} klingt",
+      "listening": "Tippe erneut, um deinen Beitrag zu beenden",
+      "correction": "Wiederhole das Wort oder sprich weiter",
+      "speaking": "Klara antwortet…",
+      "transcript": "Tippe auf „Stimme“, um zur Konversation zurückzukehren",
+      "noSpeech": "Wir haben nichts gehört. Sprich lauter und versuch es noch einmal.",
+      "lowConfidence": "Wir haben dich nicht ganz verstanden. Sagst du es noch einmal?"
+    },
+    "summary": {
+      "kicker": "ENDE DES GESPRÄCHS",
+      "titlePre": "Das Ohr von heute: das ",
+      "titlePost": ".",
+      "dek": "{{minutes}} Min. Gespräch. Das {{sound}} klingt schon näher — diese Wörter gehen zurück in die Übung.",
+      "stat": {
+        "clear": "{{sound}} KLAR",
+        "minutes": "MINUTEN",
+        "toPractice": "ZUR ÜBUNG"
+      },
+      "returns": "ZURÜCK ZUR ÜBUNG",
+      "soon": "bald",
+      "saveFailed": "Diese Wörter konnten diesmal nicht in die Übung übernommen werden.",
+      "partial_one": "1 Wort konnte diesmal nicht vorbereitet werden.",
+      "partial_other": "{{count}} Wörter konnten diesmal nicht vorbereitet werden.",
+      "again": "Noch ein Gespräch",
+      "home": "Zur Startseite"
+    }
+  },
   "onboarding": {
     "kicker": "Onboarding",
     "continue": "Weiter →",
@@ -480,13 +554,6 @@
       "confirmLabel": "Passwort bestätigen",
       "submit": "Passwort aktualisieren",
       "success": "Fertig. Du kannst dich jetzt mit dem neuen Passwort anmelden."
-    }
-  },
-  "stub": {
-    "chat": {
-      "kicker": "Mit Klara sprechen",
-      "title": "Bald verfügbar.",
-      "dek": "Freies Gespräch. Stimme zu Stimme, wenn du bereit bist."
     }
   },
   "errors": {
