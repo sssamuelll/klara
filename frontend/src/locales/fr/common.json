@@ -333,6 +333,7 @@
       "audio_too_large": "L'enregistrement est trop long. Essaie une phrase plus courte.",
       "audio_undecodable": "Impossible de traiter l'audio. Réessaye.",
       "service_unavailable": "L'évaluation de la prononciation n'est pas disponible pour le moment.",
+      "scoring_failed": "L'évaluation a échoué de notre côté. Patiente un instant et réessaye.",
       "network": "Tu sembles hors ligne. Vérifie ta connexion et réessaye.",
       "unknown": "Quelque chose s'est mal passé. Réessaye."
     }

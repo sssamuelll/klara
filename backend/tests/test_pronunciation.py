@@ -223,6 +223,49 @@ async def test_score_502_when_azure_fails(
 
 
 @pytest.mark.asyncio
+async def test_score_502_logs_azure_details(
+    client, app_settings, seed_invite, monkeypatch, tmp_path: Path
+):
+    """A non-recoverable Azure failure must log the CancellationDetails.
+
+    The 502 response body carries only a localized user-facing message; the
+    server log is the ONLY place the real reason (auth, quota, region,
+    connectivity) can surface. Without this, prod 502s are undiagnosable.
+    """
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    from unittest.mock import MagicMock
+
+    from klara.pronunciation.azure_client import AzureSpeechError
+
+    def stub_transcode(b, *, sample_rate=16_000):
+        out = tmp_path / "x.wav"
+        out.write_bytes(b"x")
+        return out
+
+    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", stub_transcode)
+
+    azure_msg = "Azure cancelled the request: CancellationReason.Error - WebSocket upgrade failed: Authentication error (401)"
+
+    def raise_fatal(*a, **k):
+        raise AzureSpeechError(azure_msg, recoverable=False)
+
+    monkeypatch.setattr("klara.routers.pronunciation.score_pronunciation", raise_fatal)
+
+    fake_log = MagicMock()
+    monkeypatch.setattr("klara.routers.pronunciation.log", fake_log)
+
+    r = await client.post(
+        "/api/v1/pronunciation/score",
+        headers={"Cookie": cookie},
+        data={"reference_text": "hi", "language": "en-US"},
+        files={"audio": ("a.webm", b"\x00\x01\x02\x03", "audio/webm")},
+    )
+    assert r.status_code == 502
+    assert fake_log.error.called, "non-recoverable Azure error must be logged"
+    assert azure_msg in str(fake_log.error.call_args)
+
+
+@pytest.mark.asyncio
 async def test_score_400_when_audio_undecodable(client, app_settings, seed_invite, monkeypatch):
     cookie = await _register_and_login(client, app_settings, seed_invite)
     from klara.pronunciation.audio import TranscodeError
