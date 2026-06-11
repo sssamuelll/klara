@@ -55,10 +55,11 @@ async def record_speak_session(
     """Returns (added, skipped). Commits once."""
     added = 0
     skipped = 0
+    attached: set = set()
 
     for entry in words:
         vocab_id = await _resolve_vocab_id(db, entry, language=language, user=user)
-        if vocab_id is None:
+        if vocab_id is None or vocab_id in attached:
             skipped += 1
             continue
         card_stmt = (
@@ -67,6 +68,10 @@ async def record_speak_session(
             .on_conflict_do_nothing(constraint="uq_user_card_user_vocab")
         )
         await db.execute(card_stmt)
+        attached.add(vocab_id)
+        # A conflict means the user ALREADY has a card for this word — it is
+        # in their practice deck either way, which is what `added` reports to
+        # the summary ("vuelven a Práctica"), not raw row inserts.
         added += 1
 
     now = datetime.now(UTC)

@@ -298,7 +298,14 @@ _TEST_LEMMAS = ["fünf", "tür", "bürgeramt"]
 
 @pytest_asyncio.fixture
 async def clean_vocab(db_session):
-    await db_session.execute(delete(VocabItem).where(func.lower(VocabItem.lemma).in_(_TEST_LEMMAS)))
+    # vocab_items is shared across languages too — scope the cleanup so a
+    # same-lemma row in another language can't be deleted by this module.
+    await db_session.execute(
+        delete(VocabItem).where(
+            VocabItem.language == "de",
+            func.lower(VocabItem.lemma).in_(_TEST_LEMMAS),
+        )
+    )
     await db_session.commit()
     yield
 

@@ -8,7 +8,7 @@ must branch on it FIRST.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class SpeakTokenOut(BaseModel):
@@ -79,6 +79,12 @@ class SpeakFinishIn(BaseModel):
     total_count: int = Field(ge=0, le=500, validation_alias="totalCount")
     duration_seconds: int = Field(ge=0, le=7200, validation_alias="durationSeconds")
     words: list[SpeakFinishWordIn] = Field(default_factory=list, max_length=8)
+
+    @model_validator(mode="after")
+    def clear_within_total(self) -> SpeakFinishIn:
+        if self.clear_count > self.total_count:
+            raise ValueError("clearCount cannot exceed totalCount")
+        return self
 
 
 class SpeakFinishOut(BaseModel):
