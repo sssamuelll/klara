@@ -348,7 +348,6 @@
       "native": "Heute feilen wir am {{sound}}. Wie war dein Tag? Musstest du irgendwo warten?"
     },
     "stage": {
-      "idleCap": "Fokus heute",
       "listeningCap": "Ich höre zu…",
       "thinkingCap": "Ich höre auf deinen Laut…",
       "speakingCap": "Klara",
@@ -361,37 +360,34 @@
         "de_ue": "Runde die Lippen wie für „u“, aber sag „i“."
       }
     },
+    "note": {
+      "cap": "NOTIZ",
+      "lead": "das {{sound}} in „{{word}}“ klingt",
+      "retry": "Sag es noch einmal",
+      "how": "WIE",
+      "playAria": "Klaras Modell anhören",
+      "legend": "Ich unterstreiche das Wort, in dem das {{sound}} noch eine Runde braucht.",
+      "clear": "Das {{sound}} in „{{word}}“ — klar. Weiter."
+    },
     "controls": {
       "exit": "← Verlassen",
-      "voice": "Stimme",
-      "transcript": "Transkript",
       "micAria": "Sprechen",
       "endAria": "Gespräch beenden",
       "muteAria": "Klara stummschalten",
       "unmuteAria": "Klaras Stimme aktivieren"
     },
-    "correction": {
-      "cap": "DEINE AUSSPRACHE",
-      "targetIpa": "Ziel",
-      "retry": "Sag es noch einmal",
-      "how": "WIE",
-      "continue": "Weiterreden",
-      "playAria": "Klaras Modell anhören"
-    },
     "transcript": {
       "cap": "GESPRÄCH VON HEUTE · Fokus {{sound}}",
       "you": "DU",
-      "fix": "{{sound}} in „{{word}}“: Ziel {{ipa}}",
-      "improved": "„{{word}}“ wurde besser — das {{sound}} klarer. ✓"
+      "improved": "Da ist es. Das {{sound}} in „{{word}}“, klar. ✓"
     },
     "hint": {
       "idle": "Antworte laut — Klara hört, wie dein {{sound}} klingt",
       "listening": "Tippe erneut, um deinen Beitrag zu beenden",
-      "correction": "Wiederhole das Wort oder sprich weiter",
       "speaking": "Klara antwortet…",
-      "transcript": "Tippe auf „Stimme“, um zur Konversation zurückzukehren",
-      "noSpeech": "Wir haben nichts gehört. Sprich lauter und versuch es noch einmal.",
-      "lowConfidence": "Wir haben dich nicht ganz verstanden. Sagst du es noch einmal?"
+      "noSpeech": "Ich habe dich nicht gehört. Versuch es noch einmal, etwas lauter.",
+      "lowConfidence": "Ich habe dich nicht ganz verstanden. Sag es noch einmal, in Ruhe.",
+      "thinking": "Ich denke auf Deutsch…"
     },
     "summary": {
       "kicker": "ENDE DES GESPRÄCHS",

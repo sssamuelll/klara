@@ -348,7 +348,6 @@
       "native": "Today we tune the {{sound}}. How was your day? Did you have to wait anywhere?"
     },
     "stage": {
-      "idleCap": "Today's focus",
       "listeningCap": "I'm listening…",
       "thinkingCap": "Listening to your sound…",
       "speakingCap": "Klara",
@@ -361,37 +360,34 @@
         "de_ue": "Round your lips as for “u”, but say “ee”."
       }
     },
+    "note": {
+      "cap": "NOTE",
+      "lead": "the {{sound}} in “{{word}}” sounds",
+      "retry": "Say it again",
+      "how": "HOW",
+      "playAria": "Hear Klara's model",
+      "legend": "I underline the word where the {{sound}} needs another pass.",
+      "clear": "The {{sound}} in “{{word}}” — clear. Let's go on."
+    },
     "controls": {
       "exit": "← Exit",
-      "voice": "Voice",
-      "transcript": "Transcript",
       "micAria": "Speak",
       "endAria": "End the chat",
       "muteAria": "Mute Klara",
       "unmuteAria": "Unmute Klara's voice"
     },
-    "correction": {
-      "cap": "YOUR PRONUNCIATION",
-      "targetIpa": "target",
-      "retry": "Say it again",
-      "how": "HOW",
-      "continue": "Keep talking",
-      "playAria": "Hear Klara's model"
-    },
     "transcript": {
       "cap": "TODAY'S CONVERSATION · focus {{sound}}",
       "you": "YOU",
-      "fix": "{{sound}} in “{{word}}”: target {{ipa}}",
-      "improved": "“{{word}}” improved — clearer {{sound}}. ✓"
+      "improved": "There it is. The {{sound}} in “{{word}}”, clear. ✓"
     },
     "hint": {
       "idle": "Answer out loud — Klara listens to how your {{sound}} sounds",
       "listening": "Tap again to end your turn",
-      "correction": "Repeat the word or keep the conversation going",
       "speaking": "Klara is answering…",
-      "transcript": "Tap “Voice” to go back to the conversation",
-      "noSpeech": "We didn't catch that. Speak louder and try again.",
-      "lowConfidence": "We didn't quite get that. Say it once more?"
+      "noSpeech": "I didn't hear you. Try again, a little louder.",
+      "lowConfidence": "I didn't quite get you. Say it again, calmly.",
+      "thinking": "Thinking in German…"
     },
     "summary": {
       "kicker": "END OF THE CHAT",

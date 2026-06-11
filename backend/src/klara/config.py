@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     llm_correction_model: str = "anthropic/claude-haiku-4-5-20251001"
     llm_request_timeout_seconds: float = 60.0
     llm_max_retries: int = 2
+    # Provider-specific request-body extras for the CHAT model (JSON in env).
+    # Speak's latency budget depends on it: with DeepSeek V4 set
+    #   LLM_CHAT_EXTRA_BODY={"thinking": {"type": "disabled"}}
+    # so a provider-side default flip can never put chain-of-thought on the
+    # conversational critical path.
+    llm_chat_extra_body: dict | None = None
 
     anthropic_api_key: str | None = None
     deepseek_api_key: str | None = None

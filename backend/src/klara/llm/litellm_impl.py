@@ -12,9 +12,20 @@ log = structlog.get_logger(__name__)
 
 
 class LiteLLMClient:
-    def __init__(self, settings: Settings, default_model: str) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        default_model: str,
+        default_extra_body: dict | None = None,
+    ) -> None:
         self.settings = settings
         self.default_model = default_model
+        # Provider-specific request-body extras applied to every complete()
+        # unless the call overrides them. The motivating case: DeepSeek V4
+        # selects thinking vs non-thinking via `{"thinking": {"type": ...}}`
+        # in the body — pinning "disabled" guards Speak's latency budget
+        # against a provider-side default flip.
+        self.default_extra_body = default_extra_body
         litellm.drop_params = True
         if settings.anthropic_api_key:
             os.environ.setdefault("ANTHROPIC_API_KEY", settings.anthropic_api_key)
@@ -33,6 +44,7 @@ class LiteLLMClient:
         response_format: dict | None = None,
         timeout_seconds: float | None = None,
         num_retries: int | None = None,
+        extra_body: dict | None = None,
     ) -> LLMResponse:
         target_model = model or self.default_model
         # Per-call overrides exist for latency-bound callers (a user is staring
@@ -54,6 +66,9 @@ class LiteLLMClient:
         }
         if response_format is not None:
             payload["response_format"] = response_format
+        body = extra_body if extra_body is not None else self.default_extra_body
+        if body:
+            payload["extra_body"] = body
 
         log.debug("llm.request", model=target_model, max_tokens=max_tokens)
         resp = await litellm.acompletion(**payload)

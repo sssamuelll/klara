@@ -11,11 +11,12 @@ reply=null — the user's scored turn always survives (spec review F14).
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep
@@ -39,7 +40,6 @@ from klara.schemas.speak import (
 from klara.services.speak_analysis import FOCUS_PHONEME_SETS, analyze_turn
 from klara.services.speak_chat import generate_reply
 from klara.services.speak_finish import FinishWord, record_speak_session
-from klara.services.tts_precache import precache_texts
 
 router = APIRouter(prefix="/speak", tags=["speak"])
 
@@ -86,7 +86,6 @@ async def speak_turn(
     settings: SettingsDep,
     locale: LocaleDep,
     llm: ChatLLM,
-    background: BackgroundTasks,
     audio: AudioUpload,
     language: Annotated[str, Form()] = "de",
     focus_sound: Annotated[str, Form(max_length=8)] = "ü",
@@ -120,6 +119,7 @@ async def speak_turn(
             detail=t("pron.audio_too_large", locale),
         )
 
+    t_start = time.monotonic()
     try:
         wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
     except TranscodeError:
@@ -133,6 +133,7 @@ async def speak_turn(
             detail=t("pron.unavailable", locale),
         ) from None
 
+    t_transcoded = time.monotonic()
     try:
         score, confidence = await run_in_threadpool(
             score_unscripted,
@@ -182,6 +183,7 @@ async def speak_turn(
             scores=scores,
         )
 
+    t_scored = time.monotonic()
     examples = [w.strip() for w in focus_examples.split(",") if w.strip()][:6]
     reply = await generate_reply(
         llm,
@@ -207,8 +209,18 @@ async def speak_turn(
             model_sentence=reply.target_word_sentence if reply else None,
         )
 
-    if reply is not None:
-        background.add_task(precache_texts, settings, [reply.reply_target], short_lang)
+    # No TTS precache here: the client auto-plays the reply the moment this
+    # response lands, so its GET /tts IS the synthesis trigger — a background
+    # precache would always lose that race and pay for a duplicate synth.
+    t_done = time.monotonic()
+    log.info(
+        "speak.turn_timing",
+        transcode_ms=round((t_transcoded - t_start) * 1000),
+        azure_ms=round((t_scored - t_transcoded) * 1000),
+        llm_ms=round((t_done - t_scored) * 1000),
+        total_ms=round((t_done - t_start) * 1000),
+        reply_ok=reply is not None,
+    )
 
     return SpeakTurnOut(
         recognized_text=score.recognized_text,
