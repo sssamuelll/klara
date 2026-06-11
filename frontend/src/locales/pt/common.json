@@ -348,7 +348,6 @@
       "native": "Hoje afinamos o {{sound}}. Como foi o teu dia? Tiveste de esperar nalgum sítio?"
     },
     "stage": {
-      "idleCap": "Foco de hoje",
       "listeningCap": "Estou a ouvir-te…",
       "thinkingCap": "A ouvir o teu som…",
       "speakingCap": "Klara",
@@ -361,37 +360,34 @@
         "de_ue": "Arredonda os lábios como para «u», mas diz «i»."
       }
     },
+    "note": {
+      "cap": "APONTAMENTO",
+      "lead": "o {{sound}} de «{{word}}» soa",
+      "retry": "Di-lo outra vez",
+      "how": "COMO",
+      "playAria": "Ouvir o modelo da Klara",
+      "legend": "Sublinho a palavra onde o {{sound}} pede outra tentativa.",
+      "clear": "O {{sound}} em «{{word}}» — claro. Continuemos."
+    },
     "controls": {
       "exit": "← Sair",
-      "voice": "Voz",
-      "transcript": "Transcrição",
       "micAria": "Falar",
       "endAria": "Terminar a conversa",
       "muteAria": "Silenciar a Klara",
       "unmuteAria": "Ativar a voz da Klara"
     },
-    "correction": {
-      "cap": "A TUA PRONÚNCIA",
-      "targetIpa": "alvo",
-      "retry": "Di-lo outra vez",
-      "how": "COMO",
-      "continue": "Continuar a falar",
-      "playAria": "Ouvir o modelo da Klara"
-    },
     "transcript": {
       "cap": "CONVERSA DE HOJE · foco {{sound}}",
       "you": "TU",
-      "fix": "{{sound}} em «{{word}}»: alvo {{ipa}}",
-      "improved": "«{{word}}» melhorou — o {{sound}} mais claro. ✓"
+      "improved": "Aí está. O {{sound}} de «{{word}}», claro. ✓"
     },
     "hint": {
       "idle": "Responde em voz alta — a Klara ouve como soa o teu {{sound}}",
       "listening": "Toca de novo para terminar a tua vez",
-      "correction": "Repete a palavra ou continua a conversa",
       "speaking": "A Klara está a responder…",
-      "transcript": "Toca em «Voz» para voltar à conversa",
-      "noSpeech": "Não te ouvimos. Fala mais alto e tenta novamente.",
-      "lowConfidence": "Não percebemos bem. Dizes outra vez?"
+      "noSpeech": "Não te ouvi. Tenta outra vez, um pouco mais alto.",
+      "lowConfidence": "Não te entendi bem. Di-lo outra vez, com calma.",
+      "thinking": "A pensar em alemão…"
     },
     "summary": {
       "kicker": "FIM DA CONVERSA",

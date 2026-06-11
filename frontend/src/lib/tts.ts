@@ -52,7 +52,14 @@ let generation = 0;
 function settleDone(reason: TTSDoneReason): void {
   const cb = onDone;
   onDone = null;
-  cb?.(reason);
+  if (!cb) return;
+  // Deferred: stop() runs synchronously inside speak() BEFORE the new
+  // utterance registers its onDone/generation/listenerCtrl. A callback that
+  // re-entered speak() from here would interleave with that half-initialized
+  // state and orphan a listener controller on the shared unlocked element
+  // (review finding). The slot above is already cleared, so exactly-once
+  // holds; only the invocation moves to a microtask.
+  queueMicrotask(() => cb(reason));
 }
 
 export function getTTSState(): TTSState {
@@ -70,6 +77,30 @@ export function useTTS(): TTSState {
   const [s, setS] = useState<TTSState>(getTTSState);
   useEffect(() => subscribeTTS(setS), []);
   return s;
+}
+
+// ---- gesture-unlocked persistent element ----------------------------------
+// Klara speaks UNPROMPTED after every turn (council decision: F6 revoked).
+// Browsers only allow that on an element that has played inside a user
+// gesture — so the mic tap "unlocks" one persistent Audio element, and every
+// subsequent speak() reuses it via .src. Without this, Safari rejects each
+// autoplay and the Web Speech robot voice becomes Klara's default voice.
+let unlockedEl: HTMLAudioElement | null = null;
+// Per-utterance listener scope: a REUSED element would otherwise accumulate
+// one set of listeners per utterance forever.
+let listenerCtrl: AbortController | null = null;
+
+const SILENT_WAV =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAAA=";
+
+/** Call from inside a user gesture (the mic tap). Idempotent. */
+export function unlockAudio(): void {
+  if (unlockedEl || typeof window === "undefined") return;
+  const a = new Audio(SILENT_WAV);
+  // The play() call inside the gesture is what marks the element as
+  // user-activated; whether the silent clip actually plays is irrelevant.
+  a.play().catch(() => undefined);
+  unlockedEl = a;
 }
 
 export function speak(
@@ -94,50 +125,76 @@ export function speak(
     fallbackWebSpeech(text, activeLocale, gen);
   };
   activeLocale = language ? speechLocale(language) : "de-DE";
-  const a = new Audio(ttsUrl(text, language));
+  const a = unlockedEl ?? new Audio();
+  listenerCtrl = new AbortController();
+  const sig = listenerCtrl.signal;
+  a.src = ttsUrl(text, language);
   a.preload = "auto";
   const rate = opts?.rate ?? 1;
-  if (rate !== 1) {
-    // preservesPitch keeps Klara's voice natural at non-1.0 rates instead of
-    // pitching it up/down like a chipmunk/walrus. Supported in modern browsers;
-    // older WebKit ignores it but still applies the rate.
-    a.preservesPitch = true;
-    a.playbackRate = rate;
-  }
-  a.addEventListener("loadedmetadata", () => {
-    if (audio === a && Number.isFinite(a.duration)) set({ duration: a.duration });
-  });
-  a.addEventListener("timeupdate", () => {
-    if (audio !== a) return;
-    const dur = a.duration || 1;
-    set({ progress: a.currentTime / dur, duration: a.duration || state.duration });
-  });
-  a.addEventListener("ended", () => {
-    if (audio === a) {
-      set({ text: null, playing: false, progress: 0, duration: 0 });
-      settleDone("ended");
-    }
-  });
+  // Reset playback knobs every utterance — the element is reused.
+  // preservesPitch keeps Klara's voice natural at non-1.0 rates instead of
+  // pitching it up/down like a chipmunk/walrus. Supported in modern browsers;
+  // older WebKit ignores it but still applies the rate.
+  a.preservesPitch = true;
+  a.playbackRate = rate;
+  a.addEventListener(
+    "loadedmetadata",
+    () => {
+      if (audio === a && Number.isFinite(a.duration)) set({ duration: a.duration });
+    },
+    { signal: sig },
+  );
+  a.addEventListener(
+    "timeupdate",
+    () => {
+      if (audio !== a) return;
+      const dur = a.duration || 1;
+      set({ progress: a.currentTime / dur, duration: a.duration || state.duration });
+    },
+    { signal: sig },
+  );
+  a.addEventListener(
+    "ended",
+    () => {
+      if (audio === a) {
+        set({ text: null, playing: false, progress: 0, duration: 0 });
+        settleDone("ended");
+      }
+    },
+    { signal: sig },
+  );
   let started = false;
-  a.addEventListener("error", () => {
-    if (audio !== a) return;
-    audio = null;
-    set({ text: null, playing: false, progress: 0, duration: 0 });
-    // Never played → outright load failure: give Web Speech one shot (it
-    // settles). Mid-stream failure → settle as error; restarting the whole
-    // reply from zero in a different voice is worse than stopping.
-    if (started) settleDone("error");
-    else tryFallback();
-  });
-  a.addEventListener("pause", () => {
-    if (audio === a) set({ playing: false });
-  });
-  a.addEventListener("play", () => {
-    if (audio === a) {
-      started = true;
-      set({ playing: true });
-    }
-  });
+  a.addEventListener(
+    "error",
+    () => {
+      if (audio !== a) return;
+      audio = null;
+      set({ text: null, playing: false, progress: 0, duration: 0 });
+      // Never played → outright load failure: give Web Speech one shot (it
+      // settles). Mid-stream failure → settle as error; restarting the whole
+      // reply from zero in a different voice is worse than stopping.
+      if (started) settleDone("error");
+      else tryFallback();
+    },
+    { signal: sig },
+  );
+  a.addEventListener(
+    "pause",
+    () => {
+      if (audio === a) set({ playing: false });
+    },
+    { signal: sig },
+  );
+  a.addEventListener(
+    "play",
+    () => {
+      if (audio === a) {
+        started = true;
+        set({ playing: true });
+      }
+    },
+    { signal: sig },
+  );
   audio = a;
   set({ text, playing: false, progress: 0, duration: 0 });
   a.play().catch((err) => {
@@ -161,10 +218,12 @@ export function resume(): void {
 
 export function stop(): void {
   generation++; // invalidate every async handler of the current utterance
+  listenerCtrl?.abort(); // detach the utterance's listeners from the (reused) element
+  listenerCtrl = null;
   if (audio) {
     audio.pause();
     audio.currentTime = 0;
-    audio = null;
+    audio = null; // the unlocked element itself persists for the next speak()
   }
   if (typeof window !== "undefined" && window.speechSynthesis) {
     window.speechSynthesis.cancel();

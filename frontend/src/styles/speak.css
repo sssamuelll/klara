@@ -1,32 +1,19 @@
 /* ============================================================
-   SPEAK — Hablar con Klara (kc-*). Ported verbatim from the
-   design handoff's pages.css; only the blocks Speak uses.
+   SPEAK — Hablar con Klara (kc-*).
+   v2: ONE persistent surface — the compact presence pinned above
+   a running column of turns; the correction is "el apunte", a
+   margin note woven under the user's turn. Nothing swaps
+   full-screen except the summary. Base blocks ported from the
+   design handoff's pages.css; the kc-live/kc-note family is v2.
 
-   kac-* here are the handoff's reading-view pieces that Speak
-   reuses by name (word tokens, play button, tri/mic glyphs,
-   feedback buttons). The repo renamed that family to k-* in
-   sentence-view.css with slightly different rules — these stay
-   under the old names on purpose: kc-corr tokens are display-
-   only and must not inherit SentenceView's interactive states.
+   kac-* are the handoff's reading-view pieces Speak reuses by
+   name (play button, tri/mic glyphs, feedback buttons). They
+   stay under the old names so Speak never inherits
+   SentenceView's interactive states.
    Tokens come from tokens.css; no new custom properties.
    ============================================================ */
 
 /* ---- reused pieces (handoff kac-* / kp-*) ---- */
-.kac-word {
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0 1px;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: background 160ms, box-shadow 220ms;
-}
-.kac-word:hover { background: var(--accent-wash); }
-.kac-word[data-active="true"] { background: var(--accent-wash); }
-.kac-word[data-score="good"] { box-shadow: inset 0 -3px 0 oklch(0.62 0.13 145); }
-.kac-word[data-score="ok"]   { box-shadow: inset 0 -3px 0 oklch(0.74 0.13 80); }
-.kac-word[data-score="bad"]  { box-shadow: inset 0 -3px 0 var(--accent); background: var(--accent-wash); }
 .kac-tool--play {
   width: 64px; height: 64px;
   border-radius: 50%;
@@ -81,10 +68,8 @@
 /* hover parity with the repo's k-feedback__btn (sentence-view.css) */
 .kac-feedback__btn:hover { border-color: var(--ink); color: var(--ink); }
 .kac-feedback__btn--strong:hover { background: var(--ink); color: var(--paper); }
-/* The focus word, marked before recording */
-.kp-word { cursor: default; }
-.kp-word:hover { background: none; }
-.kp-word[data-focus="true"] { box-shadow: inset 0 -3px 0 var(--accent); }
+.kac-feedback__btn:disabled,
+.kac-tool--play:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
 
 /* ============================================================
    CHAT — Hablar con Klara, voice mode (kc-*)
@@ -93,30 +78,8 @@
 
 .kc-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .kc-top__time { color: var(--ink-3); font-size: 11px; letter-spacing: 0.06em; }
-.kc-top__tr {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: border-color 140ms, color 140ms, background 140ms;
-}
-.kc-top__tr:hover { border-color: var(--ink); color: var(--ink); }
-.kc-top__tr[data-on="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 
 /* Stage */
-.kc-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  text-align: center;
-}
 .kc-presence { position: relative; width: 300px; height: 300px; display: grid; place-items: center; }
 .kc-disc {
   position: absolute;
@@ -158,23 +121,87 @@
   text-transform: uppercase;
   color: var(--ink-3);
   transition: color 200ms;
+  min-height: 14px; /* idle renders it empty — keep the column from jumping */
 }
 .kc-page[data-state="speaking"] .kc-cap { color: var(--accent-ink); }
-.kc-utter {
-  font-family: var(--font-serif);
-  font-size: 38px;
-  line-height: 1.18;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin: 0;
-  max-width: 20ch;
-  text-wrap: balance;
+
+/* ===== v2 — the one persistent surface ===== */
+/* Compact presence: same ring, smaller orbit (ticks translateY(-78px) inline). */
+.kc-presence--sm { width: 164px; height: 164px; }
+.kc-presence--sm .kc-disc { inset: 30px; }
+.kc-presence--sm .kc-tick__bar { height: 10px; }
+.kc-presence--sm .kc-think { gap: 8px; }
+.kc-presence--sm .kc-think i { width: 8px; height: 8px; }
+
+.kc-live {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
 }
-.kc-utter--mute { color: var(--ink-4); letter-spacing: 0.3em; }
-.kc-gloss { font-family: var(--font-serif); font-style: italic; font-size: 18px; color: var(--ink-3); margin: 0; max-width: 42ch; }
+.kc-live__presence { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.kc-live__column {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--maxw-read);
+  margin: 0 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: 2px;
+  scroll-behavior: smooth;
+}
+
+/* The focus word in the user's line — ONE accent, no grading rubric. */
+.kc-live-focus {
+  box-shadow: inset 0 -3px 0 var(--accent);
+  background: var(--accent-wash);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+/* El apunte — margin note under a struggled turn. Never a screen. */
+.kc-note {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px 14px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--accent);
+  border-radius: 8px;
+  align-self: flex-start;
+  max-width: 100%;
+}
+.kc-note__line { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.kc-note__cap { font-size: 10px; letter-spacing: 0.12em; color: var(--accent-ink); }
+.kc-note__lead { font-family: var(--font-serif); font-size: 15px; color: var(--ink); }
+.kc-note__lead strong { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--accent-ink); }
+.kc-note__actions { display: flex; align-items: center; gap: 10px; }
+.kc-note__play { width: 40px; height: 40px; }
+.kc-note__tip { font-family: var(--font-serif); font-style: italic; font-size: 14px; color: var(--ink-2); margin: 0; max-width: 46ch; }
+.kc-note__tip-cap { font-style: normal; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); margin-right: 6px; }
+.kc-note__legend { font-family: var(--font-serif); font-style: italic; font-size: 12.5px; color: var(--ink-3); margin: 0; }
+
+/* Quiet acknowledgments (clear / improved) — ink, not alarm. */
+.kc-turn__fix[data-tone="clear"] {
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+}
+
+@media (max-width: 720px) {
+  .kc-presence--sm { width: 132px; height: 132px; }
+  .kc-presence--sm .kc-disc { inset: 24px; }
+  .kc-turn__de { font-size: 19px; }
+}
 
 /* Transcript — letter column */
-.kc-transcript { flex: 1; display: flex; flex-direction: column; gap: var(--space-5); max-width: var(--maxw-read); margin: 0 auto; width: 100%; padding-top: var(--space-3); }
 .kc-transcript__cap { color: var(--ink-3); }
 .kc-turns { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-6); }
 .kc-turn { display: flex; flex-direction: column; gap: 6px; }
@@ -230,11 +257,6 @@
 }
 .kc-hint { font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--ink-3); margin: 0; text-align: center; }
 
-@media (max-width: 720px) {
-  .kc-presence { width: 240px; height: 240px; }
-  .kc-utter { font-size: 30px; }
-}
-
 /* ===== CHAT — pronunciation orientation (kc-foco / kc-corr) ===== */
 .kc-em { font-style: italic; color: var(--accent-ink); }
 
@@ -251,58 +273,5 @@
 .kc-foco__cap { font-size: 10px; letter-spacing: 0.12em; color: var(--ink-3); }
 .kc-foco__sound { font-family: var(--font-serif); font-style: italic; font-size: 20px; line-height: 1; color: var(--ink); }
 .kc-foco__ipa { font-size: 11px; color: var(--ink-3); }
-
-.kc-stage--corr { justify-content: center; }
-.kc-corr {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  align-items: center;
-  text-align: center;
-  max-width: 640px;
-  margin: 0 auto;
-  width: 100%;
-}
-.kc-corr__cap { color: var(--ink-3); letter-spacing: 0.12em; }
-.kc-corr__line {
-  font-family: var(--font-serif);
-  font-size: 34px;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  margin: 0;
-  color: var(--ink);
-  text-wrap: balance;
-}
-.kc-corr__es { font-family: var(--font-serif); font-style: italic; font-size: 16px; color: var(--ink-3); margin: 0; }
-.kc-corr__target {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-  justify-content: center;
-  padding: 16px 18px;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
-  border-radius: 12px;
-  flex-wrap: wrap;
-}
-.kc-corr__play { flex-shrink: 0; }
-.kc-corr__detail { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; text-align: left; }
-.kc-corr__word { font-family: var(--font-serif); font-size: 24px; color: var(--ink); }
-.kc-corr__ipa { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); letter-spacing: 0.02em; }
-.kc-corr__ipa em { font-style: normal; color: var(--ink-3); }
-.kc-corr__ipa strong { color: var(--accent-ink); font-weight: 500; }
-.kc-corr__tip { font-family: var(--font-serif); font-style: italic; font-size: 15px; color: var(--ink-2); margin: 0; max-width: 46ch; }
-.kc-corr__tip-cap { font-style: normal; font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); margin-right: 8px; }
-.kc-corr__cont {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  width: 100%;
-  padding-top: 16px;
-  border-top: 1px solid var(--rule);
-}
-.kc-corr__cont-line { display: flex; align-items: center; gap: 8px; font-family: var(--font-serif); font-style: italic; font-size: 17px; color: var(--ink); }
 
 .kp-stat__of { font-size: 14px; color: var(--ink-3); }

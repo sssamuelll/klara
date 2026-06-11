@@ -348,7 +348,6 @@
       "native": "Aujourd'hui on affine le {{sound}}. C'était comment, ta journée ? Tu as dû attendre quelque part ?"
     },
     "stage": {
-      "idleCap": "Focus du jour",
       "listeningCap": "Je t'écoute…",
       "thinkingCap": "J'écoute ton son…",
       "speakingCap": "Klara",
@@ -361,37 +360,34 @@
         "de_ue": "Arrondis les lèvres comme pour « ou », mais dis « i »."
       }
     },
+    "note": {
+      "cap": "NOTE",
+      "lead": "le {{sound}} de « {{word}} » sonne",
+      "retry": "Redis-le",
+      "how": "COMMENT",
+      "playAria": "Écouter le modèle de Klara",
+      "legend": "Je souligne le mot où le {{sound}} demande une autre passe.",
+      "clear": "Le {{sound}} dans « {{word}} » — clair. On continue."
+    },
     "controls": {
       "exit": "← Quitter",
-      "voice": "Voix",
-      "transcript": "Transcription",
       "micAria": "Parler",
       "endAria": "Terminer la conversation",
       "muteAria": "Couper la voix de Klara",
       "unmuteAria": "Réactiver la voix de Klara"
     },
-    "correction": {
-      "cap": "TA PRONONCIATION",
-      "targetIpa": "cible",
-      "retry": "Redis-le",
-      "how": "COMMENT",
-      "continue": "Continuer à parler",
-      "playAria": "Écouter le modèle de Klara"
-    },
     "transcript": {
       "cap": "CONVERSATION DU JOUR · focus {{sound}}",
       "you": "TOI",
-      "fix": "{{sound}} dans « {{word}} » : cible {{ipa}}",
-      "improved": "« {{word}} » s'est amélioré — le {{sound}} plus clair. ✓"
+      "improved": "Voilà. Le {{sound}} de « {{word}} », clair. ✓"
     },
     "hint": {
       "idle": "Réponds à voix haute — Klara écoute comment sonne ton {{sound}}",
       "listening": "Touche à nouveau pour finir ton tour",
-      "correction": "Répète le mot ou continue la conversation",
       "speaking": "Klara te répond…",
-      "transcript": "Touche « Voix » pour revenir à la conversation",
-      "noSpeech": "On ne t'a pas entendu. Parle plus fort et réessaye.",
-      "lowConfidence": "On n'a pas bien compris. Tu le redis ?"
+      "noSpeech": "Je ne t'ai pas entendu. Réessaye, un peu plus fort.",
+      "lowConfidence": "Je ne t'ai pas bien compris. Redis-le, calmement.",
+      "thinking": "Je réfléchis en allemand…"
     },
     "summary": {
       "kicker": "FIN DE LA CONVERSATION",

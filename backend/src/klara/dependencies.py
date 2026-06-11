@@ -47,7 +47,11 @@ def get_story_llm(settings: SettingsDep) -> LLMClient:
 
 
 def get_chat_llm(settings: SettingsDep) -> LLMClient:
-    return LiteLLMClient(settings, default_model=settings.llm_chat_model)
+    return LiteLLMClient(
+        settings,
+        default_model=settings.llm_chat_model,
+        default_extra_body=settings.llm_chat_extra_body,
+    )
 
 
 StoryLLM = Annotated[LLMClient, Depends(get_story_llm)]

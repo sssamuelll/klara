@@ -33,6 +33,7 @@ class LLMClient(Protocol):
         response_format: dict | None = None,
         timeout_seconds: float | None = None,
         num_retries: int | None = None,
+        extra_body: dict | None = None,
     ) -> LLMResponse: ...
 
     async def stream(
