@@ -19,6 +19,11 @@ class FfmpegMissingError(RuntimeError):
     """ffmpeg binary is not available in the container's PATH."""
 
 
+#: A pathological container must not stall a threadpool slot forever — 25MB of
+#: voice audio transcodes in well under a second; 15s is generous headroom.
+FFMPEG_TIMEOUT_SECONDS = 15
+
+
 def transcode_to_wav(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
     """Returns a path to a temp .wav file. Caller is responsible for unlinking."""
     src = tempfile.NamedTemporaryFile(suffix=".bin", delete=False)
@@ -52,9 +57,12 @@ def transcode_to_wav(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
             ],
             check=True,
             capture_output=True,
+            timeout=FFMPEG_TIMEOUT_SECONDS,
         )
     except FileNotFoundError as e:
         raise FfmpegMissingError("ffmpeg is not installed in the server PATH.") from e
+    except subprocess.TimeoutExpired as e:
+        raise TranscodeError(f"ffmpeg timed out after {FFMPEG_TIMEOUT_SECONDS}s") from e
     except subprocess.CalledProcessError as e:
         msg = e.stderr.decode(errors="ignore")[:300] if e.stderr else "ffmpeg error"
         raise TranscodeError(msg) from e

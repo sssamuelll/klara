@@ -7,7 +7,7 @@ import Home from "./routes/Home";
 import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
 import Practice from "./routes/Practice";
-import ChatStub from "./routes/ChatStub";
+import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
 import Onboarding from "./onboarding/Onboarding";
 import Login from "./routes/Login";
@@ -89,7 +89,7 @@ function AppShell() {
             path="/chat"
             element={
               <ProtectedRoute>
-                <ChatStub />
+                <Speak />
               </ProtectedRoute>
             }
           />

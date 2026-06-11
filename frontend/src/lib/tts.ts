@@ -29,6 +29,32 @@ function ttsUrl(text: string, lang?: string): string {
   return lang ? `${base}&lang=${encodeURIComponent(lang)}` : base;
 }
 
+/**
+ * Why the playback finished. "interrupted" = stop() ran (a new speak(), a mic
+ * tap, navigation) — callers driving a state machine usually treat it as
+ * "stop transitioning, someone else owns the state now".
+ */
+export type TTSDoneReason = "ended" | "error" | "interrupted";
+
+// Exactly-once completion callback for the CURRENT utterance. Speak's state
+// machine hangs forever in "speaking" if any finish path (ended, playback
+// error, Web Speech fallback, interruption) fails to fire — so every exit
+// funnels through settleDone, which clears before calling.
+//
+// `generation` is the zombie guard: events from a superseded utterance keep
+// arriving asynchronously (a pending play() rejects AFTER stop(); a canceled
+// SpeechSynthesisUtterance fires onend on a queued task AFTER the next speak()
+// registered its callback). Every async handler captures its generation and
+// must not settle — or speak — on behalf of a later one.
+let onDone: ((reason: TTSDoneReason) => void) | null = null;
+let generation = 0;
+
+function settleDone(reason: TTSDoneReason): void {
+  const cb = onDone;
+  onDone = null;
+  cb?.(reason);
+}
+
 export function getTTSState(): TTSState {
   return state;
 }
@@ -46,9 +72,27 @@ export function useTTS(): TTSState {
   return s;
 }
 
-export function speak(text: string, language?: string, opts?: { rate?: number }): void {
-  stop();
-  if (!text.trim()) return;
+export function speak(
+  text: string,
+  language?: string,
+  opts?: { rate?: number; onDone?: (reason: TTSDoneReason) => void },
+): void {
+  stop(); // settles any previous utterance's onDone as "interrupted"
+  if (!text.trim()) {
+    opts?.onDone?.("ended"); // nothing to say is a completed utterance
+    return;
+  }
+  onDone = opts?.onDone ?? null;
+  const gen = ++generation;
+  // One fallback attempt per utterance, whether the trigger was the error
+  // event (load failure) or the play() rejection (autoplay) — on an outright
+  // load failure BOTH fire, and double-speaking the reply is worse than none.
+  let fellBack = false;
+  const tryFallback = () => {
+    if (gen !== generation || fellBack) return;
+    fellBack = true;
+    fallbackWebSpeech(text, activeLocale, gen);
+  };
   activeLocale = language ? speechLocale(language) : "de-DE";
   const a = new Audio(ttsUrl(text, language));
   a.preload = "auto";
@@ -69,19 +113,41 @@ export function speak(text: string, language?: string, opts?: { rate?: number })
     set({ progress: a.currentTime / dur, duration: a.duration || state.duration });
   });
   a.addEventListener("ended", () => {
-    if (audio === a) set({ text: null, playing: false, progress: 0, duration: 0 });
+    if (audio === a) {
+      set({ text: null, playing: false, progress: 0, duration: 0 });
+      settleDone("ended");
+    }
+  });
+  let started = false;
+  a.addEventListener("error", () => {
+    if (audio !== a) return;
+    audio = null;
+    set({ text: null, playing: false, progress: 0, duration: 0 });
+    // Never played → outright load failure: give Web Speech one shot (it
+    // settles). Mid-stream failure → settle as error; restarting the whole
+    // reply from zero in a different voice is worse than stopping.
+    if (started) settleDone("error");
+    else tryFallback();
   });
   a.addEventListener("pause", () => {
     if (audio === a) set({ playing: false });
   });
   a.addEventListener("play", () => {
-    if (audio === a) set({ playing: true });
+    if (audio === a) {
+      started = true;
+      set({ playing: true });
+    }
   });
   audio = a;
   set({ text, playing: false, progress: 0, duration: 0 });
   a.play().catch((err) => {
+    // A pending play() rejects (AbortError) when stop() or a newer speak()
+    // paused this element — that utterance is dead; speaking its stale text
+    // over whatever the user is doing now would be a real bug, not a fallback.
+    if (gen !== generation) return;
     console.warn("TTS playback failed, falling back to Web Speech", err);
-    fallbackWebSpeech(text, activeLocale);
+    if (audio === a) audio = null;
+    tryFallback();
   });
 }
 
@@ -94,6 +160,7 @@ export function resume(): void {
 }
 
 export function stop(): void {
+  generation++; // invalidate every async handler of the current utterance
   if (audio) {
     audio.pause();
     audio.currentTime = 0;
@@ -103,10 +170,14 @@ export function stop(): void {
     window.speechSynthesis.cancel();
   }
   set({ text: null, playing: false, progress: 0, duration: 0 });
+  settleDone("interrupted");
 }
 
-function fallbackWebSpeech(text: string, locale: string): void {
-  if (typeof window === "undefined" || !window.speechSynthesis) return;
+function fallbackWebSpeech(text: string, locale: string, gen: number): void {
+  if (typeof window === "undefined" || !window.speechSynthesis) {
+    settleDone("error");
+    return;
+  }
   const utter = new SpeechSynthesisUtterance(text);
   const langPrefix = locale.split("-")[0].toLowerCase();
   const voice = window.speechSynthesis
@@ -115,5 +186,16 @@ function fallbackWebSpeech(text: string, locale: string): void {
   if (voice) utter.voice = voice;
   utter.lang = voice?.lang ?? locale;
   utter.rate = 0.95;
+  // Web Speech is a routine path on Safari (autoplay rejection) — without
+  // these, a Speak session would strand in "speaking" forever. The gen check
+  // matters: speechSynthesis.cancel() fires the canceled utterance's onend on
+  // a QUEUED task, i.e. after the next speak() already registered its onDone —
+  // settling here would steal the new utterance's completion.
+  utter.onend = () => {
+    if (gen === generation) settleDone("ended");
+  };
+  utter.onerror = () => {
+    if (gen === generation) settleDone("error");
+  };
   window.speechSynthesis.speak(utter);
 }

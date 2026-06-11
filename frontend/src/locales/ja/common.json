@@ -338,6 +338,80 @@
       "unknown": "問題が発生しました。もう一度お試しください。"
     }
   },
+  "speak": {
+    "gate": {
+      "kicker": "クララと話す",
+      "title": "まずはドイツ語から。",
+      "dek": "音声会話はまずドイツ語で始まります。あなたの言語も近日対応予定です。"
+    },
+    "opener": {
+      "native": "今日は{{sound}}の音を磨きます。今日はどんな一日でしたか？どこかで待ちましたか？"
+    },
+    "stage": {
+      "idleCap": "今日のフォーカス",
+      "listeningCap": "聞いています…",
+      "thinkingCap": "あなたの音を聞いています…",
+      "speakingCap": "クララ",
+      "thinkingAria": "考え中"
+    },
+    "focus": {
+      "cap": "今日のフォーカス",
+      "titleAttr": "今日磨く音",
+      "tip": {
+        "de_ue": "「う」のように唇を丸めて、「い」と言ってみてください。"
+      }
+    },
+    "controls": {
+      "exit": "← 終了",
+      "voice": "音声",
+      "transcript": "文字起こし",
+      "micAria": "話す",
+      "endAria": "会話を終える",
+      "muteAria": "クララの声をミュート",
+      "unmuteAria": "クララの声をオンにする"
+    },
+    "correction": {
+      "cap": "あなたの発音",
+      "targetIpa": "目標",
+      "retry": "もう一度言う",
+      "how": "コツ",
+      "continue": "会話を続ける",
+      "playAria": "クララのお手本を聞く"
+    },
+    "transcript": {
+      "cap": "今日の会話 · フォーカス {{sound}}",
+      "you": "あなた",
+      "fix": "「{{word}}」の{{sound}}：目標 {{ipa}}",
+      "improved": "「{{word}}」が良くなりました — {{sound}}がよりクリアに。✓"
+    },
+    "hint": {
+      "idle": "声に出して答えてください — クララが{{sound}}の音を聞いています",
+      "listening": "もう一度タップすると発言を終えます",
+      "correction": "単語を繰り返すか、会話を続けましょう",
+      "speaking": "クララが答えています…",
+      "transcript": "「音声」をタップすると会話に戻ります",
+      "noSpeech": "聞き取れませんでした。もう少し大きな声でもう一度。",
+      "lowConfidence": "うまく聞き取れませんでした。もう一度言ってみてください。"
+    },
+    "summary": {
+      "kicker": "会話の終わり",
+      "titlePre": "今日の耳：",
+      "titlePost": "。",
+      "dek": "{{minutes}}分の会話。{{sound}}の音が近づいています — これらの単語は練習に戻ります。",
+      "stat": {
+        "clear": "{{sound}} クリア",
+        "minutes": "分",
+        "toPractice": "練習へ"
+      },
+      "returns": "練習に戻る単語",
+      "soon": "近日",
+      "saveFailed": "今回はこれらの単語を練習に保存できませんでした。",
+      "partial_one": "{{count}}個の単語は今回準備できませんでした。",
+      "partial_other": "{{count}}個の単語は今回準備できませんでした。",
+      "again": "もう一度話す",
+      "home": "ホームへ戻る"
+    }
+  },
   "onboarding": {
     "kicker": "オンボーディング",
     "continue": "続ける →",
@@ -480,13 +554,6 @@
       "confirmLabel": "パスワードを再入力",
       "submit": "パスワードを更新",
       "success": "完了しました。新しいパスワードでログインできます。"
-    }
-  },
-  "stub": {
-    "chat": {
-      "kicker": "Klara と話す",
-      "title": "近日公開。",
-      "dek": "自由な会話。準備ができたら、声と声で。"
     }
   },
   "errors": {
