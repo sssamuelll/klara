@@ -81,3 +81,17 @@ async def test_per_call_timeout_and_retries_still_apply(captured):
     await client.complete(messages=_msg(), timeout_seconds=25.0, num_retries=0)
     assert captured["timeout"] == 25.0
     assert captured["num_retries"] == 0
+
+
+def test_settings_parses_json_extra_body_from_env(monkeypatch):
+    monkeypatch.setenv("LLM_CHAT_EXTRA_BODY", '{"thinking": {"type": "disabled"}}')
+    assert Settings().llm_chat_extra_body == {"thinking": {"type": "disabled"}}
+
+
+def test_settings_treats_blank_extra_body_as_none(monkeypatch):
+    # docker-compose delivers ${LLM_CHAT_EXTRA_BODY:-} = "" when unset; an
+    # empty string must not crash Settings() (it isn't valid JSON).
+    monkeypatch.setenv("LLM_CHAT_EXTRA_BODY", "")
+    assert Settings().llm_chat_extra_body is None
+    monkeypatch.setenv("LLM_CHAT_EXTRA_BODY", "   ")
+    assert Settings().llm_chat_extra_body is None
