@@ -33,6 +33,9 @@ services:
       LLM_STORY_MODEL: ${LLM_STORY_MODEL:-anthropic/claude-haiku-4-5-20251001}
       LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-anthropic/claude-sonnet-4-6}
       LLM_CORRECTION_MODEL: ${LLM_CORRECTION_MODEL:-anthropic/claude-haiku-4-5-20251001}
+      # JSON, e.g. {"thinking": {"type": "disabled"}} for DeepSeek V4 Flash.
+      # Blank when unset → Settings treats it as None (see config validator).
+      LLM_CHAT_EXTRA_BODY: ${LLM_CHAT_EXTRA_BODY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

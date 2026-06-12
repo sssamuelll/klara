@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -68,6 +69,17 @@ class Settings(BaseSettings):
     inworld_sample_rate_hz: int = 24000
     tts_request_timeout_seconds: float = 30.0
     tts_max_text_chars: int = 4000
+
+    @field_validator("llm_chat_extra_body", mode="before")
+    @classmethod
+    def _blank_extra_body_is_none(cls, v: object) -> object:
+        # docker-compose delivers this as ${LLM_CHAT_EXTRA_BODY:-}, i.e. an
+        # EMPTY string whenever it isn't set (local dev, anthropic path). An
+        # empty string is not valid JSON and would crash Settings(); treat
+        # blank as "unset". A real value is JSON-decoded to a dict upstream.
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     @property
     def elevenlabs_voices_by_lang(self) -> dict[str, str]:
