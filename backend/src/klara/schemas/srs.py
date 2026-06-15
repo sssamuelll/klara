@@ -48,7 +48,10 @@ class PronunciationReviewIn(BaseModel):
 
 
 class PronunciationBatchIn(BaseModel):
-    reviews: list[PronunciationReviewIn]
+    # Cap el batch: la cola de práctica sirve <=50 líneas (practice/queue limit),
+    # así que una sesión real nunca se acerca a esto; el tope evita que un payload
+    # autenticado oversized mantenga la transacción de mantenimiento abierta.
+    reviews: list[PronunciationReviewIn] = Field(max_length=100)
 
 
 class RescheduledCardOut(BaseModel):

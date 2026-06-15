@@ -149,7 +149,16 @@ export default function Practice() {
     for (let i = 0; i < items.length; i++) {
       const it = items[i];
       const scores = practice.scoresBySentence[i];
-      if (!it.cardId || !scores || practice.simulatedIndices.has(i)) continue;
+      // Salta items sin carta, simulados, sin score, o con score vacío ({}) — este
+      // último pasaría `!scores` pero no es una respuesta real (alineado con
+      // tallySummary, que exige Object.keys(scores).length > 0).
+      if (
+        !it.cardId ||
+        !scores ||
+        Object.keys(scores).length === 0 ||
+        practice.simulatedIndices.has(i)
+      )
+        continue;
       reviews.push({
         cardId: it.cardId,
         focusText: it.focusText,
