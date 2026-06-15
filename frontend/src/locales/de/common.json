@@ -293,10 +293,7 @@
         "bad": "ZU PRÜFEN"
       },
       "returns": {
-        "title": "BALD ZURÜCK",
-        "tomorrow": "morgen",
-        "inTwoDays": "in 2 Tagen",
-        "thisWeek": "diese Woche"
+        "title": "BALD ZURÜCK"
       },
       "send": {
         "failed": "Diese Runde konnte nicht gespeichert werden.",

@@ -293,10 +293,7 @@
         "bad": "TO REVISIT"
       },
       "returns": {
-        "title": "BACK SOON",
-        "tomorrow": "tomorrow",
-        "inTwoDays": "in 2 days",
-        "thisWeek": "this week"
+        "title": "BACK SOON"
       },
       "send": {
         "failed": "Couldn't save this round.",

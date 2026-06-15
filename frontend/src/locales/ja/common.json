@@ -293,10 +293,7 @@
         "bad": "要確認"
       },
       "returns": {
-        "title": "まもなく戻る",
-        "tomorrow": "明日",
-        "inTwoDays": "2日後",
-        "thisWeek": "今週"
+        "title": "まもなく戻る"
       },
       "send": {
         "failed": "今回の記録を保存できませんでした。",

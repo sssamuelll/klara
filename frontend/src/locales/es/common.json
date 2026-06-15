@@ -293,10 +293,7 @@
         "bad": "A REVISAR"
       },
       "returns": {
-        "title": "VUELVEN PRONTO",
-        "tomorrow": "mañana",
-        "inTwoDays": "en 2 días",
-        "thisWeek": "esta semana"
+        "title": "VUELVEN PRONTO"
       },
       "send": {
         "failed": "No se pudo guardar esta ronda.",

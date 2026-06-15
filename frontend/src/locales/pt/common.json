@@ -293,10 +293,7 @@
         "bad": "A REVER"
       },
       "returns": {
-        "title": "VOLTAM EM BREVE",
-        "tomorrow": "amanhã",
-        "inTwoDays": "em 2 dias",
-        "thisWeek": "esta semana"
+        "title": "VOLTAM EM BREVE"
       },
       "send": {
         "failed": "Não foi possível guardar esta ronda.",

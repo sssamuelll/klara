@@ -293,10 +293,7 @@
         "bad": "À REVOIR"
       },
       "returns": {
-        "title": "BIENTÔT DE RETOUR",
-        "tomorrow": "demain",
-        "inTwoDays": "dans 2 jours",
-        "thisWeek": "cette semaine"
+        "title": "BIENTÔT DE RETOUR"
       },
       "send": {
         "failed": "Impossible d’enregistrer ce tour.",
