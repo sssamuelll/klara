@@ -306,7 +306,7 @@ async def build_review_items(
         return []
 
     items: list[PracticeItemOut] = []
-    for _card, vocab in rows:
+    for card, vocab in rows:
         lemma = vocab.lemma
         # Most-recent story where this lemma is a target vocab item.
         story = (
@@ -380,6 +380,7 @@ async def build_review_items(
                 # line has no real story sentence → None, None → not persisted.
                 story_id=str(story.id) if from_story and story is not None else None,
                 sentence_index=story_sentence_index if from_story else None,
+                card_id=card.id,
             )
         )
         if len(items) >= limit:
@@ -410,6 +411,7 @@ async def build_practice_queue(
     items: list[PracticeItemOut] = list(struggled_items[:limit])
     struggled_focus = {it.focus_text.casefold() for it in items}
 
+    review_items: list[PracticeItemOut] = []
     remaining = limit - len(items)
     if remaining > 0:
         # Pull a few extra review candidates beyond `remaining`, since some may
@@ -427,6 +429,16 @@ async def build_practice_queue(
             items.append(it)
             if len(items) >= limit:
                 break
+
+    # Un struggled cuyo focus es una carta due debe reprogramarse igual que un
+    # review (scope B). El dedup ya lo dejó como struggled; aquí le adjuntamos la
+    # identidad de su carta para que el cierre del ciclo la alcance.
+    card_by_lemma = {
+        it.focus_text.casefold(): it.card_id for it in review_items if it.card_id is not None
+    }
+    for it in items:
+        if it.card_id is None and it.focus_text.casefold() in card_by_lemma:
+            it.card_id = card_by_lemma[it.focus_text.casefold()]
 
     # Queue-level sourceTitle only makes sense for a homogeneous single-story
     # queue. It stays set only when every emitted item is struggled AND from

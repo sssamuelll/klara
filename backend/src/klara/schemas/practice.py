@@ -12,6 +12,7 @@ The queue mixes "struggled" and "review" items. `variants` is always `[]`
 """
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -52,6 +53,11 @@ class PracticeItemOut(BaseModel):
     # the attempt to (None → that item is not persisted).
     story_id: str | None = Field(default=None, serialization_alias="storyId")
     sentence_index: int | None = Field(default=None, serialization_alias="sentenceIndex")
+    # Identidad de la UserCard SRS que respalda este item, cuando la hay. La cola
+    # YA resuelve la carta (build_review_items) y el dedup struggled∩review matchea
+    # el lemma — portarla aquí deja que el cierre del ciclo reprograme POR ID, sin
+    # re-resolver por texto aguas abajo (que colapsa para formas flexionadas).
+    card_id: UUID | None = Field(default=None, serialization_alias="cardId")
 
 
 class PracticeQueueOut(BaseModel):
