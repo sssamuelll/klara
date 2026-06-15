@@ -2,11 +2,12 @@
 realmente cubiertos por la historia (honestidad de cobertura)."""
 
 import uuid
+from datetime import UTC, datetime
 
 import pytest
 
 from klara.models import VocabItem
-from klara.models.enums import CEFRLevel
+from klara.models.enums import CEFRLevel, PartOfSpeech
 from klara.services.story_gen import generate_story
 
 
@@ -106,3 +107,34 @@ async def test_uncovered_target_word_dropped_from_story(db_session):
     # La respuesta (target_words) tampoco debe afirmar enseñar lo no cubierto:
     returned = [w.lemma for w in result.target_words]
     assert "Haus" in returned and "Brücke" not in returned
+
+
+def test_serialize_exposes_frequency_rank_and_note():
+    from klara.models import Story as StoryModel
+    from klara.routers.stories import _serialize_story
+
+    v = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Haus",
+        pos=PartOfSpeech.NOUN,
+        frequency_rank=10,
+        cefr_level=CEFRLevel.A1,
+        translations={"es": "casa"},
+    )
+    story = StoryModel(
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="Das Haus",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[v.id],
+        created_at=datetime.now(UTC),  # StoryOut.created_at es datetime requerido; el modelo
+        # solo tiene server_default (sin default Python), así que un Story() en memoria
+        # sin flush deja created_at=None → ValidationError. Lo seteamos en el fixture.
+    )
+    out = _serialize_story(story, [v], "es")
+    assert out.target_words[0].frequency_rank == 10
+    assert out.curriculum_note is not None and "Haus" in out.curriculum_note
