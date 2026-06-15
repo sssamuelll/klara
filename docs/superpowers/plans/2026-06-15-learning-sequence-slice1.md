@@ -1069,6 +1069,8 @@ git commit -m "feat(story): drive target words by curriculum selection + coverag
 
 ```python
 def test_serialize_exposes_frequency_rank_and_note():
+    from datetime import UTC, datetime
+
     from klara.routers.stories import _serialize_story
     from klara.models import Story as StoryModel
 
@@ -1078,6 +1080,9 @@ def test_serialize_exposes_frequency_rank_and_note():
         id=uuid.uuid4(), user_id=uuid.uuid4(), level=CEFRLevel.A1, target_language="de",
         native_language="es", title="Das Haus",
         content={"sentences": [], "comprehension_questions": []}, target_vocab_item_ids=[v.id],
+        # StoryOut.created_at es datetime requerido; el modelo solo tiene server_default
+        # (sin default Python), así que un Story() en memoria sin flush deja created_at=None.
+        created_at=datetime.now(UTC),
     )
     out = _serialize_story(story, [v], "es")
     assert out.target_words[0].frequency_rank == 10
