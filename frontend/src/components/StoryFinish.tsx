@@ -1205,7 +1205,7 @@ interface Tok {
 }
 
 function tokenizeWords(text: string): Tok[] {
-  const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+  const re = /(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)/g;
   const out: Tok[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {

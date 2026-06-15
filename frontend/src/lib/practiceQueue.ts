@@ -10,11 +10,8 @@
  *   - reason "struggled" → words the learner mispronounced recently.
  *   - reason "review"    → items due by spaced repetition (SRS).
  *
- * Scope today: the endpoint is STRUGGLED-ONLY — `variants` arrives empty and
- * no "review" items are produced yet (SRS-due items are deferred until the
- * origin-sentence resolution for an SRS lemma is settled). The contract
- * already carries both, so neither this type nor the component changes when
- * review items and variety-by-level land.
+ * El endpoint sirve struggled + review; los items respaldados por una carta SRS
+ * due portan `cardId`.
  */
 
 import { api } from "../api/client";
@@ -61,6 +58,12 @@ export interface PracticeItem {
    * with `storyId` for `example_target` fallback items.
    */
   sentenceIndex?: number;
+  /**
+   * Id de la UserCard SRS que respalda este item, cuando la hay (review items, y
+   * struggled cuyo focus es una carta due). Ausente para struggled sin vocab en
+   * SRS. El cierre del ciclo reprograma POR este id (no por texto).
+   */
+  cardId?: string;
 }
 
 export interface PracticeQueue {

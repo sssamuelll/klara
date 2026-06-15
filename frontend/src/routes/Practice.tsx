@@ -18,19 +18,22 @@
  * PracticeItem[] comes back.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { StorySentence } from "../api/types";
+import { api } from "../api/client";
+import type { PronunciationReviewIn, RescheduledCard, StorySentence } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import SentenceView from "../components/SentenceView";
 import { useFontScale } from "../lib/preferences";
+import { focusBand } from "../lib/pronunciation";
 import {
   loadPracticeQueue,
   countByReason,
   type PracticeItem,
   type PracticeQueue,
 } from "../lib/practiceQueue";
+import { humanizeNextReview } from "../lib/srsTime";
 import { useSentencePractice, type PronScores } from "../lib/useSentencePractice";
 
 type Phase = "setup" | "session" | "summary";
@@ -47,26 +50,23 @@ function toStorySentence(item: PracticeItem): StorySentence {
   };
 }
 
-// Summary tally: per item, fraction of "good" bands → clear / mid / revisit.
-// Mirrors the handoff's bucketing (≥0.8 clear, ≥0.5 mid, else revisit).
 function tallySummary(
-  total: number,
+  items: PracticeItem[],
+  sentences: StorySentence[],
   scoresBySentence: Record<number, PronScores>,
 ): { clear: number; mid: number; revisit: number; answered: number } {
   let clear = 0;
   let mid = 0;
   let revisit = 0;
   let answered = 0;
-  for (let i = 0; i < total; i++) {
+  for (let i = 0; i < items.length; i++) {
     const scores = scoresBySentence[i];
-    if (!scores) continue;
-    const vals = Object.values(scores);
-    if (vals.length === 0) continue;
+    if (!scores || Object.keys(scores).length === 0) continue;
+    const band = focusBand(sentences[i].target, items[i].focusText, scores);
+    if (!band) continue;
     answered++;
-    const good = vals.filter((s) => s === "good").length;
-    const frac = good / vals.length;
-    if (frac >= 0.8) clear++;
-    else if (frac >= 0.5) mid++;
+    if (band === "good") clear++;
+    else if (band === "ok") mid++;
     else revisit++;
   }
   return { clear, mid, revisit, answered };
@@ -100,6 +100,13 @@ export default function Practice() {
   const reviewN = total - struggledN;
 
   const [phase, setPhase] = useState<Phase>("setup");
+
+  type SendState = "idle" | "sending" | "ok" | "failed";
+  const [sendState, setSendState] = useState<SendState>("idle");
+  const [rescheduled, setRescheduled] = useState<RescheduledCard[]>([]);
+  // Se marca al CONFIRMAR éxito (no al disparar): un fallo deja reintentar en vez
+  // de perder la reprogramación en silencio (spec §4.4).
+  const sessionSubmittedRef = useRef(false);
 
   // SentenceView consumes StorySentence; map once.
   const sentences = useMemo(() => items.map(toStorySentence), [items]);
@@ -136,6 +143,56 @@ export default function Practice() {
   });
 
   const item = items[practice.currentIndex];
+
+  const submitSession = useCallback(() => {
+    const reviews: PronunciationReviewIn[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const scores = practice.scoresBySentence[i];
+      // Salta items sin carta, simulados, sin score, o con score vacío ({}) — este
+      // último pasaría `!scores` pero no es una respuesta real (alineado con
+      // tallySummary, que exige Object.keys(scores).length > 0).
+      if (
+        !it.cardId ||
+        !scores ||
+        Object.keys(scores).length === 0 ||
+        practice.simulatedIndices.has(i)
+      )
+        continue;
+      reviews.push({
+        cardId: it.cardId,
+        focusText: it.focusText,
+        sentenceTarget: sentences[i].target,
+        wordBands: scores,
+      });
+    }
+    if (reviews.length === 0) {
+      sessionSubmittedRef.current = true;
+      setRescheduled([]);
+      setSendState("ok");
+      return;
+    }
+    setSendState("sending");
+    api
+      .submitPronunciationReviews(reviews)
+      .then((res) => {
+        sessionSubmittedRef.current = true; // marca al confirmar
+        setRescheduled(res.rescheduled);
+        setSendState("ok");
+      })
+      .catch(() => {
+        // ref sigue en false → el botón "Reintentar" del bloque `failed` del
+        // summary re-invoca este mismo submitSession sin duplicar ni rehacer
+        // la sesión (spec §4.4: "ofrecer reintento").
+        setSendState("failed");
+      });
+  }, [items, sentences, practice.scoresBySentence, practice.simulatedIndices]);
+
+  useEffect(() => {
+    if (phase === "summary" && !sessionSubmittedRef.current && sendState === "idle") {
+      submitSession();
+    }
+  }, [phase, sendState, submitSession]);
 
   // ---- LOADING / ERROR / EMPTY -------------------------------------------
   if (phase === "setup" && (queue === null || loadFailed || total === 0)) {
@@ -212,6 +269,9 @@ export default function Practice() {
           <button
             className="k-btn"
             onClick={() => {
+              sessionSubmittedRef.current = false;
+              setSendState("idle");
+              setRescheduled([]);
               practice.reset();
               setPhase("session");
             }}
@@ -241,8 +301,11 @@ export default function Practice() {
 
   // ---- SUMMARY ------------------------------------------------------------
   if (phase === "summary") {
-    const { clear, mid, revisit } = tallySummary(total, practice.scoresBySentence);
-    const returns = items.filter((i) => i.reason === "struggled").slice(0, 3);
+    const { clear, mid, revisit } = tallySummary(items, sentences, practice.scoresBySentence);
+    // Glosa local por palabra-foco (reusa focusTx del item; el contrato del backend
+    // NO devuelve traducción — spec §4.3 "contrato mínimo").
+    const txByFocus: Record<string, string> = {};
+    for (const it of items) txByFocus[it.focusText] = it.focusTx;
 
     return (
       <main className="k-page kp-summary">
@@ -275,34 +338,56 @@ export default function Practice() {
           </div>
         </section>
 
-        <hr className="k-hairline" />
+        {sendState === "ok" && rescheduled.length > 0 && (
+          <>
+            <hr className="k-hairline" />
+            <section className="kp-returns">
+              <header className="kp-returns__head">
+                <span className="k-mono">{t("practice.summary.returns.title")}</span>
+                <span className="k-mono kp-returns__count">{rescheduled.length}</span>
+              </header>
+              <ul className="kp-returns__list">
+                {rescheduled.map((r) => (
+                  <li key={`${r.focusText}-${r.nextReviewAt}`} className="kp-returns__item">
+                    <span className="kp-returns__word">{r.focusText}</span>
+                    <span className="kp-returns__tx">{txByFocus[r.focusText] ?? ""}</span>
+                    <span className="kp-returns__next k-mono">
+                      {humanizeNextReview(r.nextReviewAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
 
-        <section className="kp-returns">
-          <header className="kp-returns__head">
-            <span className="k-mono">{t("practice.summary.returns.title")}</span>
-            <span className="k-mono kp-returns__count">{returns.length}</span>
-          </header>
-          <ul className="kp-returns__list">
-            {returns.map((r, i) => (
-              <li key={r.focusText} className="kp-returns__item">
-                <span className="kp-returns__word">{r.focusText}</span>
-                <span className="kp-returns__tx">{r.focusTx}</span>
-                <span className="kp-returns__next k-mono">
-                  {i === 0
-                    ? t("practice.summary.returns.tomorrow")
-                    : i === 1
-                      ? t("practice.summary.returns.inTwoDays")
-                      : t("practice.summary.returns.thisWeek")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {/* En fallo NO fabricamos intervalos (spec §4.4): ocultamos la sección de
+            próximos repasos y ofrecemos reintentar el MISMO POST. submitSession
+            es idempotente desde aquí porque sessionSubmittedRef sigue en false
+            (solo se marca al confirmar éxito), así que reintentar no duplica ni
+            rehace la sesión — a diferencia de "Otra ronda". */}
+        {sendState === "failed" && (
+          <>
+            <hr className="k-hairline" />
+            <div className="kp-send-fail" role="alert">
+              <span className="k-mono">{t("practice.summary.send.failed")}</span>
+              <button
+                className="k-btn k-btn--ghost"
+                onClick={() => submitSession()}
+              >
+                {t("practice.summary.send.retry")}
+              </button>
+            </div>
+          </>
+        )}
 
         <footer className="kp-sum__cta">
           <button
             className="k-btn"
             onClick={() => {
+              sessionSubmittedRef.current = false;
+              setSendState("idle");
+              setRescheduled([]);
               practice.reset();
               setPhase("setup");
             }}

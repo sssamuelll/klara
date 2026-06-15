@@ -978,3 +978,53 @@ async def test_queue_review_source_blank_for_example_target_despite_matching_sto
     assert item["sentence"]["target"] == "Wir singen zusammen."  # example fallback
     # The matched story does NOT contain this sentence → no attribution.
     assert item["source"] == ""
+
+
+@pytest.mark.asyncio
+async def test_review_item_carries_card_id(client, seed_invite, db_session):
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+    vid = await _seed_due_card(
+        db_session,
+        user_id=uid,
+        lemma="Brot",
+        translation="pan",
+        example_target="Ich esse Brot.",
+    )
+    card_id = (
+        (await db_session.execute(select(UserCard).where(UserCard.vocab_item_id == vid)))
+        .scalar_one()
+        .id
+    )
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    items = r.json()["items"]
+    review = [i for i in items if i["reason"] == "review"]
+    assert review and review[0]["cardId"] == str(card_id)
+
+
+@pytest.mark.asyncio
+async def test_struggled_without_card_has_null_card_id(client, seed_invite, db_session):
+    cookie = await _register_and_login(client, seed_invite)
+    uid = await _user_id_by_email(db_session, "practice@example.com")
+    ref = "Die Nummer wechselt."
+    sid = await _seed_story(
+        db_session,
+        user_id=uid,
+        sentences=[
+            {"target": ref, "native": "El número cambia.", "new_words": [], "breakdown": []}
+        ],
+    )
+    await _seed_attempt(
+        db_session,
+        user_id=uid,
+        story_id=sid,
+        sentence_index=0,
+        reference_text=ref,
+        overall_score=50.0,
+        word_bands={"0": "bad", "2": "ok"},
+    )
+    r = await client.get("/api/v1/practice/queue", headers={"Cookie": cookie})
+    items = r.json()["items"]
+    struggled = [i for i in items if i["reason"] == "struggled"]
+    assert struggled and struggled[0]["cardId"] is None

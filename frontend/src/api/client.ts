@@ -9,6 +9,8 @@ import type {
   MCResolveResponse,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
+  PronunciationBatchOut,
+  PronunciationReviewIn,
   PronunciationScoreResponse,
   QuizAttemptIn,
   QuizResponse,
@@ -196,6 +198,12 @@ export const api = {
     request(`/srs/cards/${cardId}/review`, {
       method: "POST",
       body: JSON.stringify({ rating }),
+    }),
+
+  submitPronunciationReviews: (reviews: PronunciationReviewIn[]) =>
+    request<PronunciationBatchOut>("/srs/cards/review-batch", {
+      method: "POST",
+      body: JSON.stringify({ reviews }),
     }),
 
   // --- invitations (admin only) ---

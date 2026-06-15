@@ -51,3 +51,28 @@ def schedule_next_review(card: UserCard, rating: ReviewRating) -> tuple[float, d
     card.repetitions = repetitions
     next_review = now + timedelta(days=new_interval)
     return new_interval, next_review, new_state
+
+
+# Maintenance ladder for the pronunciation channel. Short, FIXED steps — this
+# channel keeps due cards in circulation; it NEVER promotes to long intervals
+# (that's the recall channel's job, future). Mirrors the LEARNING-path steps of
+# schedule_next_review WITHOUT its REVIEWING exponential growth, and crucially
+# does NOT touch ease/repetitions/state (promotion state owned by recall).
+_MAINTENANCE_INTERVAL_DAYS: dict[str, float] = {
+    "bad": 0.0069,  # ~10 min — re-drill soon (rating Again)
+    "ok": 0.04,  # ~1 hour (rating Hard)
+    "good": 1.0,  # +1 day — maintained, not graduated (rating Good)
+}
+
+
+def schedule_pronunciation_maintenance(card: UserCard, band: str) -> tuple[float, datetime]:
+    """Pronunciation maintenance channel. Returns (interval_days, next_review_at).
+
+    The caller persists card.interval_days / next_review_at / last_reviewed_at
+    (this function deliberately does NOT mutate the card — schedule_next_review
+    mutates ease/repetitions, this one keeps the card's promotion state frozen).
+    `band` is one of "bad" | "ok" | "good".
+    """
+    interval = _MAINTENANCE_INTERVAL_DAYS[band]
+    next_review = datetime.now(UTC) + timedelta(days=interval)
+    return interval, next_review

@@ -8,7 +8,15 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from klara.dependencies import CurrentUser, DBSession, LocaleDep
 from klara.i18n import t
 from klara.models import Review, UserCard, VocabItem
-from klara.schemas.srs import CardCreateRequest, CardOut, ReviewOut, ReviewSubmitRequest
+from klara.schemas.srs import (
+    CardCreateRequest,
+    CardOut,
+    PronunciationBatchIn,
+    PronunciationBatchOut,
+    ReviewOut,
+    ReviewSubmitRequest,
+)
+from klara.services.practice_session import apply_pronunciation_reviews
 from klara.services.srs_engine import schedule_next_review
 
 router = APIRouter(prefix="/srs", tags=["srs"])
@@ -122,3 +130,20 @@ async def submit_review(
         new_interval_days=review.new_interval_days,
         reviewed_at=review.reviewed_at,
     )
+
+
+@router.post(
+    "/cards/review-batch",
+    response_model=PronunciationBatchOut,
+    response_model_by_alias=True,
+)
+async def review_batch(
+    payload: PronunciationBatchIn,
+    db: DBSession,
+    user: CurrentUser,
+) -> PronunciationBatchOut:
+    """Cierra el ciclo SRS desde una sesión de Practice: reprograma (mantenimiento)
+    cada carta DUE del usuario respaldando una línea pronunciada. Atómico, idempotente
+    por card_id. Las cartas no-due y las que no son del usuario se ignoran en silencio."""
+    rescheduled = await apply_pronunciation_reviews(db, user_id=user.id, reviews=payload.reviews)
+    return PronunciationBatchOut(rescheduled=rescheduled)

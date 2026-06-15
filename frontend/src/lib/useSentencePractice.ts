@@ -58,7 +58,7 @@ export type Rate = (typeof RATES)[number];
 
 // Word-token regex shared with SentenceView; used to extract bad-word
 // strings for the phonetic-hints request and the simulated fallback.
-const WORD_RE = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+const WORD_RE = /(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)/g;
 
 function badWordsFromBands(text: string, bands: PronScores): string[] {
   const out: string[] = [];
@@ -162,6 +162,8 @@ export interface UseSentencePractice {
 
   // Aggregate, for summary / finish screens.
   scoresBySentence: Record<number, PronScores>;
+  /** Índices cuyas bandas son simuladas (503) — excluir del cierre SRS. */
+  simulatedIndices: Set<number>;
 }
 
 export function useSentencePractice({
@@ -177,6 +179,10 @@ export function useSentencePractice({
   const [recordingIndex, setRecordingIndex] = useState<number | null>(null);
   const [evaluatingIndex, setEvaluatingIndex] = useState<number | null>(null);
   const [scoresBySentence, setScoresBySentence] = useState<Record<number, PronScores>>({});
+  // Índices (queue position) cuyas bandas son SIMULADAS (Math.random, fallback de
+  // 503 de Azure). Se EXCLUYEN del cierre de ciclo SRS — jamás reprograman cartas
+  // reales con ruido (spec §6.1).
+  const [simulatedIndices, setSimulatedIndices] = useState<Set<number>>(new Set());
   const [phoneticHintsBySentence, setPhoneticHintsBySentence] = useState<
     Record<number, Record<string, string>>
   >({});
@@ -238,6 +244,12 @@ export function useSentencePractice({
       if (!(currentIndex in s)) return s;
       const next = { ...s };
       delete next[currentIndex];
+      return next;
+    });
+    setSimulatedIndices((s) => {
+      if (!s.has(currentIndex)) return s;
+      const next = new Set(s);
+      next.delete(currentIndex);
       return next;
     });
   }, [currentIndex]);
@@ -323,6 +335,7 @@ export function useSentencePractice({
         const sentence = sentences[idxAtStart];
         if (sentence) {
           setScoresBySentence((s) => ({ ...s, [idxAtStart]: simulatedBands(sentence.target) }));
+          setSimulatedIndices((s) => new Set(s).add(idxAtStart));
         }
         setPronError(null);
       } else {
@@ -386,6 +399,7 @@ export function useSentencePractice({
     setCurrentIndex(0);
     setScoresBySentence({});
     setPhoneticHintsBySentence({});
+    setSimulatedIndices(new Set());
     setPronError(null);
   }, [cancelRecording]);
 
@@ -480,5 +494,6 @@ export function useSentencePractice({
     reset,
     stopAudio,
     scoresBySentence,
+    simulatedIndices,
   };
 }

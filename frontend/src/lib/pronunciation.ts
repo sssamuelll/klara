@@ -19,13 +19,20 @@ export function scoreBand(accuracy: number): ScoreBand {
   return "bad";
 }
 
+// Clase de puntuación canónica del repo. DEBE coincidir byte a byte con
+// backend services/tokens.py `_PUNCT`, o los índices de word_bands se desalinean
+// entre cliente y servidor. Codepoints: . , ! ? ; : „(U+201E) "(U+201C) "(U+201D)
+// »(U+00BB) «(U+00AB) ( ) ¡(U+00A1) ¿(U+00BF) —(U+2014) –(U+2013) -.
+const WORD_PUNCT = ".,!?;:„“”»«()¡¿—–\\-";
+const WORD_RE_SRC = `(\\s+)|([${WORD_PUNCT}]+)|([^\\s${WORD_PUNCT}]+)`;
+
 /**
  * Tokenize the reference text the same way SentenceView does. Returns the
  * index of every word token (skipping spaces and punctuation), so the result
  * lines up with what SentenceView renders.
  */
 export function wordTokenIndices(text: string): number[] {
-  const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+  const re = new RegExp(WORD_RE_SRC, "g");
   const out: number[] = [];
   let i = 0;
   let m: RegExpExecArray | null;
@@ -34,6 +41,46 @@ export function wordTokenIndices(text: string): number[] {
     i++;
   }
   return out;
+}
+
+/** {índice_global_de_token: palabra} — espeja backend word_tokens_by_index. */
+export function wordTokensByIndex(text: string): Record<number, string> {
+  const re = new RegExp(WORD_RE_SRC, "g");
+  const out: Record<number, string> = {};
+  let i = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m[3]) out[i] = m[3];
+    i++;
+  }
+  return out;
+}
+
+const BAND_RANK: Record<ScoreBand, number> = { bad: 0, ok: 1, good: 2 };
+
+/** La peor banda presente, o null. Espeja backend worst_band. */
+export function worstBand(bands: Record<number, ScoreBand>): ScoreBand | null {
+  const vals = Object.values(bands);
+  if (vals.length === 0) return null;
+  return vals.reduce((w, b) => (BAND_RANK[b] < BAND_RANK[w] ? b : w));
+}
+
+/** Banda de la palabra-foco con fallback a la peor banda de la frase (spec D3). */
+export function focusBand(
+  text: string,
+  focusText: string,
+  bands: Record<number, ScoreBand>,
+): ScoreBand | null {
+  const target = focusText.toLowerCase();
+  const tokens = wordTokensByIndex(text);
+  for (const [idx, word] of Object.entries(tokens)) {
+    if (word.toLowerCase() === target) {
+      const b = bands[Number(idx)];
+      if (b) return b;
+      break;
+    }
+  }
+  return worstBand(bands);
 }
 
 /**
