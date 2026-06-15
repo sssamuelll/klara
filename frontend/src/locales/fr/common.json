@@ -286,14 +286,14 @@
       "kicker": "FIN DE LA PRATIQUE",
       "title_one": "Une phrase, dite.",
       "title_other": "{{count}} phrases, dites.",
-      "dek": "Sans hâte et sans série. Voici ce que Klara garde et quand cela revient.",
+      "dek": "Sans hâte et sans série. Ce que tu as dit aujourd'hui, et quand tu le rediras.",
       "stat": {
         "clear": "CLAIRES",
         "ok": "PRESQUE",
         "bad": "À REVOIR"
       },
       "returns": {
-        "title": "BIENTÔT DE RETOUR"
+        "title": "QUAND LES REDIRE"
       },
       "send": {
         "failed": "Impossible d’enregistrer ce tour.",

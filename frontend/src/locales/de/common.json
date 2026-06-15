@@ -286,14 +286,14 @@
       "kicker": "ENDE DER ÜBUNG",
       "title_one": "Ein Satz, gesagt.",
       "title_other": "{{count}} Sätze, gesagt.",
-      "dek": "Ohne Eile und ohne Serie. Das behält Klara — und wann es zurückkommt.",
+      "dek": "Ohne Eile und ohne Serie. Was du heute gesagt hast und wann du es wieder sagst.",
       "stat": {
         "clear": "KLAR",
         "ok": "FAST",
         "bad": "ZU PRÜFEN"
       },
       "returns": {
-        "title": "BALD ZURÜCK"
+        "title": "WANN ZURÜCK"
       },
       "send": {
         "failed": "Diese Runde konnte nicht gespeichert werden.",

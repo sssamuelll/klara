@@ -286,14 +286,14 @@
       "kicker": "END OF PRACTICE",
       "title_one": "One line, said.",
       "title_other": "{{count}} lines, said.",
-      "dek": "No rush and no streak. Here’s what Klara keeps and when it comes back.",
+      "dek": "No rush and no streak. What you said today, and when you say it again.",
       "stat": {
         "clear": "CLEAR",
         "ok": "CLOSE",
         "bad": "TO REVISIT"
       },
       "returns": {
-        "title": "BACK SOON"
+        "title": "WHEN THEY RETURN"
       },
       "send": {
         "failed": "Couldn't save this round.",

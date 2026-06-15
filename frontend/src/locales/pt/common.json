@@ -286,14 +286,14 @@
       "kicker": "FIM DA PRÁTICA",
       "title_one": "Uma frase, dita.",
       "title_other": "{{count}} frases, ditas.",
-      "dek": "Sem pressa e sem sequência. Isto é o que a Klara guarda e quando volta.",
+      "dek": "Sem pressa e sem sequência. O que você disse hoje, e quando vai dizer de novo.",
       "stat": {
         "clear": "CLARAS",
         "ok": "QUASE",
         "bad": "A REVER"
       },
       "returns": {
-        "title": "VOLTAM EM BREVE"
+        "title": "QUANDO VOLTAM"
       },
       "send": {
         "failed": "Não foi possível guardar esta ronda.",
