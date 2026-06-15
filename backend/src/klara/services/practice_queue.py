@@ -44,7 +44,6 @@ into the queue). Fix the data, not the predicate.
 
 from __future__ import annotations
 
-import re
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -57,6 +56,8 @@ from klara.schemas.practice import (
     PracticeQueueOut,
     PracticeSentenceOut,
 )
+from klara.services.tokens import BAND_RANK as _BAND_RANK
+from klara.services.tokens import word_tokens_by_index as _word_tokens_by_index
 
 # --- Tunable thresholds ----------------------------------------------------
 # Product knobs, deliberately named and kept next to the logic they govern so
@@ -70,32 +71,6 @@ RECENT_ATTEMPTS_WINDOW_DAYS = 14
 STRUGGLED_SCORE_THRESHOLD = 70.0
 # Default queue length when the caller doesn't pass ?limit=.
 DEFAULT_QUEUE_LIMIT = 6
-
-# Token band ranking, worst → best. Used to pick the single worst token of a
-# sentence as the focus word. `bad` < `ok` < `good`; unknown bands sort safe.
-_BAND_RANK = {"bad": 0, "ok": 1, "good": 2}
-
-# Tokenizer mirrors frontend `wordTokenIndices` (lib/pronunciation.ts) EXACTLY:
-# whitespace / punctuation / word, advancing a global token counter and
-# emitting an index only for word tokens. word_bands is keyed by that global
-# index, so the backend must tokenize identically to map index → token text.
-_TOKEN_RE = re.compile(r"(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)")
-
-
-def _word_tokens_by_index(text: str) -> dict[int, str]:
-    """Return {global_token_index: word_text} for word tokens only.
-
-    The global index counts every token (space, punctuation, word) so it lines
-    up with the keys in `word_bands` produced by the frontend's
-    `bandsByTokenIndex`.
-    """
-    out: dict[int, str] = {}
-    i = 0
-    for m in _TOKEN_RE.finditer(text):
-        if m.group(3):  # word token
-            out[i] = m.group(3)
-        i += 1
-    return out
 
 
 def _worst_token(reference_text: str, word_bands: dict) -> str | None:
