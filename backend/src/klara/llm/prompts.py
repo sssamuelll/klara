@@ -102,8 +102,24 @@ STORY_USER_PROMPT = """Genera una nueva micro-historia.
 
 Tema: {topic}
 Vocabulario reciente del estudiante en {target_label} (intenta NO repetir): {recent_vocab}
-
+{target_block}
 Genera el JSON ahora."""
+
+
+def build_story_user_prompt(
+    *, topic: str, target_label: str, recent_vocab: str, target_lemmas: list[str]
+) -> str:
+    if target_lemmas:
+        joined = ", ".join(target_lemmas)
+        target_block = (
+            f"\nPALABRAS OBJETIVO DE HOY (el currículo las eligió por frecuencia; la historia "
+            f"DEBE girar en torno a ellas y deben aparecer en `target_words`): {joined}\n"
+        )
+    else:
+        target_block = ""
+    return STORY_USER_PROMPT.format(
+        topic=topic, target_label=target_label, recent_vocab=recent_vocab, target_block=target_block
+    )
 
 
 CHAT_SYSTEM_PROMPT = """Eres Klara, compañera conversacional de {target_label} para un estudiante de nivel {level} cuya lengua materna es {native_label}.
