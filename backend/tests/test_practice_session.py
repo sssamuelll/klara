@@ -189,3 +189,54 @@ async def test_band_to_rating_never_easy(db_session):
         await db_session.execute(select(Review).where(Review.user_card_id == cid))
     ).scalar_one()
     assert review.rating == ReviewRating.GOOD
+
+
+async def _register_and_login(client, seed_invite) -> str:
+    token = await seed_invite(email=None)
+    await client.post(
+        "/api/v1/auth/register",
+        json={"email": "loop@example.com", "password": "hunter2hunter2", "invite_token": token},
+    )
+    r = await client.post(
+        "/api/v1/auth/jwt/login",
+        data={"username": "loop@example.com", "password": "hunter2hunter2"},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    return r.headers["set-cookie"].split(";")[0]
+
+
+@pytest.mark.asyncio
+async def test_review_batch_endpoint_reschedules(client, seed_invite, db_session):
+    cookie = await _register_and_login(client, seed_invite)
+    uid = (
+        (await db_session.execute(select(User).where(User.email == "loop@example.com")))
+        .scalar_one()
+        .id
+    )
+    cid = await _seed_card(db_session, user_id=uid, lemma="Brot", next_review_at=None)
+    r = await client.post(
+        "/api/v1/srs/cards/review-batch",
+        headers={"Cookie": cookie},
+        json={
+            "reviews": [
+                {
+                    "cardId": str(cid),
+                    "focusText": "Brot",
+                    "sentenceTarget": "Ich esse Brot.",
+                    "wordBands": {"4": "good"},
+                }
+            ]
+        },
+    )
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert len(body["rescheduled"]) == 1
+    assert body["rescheduled"][0]["focusText"] == "Brot"
+    assert body["rescheduled"][0]["intervalDays"] == 1.0
+    assert "nextReviewAt" in body["rescheduled"][0]
+
+
+@pytest.mark.asyncio
+async def test_review_batch_requires_auth(client):
+    r = await client.post("/api/v1/srs/cards/review-batch", json={"reviews": []})
+    assert r.status_code == 401
