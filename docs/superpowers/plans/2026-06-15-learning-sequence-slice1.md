@@ -101,10 +101,19 @@ Crea `backend/src/klara/curriculum/__init__.py` vacío. Crea `backend/src/klara/
 ```python
 """Lematizador canónico por idioma sobre simplemma.
 
-Mapea una forma de superficie a su lema canónico EN MINÚSCULAS, para que el
-conteo de cobertura y el known-set agrupen flexiones bajo una familia. Para un
-idioma que simplemma no soporta, degrada a la identidad en minúsculas (nunca
-crashea): la secuencia de ese idioma sigue genérica (deuda visible, spec §10).
+Mapea una forma de superficie a su lema canónico EN MINÚSCULAS (la CLAVE de
+comparación), para que el conteo de cobertura y el known-set agrupen flexiones
+bajo una familia. Para un idioma que simplemma no soporta, degrada a la identidad
+en minúsculas (nunca crashea): la secuencia de ese idioma sigue genérica (deuda
+visible, spec §10).
+
+CONTRATO (importante — no es idempotente): pásale formas en su CASO NATURAL
+(como aparecen en el texto o como las da la lista/diccionario; en alemán los
+sustantivos van capitalizados). NO le pases un lema ya en minúsculas: simplemma
+usa la mayúscula del sustantivo como señal y re-lematiza "haus"→"hausen". Por eso
+los lemas se ALMACENAN en caso natural (VocabItem.lemma = "Haus") y esta función
+se aplica al LEER para producir la clave de comparación; su salida en minúsculas
+NUNCA se vuelve a almacenar ni a re-lematizar.
 """
 
 from __future__ import annotations
@@ -525,9 +534,12 @@ def _content(*targets_in_sentences: str) -> dict:
 
 def test_covered_lemmas_match_inflected_forms():
     content = _content("Die Häuser sind groß.", "Er läuft schnell.")
-    # objetivos pedidos en forma de lema; aparecen flexionados en el texto
-    covered = verify_coverage(content, ["haus", "laufen", "brücke"], "de")
-    assert covered == {"haus", "laufen"}   # "brücke" no aparece → no cubierto
+    # Los objetivos llegan en su FORMA NATURAL de lema (como los guarda
+    # VocabItem.lemma: sustantivo capitalizado). canonical_lemma necesita la
+    # mayúscula del sustantivo alemán; pasar "haus" en minúsculas lo re-lematizaría
+    # como verbo ("hausen") y nunca casaría — ver el contrato en lemmatize.py.
+    covered = verify_coverage(content, ["Haus", "laufen", "Brücke"], "de")
+    assert covered == {"haus", "laufen"}   # "Brücke" no aparece → no cubierto
 
 
 def test_empty_targets_returns_empty():
@@ -622,11 +634,11 @@ def test_parse_tsv_rows():
 @pytest.mark.asyncio
 async def test_load_populates_rank_and_overwrites_cefr_idempotently(db_session):
     lang = "invt1"  # idioma de prueba aislado (vocab_items NO se trunca entre tests)
-    # pre-existente YA canónico (minúsculas) con cefr ruidoso y rank NULL, para que
-    # el on_conflict por uq_vocab_lemma_lang_pos ACTUALICE: load canonicaliza
-    # "Haus"→"haus"; si el pre fuera "Haus" (capital) no colisionaría → duplicaría.
+    # pre-existente en CASO NATURAL con cefr ruidoso y rank NULL. load almacena el
+    # lema tal cual ("Haus", sin minusculizar), así que el on_conflict por
+    # uq_vocab_lemma_lang_pos casa "Haus"=="Haus" y ACTUALIZA (no duplica).
     pre = VocabItem(
-        id=uuid.uuid4(), language=lang, lemma="haus", pos=PartOfSpeech.NOUN,
+        id=uuid.uuid4(), language=lang, lemma="Haus", pos=PartOfSpeech.NOUN,
         cefr_level=CEFRLevel.B2, frequency_rank=None,
     )
     db_session.add(pre); await db_session.commit()
@@ -637,7 +649,7 @@ async def test_load_populates_rank_and_overwrites_cefr_idempotently(db_session):
 
     items = (
         await db_session.execute(
-            select(VocabItem).where(VocabItem.language == lang, VocabItem.lemma == "haus")
+            select(VocabItem).where(VocabItem.language == lang, VocabItem.lemma == "Haus")
         )
     ).scalars().all()
     assert len(items) == 1                      # no duplica
@@ -658,9 +670,13 @@ Expected: FAIL — `ModuleNotFoundError: No module named 'klara.curriculum.inven
 """Carga del inventario de referencia (eje léxico) desde una lista curada externa.
 
 El rank y la banda CEFR vienen de una fuente CURADA (Kelly / SUBTLEX-DE + CEFR),
-NUNCA del LLM. Upsert por (lema canónico, idioma, pos): puebla frequency_rank y
-SOBREESCRIBE cefr_level (el inferido por LLM en story_gen es ruido, no verdad de
-terreno). Idempotente. La canonicalización del lema cuenta familias, no flexiones.
+NUNCA del LLM. Upsert por (lema en CASO NATURAL, idioma, pos): puebla frequency_rank
+y SOBREESCRIBE cefr_level (el inferido por LLM en story_gen es ruido, no verdad de
+terreno). Idempotente. El lema se almacena TAL CUAL lo da la lista (caso natural,
+p.ej. "Haus" capitalizado) — NO se minusculiza: canonical_lemma re-lematizaría un
+sustantivo en minúsculas como verbo ("haus"→"hausen"). La agrupación por familia se
+hace al LEER (known-set/cobertura aplican canonical_lemma para la clave de comparación);
+story_gen también almacena el lema en caso natural, así que el upsert casa por igual.
 """
 
 from __future__ import annotations
@@ -670,7 +686,6 @@ from dataclasses import dataclass
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from klara.curriculum.lemmatize import canonical_lemma
 from klara.models import VocabItem
 from klara.models.enums import CEFRLevel, PartOfSpeech
 
@@ -703,7 +718,7 @@ def parse_frequency_tsv(text: str) -> list[FrequencyRow]:
 async def load_frequency(db: AsyncSession, *, language: str, rows: list[FrequencyRow]) -> int:
     """Upsertea el inventario. Devuelve cuántas filas se procesaron. Idempotente."""
     for r in rows:
-        lemma = canonical_lemma(r.lemma, language)
+        lemma = r.lemma.strip()  # caso natural — NO minusculizar (ver docstring)
         stmt = (
             pg_insert(VocabItem)
             .values(
