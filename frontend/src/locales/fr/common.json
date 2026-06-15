@@ -304,6 +304,7 @@
     }
   },
   "wpop": {
+    "freq": "parmi les ~{{rank}} plus courants",
     "audio": {
       "aria": "Écouter le mot"
     },
