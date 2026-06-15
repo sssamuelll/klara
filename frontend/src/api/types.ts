@@ -254,3 +254,20 @@ export interface UserUpdate {
   target_language?: LanguageCode;
   learning_context?: string | null;
 }
+
+export interface PronunciationReviewIn {
+  cardId: string;
+  focusText: string;
+  sentenceTarget: string;
+  wordBands: Record<number, "bad" | "ok" | "good">;
+}
+
+export interface RescheduledCard {
+  focusText: string;
+  intervalDays: number;
+  nextReviewAt: string; // ISO 8601
+}
+
+export interface PronunciationBatchOut {
+  rescheduled: RescheduledCard[];
+}
