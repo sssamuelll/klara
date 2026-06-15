@@ -89,10 +89,10 @@ interface Tok {
   text: string;
 }
 
-const PUNCT_RE = /[.,!?;:„""»«()¡¿—–\-]/g;
+const PUNCT_RE = /[.,!?;:„“”»«()¡¿—–\-]/g;
 
 function tokenize(text: string): Tok[] {
-  const re = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+  const re = /(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)/g;
   const out: Tok[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
