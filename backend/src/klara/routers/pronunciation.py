@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated
 
+import structlog
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
@@ -31,6 +32,8 @@ from klara.pronunciation.schemas import (
 from klara.services.phonetic_hints import generate_phonetic_hints
 
 router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
+
+log = structlog.get_logger(__name__)
 
 
 def _resolve_bcp47(raw: str) -> str:
@@ -113,6 +116,15 @@ async def score(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=t("pron.no_speech_detected", locale),
             ) from e
+        # The 502 body only carries a localized user-facing message; this log
+        # line is the only place Azure's CancellationDetails (auth / quota /
+        # region / connectivity) ever surface. Don't drop it.
+        log.error(
+            "pronunciation.azure_failed",
+            error=str(e),
+            language=bcp47,
+            region=settings.azure_speech_region,
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=t("pron.upstream_error", locale),

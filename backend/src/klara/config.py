@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +27,12 @@ class Settings(BaseSettings):
     llm_correction_model: str = "anthropic/claude-haiku-4-5-20251001"
     llm_request_timeout_seconds: float = 60.0
     llm_max_retries: int = 2
+    # Provider-specific request-body extras for the CHAT model (JSON in env).
+    # Speak's latency budget depends on it: with DeepSeek V4 set
+    #   LLM_CHAT_EXTRA_BODY={"thinking": {"type": "disabled"}}
+    # so a provider-side default flip can never put chain-of-thought on the
+    # conversational critical path.
+    llm_chat_extra_body: dict | None = None
 
     anthropic_api_key: str | None = None
     deepseek_api_key: str | None = None
@@ -62,6 +69,17 @@ class Settings(BaseSettings):
     inworld_sample_rate_hz: int = 24000
     tts_request_timeout_seconds: float = 30.0
     tts_max_text_chars: int = 4000
+
+    @field_validator("llm_chat_extra_body", mode="before")
+    @classmethod
+    def _blank_extra_body_is_none(cls, v: object) -> object:
+        # docker-compose delivers this as ${LLM_CHAT_EXTRA_BODY:-}, i.e. an
+        # EMPTY string whenever it isn't set (local dev, anthropic path). An
+        # empty string is not valid JSON and would crash Settings(); treat
+        # blank as "unset". A real value is JSON-decoded to a dict upstream.
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
 
     @property
     def elevenlabs_voices_by_lang(self) -> dict[str, str]:

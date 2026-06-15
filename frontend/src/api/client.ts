@@ -15,6 +15,10 @@ import type {
   QuizAttemptIn,
   QuizResponse,
   ScheduleResponse,
+  SpeakFinishRequest,
+  SpeakFinishResponse,
+  SpeakHistoryTurn,
+  SpeakTurnResponse,
   Story,
   StoryListItem,
   User,
@@ -23,7 +27,7 @@ import type {
 
 const API_BASE = "/api/v1";
 
-class ApiError extends Error {
+export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
     super(message);
@@ -317,4 +321,63 @@ export const api = {
     }
     return resp.json() as Promise<MCResolveResponse>;
   },
+
+  // --- speak (voice conversation) ---
+
+  /**
+   * One conversation turn: audio in, assessment + Klara's reply out.
+   * Hard 60s client deadline (the backend chains ffmpeg + Azure + LLM; the
+   * state machine needs a guaranteed exit from "thinking"), composed with
+   * the caller's abort signal for unmount teardown.
+   */
+  speakTurn: async (
+    audio: Blob,
+    opts: {
+      language: string;
+      focusSound: string;
+      focusExamples: string[];
+      history: SpeakHistoryTurn[];
+      retryWord?: string;
+      signal?: AbortSignal;
+    },
+  ): Promise<SpeakTurnResponse> => {
+    const fd = new FormData();
+    fd.append("audio", audio, "turn.webm");
+    fd.append("language", opts.language);
+    fd.append("focus_sound", opts.focusSound);
+    fd.append("focus_examples", opts.focusExamples.join(","));
+    fd.append("history", JSON.stringify(opts.history));
+    if (opts.retryWord) fd.append("retry_word", opts.retryWord);
+
+    const signals = [AbortSignal.timeout(60_000)];
+    if (opts.signal) signals.push(opts.signal);
+    const resp = await fetch(`${API_BASE}/speak/turn`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Accept-Language": i18n.language || "es" },
+      body: fd,
+      signal: AbortSignal.any(signals),
+    });
+    if (resp.status === 401) {
+      for (const fn of unauthorizedListeners) fn();
+      throw new AuthRequiredError();
+    }
+    if (!resp.ok) {
+      let detail: string;
+      try {
+        const body = await resp.json();
+        detail = body.detail ?? JSON.stringify(body);
+      } catch {
+        detail = await resp.text();
+      }
+      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
+    }
+    return resp.json() as Promise<SpeakTurnResponse>;
+  },
+
+  speakFinish: (payload: SpeakFinishRequest) =>
+    request<SpeakFinishResponse>("/speak/finish", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 };

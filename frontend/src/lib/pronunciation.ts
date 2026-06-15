@@ -1,4 +1,4 @@
-import { api } from "../api/client";
+import { api, ApiError } from "../api/client";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
 
 export type ScoreBand = "good" | "ok" | "bad";
@@ -118,6 +118,7 @@ export type PronunciationErrorKind =
   | "audio_too_large"
   | "audio_undecodable"
   | "service_unavailable"
+  | "scoring_failed"
   | "network"
   | "unknown";
 
@@ -237,6 +238,44 @@ export async function startMicRecording(): Promise<MicRecorder> {
 }
 
 /**
+ * Translate a thrown score-request error into a PronunciationError the UI
+ * can render with a translation key. Classifies on ApiError.status — NOT on
+ * the message text, which carries the backend's localized `detail` and used
+ * to defeat the old regex parse (every detail-bearing error, including the
+ * backend's own 502, showed up as "you appear to be offline").
+ *
+ * 502/504 get their own kind instead of "service_unavailable" because that
+ * kind triggers the simulated-score fallback in useSentencePractice — a real
+ * upstream failure must surface as an error, not as fake scores.
+ */
+export function classifyScoreError(e: unknown): PronunciationError {
+  if (e instanceof ApiError) {
+    const detail = e.message;
+    switch (e.status) {
+      case 422:
+        return { kind: "no_speech", detail };
+      case 413:
+        return { kind: "audio_too_large", detail };
+      case 400:
+        return { kind: "audio_undecodable", detail };
+      case 503:
+        return { kind: "service_unavailable", detail };
+      case 502:
+      case 504:
+        return { kind: "scoring_failed", detail };
+      default:
+        return { kind: "unknown", detail };
+    }
+  }
+  // fetch() rejects with a TypeError when the request never left or never
+  // completed — the only case where "you appear to be offline" is honest.
+  if (e instanceof TypeError) {
+    return { kind: "network", detail: e.message };
+  }
+  return { kind: "unknown", detail: e instanceof Error ? e.message : String(e) };
+}
+
+/**
  * POST audio + reference to the backend and translate the HTTP error into
  * a PronunciationError the UI can render with a translation key.
  */
@@ -248,17 +287,6 @@ export async function scoreAudio(
   try {
     return await api.scorePronunciation(audio, referenceText, language);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    // ApiError stringifies as `${status}: ${detail}` — parse status back out.
-    const m = msg.match(/^(\d{3})/);
-    const status = m ? parseInt(m[1], 10) : 0;
-    let kind: PronunciationErrorKind = "unknown";
-    if (status === 422) kind = "no_speech";
-    else if (status === 413) kind = "audio_too_large";
-    else if (status === 400) kind = "audio_undecodable";
-    else if (status === 503) kind = "service_unavailable";
-    else if (status === 0) kind = "network";
-    const err: PronunciationError = { kind, detail: msg };
-    throw err;
+    throw classifyScoreError(e);
   }
 }

@@ -334,8 +334,79 @@
       "audio_too_large": "The recording is too long. Try a shorter sentence.",
       "audio_undecodable": "We couldn't process the audio. Try again.",
       "service_unavailable": "Pronunciation scoring isn't available right now.",
+      "scoring_failed": "Scoring failed on our side. Give it a moment and try again.",
       "network": "You appear to be offline. Check your connection and retry.",
       "unknown": "Something went wrong. Try again."
+    }
+  },
+  "speak": {
+    "gate": {
+      "kicker": "Speak with Klara",
+      "title": "German first.",
+      "dek": "Voice conversation opens first in German. Your language is coming soon."
+    },
+    "opener": {
+      "native": "Today we tune the {{sound}}. How was your day? Did you have to wait anywhere?"
+    },
+    "stage": {
+      "listeningCap": "I'm listening…",
+      "thinkingCap": "Listening to your sound…",
+      "speakingCap": "Klara",
+      "thinkingAria": "Thinking"
+    },
+    "focus": {
+      "cap": "TODAY'S FOCUS",
+      "titleAttr": "The sound we're tuning today",
+      "tip": {
+        "de_ue": "Round your lips as for “u”, but say “ee”."
+      }
+    },
+    "note": {
+      "cap": "NOTE",
+      "lead": "the {{sound}} in “{{word}}” sounds",
+      "retry": "Say it again",
+      "how": "HOW",
+      "playAria": "Hear Klara's model",
+      "legend": "I underline the word where the {{sound}} needs another pass.",
+      "clear": "The {{sound}} in “{{word}}” — clear. Let's go on."
+    },
+    "controls": {
+      "exit": "← Exit",
+      "micAria": "Speak",
+      "endAria": "End the chat",
+      "muteAria": "Mute Klara",
+      "unmuteAria": "Unmute Klara's voice"
+    },
+    "transcript": {
+      "cap": "TODAY'S CONVERSATION · focus {{sound}}",
+      "you": "YOU",
+      "improved": "There it is. The {{sound}} in “{{word}}”, clear. ✓"
+    },
+    "hint": {
+      "idle": "Answer out loud — Klara listens to how your {{sound}} sounds",
+      "listening": "Tap again to end your turn",
+      "speaking": "Klara is answering…",
+      "noSpeech": "I didn't hear you. Try again, a little louder.",
+      "lowConfidence": "I didn't quite get you. Say it again, calmly.",
+      "thinking": "Thinking in German…"
+    },
+    "summary": {
+      "kicker": "END OF THE CHAT",
+      "titlePre": "Today's ear: the ",
+      "titlePost": ".",
+      "dek": "{{minutes}} min of conversation. The {{sound}} is getting closer — these words go back to Practice to lock it in.",
+      "stat": {
+        "clear": "{{sound}} CLEAR",
+        "minutes": "MINUTES",
+        "toPractice": "TO PRACTICE"
+      },
+      "returns": "BACK TO PRACTICE",
+      "soon": "soon",
+      "saveFailed": "We couldn't save these words to Practice this time.",
+      "partial_one": "1 word couldn't be prepared this time.",
+      "partial_other": "{{count}} words couldn't be prepared this time.",
+      "again": "Another chat",
+      "home": "Back home"
     }
   },
   "onboarding": {
@@ -480,13 +551,6 @@
       "confirmLabel": "Confirm password",
       "submit": "Update password",
       "success": "Done. You can sign in with your new password."
-    }
-  },
-  "stub": {
-    "chat": {
-      "kicker": "Talk with Klara",
-      "title": "Coming soon.",
-      "dek": "Free conversation. Voice to voice, when you're ready."
     }
   },
   "errors": {
