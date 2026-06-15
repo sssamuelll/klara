@@ -286,14 +286,14 @@
       "kicker": "FIN DE LA PRÁCTICA",
       "title_one": "Una frase, dicha.",
       "title_other": "{{count}} frases, dichas.",
-      "dek": "Sin apuro y sin racha. Esto es lo que Klara guarda y cuándo vuelve.",
+      "dek": "Sin apuro y sin racha. Lo que dijiste hoy, y cuándo lo vuelves a decir.",
       "stat": {
         "clear": "CLARAS",
         "ok": "APROXIMADAS",
         "bad": "A REVISAR"
       },
       "returns": {
-        "title": "VUELVEN PRONTO"
+        "title": "CUÁNDO VUELVEN"
       },
       "send": {
         "failed": "No se pudo guardar esta ronda.",
