@@ -17,6 +17,7 @@ from fastapi import (
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.selection import next_target_words
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
@@ -103,6 +104,9 @@ async def create_story(
     background: BackgroundTasks,
 ) -> StoryOut:
     level = payload.level or user.level
+    target_words_sel = await next_target_words(
+        db, user_id=user.id, language=user.target_language, level=level, n=5
+    )
     result = await generate_story(
         db,
         llm,
@@ -113,6 +117,7 @@ async def create_story(
         learning_context=user.learning_context,
         topic=payload.topic,
         model=None,
+        target_lemmas=[w.lemma for w in target_words_sel],
     )
     serialized = _serialize_story(result.story, result.target_words, user.native_language)
     target_words_dicts = [

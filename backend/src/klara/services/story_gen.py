@@ -8,6 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.curriculum.coverage import verify_coverage
+from klara.curriculum.lemmatize import canonical_lemma
 from klara.i18n import language_label
 from klara.llm.base import LLMClient, Message
 from klara.llm.prompts import build_story_system_prompt, build_story_user_prompt
@@ -173,6 +175,7 @@ async def generate_story(
     learning_context: str | None,
     topic: str | None,
     model: str | None,
+    target_lemmas: list[str] | None = None,
 ) -> GeneratedStory:
     target_label = language_label(target_language)
     native_label = language_label(native_language)
@@ -188,7 +191,7 @@ async def generate_story(
         topic=topic or "libre — algo cotidiano",
         target_label=target_label,
         recent_vocab=", ".join(recent) if recent else "(ninguno)",
-        target_lemmas=[],
+        target_lemmas=target_lemmas or [],
     )
 
     log.info(
@@ -236,14 +239,33 @@ async def generate_story(
         native_language=native_language,
     )
 
+    content = {"sentences": sentences, "comprehension_questions": questions}
+    covered = verify_coverage(content, [w.lemma for w in target_words], target_language)
+    kept_words = [w for w in target_words if canonical_lemma(w.lemma, target_language) in covered]
+    kept_ids = [w.id for w in kept_words]
+    dropped = [
+        w.lemma for w in target_words if canonical_lemma(w.lemma, target_language) not in covered
+    ]
+    if dropped:
+        log.info("story.coverage.dropped", story_dropped=dropped, target_language=target_language)
+    # Registrar qué lemas del CURRÍCULO ignoró el LLM (señal de calidad, no bloquea):
+    if target_lemmas:
+        missed = [
+            lemma
+            for lemma in target_lemmas
+            if canonical_lemma(lemma, target_language) not in covered
+        ]
+        if missed:
+            log.info("story.curriculum.missed", missed=missed, target_language=target_language)
+
     story = Story(
         user_id=user_id,
         level=level,
         target_language=target_language,
         native_language=native_language,
         title=title,
-        content={"sentences": sentences, "comprehension_questions": questions},
-        target_vocab_item_ids=[w.id for w in target_words],
+        content=content,
+        target_vocab_item_ids=kept_ids,
         generated_by_provider=response.provider,
         generated_by_model=response.model,
         generation_cost_usd=response.cost_usd,
@@ -263,4 +285,4 @@ async def generate_story(
         n_target_words=len(target_words),
         cost_usd=response.cost_usd,
     )
-    return GeneratedStory(story=story, target_words=target_words)
+    return GeneratedStory(story=story, target_words=kept_words)
