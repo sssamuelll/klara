@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.i18n import language_label
 from klara.llm.base import LLMClient, Message
-from klara.llm.prompts import STORY_USER_PROMPT, build_story_system_prompt
+from klara.llm.prompts import build_story_system_prompt, build_story_user_prompt
 from klara.models import Story, VocabItem
 from klara.models.enums import CEFRLevel, PartOfSpeech
 
@@ -184,10 +184,11 @@ async def generate_story(
         target_language=target_language,
         learning_context=learning_context,
     )
-    user = STORY_USER_PROMPT.format(
+    user = build_story_user_prompt(
         topic=topic or "libre — algo cotidiano",
         target_label=target_label,
         recent_vocab=", ".join(recent) if recent else "(ninguno)",
+        target_lemmas=[],
     )
 
     log.info(
