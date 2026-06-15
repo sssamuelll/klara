@@ -298,6 +298,10 @@
         "inTwoDays": "in 2 days",
         "thisWeek": "this week"
       },
+      "send": {
+        "failed": "Couldn't save this round.",
+        "retry": "Retry"
+      },
       "again": "Another round",
       "home": "Back home"
     }

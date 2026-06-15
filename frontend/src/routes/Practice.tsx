@@ -172,7 +172,10 @@ export default function Practice() {
         setSendState("ok");
       })
       .catch(() => {
-        setSendState("failed"); // ref NO marcado -> reintentable
+        // ref sigue en false → el botón "Reintentar" del bloque `failed` del
+        // summary re-invoca este mismo submitSession sin duplicar ni rehacer
+        // la sesión (spec §4.4: "ofrecer reintento").
+        setSendState("failed");
       });
   }, [items, sentences, practice.scoresBySentence, practice.simulatedIndices]);
 
@@ -346,6 +349,26 @@ export default function Practice() {
                 ))}
               </ul>
             </section>
+          </>
+        )}
+
+        {/* En fallo NO fabricamos intervalos (spec §4.4): ocultamos la sección de
+            próximos repasos y ofrecemos reintentar el MISMO POST. submitSession
+            es idempotente desde aquí porque sessionSubmittedRef sigue en false
+            (solo se marca al confirmar éxito), así que reintentar no duplica ni
+            rehace la sesión — a diferencia de "Otra ronda". */}
+        {sendState === "failed" && (
+          <>
+            <hr className="k-hairline" />
+            <div className="kp-send-fail" role="alert">
+              <span className="k-mono">{t("practice.summary.send.failed")}</span>
+              <button
+                className="k-btn k-btn--ghost"
+                onClick={() => submitSession()}
+              >
+                {t("practice.summary.send.retry")}
+              </button>
+            </div>
           </>
         )}
 

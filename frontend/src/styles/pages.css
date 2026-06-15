@@ -717,6 +717,8 @@ select.snew__input option {
 .kp-returns__tx { grid-column: 1; grid-row: 2; font-style: italic; color: var(--ink-3); font-size: 14px; }
 .kp-returns__next { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; }
 .kp-sum__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: var(--space-2); }
+.kp-send-fail { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.kp-send-fail .k-mono { color: var(--ink-3); font-size: 11px; }
 
 @media (max-width: 720px) {
   .kp-setup__title, .kp-sum__title { font-size: 32px; }

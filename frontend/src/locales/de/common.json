@@ -298,6 +298,10 @@
         "inTwoDays": "in 2 Tagen",
         "thisWeek": "diese Woche"
       },
+      "send": {
+        "failed": "Diese Runde konnte nicht gespeichert werden.",
+        "retry": "Erneut versuchen"
+      },
       "again": "Noch eine Runde",
       "home": "Zurück zum Start"
     }

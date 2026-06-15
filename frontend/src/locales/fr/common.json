@@ -298,6 +298,10 @@
         "inTwoDays": "dans 2 jours",
         "thisWeek": "cette semaine"
       },
+      "send": {
+        "failed": "Impossible d’enregistrer ce tour.",
+        "retry": "Réessayer"
+      },
       "again": "Un autre tour",
       "home": "Retour à l’accueil"
     }
