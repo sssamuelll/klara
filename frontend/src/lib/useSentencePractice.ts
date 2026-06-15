@@ -58,7 +58,7 @@ export type Rate = (typeof RATES)[number];
 
 // Word-token regex shared with SentenceView; used to extract bad-word
 // strings for the phonetic-hints request and the simulated fallback.
-const WORD_RE = /(\s+)|([.,!?;:„""»«()¡¿—–\-]+)|([^\s.,!?;:„""»«()¡¿—–\-]+)/g;
+const WORD_RE = /(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)/g;
 
 function badWordsFromBands(text: string, bands: PronScores): string[] {
   const out: string[] = [];
