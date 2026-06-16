@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from klara.curriculum.modules import advance_module_if_mastered
 from klara.dependencies import CurrentUser, DBSession, LocaleDep
 from klara.i18n import t
 from klara.models import Review, UserCard, VocabItem
@@ -119,6 +120,7 @@ async def submit_review(
         new_interval_days=new_interval,
     )
     db.add(review)
+    await advance_module_if_mastered(db, user=user, reviewed_vocab_item_id=card.vocab_item_id)
     await db.commit()
     await db.refresh(review)
 

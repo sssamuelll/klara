@@ -442,3 +442,43 @@ async def test_advance_noop_on_last_module(db_session):
     advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
     assert advanced is False
     assert u.current_module_id == m1.id  # stays on the last module
+
+
+@pytest.mark.asyncio
+async def test_submit_review_advances_module_on_mastery(db_session):
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    # Active module m1 with one word; mastering it should advance to m2.
+    v = await _vocab(db_session, lemma="Wort", language="modtE")
+    m1 = await _module(db_session, language="modtE", order=1, title="Uno", vocab=[v])
+    m2 = await _module(db_session, language="modtE", order=2, title="Dos", vocab=[v])
+    u = await _user(db_session)
+    u.target_language = "modtE"
+    u.current_module_id = m1.id
+    # A card already near mastery (REVIEWING, interval 20) so one GOOD pushes it ≥21d.
+    card = UserCard(
+        id=uuid.uuid4(),
+        user_id=u.id,
+        vocab_item_id=v.id,
+        state=CardState.REVIEWING,
+        interval_days=20.0,
+        ease=2.5,
+        repetitions=3,
+    )
+    db_session.add(card)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(f"/api/v1/srs/cards/{card.id}/review", json={"rating": "good"})
+    assert resp.status_code == 200, resp.text
+    # GOOD on a 20d REVIEWING card → interval *= ease (≈50d) ≥ 21 → mastered → advance.
+    reloaded = await db_session.get(type(u), u.id)
+    assert reloaded.current_module_id == m2.id
