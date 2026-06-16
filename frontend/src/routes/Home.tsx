@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import type { CardOut, Story, StoryListItem } from "../api/types";
+import type { CardOut, ModuleCurrent, Story, StoryListItem } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import { useMastheadDate, useGreeting } from "../lib/dateLabel";
 import { useUser } from "../lib/user";
@@ -41,6 +41,7 @@ export default function Home() {
   const { user } = useUser();
   const [latest, setLatest] = useState<HomeStorySummary | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
+  const [currentModule, setCurrentModule] = useState<ModuleCurrent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -67,6 +68,12 @@ export default function Home() {
       } catch {
         if (!cancelled) setDueCount(null);
       }
+      try {
+        const mod = await api.currentModule();
+        if (!cancelled) setCurrentModule(mod);
+      } catch {
+        if (!cancelled) setCurrentModule(null);
+      }
     })();
     return () => {
       cancelled = true;
@@ -91,6 +98,25 @@ export default function Home() {
       </div>
 
       <hr className="k-rule home__rule" />
+
+      {!loading && (
+        <section className="home__module">
+          <span className="k-mono home__module-kicker">{t("home.module.kicker")}</span>
+          {currentModule ? (
+            <>
+              <h2 className="home__module-title">{currentModule.title}</h2>
+              <p className="home__module-progress k-mono">
+                {t("home.module.progress", {
+                  count: currentModule.encountered,
+                  total: currentModule.total,
+                })}
+              </p>
+            </>
+          ) : (
+            <p className="home__module-empty">{t("home.module.empty")}</p>
+          )}
+        </section>
+      )}
 
       {loading ? (
         <div className="story-loading">

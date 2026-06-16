@@ -70,6 +70,12 @@
         "dek": "Conversa livre, o que tiveres na cabeça."
       }
     },
+    "module": {
+      "kicker": "Seu módulo",
+      "progress_one": "Você encontrou {{count}} de {{total}} palavra.",
+      "progress_other": "Você encontrou {{count}} de {{total}} palavras.",
+      "empty": "Ainda sem módulo. Gere sua primeira história."
+    },
     "footer": {
       "edition": "Klara — Edição {{city}}",
       "aria": "Klara — Edição {{city}}"

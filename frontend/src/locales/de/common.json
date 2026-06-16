@@ -70,6 +70,12 @@
         "dek": "Freies Gespräch, was dich gerade beschäftigt."
       }
     },
+    "module": {
+      "kicker": "Dein Modul",
+      "progress_one": "Du kennst {{count}} von {{total}} Wort.",
+      "progress_other": "Du kennst {{count}} von {{total}} Wörtern.",
+      "empty": "Noch kein Modul. Erstelle deine erste Geschichte."
+    },
     "footer": {
       "edition": "Klara — Ausgabe {{city}}",
       "aria": "Klara — Ausgabe {{city}}"

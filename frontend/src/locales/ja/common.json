@@ -70,6 +70,12 @@
         "dek": "自由な会話、今あなたが考えていることを。"
       }
     },
+    "module": {
+      "kicker": "あなたのモジュール",
+      "progress_one": "{{total}} 語中 {{count}} 語に出会いました。",
+      "progress_other": "{{total}} 語中 {{count}} 語に出会いました。",
+      "empty": "まだモジュールがありません。最初のストーリーを作成してください。"
+    },
     "footer": {
       "edition": "Klara — {{city}} 版",
       "aria": "Klara — {{city}} 版"
