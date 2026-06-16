@@ -267,6 +267,53 @@ def test_build_gender_cloze_none_when_no_oracle_noun():
         gender="die", gender_source="llm",
     )
     assert build_gender_cloze([only_llm], native_language="es") is None
+
+
+@pytest.mark.asyncio
+async def test_get_quiz_appends_gender_cloze(db_session):
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=uuid.uuid4(), email=f"gq-{uuid.uuid4().hex[:6]}@k.app", hashed_password="x",
+        is_active=True, is_verified=True, is_superuser=False, display_name="GQ",
+        level=CEFRLevel.A1, native_language="es", target_language="de",
+    )
+    v = VocabItem(
+        id=uuid.uuid4(), language="de", lemma=f"Tisch{uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN, gender="der", gender_source="oracle",
+    )
+    db_session.add_all([u, v])
+    await db_session.flush()
+    story = Story(
+        id=uuid.uuid4(), user_id=u.id, level=CEFRLevel.A1, target_language="de",
+        native_language="es", title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[v.id],
+        # Pre-set quiz_items (non-empty) so ensure_quiz_items returns them
+        # without calling the LLM; the gender_cloze is appended on top.
+        quiz_items=[{"type": "shadow", "cap": "x", "sentence": "Hallo.", "en": "Hola."}],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get(f"/api/v1/stories/{story.id}/quiz")
+    assert resp.status_code == 200, resp.text
+    items = resp.json()["items"]
+    gc = items[-1]
+    assert gc["type"] == "gender_cloze"
+    assert gc["vocab_item_id"] == str(v.id)
+    assert "correct_gender" not in gc  # answer never shipped
 ```
 
 - [ ] **Step 2: Run to verify failure**
@@ -301,7 +348,7 @@ Add `"gender_cloze"` to `QuizAttemptIn.question_type` (line 83):
 
 - [ ] **Step 4: Implement build_gender_cloze**
 
-Modify `backend/src/klara/services/finish_lessons.py`. Add imports at the top (alphabetical within their groups): `from klara.models import VocabItem` (if not present) and `from klara.models.enums import PartOfSpeech`. Add the function (near `ensure_quiz_items`):
+Modify `backend/src/klara/services/finish_lessons.py`. Fix imports exactly (ruff I/F): the file currently has `from klara.models import Story` — change it to `from klara.models import Story, VocabItem`; and add a new line `from klara.models.enums import PartOfSpeech` (alphabetically after the `klara.models` line). Add the function (near `ensure_quiz_items`):
 
 ```python
 def build_gender_cloze(words: list[VocabItem], *, native_language: str) -> dict | None:
@@ -367,13 +414,13 @@ async def test_gender_attempt_endpoint_grades_against_oracle(db_session):
     import uuid as _uuid
 
     from httpx import ASGITransport, AsyncClient
+    from sqlalchemy import select
 
     from klara.auth.users import current_active_user
     from klara.dependencies import db_session as db_session_dep
     from klara.main import create_app
-    from klara.models import GenderAttempt, Story, User
+    from klara.models import Story, User
     from klara.models.enums import CEFRLevel
-    from sqlalchemy import select
 
     u = User(
         id=_uuid.uuid4(), email=f"ge-{_uuid.uuid4().hex[:6]}@k.app", hashed_password="x",
@@ -628,6 +675,8 @@ Modify `frontend/src/components/StoryFinish.tsx`.
 
 (a) Add `GenderClozeQuizItem` to the `../api/types` import block.
 
+(a2) **Widen `QuizResult.qType`** (the local interface, ~line 56) to include the new type — change `qType: "mc" | "cloze" | "shadow";` to `qType: "mc" | "cloze" | "shadow" | "gender_cloze";`. A gender answer flows through `onAnswered`, which builds a `QuizResult` with `qType: q.type`; without widening, strict TS fails (TS2322) at that assignment. (`qType` is only read for the summary count; widening is safe. The gender_cloze answer DOES count toward the displayed quiz score — intended: it's a question the user answered.)
+
 (b) In the `Quiz()` component's `onAnswered`, skip the generic quiz-attempt POST for gender items (the gender attempt is recorded by the renderer). Change the `void api.recordQuizAttempt(...)` call so it is guarded:
 
 ```typescript
@@ -785,5 +834,8 @@ Run (from `frontend/`): `npm run i18n:check && npm run typecheck && npm run buil
 - **Test isolation:** `gender_attempts` IS truncated between tests; `vocab_items` is NOT — use unique (uuid-suffixed) lemmas in tests.
 - **Server-side grading is the contract:** the gender_cloze item never carries the correct article; the client sends the pick and the backend grades against `VocabItem.gender` (the oracle) and returns the verdict. Keep it that way — it's authoritative and prevents peeking.
 - **Graceful when the oracle is empty:** `build_gender_cloze` returns `None` if no target noun has `gender_source == 'oracle'`, so until the prod oracle is loaded (PR-A's `load_de_gender`), the quiz is served unchanged — no gender_cloze appears. No regression.
+- **No dedup vs an LLM cloze on the same noun (accepted for v1):** the LLM may already have generated a `ClozeQuizItem` (pronunciation, Azure-graded) for the same noun the `gender_cloze` targets. The two are different correction models (pronunciation ≥60 vs exact-article-match) and different surfaces, so seeing the same word twice in a Finish quiz is acceptable for v1 — not a bug. Cross-item dedup is deferred; if it ever feels redundant in practice, it belongs in PR-C, not here.
+- **Serve/answer race on gender (handled by the frontend catch path):** the quiz is served with the gender_cloze appended, but the answer is graded later against a live `VocabItem.gender` read. If the oracle gender were cleared between serve and answer (e.g. a concurrent re-upsert dropping it), the endpoint returns 404. The renderer's `.catch()` grades that pick optimistically as wrong-unknown (`correctGender: ""`) and still advances — the UX never blocks. This is a tolerated, vanishingly rare edge, not a guarded transaction.
+- **gender_cloze counts toward the displayed quiz score (intended):** widening `QuizResult.qType` means the gender answer flows into the summary count like any other question. That is deliberate — it is a question the user answered. Note that no generic `QuizAttempt` row is written for it (Task 5 step 2b skips `recordQuizAttempt`); the `GenderAttempt` row is the sole persisted record. The score count is purely the in-session summary, independent of persistence.
 - **Deferred:** `is_mastered_gender` (no consumer yet), suffix-rule feedback + ES→DE incongruence (PR-C), Practice/SRS gender integration. `GenderAttempt.detail` (JSONB) is reserved for PR-C's suffix signal; unused in v1.
 - **CSS:** `qcard__gender-opts` / `qcard__gender-btn` are new classes; minimal styling (3 inline buttons) is fine — match the existing `qcard__*` look. If the existing stylesheet uses a different convention, follow it; styling is not behavior-critical.
