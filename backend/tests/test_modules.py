@@ -299,3 +299,61 @@ async def test_load_modules_is_idempotent(db_session):
         )
     ).scalar_one()
     assert {v.lemma for v in m.vocab_items} == {"Kaffee", "Tee"}
+
+
+@pytest.mark.asyncio
+async def test_load_modules_replaces_vocab_links_on_reseed(db_session):
+    # First seed: module has {Apfel, Birne}.
+    spec_v1 = [
+        {
+            "sequence_order": 1,
+            "title": "Obst",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {
+                    "lemma": "Apfel",
+                    "pos": "noun",
+                    "gender": "der",
+                    "translations": {"es": "manzana"},
+                },
+                {"lemma": "Birne", "pos": "noun", "gender": "die", "translations": {"es": "pera"}},
+            ],
+        }
+    ]
+    await load_modules(db_session, language="modt9", modules=spec_v1)
+    await db_session.commit()
+    # Re-seed same module with a DIFFERENT vocab set {Apfel, Traube} — Birne dropped.
+    spec_v2 = [
+        {
+            "sequence_order": 1,
+            "title": "Obst",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {
+                    "lemma": "Apfel",
+                    "pos": "noun",
+                    "gender": "der",
+                    "translations": {"es": "manzana"},
+                },
+                {"lemma": "Traube", "pos": "noun", "gender": "die", "translations": {"es": "uva"}},
+            ],
+        }
+    ]
+    await load_modules(db_session, language="modt9", modules=spec_v2)
+    await db_session.commit()
+
+    from sqlalchemy import select as _select
+
+    from klara.models import Module
+
+    m = (
+        await db_session.execute(
+            _select(Module).where(Module.language == "modt9", Module.sequence_order == 1)
+        )
+    ).scalar_one()
+    # Links reflect ONLY the v2 set — no stale Birne link.
+    assert {v.lemma for v in m.vocab_items} == {"Apfel", "Traube"}

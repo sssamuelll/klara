@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -110,6 +110,11 @@ async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) 
             .returning(Module.id)
         )
         module_id = (await db.execute(mod_stmt)).scalar_one()
+
+        # Replace the module's vocab links (idempotent re-seed must not leave
+        # stale links when the curated list changes). Safe: UserCards reference
+        # vocab_items directly, not these association rows.
+        await db.execute(delete(module_vocab).where(module_vocab.c.module_id == module_id))
 
         for w in spec["vocab"]:
             voc_stmt = (
