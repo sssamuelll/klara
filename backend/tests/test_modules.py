@@ -5,7 +5,7 @@ import uuid
 import pytest
 
 from klara.models import Module, User, VocabItem
-from klara.models.enums import CEFRLevel, PartOfSpeech
+from klara.models.enums import CardState, CEFRLevel, PartOfSpeech
 
 
 async def _user(db, level=CEFRLevel.A1) -> User:
@@ -127,3 +127,55 @@ async def test_enroll_cards_is_idempotent(db_session):
         )
     ).scalar_one()
     assert n == 1
+
+
+@pytest.mark.asyncio
+async def test_get_current_module_endpoint(db_session):
+    v1 = await _vocab(db_session, lemma="Kuchen", language="modt6")
+    v2 = await _vocab(db_session, lemma="Teller", language="modt6")
+    m = await _module(db_session, language="modt6", order=1, title="En el café", vocab=[v1, v2])
+    u = await _user(db_session)
+    u.target_language = "modt6"
+    u.current_module_id = m.id
+    db_session.add(UserCard(id=uuid.uuid4(), user_id=u.id, vocab_item_id=v1.id, state=CardState.NEW))
+    await db_session.commit()
+
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/modules/current")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["title"] == "En el café"
+    assert body["encountered"] == 1
+    assert body["mastered"] == 0
+    assert body["total"] == 2
+
+
+@pytest.mark.asyncio
+async def test_get_current_module_empty_when_none(db_session):
+    u = await _user(db_session)  # no current module, no modules for "de"
+    await db_session.commit()
+
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/modules/current")
+    assert resp.status_code == 200, resp.text
+    assert resp.json() is None
