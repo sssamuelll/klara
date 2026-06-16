@@ -22,6 +22,9 @@ class VocabItem(Base):
         nullable=False,
     )
     gender: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    gender_source: Mapped[str] = mapped_column(
+        String(8), server_default="llm", default="llm", nullable=False
+    )  # oracle | llm | user
     plural: Mapped[str | None] = mapped_column(String(120), nullable=True)
     translations: Mapped[dict] = mapped_column(
         JSONB,

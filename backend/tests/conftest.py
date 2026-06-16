@@ -63,8 +63,8 @@ async def _clean_tables():
         await conn.execute(
             text(
                 "TRUNCATE invitations, oauth_accounts, reviews, user_cards, "
-                "story_views, study_sessions, stories, module_vocab, modules, users "
-                "RESTART IDENTITY CASCADE"
+                "story_views, study_sessions, stories, module_vocab, modules, "
+                "gender_lexicon, users RESTART IDENTITY CASCADE"
             )
         )
         await conn.commit()
