@@ -27,11 +27,20 @@ from klara.curriculum.selection import next_target_words
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
-from klara.models import PronunciationAttempt, QuizAttempt, Story, UserCard, VocabItem
+from klara.models import (
+    GenderAttempt,
+    PronunciationAttempt,
+    QuizAttempt,
+    Story,
+    UserCard,
+    VocabItem,
+)
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
+    GenderAttemptIn,
+    GenderAttemptOut,
     InsightOut,
     KlaraNoteOut,
     MCResolveOut,
@@ -421,6 +430,40 @@ async def record_quiz_attempt(
         was_revealed=row.was_revealed,
         attempted_at=row.attempted_at,
     )
+
+
+@router.post(
+    "/{story_id}/gender/attempts",
+    response_model=GenderAttemptOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_gender_attempt(
+    story_id: UUID,
+    payload: GenderAttemptIn,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> GenderAttemptOut:
+    """Grade a der/die/das pick against the oracle (VocabItem.gender) and record
+    the diadic evidence. The story scopes which words are answerable."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    if payload.vocab_item_id not in (story.target_vocab_item_ids or []):
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
+    vocab = await db.get(VocabItem, payload.vocab_item_id)
+    if vocab is None or not vocab.gender:
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
+
+    was_correct = payload.picked_article == vocab.gender
+    db.add(
+        GenderAttempt(
+            user_id=user.id,
+            vocab_item_id=vocab.id,
+            picked_article=payload.picked_article,
+            was_correct=was_correct,
+        )
+    )
+    await db.commit()
+    return GenderAttemptOut(was_correct=was_correct, correct_gender=vocab.gender)
 
 
 def _resolve_bcp47(raw: str) -> str:

@@ -103,6 +103,16 @@ class QuizAttemptOut(BaseModel):
     attempted_at: datetime
 
 
+class GenderAttemptIn(BaseModel):
+    vocab_item_id: UUID
+    picked_article: Literal["der", "die", "das"]
+
+
+class GenderAttemptOut(BaseModel):
+    was_correct: bool
+    correct_gender: str
+
+
 # ---- Schedule entries — per-target-word SRS state for the Finish summary -
 
 
