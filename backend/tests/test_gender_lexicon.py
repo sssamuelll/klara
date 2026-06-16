@@ -48,6 +48,12 @@ def test_parse_gender_csv_skips_unknown_genus():
     assert {r.lemma for r in rows} == {"Ding"}  # empty + unrecognized genus dropped
 
 
+def test_parse_gender_csv_accepts_article_valued_column():
+    # An "artikel" column holding der/die/das resolves (no silent zero-row drop).
+    rows = parse_gender_csv("lemma,artikel\nTisch,der\nMilch,die\n")
+    assert {r.lemma: r.gender for r in rows} == {"Tisch": "der", "Milch": "die"}
+
+
 def test_parse_gender_csv_raises_on_missing_columns():
     # Headers that resolve to neither a lemma nor a genus column.
     with pytest.raises(ValueError, match="lemma"):

@@ -52,7 +52,9 @@ def parse_gender_csv(text: str) -> list[GenderRow]:
         genus = (row.get(genus_col) or "").strip().lower()
         if not lemma:
             continue
-        article = _GENUS_TO_ARTICLE.get(genus[:1]) if genus else None
+        # Accept both genus codes (m/f/n) and full articles (der/die/das), so an
+        # article-valued column resolves instead of silently dropping every row.
+        article = genus if genus in {"der", "die", "das"} else _GENUS_TO_ARTICLE.get(genus[:1])
         if article is None:
             continue
         pos = (row.get(pos_col) or "noun").strip().lower() if pos_col else "noun"
