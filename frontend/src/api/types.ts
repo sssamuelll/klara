@@ -192,7 +192,19 @@ export interface ShadowQuizItem {
   after?: string | null;
 }
 
-export type QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem;
+export interface GenderClozeQuizItem {
+  type: "gender_cloze";
+  cap: string;
+  lemma: string;
+  vocab_item_id: string;
+  en?: string | null;
+}
+
+export type QuizItem =
+  | MCQuizItem
+  | ClozeQuizItem
+  | ShadowQuizItem
+  | GenderClozeQuizItem;
 
 export interface QuizResponse {
   items: QuizItem[];
@@ -215,9 +227,19 @@ export interface PronunciationAttemptIn {
   word_bands: Record<string, "good" | "ok" | "bad">;
 }
 
+export interface GenderAttemptIn {
+  vocab_item_id: string;
+  picked_article: "der" | "die" | "das";
+}
+
+export interface GenderAttemptOut {
+  was_correct: boolean;
+  correct_gender: string;
+}
+
 export interface QuizAttemptIn {
   question_index: number;
-  question_type: "mc" | "cloze" | "shadow";
+  question_type: "mc" | "cloze" | "shadow" | "gender_cloze";
   was_correct: boolean;
   was_revealed?: boolean;
   detail?: Record<string, unknown> | null;

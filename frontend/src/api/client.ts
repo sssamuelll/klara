@@ -2,6 +2,8 @@ import i18n from "../i18n";
 import type { PracticeQueue } from "../lib/practiceQueue";
 import type {
   CardOut,
+  GenderAttemptIn,
+  GenderAttemptOut,
   InsightResponse,
   Invitation,
   InvitationCreate,
@@ -285,6 +287,12 @@ export const api = {
 
   recordQuizAttempt: (storyId: string, payload: QuizAttemptIn) =>
     request<void>(`/stories/${storyId}/quiz/attempts`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  recordGenderAttempt: (storyId: string, payload: GenderAttemptIn) =>
+    request<GenderAttemptOut>(`/stories/${storyId}/gender/attempts`, {
       method: "POST",
       body: JSON.stringify(payload),
     }),

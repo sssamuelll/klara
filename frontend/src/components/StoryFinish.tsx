@@ -53,7 +53,7 @@ interface Props {
 
 interface QuizResult {
   index: number;
-  qType: "mc" | "cloze" | "shadow";
+  qType: "mc" | "cloze" | "shadow" | "gender_cloze";
   correct: boolean;
   revealed: boolean;
 }
