@@ -5,6 +5,7 @@ import uuid
 import pytest
 
 from klara.curriculum.modules import (
+    advance_module_if_mastered,
     enroll_cards,
     ensure_active_module,
     load_modules,
@@ -357,3 +358,87 @@ async def test_load_modules_replaces_vocab_links_on_reseed(db_session):
     ).scalar_one()
     # Links reflect ONLY the v2 set — no stale Birne link.
     assert {v.lemma for v in m.vocab_items} == {"Apfel", "Traube"}
+
+
+async def _mastered_card(db, user_id, vocab_item_id):
+    db.add(
+        UserCard(
+            id=uuid.uuid4(),
+            user_id=user_id,
+            vocab_item_id=vocab_item_id,
+            state=CardState.REVIEWING,
+            interval_days=30.0,
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_advance_moves_pointer_when_module_mastered(db_session):
+    v1 = await _vocab(db_session, lemma="Tag", language="modtA")
+    v2 = await _vocab(db_session, lemma="Nacht", language="modtA")
+    m1 = await _module(db_session, language="modtA", order=1, title="Uno", vocab=[v1, v2])
+    m2 = await _module(db_session, language="modtA", order=2, title="Dos", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtA"
+    u.current_module_id = m1.id
+    # Both m1 words mastered → 2/2 ≥ 0.85.
+    await _mastered_card(db_session, u.id, v1.id)
+    await _mastered_card(db_session, u.id, v2.id)
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is True
+    assert u.current_module_id == m2.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_when_reviewed_card_not_in_active_module(db_session):
+    v_in = await _vocab(db_session, lemma="Haus", language="modtB")
+    v_out = await _vocab(db_session, lemma="Auto", language="modtB")
+    m1 = await _module(db_session, language="modtB", order=1, title="Uno", vocab=[v_in])
+    await _module(db_session, language="modtB", order=2, title="Dos", vocab=[v_in])
+    u = await _user(db_session)
+    u.target_language = "modtB"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v_in.id)  # module IS mastered (1/1)
+    await db_session.commit()
+
+    # Reviewed an OFF-module card → no-op even though the module is mastered.
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v_out.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_when_not_yet_mastered(db_session):
+    v1 = await _vocab(db_session, lemma="Brot", language="modtC")
+    v2 = await _vocab(db_session, lemma="Milch", language="modtC")
+    m1 = await _module(db_session, language="modtC", order=1, title="Uno", vocab=[v1, v2])
+    await _module(db_session, language="modtC", order=2, title="Dos", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtC"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v1.id)  # only 1/2 mastered → 0.5 < 0.85
+    db_session.add(
+        UserCard(id=uuid.uuid4(), user_id=u.id, vocab_item_id=v2.id, state=CardState.NEW)
+    )
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_on_last_module(db_session):
+    v1 = await _vocab(db_session, lemma="Stadt", language="modtD")
+    m1 = await _module(db_session, language="modtD", order=1, title="Único", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtD"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v1.id)  # mastered, but no next module
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id  # stays on the last module
