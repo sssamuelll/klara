@@ -20,6 +20,7 @@ dependencies = [
     "argon2-cffi>=23",
     "httpx-oauth>=0.15",
     "azure-cognitiveservices-speech>=1.40",
+    "simplemma>=1.1",
 ]
 
 [build-system]

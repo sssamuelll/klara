@@ -14,6 +14,7 @@ class StoryWordOut(BaseModel):
     plural: str | None = None
     translation: str | None = None
     example_target: str | None = None
+    frequency_rank: int | None = None
 
 
 class WordBreakdown(BaseModel):
@@ -60,6 +61,7 @@ class StoryOut(BaseModel):
     generated_by_model: str | None = None
     generation_cost_usd: float | None = None
     created_at: datetime
+    curriculum_note: str | None = None
 
 
 class StoryCreateRequest(BaseModel):

@@ -51,6 +51,7 @@ export interface StoryWord {
   plural: string | null;
   translation: string | null;
   example_target: string | null;
+  frequency_rank: number | null;
 }
 
 export interface StoryContent {

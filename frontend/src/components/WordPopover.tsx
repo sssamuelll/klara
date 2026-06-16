@@ -106,6 +106,12 @@ export default function WordPopover({
         </div>
       )}
 
+      {word.frequency_rank != null && (
+        <div className="wpop__freq k-mono">
+          {t("wpop.freq", { rank: word.frequency_rank })}
+        </div>
+      )}
+
       <div className="wpop__foot">
         <button
           className="wpop__add"

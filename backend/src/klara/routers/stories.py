@@ -17,8 +17,9 @@ from fastapi import (
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.selection import next_target_words
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
-from klara.i18n import t
+from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.models import PronunciationAttempt, QuizAttempt, Story, UserCard, VocabItem
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
@@ -67,9 +68,19 @@ def _serialize_story(story: Story, words: list[VocabItem], native_language: str)
             plural=w.plural,
             translation=(w.translations or {}).get(native_language),
             example_target=w.example_target,
+            frequency_rank=w.frequency_rank,
         )
         for w in words
     ]
+    ranked = [w for w in words if w.frequency_rank is not None]
+    if ranked:
+        lemmas = ", ".join(w.lemma for w in ranked)
+        curriculum_note = (
+            f"Estas palabras están entre las más comunes en {language_label(story.target_language)} "
+            f"que aún no dominas: {lemmas}."
+        )
+    else:
+        curriculum_note = None
     return StoryOut(
         id=story.id,
         level=story.level,
@@ -82,6 +93,7 @@ def _serialize_story(story: Story, words: list[VocabItem], native_language: str)
         generated_by_model=story.generated_by_model,
         generation_cost_usd=story.generation_cost_usd,
         created_at=story.created_at,
+        curriculum_note=curriculum_note,
     )
 
 
@@ -103,6 +115,9 @@ async def create_story(
     background: BackgroundTasks,
 ) -> StoryOut:
     level = payload.level or user.level
+    target_words_sel = await next_target_words(
+        db, user_id=user.id, language=user.target_language, level=level, n=5
+    )
     result = await generate_story(
         db,
         llm,
@@ -113,6 +128,7 @@ async def create_story(
         learning_context=user.learning_context,
         topic=payload.topic,
         model=None,
+        target_lemmas=[w.lemma for w in target_words_sel],
     )
     serialized = _serialize_story(result.story, result.target_words, user.native_language)
     target_words_dicts = [
