@@ -445,12 +445,15 @@ async def record_gender_attempt(
     locale: LocaleDep,
 ) -> GenderAttemptOut:
     """Grade a der/die/das pick against the oracle (VocabItem.gender) and record
-    the diadic evidence. The story scopes which words are answerable."""
+    the diadic evidence. The story scopes which words are answerable, and grading
+    is restricted to oracle-sourced genders so an LLM guess is never certified as
+    evidence (the curriculum invariant: the source of truth must outrank the
+    learner)."""
     story = await _load_or_404(db, story_id, user.id, locale)
     if payload.vocab_item_id not in (story.target_vocab_item_ids or []):
         raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
     vocab = await db.get(VocabItem, payload.vocab_item_id)
-    if vocab is None or not vocab.gender:
+    if vocab is None or vocab.gender_source != "oracle" or not vocab.gender:
         raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
 
     was_correct = payload.picked_article == vocab.gender

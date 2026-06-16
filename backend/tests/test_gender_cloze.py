@@ -376,3 +376,74 @@ async def test_gender_attempt_404_when_vocab_has_no_gender(db_session):
         )
     ).scalar_one()
     assert count == 0
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_404_when_gender_not_oracle(db_session):
+    """Grading is oracle-only: an LLM-guessed gender must never be certified as
+    evidence, even if the vocab is in the story and has a (non-oracle) gender.
+    Without the gender_source gate the endpoint would grade the LLM's echo."""
+    import uuid as _uuid
+
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy import func, select
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=_uuid.uuid4(),
+        email=f"gl-{_uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="GL",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
+    )
+    v = VocabItem(  # in the story, has a gender, but it's the LLM's guess
+        id=_uuid.uuid4(),
+        language="de",
+        lemma=f"Quux{_uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="llm",
+    )
+    db_session.add_all([u, v])
+    await db_session.flush()
+    story = Story(
+        id=_uuid.uuid4(),
+        user_id=u.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[v.id],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(
+            f"/api/v1/stories/{story.id}/gender/attempts",
+            json={"vocab_item_id": str(v.id), "picked_article": "die"},
+        )
+    assert resp.status_code == 404, resp.text  # rejected despite picked == stored gender
+    count = (
+        await db_session.execute(
+            select(func.count())
+            .select_from(GenderAttempt)
+            .where(GenderAttempt.vocab_item_id == v.id)
+        )
+    ).scalar_one()
+    assert count == 0

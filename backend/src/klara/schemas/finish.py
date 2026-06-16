@@ -88,7 +88,10 @@ class PronunciationAttemptOut(BaseModel):
 
 class QuizAttemptIn(BaseModel):
     question_index: int = Field(..., ge=0, le=20)
-    question_type: Literal["mc", "cloze", "shadow", "gender_cloze"]
+    # gender_cloze is deliberately NOT accepted here: this generic endpoint trusts
+    # the client's was_correct, whereas gender is graded server-side and recorded
+    # via POST /gender/attempts. Excluding it keeps the single-write guarantee.
+    question_type: Literal["mc", "cloze", "shadow"]
     was_correct: bool
     was_revealed: bool = False
     detail: dict | None = None

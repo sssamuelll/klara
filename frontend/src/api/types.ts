@@ -239,7 +239,11 @@ export interface GenderAttemptOut {
 
 export interface QuizAttemptIn {
   question_index: number;
-  question_type: "mc" | "cloze" | "shadow" | "gender_cloze";
+  // No "gender_cloze": gender is graded server-side via recordGenderAttempt, not
+  // through this client-trusted generic attempt. The Quiz dispatcher guards the
+  // recordQuizAttempt call with `q.type !== "gender_cloze"`, which narrows q.type
+  // to these three at the call site.
+  question_type: "mc" | "cloze" | "shadow";
   was_correct: boolean;
   was_revealed?: boolean;
   detail?: Record<string, unknown> | null;
