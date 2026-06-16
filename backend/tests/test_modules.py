@@ -64,3 +64,66 @@ async def test_module_roundtrips_with_vocab_and_user_pointer(db_session):
     assert {v.lemma for v in reloaded.vocab_items} == {"Kaffee", "Tasse"}
     reloaded_user = await db_session.get(User, u.id)
     assert reloaded_user.current_module_id == m.id
+
+
+from klara.curriculum.modules import (
+    enroll_cards,
+    ensure_active_module,
+    module_target_lemmas,
+    module_vocab_ids,
+    read_active_module,
+)
+from klara.models import UserCard
+
+
+@pytest.mark.asyncio
+async def test_ensure_active_module_inits_pointer_when_null(db_session):
+    v = await _vocab(db_session, lemma="Brot", language="modt3")
+    m = await _module(db_session, language="modt3", order=1, title="café", vocab=[v])
+    u = await _user(db_session)  # target_language="de"
+    u.target_language = "modt3"
+    await db_session.flush()
+
+    assert u.current_module_id is None
+    active = await ensure_active_module(db_session, u)
+    assert active is not None and active.id == m.id
+    assert u.current_module_id == m.id  # persisted on the user
+    # Idempotent: second call returns the same module, doesn't move the pointer.
+    again = await ensure_active_module(db_session, u)
+    assert again.id == m.id
+
+
+@pytest.mark.asyncio
+async def test_read_active_module_does_not_init(db_session):
+    u = await _user(db_session)
+    assert await read_active_module(db_session, u) is None
+    assert u.current_module_id is None  # read path never writes
+
+
+@pytest.mark.asyncio
+async def test_module_target_lemmas_and_vocab_ids(db_session):
+    v1 = await _vocab(db_session, lemma="Wasser", language="modt4")
+    v2 = await _vocab(db_session, lemma="Saft", language="modt4")
+    m = await _module(db_session, language="modt4", order=1, title="café", vocab=[v1, v2])
+    lemmas = await module_target_lemmas(db_session, m)
+    assert set(lemmas) == {"Wasser", "Saft"}
+    ids = await module_vocab_ids(db_session, m)
+    assert ids == {v1.id, v2.id}
+
+
+@pytest.mark.asyncio
+async def test_enroll_cards_is_idempotent(db_session):
+    v = await _vocab(db_session, lemma="Zucker", language="modt5")
+    u = await _user(db_session)
+    await enroll_cards(db_session, user_id=u.id, vocab_item_ids=[v.id])
+    await enroll_cards(db_session, user_id=u.id, vocab_item_ids=[v.id])  # again
+    await db_session.commit()
+    from sqlalchemy import func, select
+    n = (
+        await db_session.execute(
+            select(func.count()).select_from(UserCard).where(
+                UserCard.user_id == u.id, UserCard.vocab_item_id == v.id
+            )
+        )
+    ).scalar_one()
+    assert n == 1
