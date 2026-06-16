@@ -41,7 +41,15 @@ class ShadowQuizItem(BaseModel):
     after: str | None = None
 
 
-QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem
+class GenderClozeQuizItem(BaseModel):
+    type: Literal["gender_cloze"]
+    cap: str
+    lemma: str
+    vocab_item_id: str
+    en: str | None = None  # native-language gloss for context; NOT the answer
+
+
+QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem | GenderClozeQuizItem
 
 
 class QuizOut(BaseModel):
@@ -80,7 +88,7 @@ class PronunciationAttemptOut(BaseModel):
 
 class QuizAttemptIn(BaseModel):
     question_index: int = Field(..., ge=0, le=20)
-    question_type: Literal["mc", "cloze", "shadow"]
+    question_type: Literal["mc", "cloze", "shadow", "gender_cloze"]
     was_correct: bool
     was_revealed: bool = False
     detail: dict | None = None

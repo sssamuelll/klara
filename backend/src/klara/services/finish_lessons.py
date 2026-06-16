@@ -16,7 +16,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.i18n import language_label
 from klara.llm.base import LLMClient, Message
-from klara.models import Story
+from klara.models import Story, VocabItem
+from klara.models.enums import PartOfSpeech
 
 log = structlog.get_logger(__name__)
 
@@ -144,6 +145,24 @@ def _extract_json(text: str) -> dict:
     if start == -1 or end == -1 or end <= start:
         raise ValueError(f"No JSON object in LLM response: {text[:200]}")
     return json.loads(text[start : end + 1])
+
+
+def build_gender_cloze(words: list[VocabItem], *, native_language: str) -> dict | None:
+    """Deterministically build a der/die/das cloze from the first story target
+    noun whose gender comes from the oracle (authoritative). Returns the quiz
+    item dict, or None when no oracle-gendered noun is available (e.g. the oracle
+    isn't loaded yet) — in which case the quiz is served unchanged. The correct
+    article is NOT included: grading is server-side (POST /gender/attempts)."""
+    for w in words:
+        if w.pos == PartOfSpeech.NOUN and w.gender_source == "oracle" and w.gender:
+            return {
+                "type": "gender_cloze",
+                "cap": "gender",  # frontend localizes the caption
+                "lemma": w.lemma,
+                "vocab_item_id": str(w.id),
+                "en": (w.translations or {}).get(native_language),
+            }
+    return None
 
 
 async def ensure_quiz_items(

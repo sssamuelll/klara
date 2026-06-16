@@ -53,7 +53,12 @@ from klara.schemas.story import (
     StorySentenceOut,
     StoryWordOut,
 )
-from klara.services.finish_lessons import ensure_insight, ensure_klara_note, ensure_quiz_items
+from klara.services.finish_lessons import (
+    build_gender_cloze,
+    ensure_insight,
+    ensure_klara_note,
+    ensure_quiz_items,
+)
 from klara.services.story_gen import generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
@@ -240,8 +245,11 @@ async def get_story_quiz(
     story = await _load_or_404(db, story_id, user.id, locale)
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
     lemmas = [w.lemma for w in words]
-    items = await ensure_quiz_items(db, story, llm, lemmas=lemmas)
-    return QuizOut(items=items or [])
+    items = list(await ensure_quiz_items(db, story, llm, lemmas=lemmas) or [])
+    gender_cloze = build_gender_cloze(words, native_language=user.native_language)
+    if gender_cloze is not None:
+        items.append(gender_cloze)
+    return QuizOut(items=items)
 
 
 @router.get("/{story_id}/insight", response_model=InsightOut | None)
