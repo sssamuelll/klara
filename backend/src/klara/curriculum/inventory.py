@@ -33,8 +33,13 @@ def parse_frequency_tsv(text: str) -> list[FrequencyRow]:
     """Parsea un TSV `lemma<TAB>pos<TAB>cefr<TAB>rank` (con cabecera)."""
     out: list[FrequencyRow] = []
     lines = [ln for ln in text.splitlines() if ln.strip()]
-    for ln in lines[1:]:  # salta la cabecera
-        lemma, pos, cefr, rank = (c.strip() for c in ln.split("\t"))
+    for i, ln in enumerate(lines[1:], start=2):  # salta la cabecera
+        cols = [c.strip() for c in ln.split("\t")]
+        if len(cols) != 4:
+            raise ValueError(f"TSV malformado en línea {i}: se esperaban 4 columnas")
+        lemma, pos, cefr, rank = cols
+        if not lemma:
+            raise ValueError(f"TSV malformado en línea {i}: lemma vacío")
         out.append(
             FrequencyRow(
                 lemma=lemma,

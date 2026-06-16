@@ -17,6 +17,8 @@ def verify_coverage(content: dict, lemmas: list[str], language: str) -> set[str]
         return set()
     seen: set[str] = set()
     for sentence in content.get("sentences", []) or []:
+        if not isinstance(sentence, dict):
+            continue  # el JSON del LLM puede traer entradas malformadas
         text = sentence.get("target") or ""
         for token in word_tokens_by_index(text).values():
             seen.add(canonical_lemma(token, language))

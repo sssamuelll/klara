@@ -121,8 +121,10 @@ Tras generar la historia:
 
 ## 9. El "por qué" (cara al usuario, mínimo)
 
-- Reusar el campo `insight` que ya existe en `Story` (no campo nuevo). Por cada palabra objetivo, una línea callada: *"está entre las ~N más comunes que aún no dominas."* Sin rachas ni culpa (coherente con el tono "sin apuro y sin racha").
+- Por cada palabra objetivo, una línea callada: *"está entre las ~N más comunes que aún no dominas."* Sin rachas ni culpa (coherente con el tono "sin apuro y sin racha").
 - Toque de frontend mínimo donde ya se muestran las palabras objetivo (popover de palabra / finish). El pase fino de microcopy se difiere a `solace-wren`.
+
+> **Desviación en implementación:** el plan originalmente proponía reusar `Story.insight`, pero ese campo tiene otra estructura (`insight_title`/`insight_body`, glosa lingüística generada por el LLM). En su lugar la implementación introduce un campo computado `curriculum_note` en `StoryOut`, y el "por qué" por-palabra se expone vía `frequency_rank` en el popover. Cabo suelto conocido: `curriculum_note` aún no se consume en frontend y se emite hardcodeado en español; se localiza o se quita cuando se decida conectarlo (no bloquea v1).
 
 ---
 

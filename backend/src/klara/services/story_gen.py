@@ -248,12 +248,15 @@ async def generate_story(
     ]
     if dropped:
         log.info("story.coverage.dropped", story_dropped=dropped, target_language=target_language)
-    # Registrar qué lemas del CURRÍCULO ignoró el LLM (señal de calidad, no bloquea):
+    # Registrar qué lemas del CURRÍCULO ignoró el LLM (señal de calidad, no bloquea).
+    # Se mide contra el contenido directamente, no contra `covered` (que solo cubre
+    # los target_words que el modelo declaró), para no reportar falsos "missed".
     if target_lemmas:
+        covered_curriculum = verify_coverage(content, target_lemmas, target_language)
         missed = [
             lemma
             for lemma in target_lemmas
-            if canonical_lemma(lemma, target_language) not in covered
+            if canonical_lemma(lemma, target_language) not in covered_curriculum
         ]
         if missed:
             log.info("story.curriculum.missed", missed=missed, target_language=target_language)
