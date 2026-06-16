@@ -82,7 +82,10 @@ def test_build_gender_cloze_picks_oracle_noun():
     assert item["lemma"] == "Tisch"
     assert item["vocab_item_id"] == str(oracle_noun.id)
     assert item["en"] == "mesa"
-    assert "correct_gender" not in item  # answer is NOT shipped to the client
+    # The answer is NEVER shipped to the client: the item carries exactly these
+    # keys — no "gender"/"correct_gender"/"correct_article". Asserting the full
+    # key set (not just one absent name) hardens the no-leak contract.
+    assert set(item.keys()) == {"type", "cap", "lemma", "vocab_item_id", "en"}
 
 
 def test_build_gender_cloze_none_when_no_oracle_noun():
