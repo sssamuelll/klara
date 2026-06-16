@@ -27,6 +27,7 @@
 
 **Backend (modify):**
 - `backend/src/klara/models/__init__.py` — export `Module`.
+- `backend/alembic/env.py` — import `module` so its tables register in `Base.metadata` (autogenerate hygiene).
 - `backend/src/klara/models/user.py` — add `current_module_id`.
 - `backend/src/klara/curriculum/competence.py` — add `is_mastered_lexical`, `module_progress`.
 - `backend/src/klara/llm/prompts.py` — `build_story_user_prompt` gains `module_objective`.
@@ -142,7 +143,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from klara.models.base import Base, created_ts, pg_enum
+from klara.models.base import Base, created_ts, pg_enum, uuid_pk
 from klara.models.enums import CEFRLevel
 from klara.models.vocab import VocabItem
 
@@ -189,13 +190,9 @@ class Module(Base):
     vocab_items: Mapped[list[VocabItem]] = relationship(secondary=module_vocab, lazy="selectin")
 ```
 
-Add the missing import at the top (the `uuid_pk` annotation): change the first import line to also import `uuid_pk`:
+(The import block above already includes `uuid_pk`, used by `id: Mapped[uuid_pk]` — matching the convention in `models/vocab.py` and `models/srs.py`.)
 
-```python
-from klara.models.base import Base, created_ts, pg_enum, uuid_pk
-```
-
-- [ ] **Step 4: Export the model**
+- [ ] **Step 4: Export the model + register for autogenerate**
 
 Modify `backend/src/klara/models/__init__.py` — add `Module` (and `module_vocab`) to the imports and `__all__`. Find the existing model imports and add:
 
@@ -204,6 +201,8 @@ from klara.models.module import Module, module_vocab
 ```
 
 Add `"Module"` and `"module_vocab"` to the `__all__` list (match the existing style — alphabetical or grouped as the file does).
+
+Also modify `backend/alembic/env.py` — its model-import tuple (it lists `audio, oauth, session, srs, story, user, vocab`) must include `module`, so `Base.metadata` registers `modules`/`module_vocab`. Without this the migration round-trip still passes (the migration is hand-written), but a future `alembic revision --autogenerate` would emit a phantom DROP of the new tables. Add `module` to that import tuple (keep it alphabetically sorted: `audio, module, oauth, session, srs, story, user, vocab`).
 
 - [ ] **Step 5: Add the user pointer**
 
@@ -217,16 +216,18 @@ Modify `backend/src/klara/models/user.py` — add the column after `learning_con
     )
 ```
 
-Add the needed imports to `user.py`'s import block:
+Fix `user.py`'s imports precisely (avoid duplicate-import ruff errors):
+- **Replace** the existing line `from sqlalchemy import String, Text` with `from sqlalchemy import ForeignKey, String, Text` (do not add a second `from sqlalchemy import` line).
+- **Add** `from uuid import UUID` at the top of the import block.
+- **Add** `from sqlalchemy.dialects.postgresql import UUID as PGUUID`.
 
+Resulting relevant imports:
 ```python
 from uuid import UUID
 
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 ```
-
-(Merge with the existing `from sqlalchemy import String, Text` line — replace it with the line above. `UUID` from `uuid` is new.)
 
 - [ ] **Step 6: Write the migration**
 
@@ -598,7 +599,7 @@ into the SRS (the "heat source" — reading produces SRS state)."""
 
 from __future__ import annotations
 
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -653,9 +654,17 @@ async def enroll_cards(db: AsyncSession, *, user_id: UUID, vocab_item_ids: list[
     unique constraint to skip words the user already has. Caller commits."""
     if not vocab_item_ids:
         return
+    # Explicit id per row: UserCard.id has a Python-side default (uuid4) only —
+    # supply it so the insert can never emit a NULL id regardless of how the
+    # multi-row VALUES form treats client-side defaults.
     stmt = (
         pg_insert(UserCard)
-        .values([{"user_id": user_id, "vocab_item_id": vid} for vid in vocab_item_ids])
+        .values(
+            [
+                {"id": uuid4(), "user_id": user_id, "vocab_item_id": vid}
+                for vid in vocab_item_ids
+            ]
+        )
         .on_conflict_do_nothing(constraint="uq_user_card_user_vocab")
     )
     await db.execute(stmt)
@@ -1059,12 +1068,13 @@ Modify `backend/src/klara/routers/stories.py`. Add imports (near line 20):
 
 ```python
 from klara.curriculum.modules import (
-    ensure_active_module,
     enroll_cards,
+    ensure_active_module,
     module_target_lemmas,
     module_vocab_ids,
 )
 ```
+(Alphabetical order — ruff's `I` import-sort rule is enabled.)
 
 Replace the body of `create_story` (lines 117-133, from `level = ...` through `serialized = ...`) with:
 
@@ -1476,17 +1486,18 @@ import type { CardOut, ModuleCurrent, Story, StoryListItem } from "../api/types"
 Add state (after line 43, `const [dueCount, ...]`):
 
 ```typescript
-  const [module, setModule] = useState<ModuleCurrent | null>(null);
+  const [currentModule, setCurrentModule] = useState<ModuleCurrent | null>(null);
 ```
+(Named `currentModule`, not `module` — `module` shadows the ambient CommonJS global and is a lint smell.)
 
 Inside the existing `useEffect`'s async IIFE, after the `due` fetch block (after line 69), add:
 
 ```typescript
       try {
         const mod = await api.currentModule();
-        if (!cancelled) setModule(mod);
+        if (!cancelled) setCurrentModule(mod);
       } catch {
-        if (!cancelled) setModule(null);
+        if (!cancelled) setCurrentModule(null);
       }
 ```
 
@@ -1496,13 +1507,13 @@ Render the panel after the masthead rule (after line 93, the first `<hr classNam
       {!loading && (
         <section className="home__module">
           <span className="k-mono home__module-kicker">{t("home.module.kicker")}</span>
-          {module ? (
+          {currentModule ? (
             <>
-              <h2 className="home__module-title">{module.title}</h2>
+              <h2 className="home__module-title">{currentModule.title}</h2>
               <p className="home__module-progress k-mono">
                 {t("home.module.progress", {
-                  count: module.encountered,
-                  total: module.total,
+                  count: currentModule.encountered,
+                  total: currentModule.total,
                 })}
               </p>
             </>
@@ -1578,4 +1589,6 @@ git commit -m "chore(curriculum): fixups from full verification"
 - **Test isolation:** `vocab_items` is NOT truncated between tests (conftest), but `modules`/`module_vocab` now ARE (Task 1, Step 7). Use a **unique fake `language` code per test** (`modt1`, `modt2`, …) for vocab and modules so rows from other tests can't bleed into queries — this mirrors the convention in `test_curriculum_selection.py`.
 - **Why auto-enroll on coverage, not on module-activation:** the "encountered" signal must move with *reading*, so a module word becomes a card only when it actually appears in a generated story (`result.target_words` = covered words). Front-loading all module vocab as cards on activation would make "encountered" jump to 100% immediately and stop being a reading signal.
 - **The fallback path is unchanged:** when no module is active (unseeded DB, e.g. CI), `create_story` calls `next_target_words` exactly as before and does not enroll. All pre-existing story tests must stay green (Task 6, Step 6).
+- **Non-atomic story + enrollment (accepted for PR-A):** `generate_story` commits the Story internally, then `create_story` commits again after `enroll_cards`. The two are separate transactions — if enrollment failed, the Story would already be persisted. Tolerable here because "encountered" is monotonic and recomputed on read; full atomicity would require hoisting `generate_story`'s commit out (a larger refactor, out of scope).
+- **Enrollment identity depends on `pos` match (known gap):** auto-enroll intersects `result.target_words` (the LLM's covered words, upserted on `uq_vocab_lemma_lang_pos`) with the module's seeded vocab ids. If the LLM tags a module word with a different `pos` than the seed (e.g. seed `bestellen`=verb but the LLM returns it as `other`), the upsert lands on a *different* `VocabItem` id, so that word is silently NOT enrolled (the "encountered" count just won't include it). Acceptable for v1; seed vocab with the `pos` the LLM most naturally uses. PR-B can harden by enrolling on lemma match if needed.
 - **PR-B (separate plan):** the advancement gate in `submit_review` (forward-only pointer advance when `module_progress` mastered/total ≥ `mastery_threshold`, with a no-op guard when the reviewed card isn't in the active module), the full ~8-module A1 authoring, and the mastery/gamification surface.
