@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.models import Module, User, UserCard, VocabItem, module_vocab
+from klara.models.enums import CEFRLevel, PartOfSpeech
 
 
 async def read_active_module(db: AsyncSession, user: User) -> Module | None:
@@ -73,3 +74,60 @@ async def enroll_cards(db: AsyncSession, *, user_id: UUID, vocab_item_ids: list[
         .on_conflict_do_nothing(constraint="uq_user_card_user_vocab")
     )
     await db.execute(stmt)
+
+
+async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) -> int:
+    """Idempotently seed curriculum modules + their vocab for a language.
+    Upserts VocabItems on (lemma, language, pos), modules on (language,
+    sequence_order), and links them in module_vocab. Returns module count."""
+    for spec in modules:
+        # Upsert the module (idempotent on language + sequence_order).
+        mod_stmt = (
+            pg_insert(Module)
+            .values(
+                language=language,
+                cefr_level=CEFRLevel(spec["cefr_level"]),
+                sequence_order=spec["sequence_order"],
+                title=spec["title"],
+                can_dos=spec.get("can_dos", []),
+                grammatical_focus=spec.get("grammatical_focus", []),
+            )
+            .on_conflict_do_update(
+                constraint="uq_module_lang_seq",
+                set_={
+                    "title": spec["title"],
+                    "can_dos": spec.get("can_dos", []),
+                    "grammatical_focus": spec.get("grammatical_focus", []),
+                },
+            )
+            .returning(Module.id)
+        )
+        module_id = (await db.execute(mod_stmt)).scalar_one()
+
+        for w in spec["vocab"]:
+            voc_stmt = (
+                pg_insert(VocabItem)
+                .values(
+                    lemma=w["lemma"],
+                    language=language,
+                    pos=PartOfSpeech(w.get("pos", "noun")),
+                    gender=w.get("gender"),
+                    translations=w.get("translations", {}),
+                )
+                .on_conflict_do_update(
+                    constraint="uq_vocab_lemma_lang_pos",
+                    set_={
+                        "gender": w.get("gender"),
+                        "translations": w.get("translations", {}),
+                    },
+                )
+                .returning(VocabItem.id)
+            )
+            vocab_id = (await db.execute(voc_stmt)).scalar_one()
+            link_stmt = (
+                pg_insert(module_vocab)
+                .values(module_id=module_id, vocab_item_id=vocab_id)
+                .on_conflict_do_nothing()
+            )
+            await db.execute(link_stmt)
+    return len(modules)

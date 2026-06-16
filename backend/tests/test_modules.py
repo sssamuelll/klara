@@ -250,3 +250,44 @@ async def test_create_story_drives_from_module_and_auto_enrolls(db_session):
         )
     ).scalar_one()
     assert n == 1
+
+
+from klara.curriculum.modules import load_modules
+
+_SEED = [
+    {
+        "sequence_order": 1,
+        "title": "En el café",
+        "cefr_level": "A1",
+        "can_dos": ["puedo pedir una bebida en un café"],
+        "grammatical_focus": ["género de sustantivos de comida y bebida"],
+        "vocab": [
+            {"lemma": "Kaffee", "pos": "noun", "gender": "der", "translations": {"es": "café"}},
+            {"lemma": "Tee", "pos": "noun", "gender": "der", "translations": {"es": "té"}},
+        ],
+    }
+]
+
+
+@pytest.mark.asyncio
+async def test_load_modules_is_idempotent(db_session):
+    n1 = await load_modules(db_session, language="modt8", modules=_SEED)
+    await db_session.commit()
+    n2 = await load_modules(db_session, language="modt8", modules=_SEED)
+    await db_session.commit()
+    assert n1 == 1 and n2 == 1
+    from sqlalchemy import func, select
+
+    from klara.models import Module
+    count = (
+        await db_session.execute(
+            select(func.count()).select_from(Module).where(Module.language == "modt8")
+        )
+    ).scalar_one()
+    assert count == 1  # second load did not duplicate
+    m = (
+        await db_session.execute(
+            select(Module).where(Module.language == "modt8", Module.sequence_order == 1)
+        )
+    ).scalar_one()
+    assert {v.lemma for v in m.vocab_items} == {"Kaffee", "Tee"}
