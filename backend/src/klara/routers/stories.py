@@ -163,7 +163,9 @@ async def create_story(
     if active is not None:
         enrolled = [w.id for w in result.target_words if w.id in mod_vids]
         await enroll_cards(db, user_id=user.id, vocab_item_ids=enrolled)
-        await db.commit()
+    # Single commit owns both the story (flushed in generate_story) and the
+    # module enrollment — atomic: a failed enroll rolls back the story too.
+    await db.commit()
 
     serialized = _serialize_story(result.story, result.target_words, user.native_language)
     target_words_dicts = [

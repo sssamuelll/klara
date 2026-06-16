@@ -72,7 +72,7 @@
     },
     "module": {
       "kicker": "Seu módulo",
-      "progress_one": "Você encontrou {{count}} de {{total}} palavra.",
+      "progress_one": "Você encontrou {{count}} de {{total}} palavras.",
       "progress_other": "Você encontrou {{count}} de {{total}} palavras.",
       "empty": "Ainda sem módulo. Gere sua primeira história."
     },

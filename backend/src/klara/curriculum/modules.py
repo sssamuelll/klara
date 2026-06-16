@@ -18,7 +18,12 @@ async def read_active_module(db: AsyncSession, user: User) -> Module | None:
     """Read-only: the user's active module, or None. Never writes (used by GET)."""
     if user.current_module_id is None:
         return None
-    return await db.get(Module, user.current_module_id)
+    module = await db.get(Module, user.current_module_id)
+    # Guard against a stale pointer after the user changed target_language —
+    # a module in the wrong language would feed mismatched lemmas to generation.
+    if module is None or module.language != user.target_language:
+        return None
+    return module
 
 
 async def ensure_active_module(db: AsyncSession, user: User) -> Module | None:
@@ -26,7 +31,11 @@ async def ensure_active_module(db: AsyncSession, user: User) -> Module | None:
     target language, set it to the lowest sequence_order and persist. The single
     canonical initialization point (called from create_story)."""
     if user.current_module_id is not None:
-        return await db.get(Module, user.current_module_id)
+        current = await db.get(Module, user.current_module_id)
+        if current is not None and current.language == user.target_language:
+            return current
+        # Stale (language changed or module gone) — clear and reinitialize below.
+        user.current_module_id = None
     stmt = (
         select(Module)
         .where(Module.language == user.target_language)
@@ -92,6 +101,7 @@ async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) 
             .on_conflict_do_update(
                 constraint="uq_module_lang_seq",
                 set_={
+                    "cefr_level": CEFRLevel(spec["cefr_level"]),
                     "title": spec["title"],
                     "can_dos": spec.get("can_dos", []),
                     "grammatical_focus": spec.get("grammatical_focus", []),

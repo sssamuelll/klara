@@ -41,12 +41,13 @@ export default function Home() {
   const { user } = useUser();
   const [latest, setLatest] = useState<HomeStorySummary | null>(null);
   const [dueCount, setDueCount] = useState<number | null>(null);
-  const [currentModule, setCurrentModule] = useState<ModuleCurrent | null>(null);
+  const [currentModule, setCurrentModule] = useState<ModuleCurrent | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setCurrentModule(undefined);
     (async () => {
       try {
         const list: StoryListItem[] = await api.listStories(1, 0);
@@ -99,7 +100,7 @@ export default function Home() {
 
       <hr className="k-rule home__rule" />
 
-      {!loading && (
+      {!loading && currentModule !== undefined && (
         <section className="home__module">
           <span className="k-mono home__module-kicker">{t("home.module.kicker")}</span>
           {currentModule ? (

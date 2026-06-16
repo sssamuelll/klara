@@ -280,8 +280,9 @@ async def generate_story(
     )
     db.add(story)
     await db.flush()
-    await db.commit()
     await db.refresh(story)
+    # NOTE: no commit here — the caller (create_story) owns the commit so the
+    # story and its module card-enrollment land in a single transaction.
 
     log.info(
         "story.generate.done",
