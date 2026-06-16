@@ -222,6 +222,12 @@
             "bad": "unklar"
           }
         },
+        "genderCloze": {
+          "cap": "Der Artikel",
+          "prompt": "der, die oder das?",
+          "correct": "Richtig.",
+          "wrong": "Es war «{{correct}}»."
+        },
         "reveal": "Antwort zeigen",
         "yourTurn": "Du bist dran",
         "next": "Weiter",

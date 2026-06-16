@@ -222,6 +222,12 @@
             "bad": "à revoir"
           }
         },
+        "genderCloze": {
+          "cap": "L'article",
+          "prompt": "der, die ou das ?",
+          "correct": "Correct.",
+          "wrong": "C'était «{{correct}}»."
+        },
         "reveal": "Voir la réponse",
         "yourTurn": "À toi",
         "next": "Suivant",

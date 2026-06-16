@@ -222,6 +222,12 @@
             "bad": "要確認"
           }
         },
+        "genderCloze": {
+          "cap": "冠詞",
+          "prompt": "der・die・das？",
+          "correct": "正解。",
+          "wrong": "正解は「{{correct}}」。"
+        },
         "reveal": "答えを見る",
         "yourTurn": "あなたの番",
         "next": "次へ",
