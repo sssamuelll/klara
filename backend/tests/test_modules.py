@@ -482,3 +482,21 @@ async def test_submit_review_advances_module_on_mastery(db_session):
     # GOOD on a 20d REVIEWING card → interval *= ease (≈50d) ≥ 21 → mastered → advance.
     reloaded = await db_session.get(type(u), u.id)
     assert reloaded.current_module_id == m2.id
+
+
+def test_de_module_sequence_is_well_formed():
+    from klara.scripts.load_de_modules import MODULES
+
+    # 8 contiguous A1 modules, unique titles, each with can-dos + focus + vocab.
+    assert len(MODULES) == 8
+    orders = sorted(m["sequence_order"] for m in MODULES)
+    assert orders == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert len({m["title"] for m in MODULES}) == 8
+    for m in MODULES:
+        assert m["cefr_level"] == "A1"
+        assert m["can_dos"] and m["grammatical_focus"] and m["vocab"]
+        for w in m["vocab"]:
+            assert w["lemma"] and w["pos"] in {"noun", "verb", "adjective", "adverb"}
+            # Every German noun must carry a gender (der/die/das).
+            if w["pos"] == "noun":
+                assert w.get("gender") in {"der", "die", "das"}, (m["title"], w["lemma"])
