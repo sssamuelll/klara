@@ -1,7 +1,9 @@
 # Secuencia de aprendizaje — Rebanada 2: eje de género (exposición, alemán)
 
+> **⚠️ SUPERADO (2026-06-16).** Esta dirección (género en modo *exposición*) fue descartada tras revisión adversarial del roster: la exposición sin corrección es un placebo honesto (no enseña género, que es un binding diádico que requiere corrección), el hint suave probablemente no muerde, y solo mordería mientras R1 esté inerte. La feature de género se reorientó a **corrección con oráculo autoritativo** (Wiktionary), y el roster, tras investigación de ciencia del aprendizaje, impuso un orden: **primero la fundación de currículo** (módulo-como-predicado + competencia-por-estado), porque construir UI/gamificación sobre competencia-como-presencia cementa la confusión evento/estado. Ver el spec activo **`2026-06-16-learning-sequence-slice2-modules-foundation-design.md`**. La feature de género-con-corrección pasa a ser **Rebanada 3**, sobre esa fundación. Este documento se conserva como registro del razonamiento.
+
 **Fecha:** 2026-06-16
-**Estado:** Diseño aprobado (pendiente de plan de implementación)
+**Estado:** SUPERADO — ver banner arriba.
 **Alcance:** un PR. Backend (lectura de exposición de género + hint de prompt + medición + surfacing) + toque mínimo de frontend (nota de género). UN idioma: alemán (es→de). Eje: género gramatical (der/die/das), **modo EXPOSICIÓN** — no maestría.
 
 ---
