@@ -125,12 +125,9 @@ git commit -m "feat(curriculum): load_modules replaces vocab links on re-seed"
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `backend/tests/test_modules.py`:
+Append to `backend/tests/test_modules.py`. First, add `advance_module_if_mastered` to the EXISTING top-of-file import `from klara.curriculum.modules import (...)` (alphabetically first in the tuple) — do NOT add a mid-file import line (ruff E402). Then append the test code:
 
 ```python
-from klara.curriculum.modules import advance_module_if_mastered
-
-
 async def _mastered_card(db, user_id, vocab_item_id):
     db.add(
         UserCard(
@@ -219,7 +216,7 @@ Expected: FAIL — `cannot import name 'advance_module_if_mastered'`.
 
 - [ ] **Step 3: Implement**
 
-In `backend/src/klara/curriculum/modules.py`, add the import of `module_progress` (from the competence module — no circular import: `competence` does not import `modules`):
+In `backend/src/klara/curriculum/modules.py`, add the import of `module_progress` — place it as the FIRST line of the first-party `klara.*` import group, BEFORE `from klara.models import ...` (ruff isort: `klara.curriculum` sorts before `klara.models`). No circular import (`competence` imports only `lemmatize` + `models`, not `modules`):
 
 ```python
 from klara.curriculum.competence import module_progress
@@ -251,6 +248,9 @@ async def advance_module_if_mastered(
     ).first()
     if in_module is None:
         return False
+    # Flush the just-updated card so module_progress reads fresh state — robust
+    # even if a future sessionmaker disables autoflush (today it defaults on).
+    await db.flush()
     _, mastered, total = await module_progress(db, user_id=user.id, module_id=module.id)
     if total == 0 or mastered / total < module.mastery_threshold:
         return False
@@ -339,7 +339,7 @@ Expected: FAIL — pointer still `m1` (gate not wired).
 
 - [ ] **Step 3: Implement**
 
-In `backend/src/klara/routers/srs.py`, add the import:
+In `backend/src/klara/routers/srs.py`, add the import — place it BEFORE `from klara.dependencies import ...` (ruff isort: `klara.curriculum` sorts before `klara.dependencies`):
 
 ```python
 from klara.curriculum.modules import advance_module_if_mastered
@@ -564,7 +564,7 @@ MODULES: list[dict] = [
 - [ ] **Step 4: Run to verify pass**
 
 Run: `cd backend && uv run pytest tests/test_modules.py -v -k "module_sequence_is_well_formed"`
-Expected: PASS. Then `uv run ruff check src/klara/scripts/load_de_modules.py` and `uv run ruff format --check src/klara/scripts/load_de_modules.py`.
+Expected: PASS. Then `uv run ruff check src/klara/scripts/load_de_modules.py` and `uv run ruff format src/klara/scripts/load_de_modules.py` (apply — the long MODULES literals need reflow). Also `uv run ruff format tests/test_modules.py`.
 
 - [ ] **Step 5: Commit**
 
@@ -602,6 +602,7 @@ git add -A && git commit -m "chore(curriculum): fixups from full verification"
 
 ## Notes for the implementer
 
+- **ruff hygiene (every task, before committing):** the per-task commands show `ruff check`, but you MUST also run `uv run ruff check --fix` AND `uv run ruff format` on **every file you touched — including `tests/` and `scripts/`**, not just `src/`. Recurring gotcha (it bit the prior PR): appended test blocks and the long seed literals are functionally correct but trip `ruff format --check` (line reflow) or E402 (mid-file imports). Put new imports in the top import block in alphabetical first-party order; never mid-file.
 - **Test isolation:** keep using unique fake `language` codes per test (`modt9`, `modtA`–`modtE`) — `vocab_items` is not truncated between tests; `modules`/`module_vocab` are.
 - **No frontend changes:** the Home panel from PR-A already renders `GET /modules/current`; advancing the pointer just changes which module/progress it returns.
 - **Deploy:** after merge, re-run `uv run python -m klara.scripts.load_de_modules` in prod to seed modules 2–8 (it's idempotent; module 1 stays, 2–8 are added, and the link-replace keeps it clean on reruns).
