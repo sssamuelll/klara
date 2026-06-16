@@ -7,6 +7,7 @@ import type {
   InvitationCreate,
   KlaraNoteResponse,
   MCResolveResponse,
+  ModuleCurrent,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
   PronunciationBatchOut,
@@ -187,6 +188,8 @@ export const api = {
     }),
 
   dueCards: (limit = 20) => request<CardOut[]>(`/srs/cards/due?limit=${limit}`),
+
+  currentModule: () => request<ModuleCurrent | null>("/modules/current"),
 
   // --- practice ("Pronunciar") ---
   // Backend emits camelCase (focusText, focusTx, targetLanguage, sourceTitle)

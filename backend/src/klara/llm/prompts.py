@@ -102,23 +102,33 @@ STORY_USER_PROMPT = """Genera una nueva micro-historia.
 
 Tema: {topic}
 Vocabulario reciente del estudiante en {target_label} (intenta NO repetir): {recent_vocab}
-{target_block}
+{objective_block}{target_block}
 Genera el JSON ahora."""
 
 
 def build_story_user_prompt(
-    *, topic: str, target_label: str, recent_vocab: str, target_lemmas: list[str]
+    *,
+    topic: str,
+    target_label: str,
+    recent_vocab: str,
+    target_lemmas: list[str],
+    module_objective: str | None = None,
 ) -> str:
     if target_lemmas:
         joined = ", ".join(target_lemmas)
         target_block = (
-            f"\nPALABRAS OBJETIVO DE HOY (el currículo las eligió por frecuencia; la historia "
+            f"\nPALABRAS OBJETIVO DE HOY (el currículo las eligió; la historia "
             f"DEBE girar en torno a ellas y deben aparecer en `target_words`): {joined}\n"
         )
     else:
         target_block = ""
+    objective_block = f"\n{module_objective.strip()}\n" if module_objective else ""
     return STORY_USER_PROMPT.format(
-        topic=topic, target_label=target_label, recent_vocab=recent_vocab, target_block=target_block
+        topic=topic,
+        target_label=target_label,
+        recent_vocab=recent_vocab,
+        objective_block=objective_block,
+        target_block=target_block,
     )
 
 

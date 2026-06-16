@@ -21,6 +21,7 @@ from klara.models.enums import CEFRLevel
 from klara.routers import (
     health,
     invitations,
+    modules,
     practice,
     pronunciation,
     speak,
@@ -225,6 +226,7 @@ def create_app() -> FastAPI:
     app.include_router(pronunciation.router, prefix="/api/v1")
     app.include_router(practice.router, prefix="/api/v1")
     app.include_router(speak.router, prefix="/api/v1")
+    app.include_router(modules.router, prefix="/api/v1")
 
     return app
 

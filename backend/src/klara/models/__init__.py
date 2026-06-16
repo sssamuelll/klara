@@ -3,6 +3,7 @@ from klara.models.audio import AudioCache
 from klara.models.base import Base
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating, SessionType
 from klara.models.invitation import Invitation
+from klara.models.module import Module, module_vocab
 from klara.models.oauth import OAuthAccount
 from klara.models.session import StudySession
 from klara.models.srs import Review, UserCard
@@ -16,6 +17,7 @@ __all__ = [
     "CEFRLevel",
     "CardState",
     "Invitation",
+    "Module",
     "OAuthAccount",
     "PartOfSpeech",
     "PronunciationAttempt",
@@ -29,4 +31,5 @@ __all__ = [
     "User",
     "UserCard",
     "VocabItem",
+    "module_vocab",
 ]

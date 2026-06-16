@@ -70,6 +70,12 @@
         "dek": "Free conversation, whatever's on your mind."
       }
     },
+    "module": {
+      "kicker": "Your module",
+      "progress_one": "You've met {{count}} of {{total}} words.",
+      "progress_other": "You've met {{count}} of {{total}} words.",
+      "empty": "No module yet. Generate your first story to start."
+    },
     "footer": {
       "edition": "Klara — {{city}} edition",
       "aria": "Klara — {{city}} edition"

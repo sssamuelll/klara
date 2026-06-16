@@ -176,6 +176,7 @@ async def generate_story(
     topic: str | None,
     model: str | None,
     target_lemmas: list[str] | None = None,
+    module_objective: str | None = None,
 ) -> GeneratedStory:
     target_label = language_label(target_language)
     native_label = language_label(native_language)
@@ -192,6 +193,7 @@ async def generate_story(
         target_label=target_label,
         recent_vocab=", ".join(recent) if recent else "(ninguno)",
         target_lemmas=target_lemmas or [],
+        module_objective=module_objective,
     )
 
     log.info(
@@ -278,8 +280,9 @@ async def generate_story(
     )
     db.add(story)
     await db.flush()
-    await db.commit()
     await db.refresh(story)
+    # NOTE: no commit here — the caller (create_story) owns the commit so the
+    # story and its module card-enrollment land in a single transaction.
 
     log.info(
         "story.generate.done",
