@@ -231,8 +231,9 @@ def test_parse_gender_csv_skips_unknown_genus():
 
 
 def test_parse_gender_csv_raises_on_missing_columns():
+    # Headers that resolve to neither a lemma nor a genus column.
     with pytest.raises(ValueError, match="lemma"):
-        parse_gender_csv("word,article\nTisch,der\n")
+        parse_gender_csv("foo,bar\nTisch,der\n")
 
 
 @pytest.mark.asyncio
@@ -484,13 +485,14 @@ Append to `backend/tests/test_gender_lexicon.py` (add `from klara.curriculum.gen
 ```python
 @pytest.mark.asyncio
 async def test_upsert_oracle_wins_over_llm_gender(db_session):
-    # Oracle says Mond is masculine (der) — the ES→DE incongruence trap.
-    await load_gender_lexicon(db_session, rows=[GenderRow(lemma="Mond", pos="noun", gender="der")])
+    # Each test uses a UNIQUE (uuid-suffixed) lemma because vocab_items is NOT
+    # truncated between tests — avoids cross-test collisions on the shared table.
+    lemma = f"Mond{uuid.uuid4().hex[:6]}"  # oracle says masculine (der); ES "la luna" trap
+    await load_gender_lexicon(db_session, rows=[GenderRow(lemma=lemma, pos="noun", gender="der")])
     await db_session.commit()
-    # LLM (wrongly) calls it "die" (Spanish "la luna" interference).
     saved = await _upsert_vocab_items(
         db_session,
-        [{"lemma": "Mond", "pos": "noun", "gender": "die", "translation": "luna"}],
+        [{"lemma": lemma, "pos": "noun", "gender": "die", "translation": "luna"}],  # LLM wrong
         CEFRLevel.A1,
         target_language="de",
         native_language="es",
@@ -502,9 +504,10 @@ async def test_upsert_oracle_wins_over_llm_gender(db_session):
 
 @pytest.mark.asyncio
 async def test_upsert_falls_back_to_llm_when_oracle_unknown(db_session):
+    lemma = f"Quux{uuid.uuid4().hex[:6]}"  # not in the oracle
     saved = await _upsert_vocab_items(
         db_session,
-        [{"lemma": "Quuxwort", "pos": "noun", "gender": "das", "translation": "x"}],
+        [{"lemma": lemma, "pos": "noun", "gender": "das", "translation": "x"}],
         CEFRLevel.A1,
         target_language="de",
         native_language="es",
@@ -515,22 +518,29 @@ async def test_upsert_falls_back_to_llm_when_oracle_unknown(db_session):
 
 
 @pytest.mark.asyncio
-async def test_upsert_oracle_not_clobbered_on_reupsert(db_session):
-    await load_gender_lexicon(db_session, rows=[GenderRow(lemma="Sonne", pos="noun", gender="die")])
+async def test_upsert_case_gate_protects_existing_oracle_gender(db_session):
+    """The CASE gate ALONE must protect a stored oracle gender. Seed the oracle,
+    land it, then REMOVE it from the oracle so resolve_gender returns None — a
+    later (wrong) LLM write must still NOT clobber the stored oracle gender. This
+    exercises the on_conflict CASE in isolation (without it, the gender would
+    flip to the LLM's value)."""
+    lemma = f"Sonne{uuid.uuid4().hex[:6]}"
+    await load_gender_lexicon(db_session, rows=[GenderRow(lemma=lemma, pos="noun", gender="die")])
     await db_session.commit()
-    # First upsert lands oracle gender.
-    await _upsert_vocab_items(
-        db_session, [{"lemma": "Sonne", "pos": "noun", "gender": "die", "translation": "sol"}],
+    await _upsert_vocab_items(  # 1st: oracle resolves → gender='die', source='oracle'
+        db_session, [{"lemma": lemma, "pos": "noun", "gender": "die", "translation": "sol"}],
         CEFRLevel.A1, target_language="de", native_language="es",
     )
     await db_session.commit()
-    # A later story where the LLM mislabels it must NOT overwrite the oracle gender.
-    saved = await _upsert_vocab_items(
-        db_session, [{"lemma": "Sonne", "pos": "noun", "gender": "der", "translation": "sol"}],
+    gl = await db_session.get(GenderLexicon, lemma)  # remove from oracle → resolve_gender→None
+    await db_session.delete(gl)
+    await db_session.commit()
+    saved = await _upsert_vocab_items(  # 2nd: resolve→None, source computed 'llm', excluded='der'
+        db_session, [{"lemma": lemma, "pos": "noun", "gender": "der", "translation": "sol"}],
         CEFRLevel.A1, target_language="de", native_language="es",
     )
     await db_session.commit()
-    assert saved[0].gender == "die"
+    assert saved[0].gender == "die"  # CASE kept the oracle value
     assert saved[0].gender_source == "oracle"
 ```
 
@@ -543,12 +553,9 @@ Expected: FAIL — gender_source is whatever the old code sets / oracle not cons
 
 Modify `backend/src/klara/services/story_gen.py`.
 
-Add imports at the top (with the other sqlalchemy / klara imports):
-
-```python
-from sqlalchemy import case
-from klara.curriculum.gender_lex import resolve_gender
-```
+Add imports — respect ruff isort order (do NOT add stray import lines):
+- Merge `case` into the existing sqlalchemy import: change `from sqlalchemy import select` to `from sqlalchemy import case, select` (one line, alphabetical).
+- Insert `from klara.curriculum.gender_lex import resolve_gender` in the `klara.curriculum.*` group — alphabetically AFTER `from klara.curriculum.coverage import verify_coverage` and BEFORE `from klara.curriculum.lemmatize import canonical_lemma`.
 
 In `_upsert_vocab_items`, replace the gender computation + the insert/on_conflict block (current lines 116, 121–139) with the oracle-aware version. The loop body becomes:
 
@@ -654,5 +661,12 @@ Expected: success.
 - **Test isolation:** `gender_lexicon` IS truncated between tests (Task 1, Step 7), so tests can seed specific lemmas freely. `vocab_items` is NOT truncated — keep the existing convention of unique lemmas where it matters.
 - **No frontend / no quiz changes in PR-A.** The gender-cloze + `gender_attempt` + the user-facing correction are PR-B.
 - **CSV acquisition (deploy-time, not code):** download `nouns.csv` from gambolputty/german-nouns (CC-BY-SA 4.0; add attribution to the repo's NOTICE/about), then run `uv run python -m klara.scripts.load_de_gender <path>` in prod. Until then the oracle is empty and the gate falls back to LLM gender (no regression — gender just isn't authoritative yet).
-- **Known v1 limitations (documented, acceptable):** homograph nouns with two genders (der/die See) collapse to one in the lexicon (last write wins on the `lemma` PK); the compound resolver is longest-suffix only (no full morphological decomposition). Both are fine for the A1 scope and revisited if needed.
+- **Known v1 limitations (documented, acceptable):** homograph nouns with two genders (der/die See) collapse to one in the lexicon (last write wins on the `lemma` PK); the compound resolver is longest-suffix only (no full morphological decomposition) and **only runs on exact misses** (rare for A1, which is mostly in the 100k lexicon exactly), accepting rare false positives — `_MIN_COMPOUND_HEAD=4` is the floor. Both are fine for A1 and revisited if needed.
+- **Verification decisions (settled, intentional — don't "fix" them):**
+  - `load_gender_lexicon` does NOT commit internally (the caller commits) — caller-controls-transaction is the chosen contract here, even though the sibling `inventory.load_frequency` commits internally. The CLI and tests commit explicitly.
+  - `db.refresh(item)` per noun after the SQL `CASE` update is deliberate (the identity-map instance is stale after an UPDATE-by-SQL); the extra SELECT is negligible against the LLM call on this path.
+  - `gender_lexicon.pos` is non-functional metadata — `resolve_gender` matches on lemma only (the table is noun-only).
+  - `gender_source` `server_default='llm'` is permanent (consistent with the repo's server-default convention); an unset provenance honestly reads as `llm`.
+  - `env.py`: insert `gender_lexicon` into the model-import tuple right after `audio` (the tuple starts at `audio`; it is already non-exhaustive — that's pre-existing, out of scope here).
+- **CSV header (verify at deploy):** `parse_gender_csv` resolves the lemma/genus columns by name (tolerant set, case-insensitive) and FAILS FAST listing the real headers if absent. When acquiring `nouns.csv`, confirm its actual `lemma`/`genus` column names match the candidate sets; widen them if needed before running the CLI in prod.
 - **PR-B (next plan):** `gender_attempt` table + `is_mastered_gender` + deterministic `gender_cloze` in Finish + tap picker + grading vs oracle + i18n.
