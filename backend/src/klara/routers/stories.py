@@ -17,6 +17,12 @@ from fastapi import (
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.modules import (
+    enroll_cards,
+    ensure_active_module,
+    module_target_lemmas,
+    module_vocab_ids,
+)
 from klara.curriculum.selection import next_target_words
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import language_label, t
@@ -105,6 +111,18 @@ async def _load_words(db, ids: list[UUID]) -> list[VocabItem]:
     return [by_id[i] for i in ids if i in by_id]
 
 
+def _module_objective(module) -> str:
+    """Build the module objective block injected into the story prompt."""
+    can_dos = "; ".join(module.can_dos or [])
+    focus = "; ".join(module.grammatical_focus or [])
+    parts = ["OBJETIVO DEL MÓDULO (la historia debe servir este objetivo, sin forzar):"]
+    if can_dos:
+        parts.append(f"Can-do: {can_dos}.")
+    if focus:
+        parts.append(f"Foco gramatical: {focus}.")
+    return " ".join(parts)
+
+
 @router.post("", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
 async def create_story(
     payload: StoryCreateRequest,
@@ -115,9 +133,19 @@ async def create_story(
     background: BackgroundTasks,
 ) -> StoryOut:
     level = payload.level or user.level
-    target_words_sel = await next_target_words(
-        db, user_id=user.id, language=user.target_language, level=level, n=5
-    )
+    active = await ensure_active_module(db, user)
+    if active is not None:
+        target_lemmas = await module_target_lemmas(db, active)
+        mod_vids = await module_vocab_ids(db, active)
+        objective = _module_objective(active)
+    else:
+        target_words_sel = await next_target_words(
+            db, user_id=user.id, language=user.target_language, level=level, n=5
+        )
+        target_lemmas = [w.lemma for w in target_words_sel]
+        mod_vids = set()
+        objective = None
+
     result = await generate_story(
         db,
         llm,
@@ -128,8 +156,15 @@ async def create_story(
         learning_context=user.learning_context,
         topic=payload.topic,
         model=None,
-        target_lemmas=[w.lemma for w in target_words_sel],
+        target_lemmas=target_lemmas,
+        module_objective=objective,
     )
+
+    if active is not None:
+        enrolled = [w.id for w in result.target_words if w.id in mod_vids]
+        await enroll_cards(db, user_id=user.id, vocab_item_ids=enrolled)
+        await db.commit()
+
     serialized = _serialize_story(result.story, result.target_words, user.native_language)
     target_words_dicts = [
         {"lemma": w.lemma, "example_target": w.example_target} for w in result.target_words

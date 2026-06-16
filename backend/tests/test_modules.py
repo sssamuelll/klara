@@ -179,3 +179,74 @@ async def test_get_current_module_empty_when_none(db_session):
         resp = await ac.get("/api/v1/modules/current")
     assert resp.status_code == 200, resp.text
     assert resp.json() is None
+
+
+class _CafeLLM:
+    """Returns a story that contains 'Kaffee' (covered) and declares it a target word."""
+
+    def __init__(self):
+        self.provider = "fake"
+        self.model = "fake"
+        self.cost_usd = 0.0
+
+    async def complete(self, **kwargs):
+        import json
+        from types import SimpleNamespace
+
+        data = {
+            "title": "Der Kaffee",
+            "sentences": [
+                {
+                    "target": "Der Kaffee ist heiß.",
+                    "native": "El café está caliente.",
+                    "new_words": ["Kaffee"],
+                    "breakdown": [{"word": "Kaffee", "translation": "café", "pos": "noun"}],
+                }
+            ],
+            "comprehension_questions": [],
+            "target_words": [
+                {"lemma": "Kaffee", "pos": "noun", "gender": "der",
+                 "translation": "café", "example_target": "Der Kaffee."},
+            ],
+        }
+        return SimpleNamespace(content=json.dumps(data), provider="fake", model="fake", cost_usd=0.0)
+
+
+@pytest.mark.asyncio
+async def test_create_story_drives_from_module_and_auto_enrolls(db_session):
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy import func, select
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep, get_story_llm
+    from klara.main import create_app
+
+    # Module 'café' with vocab 'Kaffee' (the lemma the fake LLM will cover).
+    v = await _vocab(db_session, lemma="Kaffee", language="modt7")
+    m = await _module(db_session, language="modt7", order=1, title="En el café", vocab=[v])
+    u = await _user(db_session)
+    u.target_language = "modt7"
+    await db_session.commit()
+    assert u.current_module_id is None  # lazy-init happens in create_story
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    app.dependency_overrides[get_story_llm] = lambda: _CafeLLM()
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post("/api/v1/stories", json={"topic": None})
+    assert resp.status_code == 201, resp.text
+
+    # Pointer initialized to the module.
+    reloaded = await db_session.get(type(u), u.id)
+    assert reloaded.current_module_id == m.id
+    # 'Kaffee' auto-enrolled as a NEW card.
+    n = (
+        await db_session.execute(
+            select(func.count()).select_from(UserCard).where(
+                UserCard.user_id == u.id, UserCard.vocab_item_id == v.id
+            )
+        )
+    ).scalar_one()
+    assert n == 1
