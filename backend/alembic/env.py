@@ -9,6 +9,7 @@ from alembic import context
 from klara.config import get_settings
 from klara.models import (  # noqa: F401  (ensure all models are imported for autogenerate)
     audio,
+    gender_lexicon,
     module,
     oauth,
     session,

@@ -4,11 +4,12 @@ from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.curriculum.coverage import verify_coverage
+from klara.curriculum.gender_lex import resolve_gender
 from klara.curriculum.lemmatize import canonical_lemma
 from klara.i18n import language_label
 from klara.llm.base import LLMClient, Message
@@ -113,7 +114,17 @@ async def _upsert_vocab_items(
             continue
         pos = _parse_pos(w.get("pos"))
         lemma, inferred_gender = _clean_lemma(raw_lemma, target_language=target_language)
-        gender = _parse_gender(w.get("gender"), target_language=target_language) or inferred_gender
+        llm_gender = (
+            _parse_gender(w.get("gender"), target_language=target_language) or inferred_gender
+        )
+
+        # Oracle wins: if the authoritative lexicon resolves this lemma, use it
+        # and mark provenance 'oracle'; otherwise fall back to the LLM's guess.
+        oracle_gender = await resolve_gender(db, lemma) if target_language == "de" else None
+        if oracle_gender is not None:
+            gender, gender_source = oracle_gender, "oracle"
+        else:
+            gender, gender_source = llm_gender, "llm"
 
         translation = (w.get("translation") or "").strip() or None
         translations = {native_language: translation} if translation else {}
@@ -123,6 +134,7 @@ async def _upsert_vocab_items(
             language=target_language,
             pos=pos,
             gender=gender,
+            gender_source=gender_source,
             plural=w.get("plural") or None,
             translations=translations,
             example_target=w.get("example_target") or None,
@@ -133,8 +145,16 @@ async def _upsert_vocab_items(
             set_={
                 "translations": VocabItem.translations.op("||")(stmt.excluded.translations),
                 "example_target": stmt.excluded.example_target,
-                "gender": stmt.excluded.gender,
                 "plural": stmt.excluded.plural,
+                # Never let a non-oracle write clobber an existing oracle gender.
+                "gender": case(
+                    (VocabItem.gender_source == "oracle", VocabItem.gender),
+                    else_=stmt.excluded.gender,
+                ),
+                "gender_source": case(
+                    (VocabItem.gender_source == "oracle", VocabItem.gender_source),
+                    else_=stmt.excluded.gender_source,
+                ),
             },
         ).returning(VocabItem.id)
         result = await db.execute(stmt)
@@ -142,6 +162,7 @@ async def _upsert_vocab_items(
 
         item = await db.get(VocabItem, vocab_id)
         if item is not None:
+            await db.refresh(item)
             saved.append(item)
     return saved
 

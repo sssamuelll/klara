@@ -1,4 +1,4 @@
-from sqlalchemy import Index, Integer, String, UniqueConstraint, text
+from sqlalchemy import CheckConstraint, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -11,6 +11,9 @@ class VocabItem(Base):
     __table_args__ = (
         UniqueConstraint("lemma", "language", "pos", name="uq_vocab_lemma_lang_pos"),
         Index("ix_vocab_cefr_freq", "cefr_level", "frequency_rank"),
+        CheckConstraint(
+            "gender_source IN ('oracle', 'llm', 'user')", name="ck_vocab_gender_source"
+        ),
     )
 
     id: Mapped[uuid_pk]
@@ -22,6 +25,9 @@ class VocabItem(Base):
         nullable=False,
     )
     gender: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    gender_source: Mapped[str] = mapped_column(
+        String(8), server_default="llm", default="llm", nullable=False
+    )  # oracle | llm | user
     plural: Mapped[str | None] = mapped_column(String(120), nullable=True)
     translations: Mapped[dict] = mapped_column(
         JSONB,
