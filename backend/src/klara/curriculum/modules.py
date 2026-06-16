@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.curriculum.competence import module_progress
 from klara.models import Module, User, UserCard, VocabItem, module_vocab
 from klara.models.enums import CEFRLevel, PartOfSpeech
 
@@ -111,6 +112,11 @@ async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) 
         )
         module_id = (await db.execute(mod_stmt)).scalar_one()
 
+        # Replace the module's vocab links (idempotent re-seed must not leave
+        # stale links when the curated list changes). Safe: UserCards reference
+        # vocab_items directly, not these association rows.
+        await db.execute(delete(module_vocab).where(module_vocab.c.module_id == module_id))
+
         for w in spec["vocab"]:
             voc_stmt = (
                 pg_insert(VocabItem)
@@ -138,3 +144,50 @@ async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) 
             )
             await db.execute(link_stmt)
     return len(modules)
+
+
+async def advance_module_if_mastered(
+    db: AsyncSession, *, user: User, reviewed_vocab_item_id: UUID
+) -> bool:
+    """Forward-only module advancement, called from submit_review after a review
+    changes a card's state. No-op unless the reviewed card belongs to the active
+    module AND that module's mastery ≥ its threshold. Returns True if the pointer
+    advanced. Caller commits."""
+    if user.current_module_id is None:
+        return False
+    module = await db.get(Module, user.current_module_id)
+    if module is None or module.language != user.target_language:
+        return False
+    # No-op guard: only react to reviews of cards in the active module.
+    in_module = (
+        await db.execute(
+            select(module_vocab.c.vocab_item_id).where(
+                module_vocab.c.module_id == module.id,
+                module_vocab.c.vocab_item_id == reviewed_vocab_item_id,
+            )
+        )
+    ).first()
+    if in_module is None:
+        return False
+    # Flush the just-updated card so module_progress reads fresh state — robust
+    # even if a future sessionmaker disables autoflush (today it defaults on).
+    await db.flush()
+    _, mastered, total = await module_progress(db, user_id=user.id, module_id=module.id)
+    if total == 0 or mastered / total < module.mastery_threshold:
+        return False
+    nxt = (
+        await db.execute(
+            select(Module)
+            .where(
+                Module.language == user.target_language,
+                Module.sequence_order > module.sequence_order,
+            )
+            .order_by(Module.sequence_order.asc())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if nxt is None:
+        return False  # last module — stay
+    user.current_module_id = nxt.id
+    await db.flush()
+    return True

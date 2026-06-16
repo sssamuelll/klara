@@ -5,6 +5,7 @@ import uuid
 import pytest
 
 from klara.curriculum.modules import (
+    advance_module_if_mastered,
     enroll_cards,
     ensure_active_module,
     load_modules,
@@ -299,3 +300,203 @@ async def test_load_modules_is_idempotent(db_session):
         )
     ).scalar_one()
     assert {v.lemma for v in m.vocab_items} == {"Kaffee", "Tee"}
+
+
+@pytest.mark.asyncio
+async def test_load_modules_replaces_vocab_links_on_reseed(db_session):
+    # First seed: module has {Apfel, Birne}.
+    spec_v1 = [
+        {
+            "sequence_order": 1,
+            "title": "Obst",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {
+                    "lemma": "Apfel",
+                    "pos": "noun",
+                    "gender": "der",
+                    "translations": {"es": "manzana"},
+                },
+                {"lemma": "Birne", "pos": "noun", "gender": "die", "translations": {"es": "pera"}},
+            ],
+        }
+    ]
+    await load_modules(db_session, language="modt9", modules=spec_v1)
+    await db_session.commit()
+    # Re-seed same module with a DIFFERENT vocab set {Apfel, Traube} — Birne dropped.
+    spec_v2 = [
+        {
+            "sequence_order": 1,
+            "title": "Obst",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {
+                    "lemma": "Apfel",
+                    "pos": "noun",
+                    "gender": "der",
+                    "translations": {"es": "manzana"},
+                },
+                {"lemma": "Traube", "pos": "noun", "gender": "die", "translations": {"es": "uva"}},
+            ],
+        }
+    ]
+    await load_modules(db_session, language="modt9", modules=spec_v2)
+    await db_session.commit()
+
+    from sqlalchemy import select as _select
+
+    from klara.models import Module
+
+    m = (
+        await db_session.execute(
+            _select(Module).where(Module.language == "modt9", Module.sequence_order == 1)
+        )
+    ).scalar_one()
+    # Links reflect ONLY the v2 set — no stale Birne link.
+    assert {v.lemma for v in m.vocab_items} == {"Apfel", "Traube"}
+
+
+async def _mastered_card(db, user_id, vocab_item_id):
+    db.add(
+        UserCard(
+            id=uuid.uuid4(),
+            user_id=user_id,
+            vocab_item_id=vocab_item_id,
+            state=CardState.REVIEWING,
+            interval_days=30.0,
+        )
+    )
+
+
+@pytest.mark.asyncio
+async def test_advance_moves_pointer_when_module_mastered(db_session):
+    v1 = await _vocab(db_session, lemma="Tag", language="modtA")
+    v2 = await _vocab(db_session, lemma="Nacht", language="modtA")
+    m1 = await _module(db_session, language="modtA", order=1, title="Uno", vocab=[v1, v2])
+    m2 = await _module(db_session, language="modtA", order=2, title="Dos", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtA"
+    u.current_module_id = m1.id
+    # Both m1 words mastered → 2/2 ≥ 0.85.
+    await _mastered_card(db_session, u.id, v1.id)
+    await _mastered_card(db_session, u.id, v2.id)
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is True
+    assert u.current_module_id == m2.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_when_reviewed_card_not_in_active_module(db_session):
+    v_in = await _vocab(db_session, lemma="Haus", language="modtB")
+    v_out = await _vocab(db_session, lemma="Auto", language="modtB")
+    m1 = await _module(db_session, language="modtB", order=1, title="Uno", vocab=[v_in])
+    await _module(db_session, language="modtB", order=2, title="Dos", vocab=[v_in])
+    u = await _user(db_session)
+    u.target_language = "modtB"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v_in.id)  # module IS mastered (1/1)
+    await db_session.commit()
+
+    # Reviewed an OFF-module card → no-op even though the module is mastered.
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v_out.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_when_not_yet_mastered(db_session):
+    v1 = await _vocab(db_session, lemma="Brot", language="modtC")
+    v2 = await _vocab(db_session, lemma="Milch", language="modtC")
+    m1 = await _module(db_session, language="modtC", order=1, title="Uno", vocab=[v1, v2])
+    await _module(db_session, language="modtC", order=2, title="Dos", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtC"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v1.id)  # only 1/2 mastered → 0.5 < 0.85
+    db_session.add(
+        UserCard(id=uuid.uuid4(), user_id=u.id, vocab_item_id=v2.id, state=CardState.NEW)
+    )
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id
+
+
+@pytest.mark.asyncio
+async def test_advance_noop_on_last_module(db_session):
+    v1 = await _vocab(db_session, lemma="Stadt", language="modtD")
+    m1 = await _module(db_session, language="modtD", order=1, title="Único", vocab=[v1])
+    u = await _user(db_session)
+    u.target_language = "modtD"
+    u.current_module_id = m1.id
+    await _mastered_card(db_session, u.id, v1.id)  # mastered, but no next module
+    await db_session.commit()
+
+    advanced = await advance_module_if_mastered(db_session, user=u, reviewed_vocab_item_id=v1.id)
+    assert advanced is False
+    assert u.current_module_id == m1.id  # stays on the last module
+
+
+@pytest.mark.asyncio
+async def test_submit_review_advances_module_on_mastery(db_session):
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    # Active module m1 with one word; mastering it should advance to m2.
+    v = await _vocab(db_session, lemma="Wort", language="modtE")
+    m1 = await _module(db_session, language="modtE", order=1, title="Uno", vocab=[v])
+    m2 = await _module(db_session, language="modtE", order=2, title="Dos", vocab=[v])
+    u = await _user(db_session)
+    u.target_language = "modtE"
+    u.current_module_id = m1.id
+    # A card already near mastery (REVIEWING, interval 20) so one GOOD pushes it ≥21d.
+    card = UserCard(
+        id=uuid.uuid4(),
+        user_id=u.id,
+        vocab_item_id=v.id,
+        state=CardState.REVIEWING,
+        interval_days=20.0,
+        ease=2.5,
+        repetitions=3,
+    )
+    db_session.add(card)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(f"/api/v1/srs/cards/{card.id}/review", json={"rating": "good"})
+    assert resp.status_code == 200, resp.text
+    # GOOD on a 20d REVIEWING card → interval *= ease (≈50d) ≥ 21 → mastered → advance.
+    reloaded = await db_session.get(type(u), u.id)
+    assert reloaded.current_module_id == m2.id
+
+
+def test_de_module_sequence_is_well_formed():
+    from klara.scripts.load_de_modules import MODULES
+
+    # 8 contiguous A1 modules, unique titles, each with can-dos + focus + vocab.
+    assert len(MODULES) == 8
+    orders = sorted(m["sequence_order"] for m in MODULES)
+    assert orders == [1, 2, 3, 4, 5, 6, 7, 8]
+    assert len({m["title"] for m in MODULES}) == 8
+    for m in MODULES:
+        assert m["cefr_level"] == "A1"
+        assert m["can_dos"] and m["grammatical_focus"] and m["vocab"]
+        for w in m["vocab"]:
+            assert w["lemma"] and w["pos"] in {"noun", "verb", "adjective", "adverb"}
+            # Every German noun must carry a gender (der/die/das).
+            if w["pos"] == "noun":
+                assert w.get("gender") in {"der", "die", "das"}, (m["title"], w["lemma"])
