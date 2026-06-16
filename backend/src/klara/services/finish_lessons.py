@@ -152,9 +152,18 @@ def build_gender_cloze(words: list[VocabItem], *, native_language: str) -> dict 
     noun whose gender comes from the oracle (authoritative). Returns the quiz
     item dict, or None when no oracle-gendered noun is available (e.g. the oracle
     isn't loaded yet) — in which case the quiz is served unchanged. The correct
-    article is NOT included: grading is server-side (POST /gender/attempts)."""
+    article is NOT included: grading is server-side (POST /gender/attempts).
+
+    Restricted to German: the der/die/das picker and grading contract are
+    German-specific, so a non-German oracle noun (a future fr/pt oracle) must not
+    surface here. v1 is German-only per the spec."""
     for w in words:
-        if w.pos == PartOfSpeech.NOUN and w.gender_source == "oracle" and w.gender:
+        if (
+            w.language == "de"
+            and w.pos == PartOfSpeech.NOUN
+            and w.gender_source == "oracle"
+            and w.gender in {"der", "die", "das"}
+        ):
             return {
                 "type": "gender_cloze",
                 "cap": "gender",  # frontend localizes the caption

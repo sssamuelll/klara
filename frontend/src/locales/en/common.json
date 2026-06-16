@@ -226,7 +226,8 @@
           "cap": "The article",
           "prompt": "der, die or das?",
           "correct": "Correct.",
-          "wrong": "It was «{{correct}}»."
+          "wrong": "It was «{{correct}}».",
+          "failed": "We couldn't check your answer."
         },
         "reveal": "Reveal",
         "yourTurn": "Your turn",

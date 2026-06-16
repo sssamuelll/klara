@@ -226,7 +226,8 @@
           "cap": "Der Artikel",
           "prompt": "der, die oder das?",
           "correct": "Richtig.",
-          "wrong": "Es war «{{correct}}»."
+          "wrong": "Es war «{{correct}}».",
+          "failed": "Wir konnten deine Antwort nicht prüfen."
         },
         "reveal": "Antwort zeigen",
         "yourTurn": "Du bist dran",

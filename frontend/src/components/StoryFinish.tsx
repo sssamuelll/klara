@@ -902,7 +902,10 @@ function GenderClozeQuestion({
 }: GenderClozeProps): JSX.Element {
   const { t } = useTranslation();
   const [picked, setPicked] = useState<string | null>(null);
-  const [result, setResult] = useState<{ correct: boolean; correctGender: string } | null>(null);
+  const [result, setResult] = useState<{
+    correct: boolean;
+    correctGender: string | null;
+  } | null>(null);
 
   const onPick = (article: string) => {
     if (picked) return;
@@ -917,8 +920,9 @@ function GenderClozeQuestion({
         onAnswered({ correct: r.was_correct, revealed: false });
       })
       .catch(() => {
-        // On failure, grade optimistically as wrong-unknown but still advance.
-        setResult({ correct: false, correctGender: "" });
+        // On failure we couldn't verify: grade as wrong-unknown (no correct
+        // article to show) but still advance so the user is never stuck.
+        setResult({ correct: false, correctGender: null });
         onAnswered({ correct: false, revealed: false });
       });
   };
@@ -956,8 +960,10 @@ function GenderClozeQuestion({
             <span className="qcard__verdict">
               {result.correct ? (
                 <em>{t("story.finish.quiz.genderCloze.correct")}</em>
-              ) : (
+              ) : result.correctGender ? (
                 t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
+              ) : (
+                t("story.finish.quiz.genderCloze.failed")
               )}
             </span>
             <button

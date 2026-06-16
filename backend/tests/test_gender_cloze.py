@@ -102,6 +102,21 @@ def test_build_gender_cloze_none_when_no_oracle_noun():
     assert build_gender_cloze([only_llm], native_language="es") is None
 
 
+def test_build_gender_cloze_skips_non_german_oracle_noun():
+    from klara.services.finish_lessons import build_gender_cloze
+
+    # der/die/das is German-specific; a non-German oracle noun must not surface.
+    fr_noun = VocabItem(
+        id=uuid.uuid4(),
+        language="fr",
+        lemma="lune",
+        pos=PartOfSpeech.NOUN,
+        gender="die",  # nonsensical for fr — exactly why the language guard matters
+        gender_source="oracle",
+    )
+    assert build_gender_cloze([fr_noun], native_language="es") is None
+
+
 @pytest.mark.asyncio
 async def test_get_quiz_appends_gender_cloze(db_session):
     from httpx import ASGITransport, AsyncClient
