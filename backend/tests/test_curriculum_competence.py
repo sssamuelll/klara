@@ -5,9 +5,14 @@ import uuid
 
 import pytest
 
-from klara.curriculum.competence import known_set
-from klara.models import User, UserCard, VocabItem
-from klara.models.enums import CEFRLevel, PartOfSpeech
+from klara.curriculum.competence import (
+    MASTERY_INTERVAL_DAYS,
+    is_mastered_lexical,
+    known_set,
+    module_progress,
+)
+from klara.models import Module, User, UserCard, VocabItem
+from klara.models.enums import CardState, CEFRLevel, PartOfSpeech
 
 
 async def _user(db) -> uuid.UUID:
@@ -56,31 +61,27 @@ async def test_known_set_empty_when_no_cards(db_session):
     assert await known_set(db_session, user_id=uid, language="de") == set()
 
 
-import uuid
-
-import pytest
-
-from klara.curriculum.competence import (
-    MASTERY_INTERVAL_DAYS,
-    is_mastered_lexical,
-    module_progress,
-)
-from klara.models import Module, UserCard, VocabItem
-from klara.models.enums import CardState, CEFRLevel, PartOfSpeech
-
-
 def test_is_mastered_lexical_thresholds():
     reviewing_mature = UserCard(
-        id=uuid.uuid4(), user_id=uuid.uuid4(), vocab_item_id=uuid.uuid4(),
-        state=CardState.REVIEWING, interval_days=MASTERY_INTERVAL_DAYS,
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        vocab_item_id=uuid.uuid4(),
+        state=CardState.REVIEWING,
+        interval_days=MASTERY_INTERVAL_DAYS,
     )
     reviewing_young = UserCard(
-        id=uuid.uuid4(), user_id=uuid.uuid4(), vocab_item_id=uuid.uuid4(),
-        state=CardState.REVIEWING, interval_days=5.0,
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        vocab_item_id=uuid.uuid4(),
+        state=CardState.REVIEWING,
+        interval_days=5.0,
     )
     learning = UserCard(
-        id=uuid.uuid4(), user_id=uuid.uuid4(), vocab_item_id=uuid.uuid4(),
-        state=CardState.LEARNING, interval_days=99.0,
+        id=uuid.uuid4(),
+        user_id=uuid.uuid4(),
+        vocab_item_id=uuid.uuid4(),
+        state=CardState.LEARNING,
+        interval_days=99.0,
     )
     assert is_mastered_lexical(reviewing_mature) is True
     assert is_mastered_lexical(reviewing_young) is False
@@ -89,12 +90,17 @@ def test_is_mastered_lexical_thresholds():
 
 @pytest.mark.asyncio
 async def test_module_progress_counts_encountered_and_mastered(db_session):
-    from klara.models import User
-
     u = User(
-        id=uuid.uuid4(), email=f"mp-{uuid.uuid4().hex[:6]}@k.app", hashed_password="x",
-        is_active=True, is_verified=True, is_superuser=False, display_name="MP",
-        level=CEFRLevel.A1, native_language="es", target_language="de",
+        id=uuid.uuid4(),
+        email=f"mp-{uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="MP",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
     )
     db_session.add(u)
     vs = []
@@ -104,23 +110,36 @@ async def test_module_progress_counts_encountered_and_mastered(db_session):
         vs.append(v)
     await db_session.flush()
     m = Module(
-        id=uuid.uuid4(), language="modt2", cefr_level=CEFRLevel.A1, sequence_order=1,
-        title="café", can_dos=["x"], grammatical_focus=["y"],
+        id=uuid.uuid4(),
+        language="modt2",
+        cefr_level=CEFRLevel.A1,
+        sequence_order=1,
+        title="café",
+        can_dos=["x"],
+        grammatical_focus=["y"],
     )
     m.vocab_items = vs
     db_session.add(m)
     await db_session.flush()
     # Kaffee: mastered (REVIEWING, interval>=21). Tasse: encountered only (NEW). Milch: no card.
-    db_session.add(UserCard(
-        id=uuid.uuid4(), user_id=u.id, vocab_item_id=vs[0].id,
-        state=CardState.REVIEWING, interval_days=30.0,
-    ))
-    db_session.add(UserCard(
-        id=uuid.uuid4(), user_id=u.id, vocab_item_id=vs[1].id, state=CardState.NEW,
-    ))
+    db_session.add(
+        UserCard(
+            id=uuid.uuid4(),
+            user_id=u.id,
+            vocab_item_id=vs[0].id,
+            state=CardState.REVIEWING,
+            interval_days=30.0,
+        )
+    )
+    db_session.add(
+        UserCard(
+            id=uuid.uuid4(),
+            user_id=u.id,
+            vocab_item_id=vs[1].id,
+            state=CardState.NEW,
+        )
+    )
     await db_session.commit()
 
-    encountered, mastered, total = await module_progress(
-        db_session, user_id=u.id, module_id=m.id
-    )
+    encountered, mastered, total = await module_progress(db_session, user_id=u.id, module_id=m.id)
     assert (encountered, mastered, total) == (2, 1, 3)

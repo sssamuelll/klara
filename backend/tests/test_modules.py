@@ -4,7 +4,15 @@ import uuid
 
 import pytest
 
-from klara.models import Module, User, VocabItem
+from klara.curriculum.modules import (
+    enroll_cards,
+    ensure_active_module,
+    load_modules,
+    module_target_lemmas,
+    module_vocab_ids,
+    read_active_module,
+)
+from klara.models import Module, User, UserCard, VocabItem
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech
 
 
@@ -66,16 +74,6 @@ async def test_module_roundtrips_with_vocab_and_user_pointer(db_session):
     assert reloaded_user.current_module_id == m.id
 
 
-from klara.curriculum.modules import (
-    enroll_cards,
-    ensure_active_module,
-    module_target_lemmas,
-    module_vocab_ids,
-    read_active_module,
-)
-from klara.models import UserCard
-
-
 @pytest.mark.asyncio
 async def test_ensure_active_module_inits_pointer_when_null(db_session):
     v = await _vocab(db_session, lemma="Brot", language="modt3")
@@ -119,11 +117,12 @@ async def test_enroll_cards_is_idempotent(db_session):
     await enroll_cards(db_session, user_id=u.id, vocab_item_ids=[v.id])  # again
     await db_session.commit()
     from sqlalchemy import func, select
+
     n = (
         await db_session.execute(
-            select(func.count()).select_from(UserCard).where(
-                UserCard.user_id == u.id, UserCard.vocab_item_id == v.id
-            )
+            select(func.count())
+            .select_from(UserCard)
+            .where(UserCard.user_id == u.id, UserCard.vocab_item_id == v.id)
         )
     ).scalar_one()
     assert n == 1
@@ -137,7 +136,9 @@ async def test_get_current_module_endpoint(db_session):
     u = await _user(db_session)
     u.target_language = "modt6"
     u.current_module_id = m.id
-    db_session.add(UserCard(id=uuid.uuid4(), user_id=u.id, vocab_item_id=v1.id, state=CardState.NEW))
+    db_session.add(
+        UserCard(id=uuid.uuid4(), user_id=u.id, vocab_item_id=v1.id, state=CardState.NEW)
+    )
     await db_session.commit()
 
     from httpx import ASGITransport, AsyncClient
@@ -205,11 +206,18 @@ class _CafeLLM:
             ],
             "comprehension_questions": [],
             "target_words": [
-                {"lemma": "Kaffee", "pos": "noun", "gender": "der",
-                 "translation": "café", "example_target": "Der Kaffee."},
+                {
+                    "lemma": "Kaffee",
+                    "pos": "noun",
+                    "gender": "der",
+                    "translation": "café",
+                    "example_target": "Der Kaffee.",
+                },
             ],
         }
-        return SimpleNamespace(content=json.dumps(data), provider="fake", model="fake", cost_usd=0.0)
+        return SimpleNamespace(
+            content=json.dumps(data), provider="fake", model="fake", cost_usd=0.0
+        )
 
 
 @pytest.mark.asyncio
@@ -218,7 +226,8 @@ async def test_create_story_drives_from_module_and_auto_enrolls(db_session):
     from sqlalchemy import func, select
 
     from klara.auth.users import current_active_user
-    from klara.dependencies import db_session as db_session_dep, get_story_llm
+    from klara.dependencies import db_session as db_session_dep
+    from klara.dependencies import get_story_llm
     from klara.main import create_app
 
     # Module 'café' with vocab 'Kaffee' (the lemma the fake LLM will cover).
@@ -244,15 +253,13 @@ async def test_create_story_drives_from_module_and_auto_enrolls(db_session):
     # 'Kaffee' auto-enrolled as a NEW card.
     n = (
         await db_session.execute(
-            select(func.count()).select_from(UserCard).where(
-                UserCard.user_id == u.id, UserCard.vocab_item_id == v.id
-            )
+            select(func.count())
+            .select_from(UserCard)
+            .where(UserCard.user_id == u.id, UserCard.vocab_item_id == v.id)
         )
     ).scalar_one()
     assert n == 1
 
-
-from klara.curriculum.modules import load_modules
 
 _SEED = [
     {
@@ -279,6 +286,7 @@ async def test_load_modules_is_idempotent(db_session):
     from sqlalchemy import func, select
 
     from klara.models import Module
+
     count = (
         await db_session.execute(
             select(func.count()).select_from(Module).where(Module.language == "modt8")
