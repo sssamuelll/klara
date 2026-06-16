@@ -11,7 +11,8 @@ from klara.curriculum.gender_lex import (
     resolve_gender,
 )
 from klara.models import GenderLexicon, VocabItem
-from klara.models.enums import PartOfSpeech
+from klara.models.enums import CEFRLevel, PartOfSpeech
+from klara.services.story_gen import _upsert_vocab_items
 
 
 @pytest.mark.asyncio
@@ -81,3 +82,70 @@ async def test_resolve_gender_exact_and_compound(db_session):
     assert await resolve_gender(db_session, "Tisch") == "der"  # exact
     assert await resolve_gender(db_session, "Hausaufgabe") == "die"  # compound → Aufgabe
     assert await resolve_gender(db_session, "Quux") is None  # unknown → None, never a guess
+
+
+@pytest.mark.asyncio
+async def test_upsert_oracle_wins_over_llm_gender(db_session):
+    # Each test uses a UNIQUE (uuid-suffixed) lemma because vocab_items is NOT
+    # truncated between tests — avoids cross-test collisions on the shared table.
+    lemma = f"Mond{uuid.uuid4().hex[:6]}"  # oracle says masculine (der); ES "la luna" trap
+    await load_gender_lexicon(db_session, rows=[GenderRow(lemma=lemma, pos="noun", gender="der")])
+    await db_session.commit()
+    saved = await _upsert_vocab_items(
+        db_session,
+        [{"lemma": lemma, "pos": "noun", "gender": "die", "translation": "luna"}],  # LLM wrong
+        CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+    )
+    await db_session.commit()
+    assert saved[0].gender == "der"  # oracle wins
+    assert saved[0].gender_source == "oracle"
+
+
+@pytest.mark.asyncio
+async def test_upsert_falls_back_to_llm_when_oracle_unknown(db_session):
+    lemma = f"Quux{uuid.uuid4().hex[:6]}"  # not in the oracle
+    saved = await _upsert_vocab_items(
+        db_session,
+        [{"lemma": lemma, "pos": "noun", "gender": "das", "translation": "x"}],
+        CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+    )
+    await db_session.commit()
+    assert saved[0].gender == "das"
+    assert saved[0].gender_source == "llm"
+
+
+@pytest.mark.asyncio
+async def test_upsert_case_gate_protects_existing_oracle_gender(db_session):
+    """The CASE gate ALONE must protect a stored oracle gender. Seed the oracle,
+    land it, then REMOVE it from the oracle so resolve_gender returns None — a
+    later (wrong) LLM write must still NOT clobber the stored oracle gender. This
+    exercises the on_conflict CASE in isolation (without it, the gender would
+    flip to the LLM's value)."""
+    lemma = f"Sonne{uuid.uuid4().hex[:6]}"
+    await load_gender_lexicon(db_session, rows=[GenderRow(lemma=lemma, pos="noun", gender="die")])
+    await db_session.commit()
+    await _upsert_vocab_items(  # 1st: oracle resolves → gender='die', source='oracle'
+        db_session,
+        [{"lemma": lemma, "pos": "noun", "gender": "die", "translation": "sol"}],
+        CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+    )
+    await db_session.commit()
+    gl = await db_session.get(GenderLexicon, lemma)  # remove from oracle → resolve_gender→None
+    await db_session.delete(gl)
+    await db_session.commit()
+    saved = await _upsert_vocab_items(  # 2nd: resolve→None, source computed 'llm', excluded='der'
+        db_session,
+        [{"lemma": lemma, "pos": "noun", "gender": "der", "translation": "sol"}],
+        CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+    )
+    await db_session.commit()
+    assert saved[0].gender == "die"  # CASE kept the oracle value
+    assert saved[0].gender_source == "oracle"
