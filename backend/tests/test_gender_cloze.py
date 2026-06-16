@@ -230,3 +230,149 @@ async def test_gender_attempt_endpoint_grades_against_oracle(db_session):
         await db_session.execute(select(GenderAttempt).where(GenderAttempt.vocab_item_id == v.id))
     ).scalar_one()
     assert row.picked_article == "die" and row.was_correct is False
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_404_when_vocab_not_in_story(db_session):
+    """Authz/IDOR guard: a vocab the user's story does not target cannot be
+    graded or recorded, even if it exists and has an oracle gender."""
+    import uuid as _uuid
+
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy import func, select
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=_uuid.uuid4(),
+        email=f"gn-{_uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="GN",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
+    )
+    in_story = VocabItem(
+        id=_uuid.uuid4(),
+        language="de",
+        lemma=f"Tisch{_uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+    )
+    outsider = VocabItem(  # exists + has a gender, but NOT in the story
+        id=_uuid.uuid4(),
+        language="de",
+        lemma=f"Haus{_uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN,
+        gender="das",
+        gender_source="oracle",
+    )
+    db_session.add_all([u, in_story, outsider])
+    await db_session.flush()
+    story = Story(
+        id=_uuid.uuid4(),
+        user_id=u.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[in_story.id],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(
+            f"/api/v1/stories/{story.id}/gender/attempts",
+            json={"vocab_item_id": str(outsider.id), "picked_article": "das"},
+        )
+    assert resp.status_code == 404, resp.text
+    count = (
+        await db_session.execute(
+            select(func.count())
+            .select_from(GenderAttempt)
+            .where(GenderAttempt.vocab_item_id == outsider.id)
+        )
+    ).scalar_one()
+    assert count == 0  # no evidence written on the rejected path
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_404_when_vocab_has_no_gender(db_session):
+    """A target word with no stored gender is not answerable — 404, no record."""
+    import uuid as _uuid
+
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy import func, select
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=_uuid.uuid4(),
+        email=f"gg-{_uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="GG",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
+    )
+    v = VocabItem(  # in the story, but gender is None
+        id=_uuid.uuid4(),
+        language="de",
+        lemma=f"laufen{_uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.VERB,
+        gender=None,
+    )
+    db_session.add_all([u, v])
+    await db_session.flush()
+    story = Story(
+        id=_uuid.uuid4(),
+        user_id=u.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[v.id],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.post(
+            f"/api/v1/stories/{story.id}/gender/attempts",
+            json={"vocab_item_id": str(v.id), "picked_article": "der"},
+        )
+    assert resp.status_code == 404, resp.text
+    count = (
+        await db_session.execute(
+            select(func.count())
+            .select_from(GenderAttempt)
+            .where(GenderAttempt.vocab_item_id == v.id)
+        )
+    ).scalar_one()
+    assert count == 0
