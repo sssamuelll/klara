@@ -66,10 +66,7 @@ async def enroll_cards(db: AsyncSession, *, user_id: UUID, vocab_item_ids: list[
     stmt = (
         pg_insert(UserCard)
         .values(
-            [
-                {"id": uuid4(), "user_id": user_id, "vocab_item_id": vid}
-                for vid in vocab_item_ids
-            ]
+            [{"id": uuid4(), "user_id": user_id, "vocab_item_id": vid} for vid in vocab_item_ids]
         )
         .on_conflict_do_nothing(constraint="uq_user_card_user_vocab")
     )

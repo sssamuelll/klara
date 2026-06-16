@@ -15,9 +15,7 @@ async def get_current_module(db: DBSession, user: CurrentUser) -> ModuleCurrentO
     module = await read_active_module(db, user)
     if module is None:
         return None
-    encountered, mastered, total = await module_progress(
-        db, user_id=user.id, module_id=module.id
-    )
+    encountered, mastered, total = await module_progress(db, user_id=user.id, module_id=module.id)
     return ModuleCurrentOut(
         id=module.id,
         title=module.title,
