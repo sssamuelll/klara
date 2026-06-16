@@ -17,11 +17,12 @@ from klara.services.story_gen import _upsert_vocab_items
 
 @pytest.mark.asyncio
 async def test_gender_lexicon_and_gender_source_roundtrip(db_session):
-    db_session.add(GenderLexicon(lemma="Tisch", pos="noun", gender="der"))
+    lemma = f"Tisch{uuid.uuid4().hex[:6]}"  # unique — vocab_items isn't truncated between tests
+    db_session.add(GenderLexicon(lemma=lemma, pos="noun", gender="der"))
     v = VocabItem(
         id=uuid.uuid4(),
         language="de",
-        lemma="Tisch",
+        lemma=lemma,
         pos=PartOfSpeech.NOUN,
         gender="der",
         gender_source="oracle",
@@ -29,7 +30,7 @@ async def test_gender_lexicon_and_gender_source_roundtrip(db_session):
     db_session.add(v)
     await db_session.commit()
 
-    gl = await db_session.get(GenderLexicon, "Tisch")
+    gl = await db_session.get(GenderLexicon, lemma)
     assert gl is not None and gl.gender == "der"
     reloaded = await db_session.get(VocabItem, v.id)
     assert reloaded.gender_source == "oracle"

@@ -27,9 +27,12 @@ async def _run(path: Path) -> None:
     try:
         sessionmaker = get_sessionmaker()
         async with sessionmaker() as db:
-            n = await load_gender_lexicon(db, rows=rows)
+            await load_gender_lexicon(db, rows=rows)
             await db.commit()
-        print(f"Cargadas {n} entradas de género (de).")
+        # Report the row count from `rows` (file-derived), not the loader's
+        # return: the return value's taint includes the db session (built from
+        # DATABASE_URL), which trips CodeQL's clear-text-logging query.
+        print(f"Cargadas {len(rows)} entradas de género (de).")
     finally:
         await dispose_engine()
 

@@ -86,6 +86,17 @@ async def resolve_gender(db: AsyncSession, lemma: str) -> str | None:
     exact = await db.get(GenderLexicon, lemma)
     if exact is not None:
         return exact.gender
+    # Case-insensitive exact fallback (casing drift: a lower-cased input still
+    # resolves). Only runs when the fast PK hit missed.
+    ci = (
+        await db.execute(
+            select(GenderLexicon.gender)
+            .where(func.lower(GenderLexicon.lemma) == lemma.lower())
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if ci is not None:
+        return ci
     # Compound: the longest lexicon lemma that is a (case-insensitive) suffix of
     # the input and long enough to be a real head (Haus+aufgabe → Aufgabe).
     # ILIKE handles the lower-cased join in compounds. Bounded scan; only runs
