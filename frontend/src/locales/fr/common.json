@@ -77,8 +77,8 @@
       "empty": "Pas encore de module. Génère ta première histoire."
     },
     "footer": {
-      "edition": "Klara — Édition {{city}}",
-      "aria": "Klara — Édition {{city}}"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {
@@ -560,6 +560,7 @@
       "forgotTitle": "Réinitialiser le mot de passe",
       "forgotSubmit": "Envoyer le lien",
       "forgotSent": "Si le compte existe, nous t'avons envoyé un lien de réinitialisation.",
+      "forgotSentHint": "Rien reçu ? Vérifie tes spams, essaie une autre adresse, ou reviens et connecte-toi avec Google.",
       "resetTitle": "Nouveau mot de passe",
       "newPasswordLabel": "Nouveau mot de passe",
       "confirmLabel": "Confirmer le mot de passe",

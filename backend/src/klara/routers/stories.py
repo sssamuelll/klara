@@ -68,7 +68,7 @@ from klara.services.finish_lessons import (
     ensure_klara_note,
     ensure_quiz_items,
 )
-from klara.services.story_gen import generate_story
+from klara.services.story_gen import StoryGenerationError, generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
 
@@ -160,19 +160,25 @@ async def create_story(
         mod_vids = set()
         objective = None
 
-    result = await generate_story(
-        db,
-        llm,
-        user_id=user.id,
-        level=level,
-        target_language=user.target_language,
-        native_language=user.native_language,
-        learning_context=user.learning_context,
-        topic=payload.topic,
-        model=None,
-        target_lemmas=target_lemmas,
-        module_objective=objective,
-    )
+    try:
+        result = await generate_story(
+            db,
+            llm,
+            user_id=user.id,
+            level=level,
+            target_language=user.target_language,
+            native_language=user.native_language,
+            learning_context=user.learning_context,
+            topic=payload.topic,
+            model=None,
+            target_lemmas=target_lemmas,
+            module_objective=objective,
+        )
+    except StoryGenerationError:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Story generation failed. Please try again.",
+        ) from None
 
     if active is not None:
         enrolled = [w.id for w in result.target_words if w.id in mod_vids]

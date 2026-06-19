@@ -270,6 +270,12 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         legacy.is_active = True
         legacy.is_verified = True
         legacy.is_superuser = True  # the owner is the admin
+        # OAuth adoption sets no password. Mirror fastapi-users' base
+        # oauth_callback (which seeds a random, unusable hash) so that
+        # hashed_password is never NULL: a NULL crashes forgot_password
+        # (hash(None)) and authenticate (verify_and_update(..., None)) with
+        # "TypeError: ... must be str or bytes", surfacing as a 500.
+        legacy.hashed_password = self.password_helper.hash(self.password_helper.generate())
 
         await self.session.commit()
         await self.session.refresh(legacy)

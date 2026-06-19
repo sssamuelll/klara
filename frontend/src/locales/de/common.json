@@ -77,8 +77,8 @@
       "empty": "Noch kein Modul. Erstelle deine erste Geschichte."
     },
     "footer": {
-      "edition": "Klara — Ausgabe {{city}}",
-      "aria": "Klara — Ausgabe {{city}}"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {
@@ -560,6 +560,7 @@
       "forgotTitle": "Passwort zurücksetzen",
       "forgotSubmit": "Link senden",
       "forgotSent": "Falls das Konto existiert, haben wir dir einen Link zum Zurücksetzen geschickt.",
+      "forgotSentHint": "Nichts angekommen? Sieh im Spam-Ordner nach, versuche eine andere E-Mail, oder geh zurück und melde dich mit Google an.",
       "resetTitle": "Neues Passwort",
       "newPasswordLabel": "Neues Passwort",
       "confirmLabel": "Passwort bestätigen",

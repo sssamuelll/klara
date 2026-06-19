@@ -77,8 +77,8 @@
       "empty": "Ainda sem módulo. Gere sua primeira história."
     },
     "footer": {
-      "edition": "Klara — Edição {{city}}",
-      "aria": "Klara — Edição {{city}}"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {
@@ -560,6 +560,7 @@
       "forgotTitle": "Repor palavra-passe",
       "forgotSubmit": "Enviar link",
       "forgotSent": "Se a conta existir, enviámos-te um link para repor a palavra-passe.",
+      "forgotSentHint": "Não chegou? Vê o spam, tenta outro e-mail, ou volta e inicia sessão com Google.",
       "resetTitle": "Nova palavra-passe",
       "newPasswordLabel": "Nova palavra-passe",
       "confirmLabel": "Confirmar palavra-passe",

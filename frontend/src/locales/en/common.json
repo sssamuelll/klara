@@ -77,8 +77,8 @@
       "empty": "No module yet. Generate your first story to start."
     },
     "footer": {
-      "edition": "Klara — {{city}} edition",
-      "aria": "Klara — {{city}} edition"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {
@@ -559,7 +559,8 @@
     "reset": {
       "forgotTitle": "Reset password",
       "forgotSubmit": "Send link",
-      "forgotSent": "If the account exists, we've sent a reset link to your inbox.",
+      "forgotSent": "If you have an account with that email, we sent a reset link to your inbox.",
+      "forgotSentHint": "Didn't arrive? Check spam, try another email, or go back and sign in with Google.",
       "resetTitle": "New password",
       "newPasswordLabel": "New password",
       "confirmLabel": "Confirm password",

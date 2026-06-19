@@ -33,6 +33,9 @@ export default function ForgotPassword() {
         <p className="k-mono" style={{ color: "var(--ink-3)" }}>
           {t("auth.reset.forgotSent")}
         </p>
+        <p className="k-mono" style={{ marginTop: "0.75rem", color: "var(--ink-3)" }}>
+          {t("auth.reset.forgotSentHint")}
+        </p>
         <p className="k-mono" style={{ marginTop: "1rem" }}>
           <Link to="/login">{t("common.back")}</Link>
         </p>
