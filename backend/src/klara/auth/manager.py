@@ -3,6 +3,7 @@ from uuid import UUID
 
 import structlog
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, UUIDIDMixin, exceptions, models, schemas
 from fastapi_users.password import PasswordHelper
 from pwdlib import PasswordHash
@@ -90,6 +91,34 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     ) -> None:
         if len(password) < 8:
             raise exceptions.InvalidPasswordException(reason="too_short")
+
+    async def forgot_password(self, user: User, request: Request | None = None) -> None:
+        # OAuth-only accounts have no password to reset. Upstream hashes
+        # user.hashed_password to fingerprint the token, which raises on NULL.
+        # No-op (the router still returns 202, preserving anti-enumeration).
+        if user.hashed_password is None:
+            log.info("auth.forgot_password_noop_no_password", user_id=str(user.id))
+            return
+        await super().forgot_password(user, request)
+
+    async def authenticate(self, credentials: OAuth2PasswordRequestForm) -> "User | None":
+        # Mirrors fastapi-users 15.0.5 BaseUserManager.authenticate, with a
+        # NULL guard: verify_and_update(..., None) raises on OAuth-only rows.
+        try:
+            user = await self.get_by_email(credentials.username)
+        except exceptions.UserNotExists:
+            self.password_helper.hash(credentials.password)  # timing mitigation
+            return None
+        if user.hashed_password is None:
+            return None
+        verified, updated_password_hash = self.password_helper.verify_and_update(
+            credentials.password, user.hashed_password
+        )
+        if not verified:
+            return None
+        if updated_password_hash is not None:
+            await self.user_db.update(user, {"hashed_password": updated_password_hash})
+        return user
 
     async def create(
         self,
@@ -270,12 +299,6 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         legacy.is_active = True
         legacy.is_verified = True
         legacy.is_superuser = True  # the owner is the admin
-        # OAuth adoption sets no password. Mirror fastapi-users' base
-        # oauth_callback (which seeds a random, unusable hash) so that
-        # hashed_password is never NULL: a NULL crashes forgot_password
-        # (hash(None)) and authenticate (verify_and_update(..., None)) with
-        # "TypeError: ... must be str or bytes", surfacing as a 500.
-        legacy.hashed_password = self.password_helper.hash(self.password_helper.generate())
 
         await self.session.commit()
         await self.session.refresh(legacy)
