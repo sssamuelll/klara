@@ -552,7 +552,8 @@
     "reset": {
       "forgotTitle": "Restablecer contraseña",
       "forgotSubmit": "Enviar enlace",
-      "forgotSent": "Si el correo existe, te enviamos un enlace para restablecer la contraseña.",
+      "forgotSent": "Si tienes una cuenta con ese correo, te enviamos un enlace para restablecerla.",
+      "forgotSentHint": "¿No llega? Revisa el spam, prueba con otro correo o vuelve e inicia sesión con Google.",
       "resetTitle": "Nueva contraseña",
       "newPasswordLabel": "Nueva contraseña",
       "confirmLabel": "Repite la contraseña",
