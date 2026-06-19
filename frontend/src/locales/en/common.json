@@ -512,6 +512,7 @@
       "kicker": "Security",
       "title": "Set a password",
       "hint": "You signed in with Google only. Add a password if you'd like to also log in with email.",
+      "gateHint": "You're the owner. Set a backup password so you don't depend on Google alone.",
       "savedToast": "Password saved"
     }
   },

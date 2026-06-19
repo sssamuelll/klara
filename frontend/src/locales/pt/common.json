@@ -512,6 +512,7 @@
       "kicker": "Segurança",
       "title": "Definir palavra-passe",
       "hint": "Entraste apenas com Google. Se quiseres, adiciona uma palavra-passe para poder entrar também por email.",
+      "gateHint": "És o proprietário. Cria uma palavra-passe de reserva para não depender só do Google.",
       "savedToast": "Palavra-passe guardada"
     }
   },

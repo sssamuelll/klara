@@ -512,6 +512,7 @@
       "kicker": "Sicherheit",
       "title": "Passwort festlegen",
       "hint": "Du hast dich nur mit Google angemeldet. Wenn du willst, füge ein Passwort hinzu, damit du dich auch per E-Mail einloggen kannst.",
+      "gateHint": "Du bist der Eigentümer. Lege ein Backup-Passwort an, damit du nicht nur von Google abhängst.",
       "savedToast": "Passwort gespeichert"
     }
   },
