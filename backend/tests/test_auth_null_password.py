@@ -27,15 +27,11 @@ async def _seed_passwordless_user(db_session, email: str):
 
 
 @pytest.mark.asyncio
-async def test_forgot_password_null_is_silent(
-    client, app_settings, captured_emails, db_session
-):
+async def test_forgot_password_null_is_silent(client, app_settings, captured_emails, db_session):
     app_settings(INITIAL_OWNER_EMAIL="")
     await _seed_passwordless_user(db_session, "owner@example.com")
 
-    r = await client.post(
-        "/api/v1/auth/forgot-password", json={"email": "owner@example.com"}
-    )
+    r = await client.post("/api/v1/auth/forgot-password", json={"email": "owner@example.com"})
     # No crash (was 500 before the fix), still 202, and no reset email sent.
     assert r.status_code in (200, 202), r.text
     assert not [e for e in captured_emails if e["kind"] == "reset"]
@@ -73,13 +69,16 @@ async def test_oauth_owner_adoption_leaves_password_null(
     manager = UserManager(user_db, settings, db_session, EmailService(settings))
 
     adopted = await manager.oauth_callback(
-        "google", "access-tok", "google-acct-123", "owner@example.com",
-        None, None, None,
+        "google",
+        "access-tok",
+        "google-acct-123",
+        "owner@example.com",
+        None,
+        None,
+        None,
     )
 
     assert str(adopted.id) == legacy_owner_with_story["user_id"]
-    refreshed = (
-        await db_session.execute(select(User).where(User.id == adopted.id))
-    ).scalar_one()
+    refreshed = (await db_session.execute(select(User).where(User.id == adopted.id))).scalar_one()
     assert refreshed.email == "owner@example.com"
     assert refreshed.hashed_password is None  # ← the regression guard
