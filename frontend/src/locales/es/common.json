@@ -512,6 +512,7 @@
       "kicker": "Seguridad",
       "title": "Establecer contraseña",
       "hint": "Has entrado solo con Google. Si quieres, añade una contraseña para poder entrar también con email.",
+      "gateHint": "Eres el owner. Crea una contraseña de respaldo para no depender solo de Google.",
       "savedToast": "Contraseña guardada"
     }
   },

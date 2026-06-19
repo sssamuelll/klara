@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/auth";
+import OwnerPasswordGate from "./OwnerPasswordGate";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -28,6 +29,14 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!user.needs_onboarding && location.pathname === "/onboarding") {
     return <Navigate to="/" replace />;
+  }
+
+  if (
+    !user.needs_onboarding &&
+    user.is_superuser &&
+    !user.auth_methods.includes("password")
+  ) {
+    return <OwnerPasswordGate />;
   }
 
   return <>{children}</>;

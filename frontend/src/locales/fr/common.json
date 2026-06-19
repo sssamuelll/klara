@@ -512,6 +512,7 @@
       "kicker": "Sécurité",
       "title": "Définir un mot de passe",
       "hint": "Tu t'es connecté uniquement avec Google. Si tu veux, ajoute un mot de passe pour pouvoir aussi te connecter par email.",
+      "gateHint": "Tu es le propriétaire du compte. Crée un mot de passe de secours pour ne pas dépendre seulement de Google.",
       "savedToast": "Mot de passe enregistré"
     }
   },

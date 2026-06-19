@@ -124,5 +124,5 @@ export const WHISPERS: Record<number, Whisper> = {
   2: () => "Hablamos en tu idioma cuando hace falta. Lo demás, en el que quieras aprender.",
   3: () => "Empezaremos un escalón más abajo del que digas.",
   4: () => "Lo que escribas aquí lo lee Klara para elegir mejor.",
-  5: () => "Puedes saltarlo y agregarla después en ajustes.",
+  5: () => "La necesitas como respaldo: con ella entras también por email.",
 };
