@@ -222,6 +222,13 @@
             "bad": "a revisar"
           }
         },
+        "genderCloze": {
+          "cap": "El artículo",
+          "prompt": "¿der, die o das?",
+          "correct": "Correcto.",
+          "wrong": "Era «{{correct}}».",
+          "failed": "No pudimos verificar tu respuesta."
+        },
         "reveal": "Ver respuesta",
         "yourTurn": "Tu turno",
         "next": "Siguiente",

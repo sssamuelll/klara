@@ -2,6 +2,7 @@ from klara.models.attempts import PronunciationAttempt, QuizAttempt
 from klara.models.audio import AudioCache
 from klara.models.base import Base
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating, SessionType
+from klara.models.gender import GenderAttempt
 from klara.models.gender_lexicon import GenderLexicon
 from klara.models.invitation import Invitation
 from klara.models.module import Module, module_vocab
@@ -17,6 +18,7 @@ __all__ = [
     "Base",
     "CEFRLevel",
     "CardState",
+    "GenderAttempt",
     "GenderLexicon",
     "Invitation",
     "Module",

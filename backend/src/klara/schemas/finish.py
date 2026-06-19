@@ -41,7 +41,15 @@ class ShadowQuizItem(BaseModel):
     after: str | None = None
 
 
-QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem
+class GenderClozeQuizItem(BaseModel):
+    type: Literal["gender_cloze"]
+    cap: str
+    lemma: str
+    vocab_item_id: str
+    en: str | None = None  # native-language gloss for context; NOT the answer
+
+
+QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem | GenderClozeQuizItem
 
 
 class QuizOut(BaseModel):
@@ -80,6 +88,9 @@ class PronunciationAttemptOut(BaseModel):
 
 class QuizAttemptIn(BaseModel):
     question_index: int = Field(..., ge=0, le=20)
+    # gender_cloze is deliberately NOT accepted here: this generic endpoint trusts
+    # the client's was_correct, whereas gender is graded server-side and recorded
+    # via POST /gender/attempts. Excluding it keeps the single-write guarantee.
     question_type: Literal["mc", "cloze", "shadow"]
     was_correct: bool
     was_revealed: bool = False
@@ -93,6 +104,16 @@ class QuizAttemptOut(BaseModel):
     was_correct: bool
     was_revealed: bool
     attempted_at: datetime
+
+
+class GenderAttemptIn(BaseModel):
+    vocab_item_id: UUID
+    picked_article: Literal["der", "die", "das"]
+
+
+class GenderAttemptOut(BaseModel):
+    was_correct: bool
+    correct_gender: str
 
 
 # ---- Schedule entries — per-target-word SRS state for the Finish summary -

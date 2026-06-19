@@ -192,7 +192,19 @@ export interface ShadowQuizItem {
   after?: string | null;
 }
 
-export type QuizItem = MCQuizItem | ClozeQuizItem | ShadowQuizItem;
+export interface GenderClozeQuizItem {
+  type: "gender_cloze";
+  cap: string;
+  lemma: string;
+  vocab_item_id: string;
+  en?: string | null;
+}
+
+export type QuizItem =
+  | MCQuizItem
+  | ClozeQuizItem
+  | ShadowQuizItem
+  | GenderClozeQuizItem;
 
 export interface QuizResponse {
   items: QuizItem[];
@@ -215,8 +227,22 @@ export interface PronunciationAttemptIn {
   word_bands: Record<string, "good" | "ok" | "bad">;
 }
 
+export interface GenderAttemptIn {
+  vocab_item_id: string;
+  picked_article: "der" | "die" | "das";
+}
+
+export interface GenderAttemptOut {
+  was_correct: boolean;
+  correct_gender: string;
+}
+
 export interface QuizAttemptIn {
   question_index: number;
+  // No "gender_cloze": gender is graded server-side via recordGenderAttempt, not
+  // through this client-trusted generic attempt. The Quiz dispatcher guards the
+  // recordQuizAttempt call with `q.type !== "gender_cloze"`, which narrows q.type
+  // to these three at the call site.
   question_type: "mc" | "cloze" | "shadow";
   was_correct: boolean;
   was_revealed?: boolean;

@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type {
   ClozeQuizItem,
+  GenderClozeQuizItem,
   InsightResponse,
   KlaraNoteResponse,
   MCQuizItem,
@@ -53,7 +54,7 @@ interface Props {
 
 interface QuizResult {
   index: number;
-  qType: "mc" | "cloze" | "shadow";
+  qType: "mc" | "cloze" | "shadow" | "gender_cloze";
   correct: boolean;
   revealed: boolean;
 }
@@ -165,15 +166,19 @@ function Quiz({ items, story, onComplete }: QuizProps): JSX.Element {
   const onAnswered = (r: Omit<QuizResult, "index" | "qType">) => {
     const full: QuizResult = { index: idx, qType: q.type, ...r };
     setResults((rs) => [...rs, full]);
-    // Best-effort persistence — failures don't block the UX.
-    void api
-      .recordQuizAttempt(story.id, {
-        question_index: idx,
-        question_type: q.type,
-        was_correct: full.correct,
-        was_revealed: full.revealed,
-      })
-      .catch(() => undefined);
+    // Best-effort persistence — failures don't block the UX. Gender items
+    // record their own diadic evidence (recordGenderAttempt), so skip the
+    // generic quiz-attempt record for them.
+    if (q.type !== "gender_cloze") {
+      void api
+        .recordQuizAttempt(story.id, {
+          question_index: idx,
+          question_type: q.type,
+          was_correct: full.correct,
+          was_revealed: full.revealed,
+        })
+        .catch(() => undefined);
+    }
   };
 
   const onNext = () => {
@@ -205,6 +210,15 @@ function Quiz({ items, story, onComplete }: QuizProps): JSX.Element {
         )}
         {q.type === "shadow" && (
           <ShadowQuestion
+            q={q}
+            story={story}
+            onAnswered={onAnswered}
+            onNext={onNext}
+            isLast={isLast}
+          />
+        )}
+        {q.type === "gender_cloze" && (
+          <GenderClozeQuestion
             q={q}
             story={story}
             onAnswered={onAnswered}
@@ -858,6 +872,109 @@ function ShadowQuestion({
               <span className="fin-arr">→</span>
             </button>
           </>
+        )}
+      </footer>
+    </article>
+  );
+}
+
+/* ============================================================
+   Gender cloze question — 3-button tap picker (der/die/das),
+   graded server-side.
+   ============================================================ */
+
+interface GenderClozeProps {
+  q: GenderClozeQuizItem;
+  story: Story;
+  onAnswered: (r: Omit<QuizResult, "index" | "qType">) => void;
+  onNext: () => void;
+  isLast: boolean;
+}
+
+const GENDER_OPTIONS = ["der", "die", "das"] as const;
+
+function GenderClozeQuestion({
+  q,
+  story,
+  onAnswered,
+  onNext,
+  isLast,
+}: GenderClozeProps): JSX.Element {
+  const { t } = useTranslation();
+  const [picked, setPicked] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    correct: boolean;
+    correctGender: string | null;
+  } | null>(null);
+
+  const onPick = (article: string) => {
+    if (picked) return;
+    setPicked(article);
+    void api
+      .recordGenderAttempt(story.id, {
+        vocab_item_id: q.vocab_item_id,
+        picked_article: article as "der" | "die" | "das",
+      })
+      .then((r) => {
+        setResult({ correct: r.was_correct, correctGender: r.correct_gender });
+        onAnswered({ correct: r.was_correct, revealed: false });
+      })
+      .catch(() => {
+        // On failure we couldn't verify: grade as wrong-unknown (no correct
+        // article to show) but still advance so the user is never stuck.
+        setResult({ correct: false, correctGender: null });
+        onAnswered({ correct: false, revealed: false });
+      });
+  };
+
+  return (
+    <article className="qcard" data-type="gender_cloze">
+      <header className="qcard__head">
+        <span className="fin-cap">{t("story.finish.quiz.genderCloze.cap")}</span>
+      </header>
+      <div className="qcard__body">
+        <p className="qcard__cloze">
+          <span
+            className="qcard__blank"
+            data-state={picked ? (result?.correct ? "correct" : "revealed") : "empty"}
+          >
+            {result ? result.correctGender || "—" : "___"}
+          </span>{" "}
+          <span>{q.lemma}</span>
+        </p>
+        {q.en && <p className="qcard__en">{q.en}</p>}
+        <p className="qcard__hint">{t("story.finish.quiz.genderCloze.prompt")}</p>
+      </div>
+      <footer className="qcard__foot">
+        {!picked && (
+          <div className="qcard__actions qcard__gender-opts">
+            {GENDER_OPTIONS.map((a) => (
+              <button key={a} type="button" className="qcard__gender-btn" onClick={() => onPick(a)}>
+                {a}
+              </button>
+            ))}
+          </div>
+        )}
+        {result && (
+          <div className="qcard__result">
+            <span className="qcard__verdict">
+              {result.correct ? (
+                <em>{t("story.finish.quiz.genderCloze.correct")}</em>
+              ) : result.correctGender ? (
+                t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
+              ) : (
+                t("story.finish.quiz.genderCloze.failed")
+              )}
+            </span>
+            <button
+              type="button"
+              className="fin-btn fin-btn--primary qcard__next"
+              onClick={onNext}
+            >
+              {isLast ? t("story.finish.quiz.toSummary") : t("story.finish.quiz.next")}{" "}
+              <span className="fin-arr">→</span>
+            </button>
+          </div>
         )}
       </footer>
     </article>

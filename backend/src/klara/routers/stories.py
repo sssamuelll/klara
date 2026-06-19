@@ -27,11 +27,20 @@ from klara.curriculum.selection import next_target_words
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep, StoryLLM
 from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
-from klara.models import PronunciationAttempt, QuizAttempt, Story, UserCard, VocabItem
+from klara.models import (
+    GenderAttempt,
+    PronunciationAttempt,
+    QuizAttempt,
+    Story,
+    UserCard,
+    VocabItem,
+)
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
+    GenderAttemptIn,
+    GenderAttemptOut,
     InsightOut,
     KlaraNoteOut,
     MCResolveOut,
@@ -53,7 +62,12 @@ from klara.schemas.story import (
     StorySentenceOut,
     StoryWordOut,
 )
-from klara.services.finish_lessons import ensure_insight, ensure_klara_note, ensure_quiz_items
+from klara.services.finish_lessons import (
+    build_gender_cloze,
+    ensure_insight,
+    ensure_klara_note,
+    ensure_quiz_items,
+)
 from klara.services.story_gen import StoryGenerationError, generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
@@ -246,8 +260,11 @@ async def get_story_quiz(
     story = await _load_or_404(db, story_id, user.id, locale)
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
     lemmas = [w.lemma for w in words]
-    items = await ensure_quiz_items(db, story, llm, lemmas=lemmas)
-    return QuizOut(items=items or [])
+    items = list(await ensure_quiz_items(db, story, llm, lemmas=lemmas) or [])
+    gender_cloze = build_gender_cloze(words, native_language=user.native_language)
+    if gender_cloze is not None:
+        items.append(gender_cloze)
+    return QuizOut(items=items)
 
 
 @router.get("/{story_id}/insight", response_model=InsightOut | None)
@@ -419,6 +436,43 @@ async def record_quiz_attempt(
         was_revealed=row.was_revealed,
         attempted_at=row.attempted_at,
     )
+
+
+@router.post(
+    "/{story_id}/gender/attempts",
+    response_model=GenderAttemptOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def record_gender_attempt(
+    story_id: UUID,
+    payload: GenderAttemptIn,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> GenderAttemptOut:
+    """Grade a der/die/das pick against the oracle (VocabItem.gender) and record
+    the diadic evidence. The story scopes which words are answerable, and grading
+    is restricted to oracle-sourced genders so an LLM guess is never certified as
+    evidence (the curriculum invariant: the source of truth must outrank the
+    learner)."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    if payload.vocab_item_id not in (story.target_vocab_item_ids or []):
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
+    vocab = await db.get(VocabItem, payload.vocab_item_id)
+    if vocab is None or vocab.gender_source != "oracle" or not vocab.gender:
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
+
+    was_correct = payload.picked_article == vocab.gender
+    db.add(
+        GenderAttempt(
+            user_id=user.id,
+            vocab_item_id=vocab.id,
+            picked_article=payload.picked_article,
+            was_correct=was_correct,
+        )
+    )
+    await db.commit()
+    return GenderAttemptOut(was_correct=was_correct, correct_gender=vocab.gender)
 
 
 def _resolve_bcp47(raw: str) -> str:
