@@ -13,10 +13,8 @@ export default function StepPassword({ data, setField, next, prev }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // "Empty + empty" is valid (skip via Más tarde); non-empty must be ≥6 and match.
-  const valid =
-    data.password.length === 0 ||
-    (data.password.length >= 6 && data.password === data.passwordConfirm);
+  // Mandatory: must be >= 8 and match (no skip).
+  const valid = data.password.length >= 8 && data.password === data.passwordConfirm;
 
   const mismatch =
     data.password.length > 0 &&
@@ -25,11 +23,6 @@ export default function StepPassword({ data, setField, next, prev }: Props) {
 
   async function commit() {
     if (!valid || submitting) return;
-    // If both empty, treat as skip — just advance, no API call.
-    if (data.password.length === 0) {
-      next();
-      return;
-    }
     setSubmitting(true);
     setError(null);
     try {
@@ -45,8 +38,8 @@ export default function StepPassword({ data, setField, next, prev }: Props) {
 
   return (
     <div className="ob-step ob-pass">
-      <ObPrompt sub="Entraste con Google. Si quieres, deja una contraseña para poder entrar también con email.">
-        ¿Una contraseña, por si acaso?
+      <ObPrompt sub="Entraste con Google. Crea una contraseña como respaldo, por si pierdes el acceso a Google.">
+        Crea tu contraseña
       </ObPrompt>
 
       <div className="ob-pass__fields">
@@ -80,8 +73,6 @@ export default function StepPassword({ data, setField, next, prev }: Props) {
       <ObNav
         onNext={() => void commit()}
         onPrev={prev}
-        onSkip={next}
-        skipLabel="Más tarde"
         canNext={valid}
         submitting={submitting}
       />
