@@ -553,6 +553,7 @@
       "forgotTitle": "パスワードをリセット",
       "forgotSubmit": "リンクを送信",
       "forgotSent": "アカウントが存在する場合、リセット用のリンクを送信しました。",
+      "forgotSentHint": "届きませんか？迷惑メールフォルダを確認し、別のメールアドレスを試すか、戻ってGoogleでログインしてください。",
       "resetTitle": "新しいパスワード",
       "newPasswordLabel": "新しいパスワード",
       "confirmLabel": "パスワードを再入力",
