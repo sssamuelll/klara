@@ -20,6 +20,10 @@ from klara.models.enums import CEFRLevel, PartOfSpeech
 log = structlog.get_logger(__name__)
 
 
+class StoryGenerationError(RuntimeError):
+    """The LLM response could not be parsed into a usable story."""
+
+
 @dataclass(slots=True)
 class GeneratedStory:
     story: Story
@@ -92,8 +96,11 @@ def _extract_json(text: str) -> dict[str, Any]:
     start = text.find("{")
     end = text.rfind("}")
     if start == -1 or end == -1:
-        raise ValueError("No JSON object found in LLM response")
-    return json.loads(text[start : end + 1])
+        raise StoryGenerationError("No JSON object found in LLM response")
+    try:
+        return json.loads(text[start : end + 1])
+    except json.JSONDecodeError as exc:
+        raise StoryGenerationError(f"Malformed JSON in LLM response: {exc}") from exc
 
 
 async def _upsert_vocab_items(
@@ -225,15 +232,27 @@ async def generate_story(
         native_language=native_language,
         topic=topic,
     )
-    response = await llm.complete(
-        messages=[Message("system", system), Message("user", user)],
-        model=model,
-        max_tokens=4000,
-        temperature=0.8,
-        response_format={"type": "json_object"},
-    )
-
-    data = _extract_json(response.content)
+    # The LLM occasionally returns malformed JSON despite json_object mode.
+    # Retry once before surfacing a clean error so a single bad generation
+    # doesn't 500 the request.
+    data: dict[str, Any] | None = None
+    last_error: StoryGenerationError | None = None
+    for attempt in range(2):
+        response = await llm.complete(
+            messages=[Message("system", system), Message("user", user)],
+            model=model,
+            max_tokens=4000,
+            temperature=0.8,
+            response_format={"type": "json_object"},
+        )
+        try:
+            data = _extract_json(response.content)
+            break
+        except StoryGenerationError as exc:
+            last_error = exc
+            log.warning("story_gen.parse_retry", attempt=attempt, error=str(exc))
+    if data is None:
+        raise last_error or StoryGenerationError("story generation failed")
 
     title = (data.get("title") or "Eine kleine Geschichte").strip()
     sentences = data.get("sentences") or []
