@@ -77,8 +77,8 @@
       "empty": "Ainda sem módulo. Gere sua primeira história."
     },
     "footer": {
-      "edition": "Klara — Edição {{city}}",
-      "aria": "Klara — Edição {{city}}"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {

@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next";
 
-export function mastheadDate(locale: string, d: Date = new Date(), city = "Nürnberg"): string {
+export function mastheadDate(locale: string, d: Date = new Date()): string {
   const wd = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(d);
   const dd = String(d.getDate()).padStart(2, "0");
   const mo = new Intl.DateTimeFormat(locale, { month: "short" }).format(d);
   const yyyy = d.getFullYear();
-  return `${wd.toUpperCase()} ${dd} ${mo.toUpperCase()} ${yyyy} · ${city.toUpperCase()}`;
+  return `${wd.toUpperCase()} ${dd} ${mo.toUpperCase()} ${yyyy}`;
 }
 
-export function useMastheadDate(d: Date = new Date(), city = "Nürnberg"): string {
+export function useMastheadDate(d: Date = new Date()): string {
   const { i18n } = useTranslation();
-  return mastheadDate(i18n.language, d, city);
+  return mastheadDate(i18n.language, d);
 }
 
 export function useGreeting(d: Date = new Date()): string {

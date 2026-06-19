@@ -83,7 +83,6 @@ export default function Home() {
 
   const dateLabel = useMastheadDate();
   const hello = useGreeting();
-  const city = "Nürnberg";
 
   return (
     <main className="k-page home">
@@ -199,9 +198,9 @@ export default function Home() {
       </section>
 
       <footer className="home__foot">
-        <Link to="/" className="home__sig" aria-label={t("home.footer.aria", { city })}>
+        <Link to="/" className="home__sig" aria-label={t("home.footer.aria")}>
           <KlaraMark size={16} />
-          <span className="k-mono">{t("home.footer.edition", { city })}</span>
+          <span className="k-mono">{t("home.footer.edition")}</span>
         </Link>
       </footer>
     </main>

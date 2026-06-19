@@ -77,8 +77,8 @@
       "empty": "まだモジュールがありません。最初のストーリーを作成してください。"
     },
     "footer": {
-      "edition": "Klara — {{city}} 版",
-      "aria": "Klara — {{city}} 版"
+      "edition": "Klara",
+      "aria": "Klara"
     }
   },
   "newstory": {
