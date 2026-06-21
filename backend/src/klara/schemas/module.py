@@ -14,3 +14,6 @@ class ModuleCurrentOut(BaseModel):
     encountered: int
     mastered: int
     total: int
+    gender_encountered: int
+    gender_mastered: int
+    gender_total: int
