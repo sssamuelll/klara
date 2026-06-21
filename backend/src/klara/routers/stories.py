@@ -17,6 +17,7 @@ from fastapi import (
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.gender_rules import detect_gender_rule, reconcile_rule
 from klara.curriculum.modules import (
     enroll_cards,
     ensure_active_module,
@@ -41,6 +42,7 @@ from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
     GenderAttemptIn,
     GenderAttemptOut,
+    GenderRuleOut,
     InsightOut,
     KlaraNoteOut,
     MCResolveOut,
@@ -463,16 +465,27 @@ async def record_gender_attempt(
         raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
 
     was_correct = payload.picked_article == vocab.gender
+    rule = detect_gender_rule(vocab.lemma)
+    detail = reconcile_rule(rule, vocab.gender, vocab.lemma) if rule is not None else None
+    rule_out = None
+    if detail is not None and (detail["agreement"] or detail["is_exception"]):
+        rule_out = GenderRuleOut(
+            suffix=detail["suffix"],
+            suffix_class=detail["suffix_class"],
+            rule_gender=detail["rule_gender"],
+            is_exception=detail["is_exception"],
+        )
     db.add(
         GenderAttempt(
             user_id=user.id,
             vocab_item_id=vocab.id,
             picked_article=payload.picked_article,
             was_correct=was_correct,
+            detail=detail,
         )
     )
     await db.commit()
-    return GenderAttemptOut(was_correct=was_correct, correct_gender=vocab.gender)
+    return GenderAttemptOut(was_correct=was_correct, correct_gender=vocab.gender, rule=rule_out)
 
 
 def _resolve_bcp47(raw: str) -> str:

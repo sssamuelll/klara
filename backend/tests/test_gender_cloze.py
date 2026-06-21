@@ -462,3 +462,143 @@ async def test_gender_attempt_404_when_gender_not_oracle(db_session):
         )
     ).scalar_one()
     assert count == 0
+
+
+async def _gender_story_user(db_session, *, lemma, gender, gender_source="oracle"):
+    """Create a user + an oracle-gendered de NOUN + a story targeting it. Returns
+    (user, vocab, story). Lemmas are unique-prefixed so the real German suffix
+    stays at the END (the detector matches the suffix), while vocab_items (not
+    truncated) stays collision-free."""
+    import uuid as _uuid
+
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=_uuid.uuid4(),
+        email=f"gp-{_uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="GP",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
+    )
+    v = VocabItem(
+        id=_uuid.uuid4(),
+        language="de",
+        lemma=lemma,
+        pos=PartOfSpeech.NOUN,
+        gender=gender,
+        gender_source=gender_source,
+    )
+    db_session.add_all([u, v])
+    await db_session.flush()
+    story = Story(
+        id=_uuid.uuid4(),
+        user_id=u.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[v.id],
+    )
+    db_session.add(story)
+    await db_session.commit()
+    return u, v, story
+
+
+async def _post_gender(db_session, u, story, vocab_id, picked):
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        return await ac.post(
+            f"/api/v1/stories/{story.id}/gender/attempts",
+            json={"vocab_item_id": str(vocab_id), "picked_article": picked},
+        )
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_case_a_returns_rule_and_persists_detail(db_session):
+    from sqlalchemy import select
+
+    lemma = f"q{uuid.uuid4().hex[:8]}heit"  # ends in -heit (hard die)
+    u, v, story = await _gender_story_user(db_session, lemma=lemma, gender="die")
+    resp = await _post_gender(db_session, u, story, v.id, "die")
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["was_correct"] is True
+    assert body["rule"] == {
+        "suffix": "heit",
+        "suffix_class": "hard",
+        "rule_gender": "die",
+        "is_exception": False,
+    }
+    row = (
+        await db_session.execute(select(GenderAttempt).where(GenderAttempt.vocab_item_id == v.id))
+    ).scalar_one()
+    assert row.detail == {
+        "suffix": "heit",
+        "suffix_class": "hard",
+        "rule_gender": "die",
+        "oracle_gender": "die",
+        "agreement": True,
+        "is_exception": False,
+    }
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_case_b_suppresses_rule_but_persists_detail(db_session):
+    from sqlalchemy import select
+
+    lemma = f"q{uuid.uuid4().hex[:8]}er"  # ends in -er (tendency der); oracle die → disagree
+    u, v, story = await _gender_story_user(db_session, lemma=lemma, gender="die")
+    resp = await _post_gender(db_session, u, story, v.id, "die")
+    assert resp.status_code == 201, resp.text
+    body = resp.json()
+    assert body["rule"] is None  # suppressed on the wire
+    row = (
+        await db_session.execute(select(GenderAttempt).where(GenderAttempt.vocab_item_id == v.id))
+    ).scalar_one()
+    assert row.detail["agreement"] is False and row.detail["is_exception"] is False
+    assert set(row.detail.keys()) == {
+        "suffix",
+        "suffix_class",
+        "rule_gender",
+        "oracle_gender",
+        "agreement",
+        "is_exception",
+    }
+
+
+@pytest.mark.asyncio
+async def test_gender_attempt_no_suffix_null_detail_and_rule(db_session):
+    lemma = f"klotz{uuid.uuid4().hex[:6]}x"  # ends in 'x' → no suffix match
+    u, v, story = await _gender_story_user(db_session, lemma=lemma, gender="der")
+    resp = await _post_gender(db_session, u, story, v.id, "der")
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["rule"] is None
+    from sqlalchemy import select
+
+    row = (
+        await db_session.execute(select(GenderAttempt).where(GenderAttempt.vocab_item_id == v.id))
+    ).scalar_one()
+    assert row.detail is None
+
+
+def test_gender_cloze_quiz_item_has_no_rule_field():
+    # No-leak contract: the PRE-answer quiz item must never carry the rule/answer.
+    from klara.schemas.finish import GenderClozeQuizItem
+
+    assert "rule" not in GenderClozeQuizItem.model_fields

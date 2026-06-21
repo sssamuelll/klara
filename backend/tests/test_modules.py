@@ -484,6 +484,74 @@ async def test_submit_review_advances_module_on_mastery(db_session):
     assert reloaded.current_module_id == m2.id
 
 
+@pytest.mark.asyncio
+async def test_get_current_module_reports_gender_tristate(db_session):
+    from klara.models import GenderAttempt
+
+    u = await _user(db_session)
+    u.target_language = "de"
+    # Two oracle de NOUNs: one mastered (3 correct), one only encountered (2 attempts).
+    mastered = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"N{uuid.uuid4().hex[:8]}",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+    )
+    seen = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"N{uuid.uuid4().hex[:8]}",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+    )
+    db_session.add_all([mastered, seen])
+    await db_session.flush()
+    m = await _module(db_session, language="de", order=1, title="Género", vocab=[mastered, seen])
+    u.current_module_id = m.id
+    for _ in range(3):
+        db_session.add(
+            GenderAttempt(
+                id=uuid.uuid4(),
+                user_id=u.id,
+                vocab_item_id=mastered.id,
+                picked_article="der",
+                was_correct=True,
+            )
+        )
+    for _ in range(2):
+        db_session.add(
+            GenderAttempt(
+                id=uuid.uuid4(),
+                user_id=u.id,
+                vocab_item_id=seen.id,
+                picked_article="die",
+                was_correct=True,
+            )
+        )
+    await db_session.commit()
+
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get("/api/v1/modules/current")
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["gender_total"] == 2
+    assert body["gender_encountered"] == 2
+    assert body["gender_mastered"] == 1
+
+
 def test_de_module_sequence_is_well_formed():
     from klara.scripts.load_de_modules import MODULES
 
