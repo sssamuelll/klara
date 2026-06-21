@@ -111,9 +111,17 @@ class GenderAttemptIn(BaseModel):
     picked_article: Literal["der", "die", "das"]
 
 
+class GenderRuleOut(BaseModel):
+    suffix: str
+    suffix_class: Literal["hard", "tendency"]
+    rule_gender: Literal["der", "die", "das"]
+    is_exception: bool
+
+
 class GenderAttemptOut(BaseModel):
     was_correct: bool
     correct_gender: str
+    rule: GenderRuleOut | None = None  # showable suffix rule (Case A/C); None otherwise
 
 
 # ---- Schedule entries — per-target-word SRS state for the Finish summary -
