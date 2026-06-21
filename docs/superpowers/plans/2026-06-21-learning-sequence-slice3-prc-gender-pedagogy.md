@@ -75,7 +75,7 @@ def test_detect_hard_suffixes_map_to_article_and_class():
         "Freiheit": ("heit", "die"),
         "Möglichkeit": ("keit", "die"),
         "Mannschaft": ("schaft", "die"),
-        "Nation": ("ion", "die"),
+        "Nation": ("tion", "die"),
         "Lehrling": ("ling", "der"),
         "Kapitalismus": ("ismus", "der"),
         "Dokument": ("ment", "das"),
