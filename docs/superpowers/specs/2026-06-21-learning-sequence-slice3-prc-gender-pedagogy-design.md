@@ -1,131 +1,160 @@
 # Secuencia de aprendizaje — Rebanada 3 PR-C: pedagogía de género (alemán)
 
 **Fecha:** 2026-06-21
-**Estado:** Diseño aprobado (decisiones de alcance cerradas; pendiente de plan de implementación)
+**Estado:** Diseño aprobado (decisiones de alcance cerradas; revisado adversarialmente por el roster; pendiente de plan)
 **Alcance:** **1 PR, backend-only.** UN idioma: alemán. Cierra la Rebanada 3 (PR-A oráculo+provenance #67, PR-B cloze+evidencia #68 — ambos mergeados). PR-C añade la **pedagogía sobre la evidencia que ya se registra**: feedback de regla de sufijo (determinista, autoritativo) y un predicado de maestría de género de solo-display.
 
 ---
 
 ## 1. El problema (provenance vs *modalidad*)
 
-PR-A/PR-B dejaron el género corregible: oráculo autoritativo (`gender_lexicon`), provenance (`VocabItem.gender_source ∈ oracle|llm|user`, el oráculo gana), evidencia diádica (`gender_attempts`), y un cloze der/die/das calificado en el servidor. El `GenderAttempt.detail` (JSONB) quedó **reservado** para esta rebanada y hoy está sin usar.
+PR-A/PR-B dejaron el género corregible: oráculo autoritativo (`gender_lexicon`), provenance (`VocabItem.gender_source ∈ oracle|llm|user`, el oráculo gana), evidencia diádica (`gender_attempts`), y un cloze der/die/das calificado en el servidor. El `GenderAttempt.detail` (JSONB nullable) quedó **reservado** para esta rebanada y hoy está sin usar.
 
 El diagnóstico del roster identificó el invariante que gobierna PR-C, una extensión del de Axiom-0: **el sistema formalizó *quién lo dice* (`gender_source`) pero nunca *qué tipo de afirmación es*** (hecho del oráculo vs tendencia estadística vs inferencia vs *el aprendiz ya lo sabe*). Las tres piezas que el spec de R3 difirió a PR-C son la misma enfermedad — una nueva **modalidad** de afirmación intentando pasar por una aduana que solo inspecciona la **procedencia**, pidiéndole prestada al oráculo una certeza que no posee.
 
-De ahí la regla maestra de PR-C: **una regla de sufijo es una generalización SOBRE el oráculo, y por tanto estrictamente menos autoritativa que el oráculo por-palabra.** El género del oráculo **siempre** es la verdad mostrada; la regla solo aparece como *explicación* cuando coincide con el oráculo (o la palabra está en una lista cerrada y curada de excepciones). El aprendiz nunca ve “los `-er` son *der*” al lado de *die Mutter*.
+De ahí la regla maestra de PR-C: **una regla de sufijo es una generalización SOBRE el oráculo, y por tanto estrictamente menos autoritativa que el oráculo por-palabra.** El género del oráculo **siempre** es la verdad mostrada; la regla solo aparece como *explicación* cuando coincide con el oráculo (o la palabra está en una lista cerrada y curada de excepciones). El aprendiz nunca ve "los `-er` son *der*" al lado de *die Mutter*.
 
-Evidencia de ciencia del aprendizaje (Köpcke & Zubin; investigación de corrective feedback): el género alemán es ~70-90% predecible por sufijo, pero esa fiabilidad **se reparte de forma muy desigual** entre sufijos. Las reglas duras productivas (`-ung/-heit/-keit…`) son procedimientos inducidos que **generalizan a palabras nuevas y no decaen** como la memoria de ítems arbitrarios; lo que sí decae (excepciones cerradas, trampas de transferencia L1) ya está a la granularidad correcta en `gender_attempts` por-sustantivo.
+Evidencia de ciencia del aprendizaje (Köpcke & Zubin; corrective feedback): el género alemán es ~70-90% predecible por sufijo, pero esa fiabilidad se reparte de forma muy desigual. Las reglas duras productivas (`-ung/-heit/-keit…`) son procedimientos inducidos que **generalizan a palabras nuevas y no decaen** como la memoria de ítems arbitrarios; lo que sí decae (excepciones cerradas, trampas de transferencia L1) ya está a la granularidad correcta en `gender_attempts` por-sustantivo.
 
 ## 2. Decisiones de marco (cerradas con el dueño + el roster)
 
 | # | Decisión | Elección |
 |---|----------|----------|
-| C1 | **Detector de sufijo** | Función **pura, síncrona, sin DB** (hermana del resolver de compuestos), `lemma → {suffix, article der/die/das, kind: hard\|tendency} \| None`. El detector es **deliberadamente simple** — match de sufijo-más-largo con un **guard de stem mínimo** (el resto del lema tras quitar el sufijo debe quedar con ≥2 caracteres, para no disparar sobre palabras absurdamente cortas) — porque el **verdadero backstop de falsos positivos es la reconciliación del Caso B contra el oráculo**, no la inteligencia del detector. No intenta análisis morfológico completo. Vive standalone; se invoca **solo** dentro de `record_gender_attempt`, en el camino ya protegido por `gender_source=='oracle'`. **Nunca** se cablea en `resolve_gender` (eso forjaría autoridad de oráculo sobre un guess). |
-| C2 | **Reconciliación contra el oráculo** | Por-intento, en tiempo de calificación, con la política de **3 casos** (§4). El género mostrado es **siempre** el del oráculo; la regla se muestra solo en coincidencia o excepción curada. |
-| C3 | **Persistencia** | Esquema **fijo** en el `GenderAttempt.detail` JSONB ya reservado: `{suffix, suffix_class, rule_gender, oracle_gender, agreement, exception_listed}`. Escritura aditiva en el insert, sin migración, sin re-lectura. Se persiste **siempre** que se detecte un sufijo — incluida la discrepancia del Caso B (señal de bug para auditoría offline). |
-| C4 | **Respuesta al cliente** | Campo **opcional/defaulted** nuevo en `GenderAttemptOut` (`rule: GenderRuleOut \| None`) con el subconjunto **mostrable** (poblado solo en Caso A/C; `null` en B, NULL-grade y sin-sufijo). **NUNCA** en `GenderClozeQuizItem` (filtraría la respuesta antes de contestar; rompería el contrato no-leak endurecido en PR-B). Se añade ahora para que PR-C.1 (el render) sea puro frontend. |
-| C5 | **`is_mastered_gender`** | `async def is_mastered_gender(db, *, user_id, vocab_item_id) -> bool` en `competence.py`, hermano del contrato de `is_mastered_lexical` (no del almacenamiento — no hay card por sustantivo). Lee los `GenderAttempt.was_correct` **ya almacenados** (nunca re-califica contra un `VocabItem.gender` posiblemente mutado). Semántica: **“los últimos N intentos por sustantivo, todos correctos”** (no “consecutivos” — el log es append-only, sin unicidad `(user,vocab)` y con orden grueso por `attempted_at`). **N = 3**, vía constante `GENDER_MASTERY_STREAK_N` junto a `MASTERY_INTERVAL_DAYS`. |
+| C1 | **Detector de sufijo** | Función **pura, síncrona, sin DB** (hermana del resolver de compuestos), `detect_gender_rule(lemma) -> GenderRule \| None`. El detector es **deliberadamente simple** — match de **sufijo-más-largo** (probando reglas duras antes que tendencias) con un **guard de stem mínimo** (el resto del lema tras quitar el sufijo debe quedar con **≥2 codepoints**, para no disparar sobre palabras absurdamente cortas) — porque el **verdadero backstop de falsos positivos es la reconciliación contra el oráculo (Caso B)**, no la inteligencia del detector. No intenta análisis morfológico completo. Vive standalone; se invoca **solo** dentro de `record_gender_attempt`, en el camino ya protegido por `gender_source=='oracle'` (donde `vocab.gender` es siempre no-nulo). **Nunca** se cablea en `resolve_gender` (eso forjaría autoridad de oráculo sobre un guess). |
+| C2 | **Reconciliación contra el oráculo** | Pura: `reconcile_rule(rule, oracle_gender, lemma) -> GenderRuleDetail`. **`agreement` (rule_gender == oracle_gender) es la ÚNICA compuerta para mostrar**; `suffix_class` (hard\|tendency) solo le da sabor a la copy del Caso A, no controla el flujo. Política de casos en §4. |
+| C3 | **Persistencia** | Esquema **fijo** en el `GenderAttempt.detail` JSONB ya reservado: el objeto `GenderRuleDetail` de 6 llaves (§5). Escritura aditiva en el insert, sin migración, sin re-lectura. Se persiste **siempre que se detecte un sufijo** — con **las 6 llaves pobladas**, incluida la discrepancia del Caso B (señal de bug para auditoría offline). Si no se detecta sufijo: `detail = null`. |
+| C4 | **Respuesta al cliente** | Campo **opcional/defaulted** nuevo en `GenderAttemptOut` (`rule: GenderRuleOut \| None = None`) — proyección estricta del `detail` (§5). Poblado **solo cuando es mostrable** (Caso A o C); `null` en Caso B y en sin-sufijo. **NUNCA** en `GenderClozeQuizItem` (filtraría la respuesta antes de contestar; rompería el contrato no-leak endurecido en PR-B). Se añade ahora para que PR-C.1 (el render) sea puro frontend. |
+| C5 | **`is_mastered_gender`** | `async def is_mastered_gender(db, *, user_id, vocab_item_id) -> bool` en `competence.py`, hermano del **contrato** de `is_mastered_lexical` (no del almacenamiento — no hay card por sustantivo). Lee los `GenderAttempt.was_correct` **ya almacenados** (nunca re-califica contra un `VocabItem.gender` posiblemente mutado). Semántica: **maestría sii hay al menos N intentos para el sustantivo Y los últimos N son todos correctos** (el piso `<N ⇒ false` es normativo, no solo de test). Orden determinista **`ORDER BY attempted_at DESC, id DESC`** (`attempted_at` es grueso y sin índice propio; `id` es uuid4 — desempata determinísticamente aunque no cronológicamente, aceptable). **N = 3**, vía constante `GENDER_MASTERY_STREAK_N`. El cómputo de racha vive en **un helper puro compartido** `_streak_mastered(attempts_desc, n) -> bool` que tanto `is_mastered_gender` como `module_gender_progress` usan, para que no puedan divergir. |
 | C6 | **Consumidor de maestría** | **Solo display**: `gender_mastered`/`gender_total` en `ModuleCurrentOut` (vía `GET /modules/current`, que el Home ya consume). **NO** entra a `advance_module_if_mastered` (la compuerta queda léxica y de un solo escritor). |
-| C7 | **Alcance UI** | **Backend-only en PR-C.** El render de la nota de sufijo + las 6 claves de locale (es/en/de/fr/pt/ja) van en un **follow-up PR-C.1** (tarea de microcopy / solace-wren), para mantener PR-C atómico y revisar los contratos no-leak/paridad aislados. |
-| C8 | **Incongruencia ES→DE** | **Diferida, fuera de PR-C.** No existe fuente autoritativa del género español (`translations` es un string del LLM sin artículo); inferirlo o preguntarle al LLM reinstala el “eco del modelo”, y en el eje español el aprendiz venezolano **le gana en autoridad** a cualquier fuente que el sistema produzca (Axiom-0 prohíbe que el sistema sea la autoridad del lado ES). Si algún día se hace: **solo contenido curado a mano** (~50-150 pares de conflicto, `provenance='curated'`, scope ES), **nunca un auto-diff**. Queda en backlog. |
-| C9 | **Scheduling de género** | **Diferido.** Indecidible con N=0 evidencia en prod; la investigación respalda que las reglas duras no decaen (SM-2 sobre “`-ung` es femenino” es error de categoría). Instrumentar el `detail` (C3) primero; decidir empíricamente después. |
-| C10 | **Lockstep de selección** | El detector es feedback **aditivo**; **no** cambia qué palabras son elegibles. El contrato de selección (de + oráculo + der/die/das) sigue idéntico en `build_gender_cloze` y en el endpoint. Una palabra que se sirve como cloze debe seguir siendo calificable. |
+| C7 | **Alcance UI** | **Backend-only en PR-C.** El render de la nota de sufijo + las 6 claves de locale (es/en/de/fr/pt/ja) van en un **follow-up PR-C.1** (tarea de microcopy / solace-wren). |
+| C8 | **Incongruencia ES→DE** | **Diferida, fuera de PR-C.** No existe fuente autoritativa del género español (`translations` es un string del LLM sin artículo); inferirlo reinstala el "eco del modelo", y en el eje español el aprendiz venezolano **le gana en autoridad** a cualquier fuente del sistema (Axiom-0 prohíbe que el sistema sea la autoridad del lado ES). Si algún día: **solo contenido curado a mano**, **nunca un auto-diff**. Backlog. |
+| C9 | **Scheduling de género** | **Diferido.** Indecidible con N=0 evidencia; las reglas duras no decaen. Instrumentar el `detail` (C3) primero. |
+| C10 | **Lockstep de selección** | El detector es feedback **aditivo**; **no** cambia qué palabras son elegibles. El **predicado** de elegibilidad (de + oráculo + `pos==NOUN` + género ∈ der/die/das) es idéntico en `build_gender_cloze` y en `module_gender_progress`. **Aclaración de cardinalidad:** `build_gender_cloze` sirve **solo el primer noun elegible por historia**, así que dentro de UNA historia se ve a lo sumo un cloze; pero a través de múltiples historias/re-lecturas cualquier noun elegible del módulo es alcanzable. Por eso `gender_total` cuenta **todos** los nouns elegibles del módulo y la fracción es completable **a través de historias**, no dentro de una. "Lockstep" = mismo predicado de elegibilidad, no misma cardinalidad por-historia. |
 
 ## 3. Tabla autoritativa de sufijos (de la lente de ciencia del aprendizaje)
 
-**Sufijos DUROS** — enseñables como regla (`kind: "hard"`, ~100%, excepciones nulas o de clase cerrada):
+**Sufijos DUROS** — `suffix_class="hard"`, enseñables como regla (~100%, excepciones nulas o de clase cerrada):
 
 | Sufijo | Género | Notas |
 |--------|--------|-------|
-| `-chen` | das | Diminutivo; sin excepciones productivas (*das Mädchen* pese al referente — el sufijo porta el género, no la raíz). |
+| `-chen` | das | Diminutivo; sin excepciones productivas (*das Mädchen* pese al referente). |
 | `-lein` | das | Diminutivo; sin excepciones. |
-| `-ung` | die | ~100% en vocabulario normal. *der Schwung/Sprung* terminan en “ung” pero no son `-ung` derivados; como el detector hace match simple, estos disparan un falso positivo que la **reconciliación del Caso B** (regla `die` contra oráculo `der`) suprime y registra. No se intenta distinguirlos en el detector. |
+| `-ung` | die | ~100%. *der Schwung/Sprung* terminan en "ung" pero no son `-ung` derivados; como el detector hace match simple, disparan un falso positivo que la **reconciliación del Caso B** (regla `die` vs oráculo `der`) suprime y registra. No se intenta distinguirlos en el detector. |
 | `-heit` | die | Exceptionless. |
 | `-keit` | die | Exceptionless. |
 | `-schaft` | die | Exceptionless. |
-| `-tät` (`-ität`) | die | Latino; ~100% (*die Qualität, die Universität*). |
+| `-tät` (`-ität`) | die | Latino; ~100% (*die Qualität, die Universität*). El sufijo-más-largo prefiere `-ität` sobre `-tät`. |
 | `-ion` (`-tion/-sion`) | die | ~100% en vocabulario normal. |
 | `-ling` | der | Sin excepciones productivas (*der Lehrling, der Schmetterling*). |
 | `-ismus` | der | ~100% (*der Kapitalismus*). |
-| `-ment` | das | ~100% en vocabulario normal (*das Dokument, das Instrument*). *der Moment* es un lexema/sentido distinto; lo maneja la reconciliación con el oráculo. |
-| `-tum` | das | Enseñable **porque la excepción es cerrada y enumerable**: das salvo **der Reichtum** y **der Irrtum** (el Caso C canónico). No confundir con el latino `-um` (*das Datum, das Museum*), que es separado. |
+| `-ment` | das | ~100% (*das Dokument, das Instrument*). *der Moment* es otro lexema; lo maneja el Caso B. |
+| `-tum` | das | Enseñable **porque la excepción es cerrada y enumerable**: das salvo **der Reichtum** y **der Irrtum** (el Caso C canónico, vía lista curada). No confundir con el latino `-um` (*das Datum*), que es separado y NO está en la tabla. |
 
-**Sufijos de TENDENCIA** — `kind: "tendency"`, suavizados (“suelen ser…”), **jamás absolutos**:
+**Sufijos de TENDENCIA** — `suffix_class="tendency"`, copy suavizada (“suelen ser…”) **solo cuando coinciden con el oráculo**; si discrepan, se suprimen (Caso B, igual que un duro):
 
 | Sufijo | Tendencia | Notas |
 |--------|-----------|-------|
-| `-e` (polisilábico) | die (~90%) | *die Blume/Lampe/Katze*, pero *der Name/Junge/Käse, das Auge/Ende*. |
-| `-er` | der (~70-80%) | Agentivos fiables (*der Lehrer*), pero *die Mutter/Butter, das Messer/Fenster/Wasser/Zimmer*. La trampa clásica — nunca como regla. |
-| `-el` | der (~60-70%) | Genuinamente partido: *der Löffel/Mantel* vs *die Gabel/Insel, das Mittel/Segel*. |
-| `-en` | der (~70%) | Subregularidades en competencia; los infinitivos nominalizados son das (*das Schwimmen*). |
-| `-ie/-ik/-ur` | die | Tendencia alta con excepciones de préstamo (*das Genie/Mosaik, der Atlantik, das Abitur/Futur*). |
-| `-nis` | die/das | Genuinamente partido (*die Erlaubnis/Kenntnis* vs *das Ergebnis/Verständnis/Zeugnis*). Dos géneros — nunca regla; si se muestra, solo “die o das”. |
+| `-e` | die (~90%) | *die Blume/Lampe/Katze*, pero *der Name/Junge/Käse, das Auge/Ende*. El gate es **solo** el guard de stem ≥2 codepoints (no hay conteo de sílabas); los falsos positivos como *Käse/Name/Auge* (oráculo der/das) caen en Caso B y se suprimen. |
+| `-er` | der (~70-80%) | Agentivos fiables (*der Lehrer*), pero *die Mutter/Butter, das Messer/Fenster/Wasser/Zimmer*. La trampa clásica — solo se muestra si coincide con el oráculo. |
+| `-el` | der (~60-70%) | Partido: *der Löffel/Mantel* vs *die Gabel/Insel, das Mittel/Segel*. |
+| `-en` | der (~70%) | Subregularidades en competencia; infinitivos nominalizados son das (*das Schwimmen*). |
+| `-ie/-ik/-ur` | die | Tendencia alta con excepciones de préstamo (*das Genie/Mosaik, der Atlantik, das Abitur*). |
 
-El detector devuelve el sufijo **más largo que matchee** (p.ej. `-ität` antes que `-tät` antes que un hipotético `-ät`), evaluando primero las reglas duras. Si nada matchea: sin regla (Caso sin-sufijo).
+> **`-nis` excluido del detector.** Es genuinamente de dos géneros (die/das) y el modelo de `rule_gender` escalar no puede representar "die o das". Como además "nunca es regla", se omite por completo de la tabla del detector — un noun en `-nis` simplemente no detecta sufijo (sin regla, `detail=null`), que es el comportamiento correcto.
 
-## 4. Política de excepciones — 3 casos (+ NULL)
+## 4. Política de casos — el álgebra (servidor)
 
-Decidida por-intento, en tiempo de calificación, dentro del guard `gender_source=='oracle'` del endpoint, usando el sufijo detectado + `vocab.gender` (el artículo del oráculo):
+En el servidor, dentro del guard `gender_source=='oracle'`, `oracle_gender = vocab.gender` es **siempre no-nulo**. Dado el resultado de `detect_gender_rule(vocab.lemma)`:
 
-- **Caso A — la regla coincide con el oráculo** (lo común): se muestra la regla, atribuida.
-  - Sufijo **duro** → como regla: *“Wohnung es die — todo `-ung` es femenino.”*
-  - Sufijo **tendencia** → suavizado: *“los `-e` suelen ser die”*, nunca “siempre”.
-  - `detail.agreement = true`, `exception_listed = false`; respuesta `rule` poblada.
-- **Caso B — la regla contradice un sufijo duro** (debe ser casi vacío): es casi siempre un **falso positivo del detector** (el problema “Schwung”), no una excepción real. Se **suprime la regla**, se muestra solo la verdad binaria (*“das, no der”*), y se **persiste la discrepancia** en `detail` como señal de bug. `detail.agreement = false`, `exception_listed = false`; respuesta `rule = null`.
-- **Caso C — contradice en una excepción de clase cerrada y curada** (*der Reichtum, der Irrtum* para `-tum`): el ÚNICO lugar donde se enseña una excepción, de alto valor por memorable: *“los `-tum` son das — pero Reichtum e Irrtum van der.”* Permitido **solo** si la palabra está en una lista enumerada a mano (no derivada al vuelo). `detail.agreement = false`, `exception_listed = true`; respuesta `rule` poblada con `is_exception = true`.
-- **NULL — sin género verificado** (fallo de red/calificación, `correct_gender` nulo): ni regla ni nota. No se puede anclar una explicación a un género no verificado.
+- **Sin sufijo detectado** → sin regla. `detail = null`. Respuesta `rule = null`.
+- **Sufijo detectado** → `agreement = (rule.rule_gender == oracle_gender)`:
+  - **Caso A — `agreement == true`** (lo común): regla **mostrable**. `is_exception=false`. La copy depende de `suffix_class`: duro → como regla (*“Wohnung es die — todo `-ung` es femenino”*); tendencia → suavizado (*“los `-e` suelen ser die”*). Respuesta `rule` poblada.
+  - **Caso B — `agreement == false` y el lema NO está en `_CURATED_EXCEPTIONS`** (cualquier `suffix_class`): es una discrepancia regla↔oráculo — casi siempre un falso positivo del detector (*Schwung*) o un noun donde la tendencia no aplica (*die Mutter*). **Se suprime la regla**: respuesta `rule = null`, se muestra solo la verdad binaria del oráculo. `is_exception=false`. Se **persisten las 6 llaves** del `detail` (señal de bug/auditoría).
+  - **Caso C — `agreement == false` pero el lema está en `_CURATED_EXCEPTIONS` con valor == `oracle_gender`** (*der Reichtum, der Irrtum* para `-tum`): la ÚNICA excepción enseñable, de alto valor por memorable (*“los `-tum` son das — pero Reichtum e Irrtum van der”*). `is_exception=true`. Respuesta `rule` poblada.
 
-**Garantía:** el género mostrado es siempre el del oráculo; la regla aparece solo cuando coincide con el oráculo o la palabra está curada. El feedback metalingüístico **nunca puede ser menos autoritativo que la fuente de verdad**, y el sistema nunca afirma una regla que la palabra concreta frente al aprendiz viola.
+**Garantía:** el género mostrado es **siempre** el del oráculo; la regla aparece **solo** cuando coincide (A) o la palabra está curada (C). `agreement` es la única compuerta de mostrabilidad; ninguna combinación queda indefinida; el feedback nunca puede ser menos autoritativo que la fuente de verdad.
 
-## 5. Arquitectura y unidades
+> **NULL (frontend, PR-C.1):** si el POST de calificación falla en el cliente (sin `correct_gender` verificado), el render no muestra ni regla ni nota — no se ancla una explicación a un género no verificado. Es una preocupación del render diferido, no del servidor (que siempre tiene `oracle_gender` aquí).
+
+## 5. Arquitectura, tipos y unidades
+
+**Tipos concretos (sin drift — renombres de identidad a través de las capas):**
+
+```python
+# detector (puro) — curriculum/gender_rules.py
+@dataclass(frozen=True)
+class GenderRule:
+    suffix: str
+    rule_gender: Literal["der", "die", "das"]
+    suffix_class: Literal["hard", "tendency"]
+
+# reconciliador / objeto persistido en GenderAttempt.detail (6 llaves)
+class GenderRuleDetail(TypedDict):
+    suffix: str
+    suffix_class: Literal["hard", "tendency"]
+    rule_gender: Literal["der", "die", "das"]
+    oracle_gender: Literal["der", "die", "das"]
+    agreement: bool
+    is_exception: bool
+
+# wire — schemas/finish.py — proyección estricta de GenderRuleDetail (quita oracle_gender + agreement)
+class GenderRuleOut(BaseModel):
+    suffix: str
+    suffix_class: Literal["hard", "tendency"]
+    rule_gender: Literal["der", "die", "das"]
+    is_exception: bool
+```
+
+Los nombres `suffix`, `suffix_class`, `rule_gender`, `is_exception` son **idénticos** a través de detector→detail→wire (sin renombres ocultos). `detail` añade `oracle_gender` + `agreement` (auditoría); `GenderRuleOut` es la proyección mostrable.
 
 ```
 DETECTOR (puro, sin DB)            RECONCILIACIÓN (oráculo manda)
  detect_gender_rule(lemma)         record_gender_attempt (stories.py)
-   -> {article, kind} | None  ──►   - guard: gender_source=='oracle' (ya existe)
-                                     - regla = detect_gender_rule(vocab.lemma)
-                                     - 3-casos vs vocab.gender + lista curada
-                                     - detail = {suffix, suffix_class, rule_gender,
-EVIDENCIA (ya existe)                          oracle_gender, agreement, exception_listed}
- gender_attempts(was_correct,        - GenderAttempt(detail=...)  [insert aditivo]
-                 detail JSONB)        - GenderAttemptOut(rule= mostrable | None)
-   │
-   ▼
- is_mastered_gender(user, vocab)    DISPLAY (consumidor vivo, no dead code)
-  = últimos N was_correct = True  ──► ModuleCurrentOut.gender_mastered/gender_total
-  (async, lee filas; N=3)             vía GET /modules/current (Home ya lo llama)
+   -> GenderRule | None        ──►  - guard: gender_source=='oracle' (ya existe)
+                                    - rule = detect_gender_rule(vocab.lemma)
+                                    - detail = reconcile_rule(rule, vocab.gender, vocab.lemma)
+                                    - GenderAttempt(detail=detail | None)  [insert aditivo]
+EVIDENCIA (ya existe)               - GenderAttemptOut(rule = proyección si mostrable else None)
+ gender_attempts(was_correct,
+                 detail JSONB)     DISPLAY (consumidor vivo, no dead code)
+   │                                module_gender_progress(user, module)
+   ▼                                  -> (gender_mastered, gender_total)
+ is_mastered_gender(user, vocab)    ──► ModuleCurrentOut.gender_mastered/gender_total
+  = _streak_mastered(últimos, N=3)      vía GET /modules/current (Home ya lo llama)
 ```
 
-- **`curriculum/gender_rules.py`** (nuevo) — `detect_gender_rule(lemma) -> GenderRule | None` (puro, frontera morfológica, sufijo-más-largo, duro-primero) + la **lista cerrada curada** de excepciones (`_CURATED_EXCEPTIONS: dict[str, str]`, p.ej. `{"Reichtum": "der", "Irrtum": "der"}`) + la función de reconciliación pura `reconcile_rule(rule, oracle_gender, lemma) -> ReconciledRule` que implementa los 3 casos y produce el objeto `detail` + el flag de mostrabilidad. Todo testeable sin DB.
-- **`schemas/finish.py`** — `GenderRuleOut` (subconjunto mostrable: `suffix`, `suffix_class`, `rule_gender`, `is_exception`) + campo opcional `rule: GenderRuleOut | None = None` en `GenderAttemptOut`.
-- **`routers/stories.py`** — `record_gender_attempt`: tras calcular `was_correct`, computa la regla, reconcilia, escribe `detail` en el `GenderAttempt`, y puebla `rule` en la respuesta cuando sea mostrable. **Una sola** computación in-scope; persiste y devuelve el mismo objeto (sin `db.refresh`).
-- **`curriculum/competence.py`** — `is_mastered_gender(...)` (async, “últimos N todos correctos”, constante `GENDER_MASTERY_STREAK_N=3`) + `module_gender_progress(db, *, user_id, module_id) -> tuple[int,int]` (gender_mastered, gender_total) en dos queries: (a) el set elegible del módulo (module_vocab ⋈ vocab_items donde de + oráculo + género in der/die/das), (b) los `GenderAttempt` del usuario para esos `vocab_item_id`, agrupados en Python por sustantivo (orden por `attempted_at` desc, tomar últimos N, todos correctos). Sin N+1.
+- **`curriculum/gender_rules.py`** (nuevo) — `detect_gender_rule` (puro; sufijo-más-largo, duros-primero, guard ≥2 codepoints), la lista cerrada `_CURATED_EXCEPTIONS: dict[str, str]` (p.ej. `{"Reichtum": "der", "Irrtum": "der"}`), y `reconcile_rule(rule, oracle_gender, lemma) -> GenderRuleDetail` con los 3 casos. **Semántica de la lista curada:** lookup **exacto sobre `vocab.lemma`** (sin matching de compuestos — *Privatreichtum* NO está y por tanto cae a Caso B por diseño); membresía es el **único** disparador de Caso C; el valor curado se **cruza** contra `oracle_gender` (si difiere, no es Caso C → Caso B). Todo testeable sin DB.
+- **`schemas/finish.py`** — `GenderRuleOut` + campo opcional `rule: GenderRuleOut | None = None` en `GenderAttemptOut`.
+- **`routers/stories.py`** — `record_gender_attempt`: tras `was_correct`, computa `rule`/`detail` una sola vez in-scope, escribe `detail` en el `GenderAttempt`, y puebla `rule` en la respuesta cuando es mostrable (Caso A/C). Sin `db.refresh`; persiste y devuelve el mismo objeto.
+- **`curriculum/competence.py`** — `_streak_mastered(attempts_desc, n) -> bool` (puro: `len(attempts_desc) >= n and all(a.was_correct for a in attempts_desc[:n])`); `is_mastered_gender(db, *, user_id, vocab_item_id)` (async: una query `WHERE user_id AND vocab_item_id ORDER BY attempted_at DESC, id DESC`, usa `ix_gender_attempt_user_vocab`, pasa al helper); `module_gender_progress(db, *, user_id, module_id) -> tuple[int,int]` en **dos queries, sin N+1**: (a) el set elegible del módulo (`module_vocab ⋈ vocab_items` donde `language=='de'` + `gender_source=='oracle'` + `pos==NOUN` + `gender ∈ {der,die,das}`); (b) **una** query de todos los `GenderAttempt` del usuario `WHERE vocab_item_id IN (set elegible) ORDER BY attempted_at DESC, id DESC`; bucketea en Python por `vocab_item_id` y aplica el **mismo** `_streak_mastered`. `gender_total = |set elegible|`, `gender_mastered = #{maestreados}`.
 - **`schemas/module.py`** — `ModuleCurrentOut`: `gender_mastered: int`, `gender_total: int`.
-- **`routers/modules.py`** — `get_current_module`: llama `module_gender_progress` y puebla los dos campos.
+- **`routers/modules.py`** — `get_current_module`: llama `module_gender_progress` y puebla los dos campos (sin conflación con el `(encountered, mastered, total)` léxico existente).
 
 ## 6. Manejo de errores / casos borde
 
-- **Sufijo no detectado** → sin regla, sin `detail` de regla (o `detail=null`); la respuesta `rule=null`. Comportamiento idéntico al de hoy salvo el campo opcional.
-- **Caso B (falso positivo)** → regla suprimida, verdad binaria, discrepancia persistida. No se rompe el grading.
-- **NULL grade** → ni regla ni nota.
-- **Homógrafos** (*der/die See*) → el PK por lema colapsa a un género (last-write-wins, limitación pre-existente de PR-A). La maestría y las notas descansan sobre el `was_correct` almacenado contra el único género del oráculo; **no se afirman excepciones de sufijo para homógrafos**. Documentado como límite v1.
-- **`detail` drift** → se computa una vez in-scope, se persiste ese objeto exacto y se devuelve ese objeto exacto; sin re-lectura.
-- **Universalidad** → el detector es alemán por contrato; se invoca solo dentro del guard de + oráculo. El colapso de universalidad es esperado y acotado, no una regresión.
+- **Sufijo no detectado / `-nis`** → sin regla, `detail=null`, respuesta `rule=null`. Idéntico a hoy salvo el campo opcional.
+- **Caso B (discrepancia, cualquier kind)** → regla suprimida en el wire (`rule=null`), verdad binaria mostrada, **las 6 llaves del `detail` pobladas** (la supresión afecta solo la respuesta, no el registro persistido). No rompe el grading.
+- **Caso C** → solo si el lema está en `_CURATED_EXCEPTIONS` y su valor == `oracle_gender`.
+- **Homógrafos** (*der/die See*): el colapso a un género **ocurre en `GenderLexicon`** (cuyo PK es `lemma`, last-write-wins) y se superficie en `VocabItem` bajo su constraint único `(lemma, language, pos)`. `VocabItem` mismo tiene PK UUID surrogate. La maestría y las notas descansan sobre el `was_correct` almacenado contra ese único género; **no se afirman excepciones de sufijo para homógrafos**. Límite v1 documentado.
+- **`detail` drift** → se computa una vez in-scope, se persiste ese objeto exacto y se devuelve su proyección; sin re-lectura.
+- **Orden no determinista** → el desempate `id DESC` hace la racha determinista bajo empates de `attempted_at`.
+- **Universalidad** → el detector es alemán por contrato; se invoca solo dentro del guard de + oráculo (que `story_gen` ya garantiza para nouns alemanes). Colapso de universalidad esperado y acotado, no regresión.
 
 ## 7. Pruebas
 
-- **Detector** (puro): tabla duro-vs-tendencia (cada sufijo de §3 → género + kind correctos); frontera morfológica (*Schwung* NO matchea `-ung`; *Datum* NO matchea `-tum`); sufijo-más-largo (*Universität* → `-ität`, no `-tät`).
-- **Reconciliación** (pura): Caso A duro (regla mostrable, `agreement=true`); Caso A tendencia (suavizado); Caso B (regla suprimida, `rule=null`, `detail.agreement=false` persistido); Caso C curado (*Reichtum* → `is_exception=true`, mostrable); NULL → nada.
-- **Endpoint**: `detail` persistido con el esquema fijo; `GenderAttemptOut.rule` poblado/nulo según caso; backward-compat (clientes viejos ignoran el campo opcional); **el contrato no-leak del `gender_cloze` sigue intacto** (el `GenderClozeQuizItem` no gana ningún campo).
-- **`is_mastered_gender`**: bordes de racha (3 correctos seguidos = true; 2 correctos + 1 fallo reciente = false; orden por `attempted_at`; menos de N intentos = false).
-- **`module_gender_progress`**: gender_total = nouns elegibles del módulo; gender_mastered cuenta solo los maestreados; módulo sin nouns-oráculo → (0, 0).
-- **Suite completa** sin regresión; ruff (E,F,I,B,UP,RUF) limpio; roundtrip de migración N/A (sin migración — `detail` ya existe).
+- **Detector** (puro): tabla duro-vs-tendencia (cada sufijo de §3 → género + `suffix_class` correctos); sufijo-más-largo (*Universität* → `-ität`); guard de stem (palabra demasiado corta → `None`); `-nis` → `None` (excluido); *Schwung* SÍ detecta `-ung` (el detector es simple — la supresión es del reconciliador, no del detector).
+- **Reconciliación** (pura): Caso A duro (mostrable, `agreement=true`, `is_exception=false`); Caso A tendencia (mostrable, suavizado); **Caso B duro** (*Schwung* → `rule=null`, `detail.agreement=false`, 6 llaves pobladas); **Caso B tendencia** (*die Mutter* con `-er→der` → `rule=null`, suprimido — el test del invariante); Caso C curado (*Reichtum* → `is_exception=true`, mostrable); curado con valor != oráculo → Caso B (no se confía a ciegas); compuesto no-listado (*Privatreichtum*) → Caso B.
+- **Endpoint**: `detail` persistido con las 6 llaves; `GenderAttemptOut.rule` poblado/nulo según caso; backward-compat (clientes viejos ignoran el opcional); **el `GenderClozeQuizItem` no gana ningún campo** (no-leak estructural).
+- **`_streak_mastered` / `is_mastered_gender`**: 3 correctos = true; 2 correctos = false (piso `<N`); 3 correctos + 1 fallo más reciente = false; orden `attempted_at DESC, id DESC` bajo empate; <3 intentos = false.
+- **`module_gender_progress`**: `gender_total` = nouns elegibles (de+oráculo+NOUN+der/die/das) del módulo; `gender_mastered` cuenta solo los maestreados; módulo sin nouns elegibles → (0, 0); una sola query de attempts (no N+1).
+- **Suite completa** sin regresión; ruff (E,F,I,B,UP,RUF) limpio; sin migración (la columna `detail` ya existe).
 
 ## 8. Fronteras — diferido explícito
 
-- **PR-C.1 (follow-up):** render de la nota de sufijo en el verdict de `StoryFinish` + 6 claves de locale (tarea de microcopy). Puro frontend gracias al campo `rule` que PR-C ya devuelve.
+- **PR-C.1 (follow-up):** render de la nota de sufijo en el verdict de `StoryFinish` + 6 claves de locale (tarea de microcopy). Puro frontend gracias al campo `rule`.
+- **Read-path de la señal de auditoría del Caso B:** PR-C **solo escribe** el `detail` de discrepancias; ninguna métrica/dashboard/alerta lo consume todavía. Diferido **explícitamente** a un paso posterior de observabilidad (no es una omisión — es el "instrumentar primero, medir después" de C9).
 - **Incongruencia ES→DE:** backlog, solo contenido curado, nunca auto-diff (C8).
-- **Scheduling de género:** diferido hasta tener datos; instrumentar primero (C9).
-- **Gender en la compuerta de avance:** no — la compuerta queda léxica y de un solo escritor (C6/D4).
+- **Scheduling de género:** diferido hasta tener datos (C9).
+- **Gender en la compuerta de avance:** no — la compuerta queda léxica y de un solo escritor (C6).
 - **Soporte de homógrafos:** límite v1 documentado.
 - **El eje léxico de R1** (TSV de frecuencia) sigue siendo deuda separada, no bloquea esto.
