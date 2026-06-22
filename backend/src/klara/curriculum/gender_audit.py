@@ -64,9 +64,17 @@ async def gender_caseb_report(db: AsyncSession) -> list[CaseBRow]:
         .join(VocabItem, VocabItem.id == GenderAttempt.vocab_item_id)
         .where(
             d.isnot(None),
+            # reconcile_rule always writes all 6 keys, so a present detail has a
+            # suffix; this guard keeps CaseBRow.suffix honestly non-null even if a
+            # malformed row ever slipped in, rather than projecting NULL -> "None".
+            suffix.isnot(None),
             d["agreement"].astext == "false",
             d["is_exception"].astext == "false",
         )
+        # Aggregation unit is the lemma — a lemma-level question ("which word's
+        # rule disagrees with the oracle?"). gender_source is grouped so an
+        # oracle/llm split never merges; in practice attempts are gated to oracle
+        # de NOUNs (unique per lemma), so lemma collisions do not arise.
         .group_by(
             VocabItem.lemma,
             suffix,
@@ -75,7 +83,7 @@ async def gender_caseb_report(db: AsyncSession) -> list[CaseBRow]:
             oracle_gender,
             VocabItem.gender_source,
         )
-        .order_by(attempts.desc(), VocabItem.lemma.asc())
+        .order_by(attempts.desc(), VocabItem.lemma.asc(), suffix.asc())
     )
     result = await db.execute(stmt)
     return [

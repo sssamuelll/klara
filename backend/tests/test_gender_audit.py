@@ -191,6 +191,25 @@ async def test_report_aggregates_and_orders_by_frequency(db_session):
 
 
 @pytest.mark.asyncio
+async def test_report_excludes_detail_missing_suffix(db_session):
+    # Defensive: a malformed detail (agreement/is_exception present but no suffix)
+    # cannot arise from reconcile_rule, but the suffix-not-null guard excludes it
+    # rather than projecting a NULL suffix into CaseBRow.
+    uid = await _user(db_session)
+    v = await _noun(db_session, lemma=f"X{uuid.uuid4().hex[:6]}", gender="die")
+    await _attempt(
+        db_session,
+        uid=uid,
+        vid=v.id,
+        picked="der",
+        correct=False,
+        detail={"agreement": False, "is_exception": False},
+    )
+    await db_session.commit()
+    assert await gender_caseb_report(db_session) == []
+
+
+@pytest.mark.asyncio
 async def test_report_empty_when_no_disagreements(db_session):
     uid = await _user(db_session)
     # Only an agreement row exists.
