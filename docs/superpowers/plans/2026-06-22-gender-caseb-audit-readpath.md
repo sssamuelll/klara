@@ -10,14 +10,14 @@
 
 ---
 
-### Task 1: Aggregation function + dataclass (TDD)
+## Task 1: Aggregation function + dataclass (TDD)
 
 **Files:**
 - Create: `backend/src/klara/curriculum/gender_audit.py`
 - Test: `backend/tests/test_gender_audit.py`
 
 - [ ] **Step 1: Write failing tests** — isolate Case-B; aggregate + order; empty; cause_hint. (Full code in Task 1 of this plan.)
-- [ ] **Step 2: Run, expect ImportError/fail.** `uv run pytest tests/test_gender_audit.py -q`
+- [ ] **Step 2: Run, expect ImportError/fail.** `cd backend && uv run pytest tests/test_gender_audit.py -q`
 - [ ] **Step 3: Implement `gender_caseb_report` + `CaseBRow`.**
 - [ ] **Step 4: Run, expect PASS.**
 
@@ -116,7 +116,7 @@ async def gender_caseb_report(db: AsyncSession) -> list[CaseBRow]:
 
 ---
 
-### Task 2: Thin CLI wrapper
+## Task 2: Thin CLI wrapper
 
 **Files:**
 - Create: `backend/src/klara/scripts/audit_gender_caseb.py`
@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
 ---
 
-### Task 3: Verify
+## Task 3: Verify
 
 - [ ] `cd backend && uv run pytest tests/test_gender_audit.py -q` — PASS.
 - [ ] `cd backend && uv run ruff check --fix src tests && uv run ruff format src tests` — clean.
