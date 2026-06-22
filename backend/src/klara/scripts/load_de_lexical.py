@@ -4,8 +4,9 @@ Uso:
     uv run python -m klara.scripts.load_de_lexical <ruta-al-tsv>
 
 El TSV es `lemma<TAB>pos<TAB>cefr<TAB>rank` (con cabecera). La lista real
-(Kelly / SUBTLEX-DE + CEFR) se adquiere aparte por licencia; este script NO la
-incluye. Wrapper idempotente sobre curriculum.inventory.load_frequency.
+(Kelly / SUBTLEX-DE + CEFR) se adquiere aparte por licencia (atribuida en
+NOTICE); este script NO la incluye. Wrapper idempotente sobre
+curriculum.inventory.load_frequency.
 """
 
 from __future__ import annotations

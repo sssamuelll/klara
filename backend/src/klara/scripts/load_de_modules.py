@@ -3,8 +3,8 @@
 Usage:
     uv run python -m klara.scripts.load_de_modules
 
-PR-A seeds ONE module ("En el café") to prove the loop end-to-end. The full
-A1 sequence (PR-B) extends MODULES below. Idempotent — safe to re-run.
+Seeds the full German A1 sequence (8 modules) defined inline in MODULES below.
+Idempotent — safe to re-run.
 """
 
 from __future__ import annotations

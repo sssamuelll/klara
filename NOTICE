@@ -1,0 +1,35 @@
+Klara — German learning app
+Copyright (c) 2026 Samuel Ballesteros
+
+The Klara source code is licensed under the MIT License (see LICENSE).
+
+Klara builds on the third-party datasets listed below. These datasets are NOT
+vendored in this repository — they are acquired separately and loaded into the
+database at deploy time by the scripts under backend/src/klara/scripts/. This
+file records the attribution obligations that apply once the data is loaded.
+
+================================================================================
+German noun gender oracle
+================================================================================
+Source:   gambolputty/german-nouns
+          https://github.com/gambolputty/german-nouns
+License:  Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+          https://creativecommons.org/licenses/by-sa/4.0/
+Used by:  backend/src/klara/scripts/load_de_gender.py -> the `gender_lexicon` table.
+Changes:  lemma and grammatical gender are extracted; genus (m/f/n) is mapped to
+          the articles der/die/das; on duplicate lemmas the last row wins.
+
+CC BY-SA 4.0 is a share-alike license: gender data derived from this dataset
+(the contents of the `gender_lexicon` table, and any redistribution thereof)
+remains licensed under CC BY-SA 4.0. The Klara source code itself is MIT and is
+unaffected by this obligation.
+
+================================================================================
+German lexical frequency / CEFR inventory
+================================================================================
+Source:   Kelly project and/or SUBTLEX-DE, combined with CEFR level data.
+Used by:  backend/src/klara/scripts/load_de_lexical.py -> the word frequency /
+          CEFR inventory.
+License:  acquired separately under the respective upstream terms; not
+          redistributed in this repository. Consult the upstream license before
+          redistributing any derived frequency data.
