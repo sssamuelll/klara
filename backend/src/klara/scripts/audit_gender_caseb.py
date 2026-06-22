@@ -43,16 +43,17 @@ async def _run() -> None:
                 f"{r.lemma:<22}-{r.suffix:<9}{r.suffix_class:<10}"
                 f"{arrow:<16}{r.attempts:>5}{r.users:>6}  {r.cause_hint}"
             )
-            # CodeQL py/clear-text-logging-sensitive-data is a FALSE POSITIVE here.
-            # The DATABASE_URL credential label propagates structurally through
-            # init_engine -> AsyncSession -> every result row, but the credential
-            # is consumed at create_async_engine and never re-emitted. Every value
-            # printed here is an explicit allow-list of NON-sensitive fields:
-            # dictionary lemma, suffix, der/die/das articles, the gender_source
-            # enum, and integer counts. No User.* column and no raw `detail` JSONB
-            # is projected into CaseBRow -- re-verify this allow-list before adding
-            # any column here.
-            print(line)  # lgtm[py/clear-text-logging-sensitive-data]
+            # CodeQL py/clear-text-logging-sensitive-data fires here as a FALSE
+            # POSITIVE: the DATABASE_URL credential label propagates structurally
+            # through init_engine -> AsyncSession -> every result row, but the
+            # credential is consumed at create_async_engine and never re-emitted.
+            # Every value printed is an explicit allow-list of NON-sensitive
+            # fields -- lemma, suffix, der/die/das articles, the gender_source
+            # enum, integer counts; no User.* column and no raw `detail` JSONB.
+            # The alert is dismissed in the code-scanning ledger (rule stays
+            # armed); test_case_b_row_is_a_non_sensitive_allowlist enforces the
+            # CaseBRow allow-list so widening it to a sensitive column fails CI.
+            print(line)
     finally:
         await dispose_engine()
 

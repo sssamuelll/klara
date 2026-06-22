@@ -4,10 +4,11 @@ lemma, most frequent first. Case-A agreement, Case-C exception, and no-detail
 rows are excluded."""
 
 import uuid
+from dataclasses import fields
 
 import pytest
 
-from klara.curriculum.gender_audit import gender_caseb_report
+from klara.curriculum.gender_audit import CaseBRow, gender_caseb_report
 from klara.models import GenderAttempt, User, VocabItem
 from klara.models.enums import CEFRLevel, PartOfSpeech
 
@@ -66,6 +67,25 @@ async def _attempt(db, *, uid, vid, picked, correct, detail):
             detail=detail,
         )
     )
+
+
+def test_case_b_row_is_a_non_sensitive_allowlist():
+    # The CodeQL py/clear-text-logging-sensitive-data alert on the audit CLI's
+    # print() is dismissed as a false positive on the premise that CaseBRow
+    # projects ONLY these non-sensitive columns. Enforce that premise: the day
+    # someone widens the report to project a User-bound field (email,
+    # hashed_password) or the raw `detail` JSONB, CI fails HERE -- before the
+    # dismissal's justification silently becomes a lie.
+    assert {f.name for f in fields(CaseBRow)} == {
+        "lemma",
+        "suffix",
+        "suffix_class",
+        "rule_gender",
+        "oracle_gender",
+        "gender_source",
+        "attempts",
+        "users",
+    }
 
 
 @pytest.mark.asyncio
