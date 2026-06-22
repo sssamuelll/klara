@@ -8,6 +8,7 @@ import type {
   Invitation,
   InvitationCreate,
   KlaraNoteResponse,
+  L1GenderNotesResponse,
   MCResolveResponse,
   ModuleCurrent,
   PhoneticHintsResponse,
@@ -278,6 +279,9 @@ export const api = {
 
   getStoryKlaraNote: (storyId: string) =>
     request<KlaraNoteResponse | null>(`/stories/${storyId}/klara-note`),
+
+  getStoryL1Notes: (storyId: string) =>
+    request<L1GenderNotesResponse>(`/stories/${storyId}/gender/l1-notes`),
 
   recordPronunciationAttempt: (storyId: string, payload: PronunciationAttemptIn) =>
     request<void>(`/stories/${storyId}/pronunciation/attempts`, {

@@ -26,6 +26,7 @@ import type {
   GenderRule,
   InsightResponse,
   KlaraNoteResponse,
+  L1GenderNote,
   MCQuizItem,
   QuizItem,
   ScheduleBucket,
@@ -1110,6 +1111,23 @@ function Summary({
     };
   }, [story.id]);
 
+  // L1 gender-transfer notes (ES→DE): async, best-effort. Empty → section hidden.
+  const [l1Notes, setL1Notes] = useState<L1GenderNote[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getStoryL1Notes(story.id)
+      .then((r) => {
+        if (!cancelled) setL1Notes(r.notes);
+      })
+      .catch(() => {
+        // best-effort: section just doesn't show
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [story.id]);
+
   // Schedule: real SRS state per target word. While loading, fall back to
   // the heuristic so the section doesn't pop in late.
   const [schedule, setSchedule] = useState<Map<string, ScheduleEntry> | null>(null);
@@ -1298,6 +1316,26 @@ function Summary({
           )}
         </section>
       </div>
+
+      {l1Notes.length > 0 && (
+        <>
+          <hr className="fin-rule" />
+          <section className="fin-l1" aria-label={t("story.finish.summary.l1Notes.title")}>
+            <span className="fin-cap">{t("story.finish.summary.l1Notes.title")}</span>
+            <p className="fin-l1__hint">{t("story.finish.summary.l1Notes.hint")}</p>
+            <ul className="fin-l1__list">
+              {l1Notes.map((n) => (
+                <li key={n.lemma} className="fin-l1__item">
+                  <span className="fin-l1__word">
+                    {n.gender} {n.lemma}
+                  </span>{" "}
+                  {n.note}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
 
       {(klaraNoteLoading || klaraNote) && (
         <>

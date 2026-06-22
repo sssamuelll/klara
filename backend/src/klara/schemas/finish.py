@@ -124,6 +124,16 @@ class GenderAttemptOut(BaseModel):
     rule: GenderRuleOut | None = None  # showable suffix rule (Case A/C); None otherwise
 
 
+class GenderL1NoteItem(BaseModel):
+    lemma: str
+    gender: Literal["der", "die", "das"]
+    note: str
+
+
+class GenderL1NotesOut(BaseModel):
+    notes: list[GenderL1NoteItem]
+
+
 # ---- Schedule entries — per-target-word SRS state for the Finish summary -
 
 

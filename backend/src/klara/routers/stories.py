@@ -14,7 +14,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import select
+from sqlalchemy import func, select
 from starlette.concurrency import run_in_threadpool
 
 from klara.curriculum.gender_rules import detect_gender_rule, reconcile_rule
@@ -30,18 +30,22 @@ from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.models import (
     GenderAttempt,
+    GenderL1Note,
     PronunciationAttempt,
     QuizAttempt,
     Story,
     UserCard,
     VocabItem,
 )
+from klara.models.enums import PartOfSpeech
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
     GenderAttemptIn,
     GenderAttemptOut,
+    GenderL1NoteItem,
+    GenderL1NotesOut,
     GenderRuleOut,
     InsightOut,
     KlaraNoteOut,
@@ -301,6 +305,54 @@ async def get_story_klara_note(
     if body is None:
         return None
     return KlaraNoteOut(body=body)
+
+
+@router.get("/{story_id}/gender/l1-notes", response_model=GenderL1NotesOut)
+async def get_story_l1_notes(
+    story_id: UUID,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> GenderL1NotesOut:
+    """Curated ES<->DE gender-trap notes for the story's target words, keyed by the
+    story's L1. The displayed der/die/das is oracle-gated; words without an
+    authoritative oracle gender are dropped, so a note never rides an LLM guess."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    ids = list(story.target_vocab_item_ids or [])
+    if not ids:
+        return GenderL1NotesOut(notes=[])
+    words = await _load_words(db, ids)
+    # eligible[lower(lemma)] = oracle gender; German nouns with an authoritative gender only.
+    eligible: dict[str, str] = {
+        w.lemma.lower(): w.gender
+        for w in words
+        if w.language == "de"
+        and w.pos == PartOfSpeech.NOUN
+        and w.gender_source == "oracle"
+        and w.gender in ("der", "die", "das")
+    }
+    if not eligible:
+        return GenderL1NotesOut(notes=[])
+    l1 = (story.native_language or "").lower()
+    rows = (
+        await db.execute(
+            select(GenderL1Note.lemma, GenderL1Note.note).where(
+                GenderL1Note.l1_language == l1,
+                func.lower(GenderL1Note.lemma).in_(list(eligible.keys())),
+            )
+        )
+    ).all()
+    notes: list[GenderL1NoteItem] = []
+    seen: set[str] = set()
+    for note_lemma, note in rows:
+        key = note_lemma.lower()
+        gender = eligible.get(key)
+        if gender is None or key in seen:
+            continue
+        seen.add(key)
+        # Display the seed's (capitalized) lemma, not the possibly drifted VocabItem casing.
+        notes.append(GenderL1NoteItem(lemma=note_lemma, gender=gender, note=note))
+    return GenderL1NotesOut(notes=notes)
 
 
 @router.post(

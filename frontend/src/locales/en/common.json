@@ -269,6 +269,10 @@
         },
         "note": {
           "aria": "Klara’s note"
+        },
+        "l1Notes": {
+          "title": "Gender traps",
+          "hint": "The gender differs between your language and German."
         }
       }
     }

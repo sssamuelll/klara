@@ -870,6 +870,42 @@
 @keyframes fin-skel-pulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 0.35; } }
 
 /* ============================================================
+   L1 GENDER TRAPS — curated ES→DE gender-transfer notes
+   ============================================================ */
+.fin-l1 {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+.fin-l1__hint {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-3);
+  margin: 0;
+}
+.fin-l1__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fin-l1__item {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 52ch;
+}
+.fin-l1__word {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ============================================================
    KLARA NOTE — italic sign-off teasing tomorrow's lesson
    ============================================================ */
 .fin-note {
