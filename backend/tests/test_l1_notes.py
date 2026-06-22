@@ -1,7 +1,6 @@
 """load_l1_notes: idempotent upsert (edits update), l1 canonicalized to lowercase,
 validation rejects empty/over-length. gender_l1_notes is truncated between tests."""
 
-
 import pytest
 from sqlalchemy import select
 

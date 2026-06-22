@@ -78,7 +78,9 @@ async def test_returns_oracle_resolved_notes(db_session):
     u = await _user(db_session)
     v = await _noun(db_session, lemma=lemma, gender="das")
     s = await _story(db_session, user=u, vocab_ids=[v.id])
-    await load_l1_notes(db_session, rows=[L1NoteRow(lemma=lemma, l1_language="es", note="trampa coche")])
+    await load_l1_notes(
+        db_session, rows=[L1NoteRow(lemma=lemma, l1_language="es", note="trampa coche")]
+    )
     await db_session.commit()
     resp = await _get_notes(db_session, u, s.id)
     assert resp.status_code == 200, resp.text
@@ -159,3 +161,55 @@ async def test_owner_gated_404(db_session):
     await db_session.commit()
     resp = await _get_notes(db_session, other, s.id)  # not the owner
     assert resp.status_code == 404, resp.text
+
+
+@pytest.mark.asyncio
+async def test_non_es_story_l1_returns_empty(db_session):
+    # A non-Spanish learner never gets Spanish prose: a fr story + only es seeds -> [].
+    lemma = f"Auto{uuid.uuid4().hex[:6]}"
+    u = await _user(db_session, native_language="fr")
+    v = await _noun(db_session, lemma=lemma, gender="das")
+    s = await _story(db_session, user=u, vocab_ids=[v.id], native_language="fr")
+    await load_l1_notes(db_session, rows=[L1NoteRow(lemma=lemma, l1_language="es", note="trampa")])
+    await db_session.commit()
+    resp = await _get_notes(db_session, u, s.id)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["notes"] == []
+
+
+@pytest.mark.asyncio
+async def test_non_noun_dropped(db_session):
+    # The pos==NOUN guard: a verb with a matching seed is dropped even if oracle-sourced.
+    lemma = f"laufen{uuid.uuid4().hex[:6]}"
+    u = await _user(db_session)
+    v = await _noun(
+        db_session, lemma=lemma, gender=None, gender_source="oracle", pos=PartOfSpeech.VERB
+    )
+    s = await _story(db_session, user=u, vocab_ids=[v.id])
+    await load_l1_notes(db_session, rows=[L1NoteRow(lemma=lemma, l1_language="es", note="x")])
+    await db_session.commit()
+    resp = await _get_notes(db_session, u, s.id)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["notes"] == []
+
+
+@pytest.mark.asyncio
+async def test_integration_real_seed_surfaces_for_a1_noun(db_session):
+    # Lock the shipped seed against the real A1 corpus: the actual "Auto" seed
+    # surfaces for an oracle "Auto" (das) noun (load_de_modules seeds Auto/das;
+    # story_gen stamps gender_source="oracle" in prod once the lexicon is loaded).
+    from klara.scripts.load_de_l1_notes import _ES_NOTES
+
+    rows = [L1NoteRow(lemma=lemma, l1_language="es", note=note) for lemma, note in _ES_NOTES]
+    await load_l1_notes(db_session, rows=rows)
+    u = await _user(db_session)
+    v = await _noun(db_session, lemma="Auto", gender="das")
+    s = await _story(db_session, user=u, vocab_ids=[v.id])
+    await db_session.commit()
+    resp = await _get_notes(db_session, u, s.id)
+    assert resp.status_code == 200, resp.text
+    notes = resp.json()["notes"]
+    assert len(notes) == 1
+    assert notes[0]["lemma"] == "Auto"
+    assert notes[0]["gender"] == "das"
+    assert "coche" in notes[0]["note"]

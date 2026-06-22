@@ -1315,21 +1315,27 @@ function Summary({
             </p>
           )}
         </section>
+      </div>
 
-        {l1Notes.length > 0 && (
+      {l1Notes.length > 0 && (
+        <>
+          <hr className="fin-rule" />
           <section className="fin-l1" aria-label={t("story.finish.summary.l1Notes.title")}>
             <span className="fin-cap">{t("story.finish.summary.l1Notes.title")}</span>
             <p className="fin-l1__hint">{t("story.finish.summary.l1Notes.hint")}</p>
             <ul className="fin-l1__list">
               {l1Notes.map((n) => (
                 <li key={n.lemma} className="fin-l1__item">
-                  <span className="fin-l1__word">«{n.gender} {n.lemma}»</span> {n.note}
+                  <span className="fin-l1__word">
+                    {n.gender} {n.lemma}
+                  </span>{" "}
+                  {n.note}
                 </li>
               ))}
             </ul>
           </section>
-        )}
-      </div>
+        </>
+      )}
 
       {(klaraNoteLoading || klaraNote) && (
         <>
