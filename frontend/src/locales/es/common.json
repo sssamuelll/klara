@@ -227,7 +227,12 @@
           "prompt": "¿der, die o das?",
           "correct": "Correcto.",
           "wrong": "Era «{{correct}}».",
-          "failed": "No pudimos verificar tu respuesta."
+          "failed": "No pudimos verificar tu respuesta.",
+          "rule": {
+            "hard": "Las palabras en {{suffix}} siempre son {{gender}}.",
+            "tendency": "Las palabras en {{suffix}} suelen ser {{gender}}.",
+            "exception": "{{suffix}} casi siempre es {{ruleGender}}, pero «{{lemma}}» es {{gender}}."
+          }
         },
         "reveal": "Ver respuesta",
         "yourTurn": "Tu turno",

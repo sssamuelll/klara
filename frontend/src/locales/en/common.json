@@ -227,7 +227,12 @@
           "prompt": "der, die or das?",
           "correct": "Correct.",
           "wrong": "It was «{{correct}}».",
-          "failed": "We couldn't check your answer."
+          "failed": "We couldn't check your answer.",
+          "rule": {
+            "hard": "Words ending in {{suffix}} are always {{gender}}.",
+            "tendency": "Words ending in {{suffix}} are usually {{gender}}.",
+            "exception": "{{suffix}} is almost always {{ruleGender}}, but «{{lemma}}» is {{gender}}."
+          }
         },
         "reveal": "Reveal",
         "yourTurn": "Your turn",

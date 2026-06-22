@@ -23,6 +23,7 @@ import { api } from "../api/client";
 import type {
   ClozeQuizItem,
   GenderClozeQuizItem,
+  GenderRule,
   InsightResponse,
   KlaraNoteResponse,
   MCQuizItem,
@@ -905,6 +906,7 @@ function GenderClozeQuestion({
   const [result, setResult] = useState<{
     correct: boolean;
     correctGender: string | null;
+    rule: GenderRule | null;
   } | null>(null);
 
   const onPick = (article: string) => {
@@ -916,16 +918,34 @@ function GenderClozeQuestion({
         picked_article: article as "der" | "die" | "das",
       })
       .then((r) => {
-        setResult({ correct: r.was_correct, correctGender: r.correct_gender });
+        setResult({ correct: r.was_correct, correctGender: r.correct_gender, rule: r.rule ?? null });
         onAnswered({ correct: r.was_correct, revealed: false });
       })
       .catch(() => {
         // On failure we couldn't verify: grade as wrong-unknown (no correct
         // article to show) but still advance so the user is never stuck.
-        setResult({ correct: false, correctGender: null });
+        setResult({ correct: false, correctGender: null, rule: null });
         onAnswered({ correct: false, revealed: false });
       });
   };
+
+  const ruleNote: string | null = (() => {
+    if (!result || !result.rule || !result.correctGender) return null;
+    const r = result.rule;
+    const suffix = `-${r.suffix}`;
+    if (r.is_exception) {
+      return t("story.finish.quiz.genderCloze.rule.exception", {
+        suffix,
+        ruleGender: r.rule_gender,
+        gender: result.correctGender,
+        lemma: q.lemma,
+      });
+    }
+    if (r.suffix_class === "hard") {
+      return t("story.finish.quiz.genderCloze.rule.hard", { suffix, gender: r.rule_gender });
+    }
+    return t("story.finish.quiz.genderCloze.rule.tendency", { suffix, gender: r.rule_gender });
+  })();
 
   return (
     <article className="qcard" data-type="gender_cloze">
@@ -956,16 +976,19 @@ function GenderClozeQuestion({
           </div>
         )}
         {result && (
-          <div className="qcard__result">
-            <span className="qcard__verdict">
-              {result.correct ? (
-                <em>{t("story.finish.quiz.genderCloze.correct")}</em>
-              ) : result.correctGender ? (
-                t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
-              ) : (
-                t("story.finish.quiz.genderCloze.failed")
-              )}
-            </span>
+          <>
+            <div className="qcard__result">
+              <span className="qcard__verdict">
+                {result.correct ? (
+                  <em>{t("story.finish.quiz.genderCloze.correct")}</em>
+                ) : result.correctGender ? (
+                  t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
+                ) : (
+                  t("story.finish.quiz.genderCloze.failed")
+                )}
+              </span>
+            </div>
+            {ruleNote && <p className="qcard__rule">{ruleNote}</p>}
             <button
               type="button"
               className="fin-btn fin-btn--primary qcard__next"
@@ -974,7 +997,7 @@ function GenderClozeQuestion({
               {isLast ? t("story.finish.quiz.toSummary") : t("story.finish.quiz.next")}{" "}
               <span className="fin-arr">→</span>
             </button>
-          </div>
+          </>
         )}
       </footer>
     </article>

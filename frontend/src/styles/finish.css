@@ -569,6 +569,17 @@
   color: var(--ink-2);
   max-width: 64ch;
 }
+.qcard__rule {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--rule);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
 .qcard__next { align-self: flex-end; }
 .qcard__hint {
   font-family: var(--font-serif);

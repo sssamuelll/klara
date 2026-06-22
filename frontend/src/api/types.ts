@@ -232,9 +232,17 @@ export interface GenderAttemptIn {
   picked_article: "der" | "die" | "das";
 }
 
+export interface GenderRule {
+  suffix: string;
+  suffix_class: "hard" | "tendency";
+  rule_gender: "der" | "die" | "das";
+  is_exception: boolean;
+}
+
 export interface GenderAttemptOut {
   was_correct: boolean;
   correct_gender: string;
+  rule?: GenderRule | null;
 }
 
 export interface QuizAttemptIn {
