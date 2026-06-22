@@ -39,10 +39,20 @@ async def _run() -> None:
         print("-" * len(header))
         for r in rows:
             arrow = f"{r.rule_gender}->{r.oracle_gender}"
-            print(
+            line = (
                 f"{r.lemma:<22}-{r.suffix:<9}{r.suffix_class:<10}"
                 f"{arrow:<16}{r.attempts:>5}{r.users:>6}  {r.cause_hint}"
             )
+            # CodeQL py/clear-text-logging-sensitive-data is a FALSE POSITIVE here.
+            # The DATABASE_URL credential label propagates structurally through
+            # init_engine -> AsyncSession -> every result row, but the credential
+            # is consumed at create_async_engine and never re-emitted. Every value
+            # printed here is an explicit allow-list of NON-sensitive fields:
+            # dictionary lemma, suffix, der/die/das articles, the gender_source
+            # enum, and integer counts. No User.* column and no raw `detail` JSONB
+            # is projected into CaseBRow -- re-verify this allow-list before adding
+            # any column here.
+            print(line)  # lgtm[py/clear-text-logging-sensitive-data]
     finally:
         await dispose_engine()
 
