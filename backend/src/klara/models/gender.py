@@ -28,6 +28,7 @@ class GenderAttempt(Base):
     )
     picked_article: Mapped[str] = mapped_column(String(8), nullable=False)  # der | die | das
     was_correct: Mapped[bool] = mapped_column(nullable=False)
-    # Forward-compat for PR-C (e.g. the detected suffix rule); unused in v1.
+    # Reconciled suffix-rule detail (the 6-key GenderRuleDetail) written by
+    # record_gender_attempt; read by the Case-B audit. Null when no suffix matched.
     detail: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     attempted_at: Mapped[created_ts]

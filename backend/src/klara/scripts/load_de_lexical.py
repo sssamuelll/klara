@@ -1,11 +1,12 @@
-"""Carga la lista de frecuencia léxica de alemán al inventario.
+"""Load the German lexical-frequency list into the inventory.
 
-Uso:
-    uv run python -m klara.scripts.load_de_lexical <ruta-al-tsv>
+Usage:
+    uv run python -m klara.scripts.load_de_lexical <path-to-tsv>
 
-El TSV es `lemma<TAB>pos<TAB>cefr<TAB>rank` (con cabecera). La lista real
-(Kelly / SUBTLEX-DE + CEFR) se adquiere aparte por licencia; este script NO la
-incluye. Wrapper idempotente sobre curriculum.inventory.load_frequency.
+The TSV is `lemma<TAB>pos<TAB>cefr<TAB>rank` (with a header row). The real list
+(Kelly / SUBTLEX-DE + CEFR) is acquired separately under its own license
+(attributed in NOTICE); this script does not vendor it. Idempotent wrapper over
+curriculum.inventory.load_frequency.
 """
 
 from __future__ import annotations
