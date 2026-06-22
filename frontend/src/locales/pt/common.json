@@ -269,6 +269,10 @@
         },
         "note": {
           "aria": "Nota da Klara"
+        },
+        "l1Notes": {
+          "title": "Armadilhas de género",
+          "hint": "O género muda entre a tua língua e o alemão."
         }
       }
     }

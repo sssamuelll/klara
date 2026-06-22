@@ -269,6 +269,10 @@
         },
         "note": {
           "aria": "Klaras Notiz"
+        },
+        "l1Notes": {
+          "title": "Genus-Fallen",
+          "hint": "Das Genus unterscheidet sich zwischen deiner Sprache und dem Deutschen."
         }
       }
     }

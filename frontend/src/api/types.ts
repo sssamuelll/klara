@@ -219,6 +219,16 @@ export interface KlaraNoteResponse {
   body: string;
 }
 
+export interface L1GenderNote {
+  lemma: string;
+  gender: "der" | "die" | "das";
+  note: string;
+}
+
+export interface L1GenderNotesResponse {
+  notes: L1GenderNote[];
+}
+
 export interface PronunciationAttemptIn {
   sentence_index: number;
   reference_text: string;

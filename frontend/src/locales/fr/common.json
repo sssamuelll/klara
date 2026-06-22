@@ -269,6 +269,10 @@
         },
         "note": {
           "aria": "Note de Klara"
+        },
+        "l1Notes": {
+          "title": "Pièges de genre",
+          "hint": "Le genre diffère entre ta langue et l'allemand."
         }
       }
     }

@@ -269,6 +269,10 @@
         },
         "note": {
           "aria": "Nota de Klara"
+        },
+        "l1Notes": {
+          "title": "Trampas de género",
+          "hint": "El género no coincide entre tu idioma y el alemán."
         }
       }
     }
