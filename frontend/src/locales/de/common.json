@@ -227,7 +227,12 @@
           "prompt": "der, die oder das?",
           "correct": "Richtig.",
           "wrong": "Es war «{{correct}}».",
-          "failed": "Wir konnten deine Antwort nicht prüfen."
+          "failed": "Wir konnten deine Antwort nicht prüfen.",
+          "rule": {
+            "hard": "Wörter auf {{suffix}} sind immer {{gender}}.",
+            "tendency": "Wörter auf {{suffix}} sind meistens {{gender}}.",
+            "exception": "{{suffix}} ist fast immer {{ruleGender}}, aber «{{lemma}}» ist {{gender}}."
+          }
         },
         "reveal": "Antwort zeigen",
         "yourTurn": "Du bist dran",

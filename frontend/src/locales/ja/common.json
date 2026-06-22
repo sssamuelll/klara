@@ -227,7 +227,12 @@
           "prompt": "der・die・das？",
           "correct": "正解。",
           "wrong": "正解は「{{correct}}」。",
-          "failed": "回答を確認できませんでした。"
+          "failed": "回答を確認できませんでした。",
+          "rule": {
+            "hard": "{{suffix}} で終わる語はすべて {{gender}} です。",
+            "tendency": "{{suffix}} で終わる語はたいてい {{gender}} です。",
+            "exception": "{{suffix}} はほとんど {{ruleGender}} ですが、「{{lemma}}」は {{gender}} です。"
+          }
         },
         "reveal": "答えを見る",
         "yourTurn": "あなたの番",

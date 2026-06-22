@@ -227,7 +227,12 @@
           "prompt": "der, die ou das ?",
           "correct": "Correct.",
           "wrong": "C'était «{{correct}}».",
-          "failed": "Nous n'avons pas pu vérifier ta réponse."
+          "failed": "Nous n'avons pas pu vérifier ta réponse.",
+          "rule": {
+            "hard": "Les mots en {{suffix}} sont toujours {{gender}}.",
+            "tendency": "Les mots en {{suffix}} sont souvent {{gender}}.",
+            "exception": "{{suffix}} est presque toujours {{ruleGender}}, mais «{{lemma}}» est {{gender}}."
+          }
         },
         "reveal": "Voir la réponse",
         "yourTurn": "À toi",
