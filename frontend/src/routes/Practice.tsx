@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { PronunciationReviewIn, RescheduledCard, StorySentence } from "../api/types";
+import GenderReviewSession from "../components/GenderReviewSession";
 import KlaraMark from "../components/KlaraMark";
 import SentenceView from "../components/SentenceView";
 import { useFontScale } from "../lib/preferences";
@@ -99,6 +100,7 @@ export default function Practice() {
   const struggledN = useMemo(() => countByReason(items, "struggled"), [items]);
   const reviewN = total - struggledN;
 
+  const [segment, setSegment] = useState<"pronunciation" | "gender" | null>(null);
   const [phase, setPhase] = useState<Phase>("setup");
 
   type SendState = "idle" | "sending" | "ok" | "failed";
@@ -193,6 +195,41 @@ export default function Practice() {
       submitSession();
     }
   }, [phase, sendState, submitSession]);
+
+  // ---- SEGMENT: gender (reuses the standalone /gender session) -----------
+  if (segment === "gender") {
+    return (
+      <GenderReviewSession onExit={() => setSegment(null)} exitLabel={t("practice.segment.back")} />
+    );
+  }
+
+  // ---- SEGMENT CHOOSER ---------------------------------------------------
+  if (segment === null) {
+    return (
+      <main className="k-page kp-setup">
+        <button className="story__back k-mono" onClick={() => navigate("/")}>
+          {t("common.back")}
+        </button>
+        <header className="kp-setup__head">
+          <h1 className="kp-setup__title">{t("practice.segment.title")}</h1>
+        </header>
+        <section className="kp-segments">
+          <button className="kp-segment" onClick={() => setSegment("pronunciation")}>
+            <span className="kp-segment__title">{t("practice.segment.pron.title")}</span>
+            <span className="kp-segment__dek">{t("practice.segment.pron.dek")}</span>
+            <span className="kp-segment__arrow k-serif">→</span>
+          </button>
+          <button className="kp-segment" onClick={() => setSegment("gender")}>
+            <span className="kp-segment__title">{t("practice.segment.gender.title")}</span>
+            <span className="kp-segment__dek">{t("practice.segment.gender.dek")}</span>
+            <span className="kp-segment__arrow k-serif">→</span>
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  // segment === "pronunciation" → the existing pronunciation flow (below, unchanged)
 
   // ---- LOADING / ERROR / EMPTY -------------------------------------------
   if (phase === "setup" && (queue === null || loadFailed || total === 0)) {

@@ -720,6 +720,52 @@ select.snew__input option {
 .kp-send-fail { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .kp-send-fail .k-mono { color: var(--ink-3); font-size: 11px; }
 
+/* ----- SEGMENT CHOOSER ----- */
+.kp-segments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.kp-segment {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "title arrow" "dek arrow";
+  align-items: center;
+  gap: 0.15rem 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.25rem;
+  background: var(--paper);
+  border: 1px solid var(--ink-3);
+  border-radius: var(--r-md);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease;
+}
+
+.kp-segment:hover {
+  border-color: var(--ink);
+}
+
+.kp-segment__title {
+  grid-area: title;
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+}
+
+.kp-segment__dek {
+  grid-area: dek;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+}
+
+.kp-segment__arrow {
+  grid-area: arrow;
+  opacity: 0.6;
+}
+
 @media (max-width: 720px) {
   .kp-setup__title, .kp-sum__title { font-size: 32px; }
   .kp-sum__stats { gap: var(--space-4); }

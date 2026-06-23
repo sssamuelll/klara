@@ -336,6 +336,18 @@
       },
       "again": "Otra ronda",
       "home": "Volver al inicio"
+    },
+    "segment": {
+      "title": "¿Qué repasas?",
+      "pron": {
+        "title": "Pronunciar",
+        "dek": "Las frases que se te traban, otra vez en voz alta."
+      },
+      "gender": {
+        "title": "Géneros",
+        "dek": "Los der, die, das que fallas."
+      },
+      "back": "Elegir otro"
     }
   },
   "wpop": {

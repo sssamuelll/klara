@@ -336,6 +336,18 @@
       },
       "again": "Another round",
       "home": "Back home"
+    },
+    "segment": {
+      "title": "What do you review?",
+      "pron": {
+        "title": "Speaking",
+        "dek": "The sentences that trip you up, out loud again."
+      },
+      "gender": {
+        "title": "Genders",
+        "dek": "The der, die, das you miss."
+      },
+      "back": "Pick another"
     }
   },
   "wpop": {
