@@ -149,7 +149,7 @@ async def test_grade_endpoint_is_user_isolated(db_session):
     user's. The vocab is shared; the attempt's user_id is server-derived."""
     from sqlalchemy import select
 
-    owner = await _user(db_session)  # noqa: F841 — seeded to prove IDOR isolation
+    owner = await _user(db_session)  # seeded to prove IDOR isolation (two-sided)
     other = await _user(db_session)
     v = await _oracle_noun(db_session, lemma=f"Haus{uuid.uuid4().hex[:6]}", gender="das")
     await db_session.commit()
@@ -164,4 +164,6 @@ async def test_grade_endpoint_is_user_isolated(db_session):
         .scalars()
         .all()
     )
-    assert len(rows) == 1 and rows[0].user_id == other.id  # never owner.id
+    assert (
+        len(rows) == 1 and rows[0].user_id == other.id and all(r.user_id != owner.id for r in rows)
+    )

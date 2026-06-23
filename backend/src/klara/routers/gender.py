@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.curriculum.competence import weak_gender_nouns
 from klara.dependencies import CurrentUser, DBSession, LocaleDep
@@ -13,7 +14,7 @@ from klara.services.gender_grading import grade_gender_attempt
 router = APIRouter(prefix="/gender", tags=["gender"])
 
 
-async def _load_words_ordered(db: DBSession, ids: list[UUID]) -> list[VocabItem]:
+async def _load_words_ordered(db: AsyncSession, ids: list[UUID]) -> list[VocabItem]:
     """Load VocabItems for `ids`, preserving the input order."""
     rows = (await db.execute(select(VocabItem).where(VocabItem.id.in_(ids)))).scalars().all()
     by_id = {w.id: w for w in rows}

@@ -488,13 +488,14 @@ async def test_weak_gender_nouns_excludes_ineligible(db_session):
 @pytest.mark.asyncio
 async def test_weak_gender_nouns_limit_after_sort(db_session):
     uid = await _user(db_session)
-    a = await _de_oracle_noun(db_session, gender="der")
-    b = await _de_oracle_noun(db_session, gender="die")
-    await _attempt(db_session, uid=uid, vid=a.id, correct=False)
-    await _attempt(db_session, uid=uid, vid=b.id, correct=False)
+    wrong_recent = await _de_oracle_noun(db_session, gender="der")  # tier 0: wrong attempt
+    in_progress = await _de_oracle_noun(db_session, gender="die")  # tier 1: correct, streak < N
+    await _attempt(db_session, uid=uid, vid=wrong_recent.id, correct=False)
+    await _attempt(db_session, uid=uid, vid=in_progress.id, correct=True)
     await db_session.commit()
     ids = await weak_gender_nouns(db_session, user_id=uid, limit=1)
-    assert len(ids) == 1  # capped after sort/filter
+    # wrong_recent (tier 0) must survive the limit=1 cap; proves sort happens BEFORE LIMIT
+    assert ids == [wrong_recent.id]
 
 
 @pytest.mark.asyncio
