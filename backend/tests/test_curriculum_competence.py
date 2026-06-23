@@ -9,7 +9,9 @@ import pytest
 from klara.curriculum.competence import (
     GENDER_MASTERY_STREAK_N,
     MASTERY_INTERVAL_DAYS,
+    _gender_noun_state,
     _streak_mastered,
+    gender_weakness_order,
     is_mastered_gender,
     is_mastered_lexical,
     known_set,
@@ -320,3 +322,119 @@ async def test_module_gender_progress_zero_when_no_eligible(db_session):
     db_session.add(m)
     await db_session.commit()
     assert await module_gender_progress(db_session, user_id=uid, module_id=m.id) == (0, 0, 0)
+
+
+def test_gender_noun_state_classifies():
+    class _A:
+        def __init__(self, was_correct):
+            self.was_correct = was_correct
+
+    n = GENDER_MASTERY_STREAK_N
+    assert _gender_noun_state([], n) == "unseen"
+    assert _gender_noun_state([_A(True), _A(True), _A(True)], n) == "mastered"
+    assert _gender_noun_state([_A(False), _A(True), _A(True)], n) == "wrong_recent"
+    assert _gender_noun_state([_A(True), _A(False)], n) == "in_progress"
+    # a mastered streak then a NEWER wrong attempt → wrong_recent (remediation trigger)
+    assert _gender_noun_state([_A(False), _A(True), _A(True), _A(True)], n) == "wrong_recent"
+
+
+async def _attempt(db, *, uid, vid, correct, at=None):
+
+    import uuid as _u
+
+    ga = GenderAttempt(
+        id=_u.uuid4(),
+        user_id=uid,
+        vocab_item_id=vid,
+        picked_article="der",
+        was_correct=correct,
+    )
+    if at is not None:
+        ga.attempted_at = at
+    db.add(ga)
+
+
+@pytest.mark.asyncio
+async def test_gender_weakness_order_ranks_wrong_recent_before_mastered(db_session):
+    uid = await _user(db_session)
+    a = await _de_oracle_noun(db_session, gender="der")  # will be mastered
+    b = await _de_oracle_noun(db_session, gender="die")  # will be wrong_recent
+    for _ in range(3):
+        await _attempt(db_session, uid=uid, vid=a.id, correct=True)
+    await _attempt(db_session, uid=uid, vid=b.id, correct=False)
+    await db_session.commit()
+
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[a.id, b.id]) == [
+        b.id,
+        a.id,
+    ]
+    # input order does not matter for the weak-vs-mastered ranking
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[b.id, a.id]) == [
+        b.id,
+        a.id,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_gender_weakness_order_all_mastered_preserves_input_order(db_session):
+    from datetime import datetime, timedelta
+
+    uid = await _user(db_session)
+    a = await _de_oracle_noun(db_session, gender="der")
+    b = await _de_oracle_noun(db_session, gender="die")
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    # a mastered OLDER, b mastered NEWER — recency must be IGNORED for mastered tier
+    for i in range(3):
+        await _attempt(db_session, uid=uid, vid=a.id, correct=True, at=base + timedelta(minutes=i))
+    for i in range(3):
+        await _attempt(
+            db_session, uid=uid, vid=b.id, correct=True, at=base + timedelta(hours=1, minutes=i)
+        )
+    await db_session.commit()
+
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[a.id, b.id]) == [
+        a.id,
+        b.id,
+    ]
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[b.id, a.id]) == [
+        b.id,
+        a.id,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_gender_weakness_order_all_unseen_preserves_input_order(db_session):
+    uid = await _user(db_session)
+    a = await _de_oracle_noun(db_session, gender="der")
+    b = await _de_oracle_noun(db_session, gender="die")
+    await db_session.commit()  # no attempts at all
+
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[a.id, b.id]) == [
+        a.id,
+        b.id,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_gender_weakness_order_cycles_least_recent_first_within_weak_tier(db_session):
+    from datetime import datetime, timedelta
+
+    uid = await _user(db_session)
+    a = await _de_oracle_noun(db_session, gender="der")  # wrong at minute 1 (older)
+    b = await _de_oracle_noun(db_session, gender="die")  # wrong at minute 5 (newer)
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    await _attempt(db_session, uid=uid, vid=a.id, correct=False, at=base + timedelta(minutes=1))
+    await _attempt(db_session, uid=uid, vid=b.id, correct=False, at=base + timedelta(minutes=5))
+    await db_session.commit()
+
+    # both wrong_recent → least-recently-attempted (a) first, regardless of input order
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[b.id, a.id]) == [
+        a.id,
+        b.id,
+    ]
+
+
+@pytest.mark.asyncio
+async def test_gender_weakness_order_empty(db_session):
+    uid = await _user(db_session)
+    assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[]) == []
