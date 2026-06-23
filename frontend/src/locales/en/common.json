@@ -68,6 +68,10 @@
       "chat": {
         "title": "Talk with Klara",
         "dek": "Free conversation, whatever's on your mind."
+      },
+      "genderReview": {
+        "title": "Review genders",
+        "dek": "Revisit the der, die, das you miss."
       }
     },
     "module": {
@@ -276,6 +280,14 @@
         }
       }
     }
+  },
+  "genderReview": {
+    "title": "Gender review",
+    "progress": "{{done}} / {{total}}",
+    "empty": "Genders you miss come back here. None for now.",
+    "summary": "{{correct}} of {{total}} right.",
+    "again": "Another round",
+    "home": "Back home"
   },
   "practice": {
     "setup": {

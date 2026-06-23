@@ -10,6 +10,7 @@ import Practice from "./routes/Practice";
 import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
 import Onboarding from "./onboarding/Onboarding";
+import GenderReview from "./routes/GenderReview";
 import Login from "./routes/Login";
 import Signup from "./routes/Signup";
 import ForgotPassword from "./routes/ForgotPassword";
@@ -82,6 +83,14 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <Practice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/gender"
+            element={
+              <ProtectedRoute>
+                <GenderReview />
               </ProtectedRoute>
             }
           />

@@ -23,7 +23,6 @@ import { api } from "../api/client";
 import type {
   ClozeQuizItem,
   GenderClozeQuizItem,
-  GenderRule,
   InsightResponse,
   KlaraNoteResponse,
   L1GenderNote,
@@ -35,6 +34,7 @@ import type {
   Story,
   StoryWord,
 } from "../api/types";
+import GenderPicker from "./GenderPicker";
 import { startAudioBars } from "../lib/audioBars";
 import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
 import { startSilenceDetector } from "../lib/silenceDetector";
@@ -893,8 +893,6 @@ interface GenderClozeProps {
   isLast: boolean;
 }
 
-const GENDER_OPTIONS = ["der", "die", "das"] as const;
-
 function GenderClozeQuestion({
   q,
   story,
@@ -902,106 +900,17 @@ function GenderClozeQuestion({
   onNext,
   isLast,
 }: GenderClozeProps): JSX.Element {
-  const { t } = useTranslation();
-  const [picked, setPicked] = useState<string | null>(null);
-  const [result, setResult] = useState<{
-    correct: boolean;
-    correctGender: string | null;
-    rule: GenderRule | null;
-  } | null>(null);
-
-  const onPick = (article: string) => {
-    if (picked) return;
-    setPicked(article);
-    void api
-      .recordGenderAttempt(story.id, {
-        vocab_item_id: q.vocab_item_id,
-        picked_article: article as "der" | "die" | "das",
-      })
-      .then((r) => {
-        setResult({ correct: r.was_correct, correctGender: r.correct_gender, rule: r.rule ?? null });
-        onAnswered({ correct: r.was_correct, revealed: false });
-      })
-      .catch(() => {
-        // On failure we couldn't verify: grade as wrong-unknown (no correct
-        // article to show) but still advance so the user is never stuck.
-        setResult({ correct: false, correctGender: null, rule: null });
-        onAnswered({ correct: false, revealed: false });
-      });
-  };
-
-  const ruleNote: string | null = (() => {
-    if (!result || !result.rule || !result.correctGender) return null;
-    const r = result.rule;
-    const suffix = `-${r.suffix}`;
-    if (r.is_exception) {
-      return t("story.finish.quiz.genderCloze.rule.exception", {
-        suffix,
-        ruleGender: r.rule_gender,
-        gender: result.correctGender,
-        lemma: q.lemma,
-      });
-    }
-    if (r.suffix_class === "hard") {
-      return t("story.finish.quiz.genderCloze.rule.hard", { suffix, gender: r.rule_gender });
-    }
-    return t("story.finish.quiz.genderCloze.rule.tendency", { suffix, gender: r.rule_gender });
-  })();
-
   return (
-    <article className="qcard" data-type="gender_cloze">
-      <header className="qcard__head">
-        <span className="fin-cap">{t("story.finish.quiz.genderCloze.cap")}</span>
-      </header>
-      <div className="qcard__body">
-        <p className="qcard__cloze">
-          <span
-            className="qcard__blank"
-            data-state={picked ? (result?.correct ? "correct" : "revealed") : "empty"}
-          >
-            {result ? result.correctGender || "—" : "___"}
-          </span>{" "}
-          <span>{q.lemma}</span>
-        </p>
-        {q.en && <p className="qcard__en">{q.en}</p>}
-        <p className="qcard__hint">{t("story.finish.quiz.genderCloze.prompt")}</p>
-      </div>
-      <footer className="qcard__foot">
-        {!picked && (
-          <div className="qcard__actions qcard__gender-opts">
-            {GENDER_OPTIONS.map((a) => (
-              <button key={a} type="button" className="qcard__gender-btn" onClick={() => onPick(a)}>
-                {a}
-              </button>
-            ))}
-          </div>
-        )}
-        {result && (
-          <>
-            <div className="qcard__result">
-              <span className="qcard__verdict">
-                {result.correct ? (
-                  <em>{t("story.finish.quiz.genderCloze.correct")}</em>
-                ) : result.correctGender ? (
-                  t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
-                ) : (
-                  t("story.finish.quiz.genderCloze.failed")
-                )}
-              </span>
-            </div>
-            {ruleNote && <p className="qcard__rule">{ruleNote}</p>}
-            <button
-              type="button"
-              className="fin-btn fin-btn--primary qcard__next"
-              onClick={onNext}
-            >
-              {isLast ? t("story.finish.quiz.toSummary") : t("story.finish.quiz.next")}{" "}
-              <span className="fin-arr">→</span>
-            </button>
-          </>
-        )}
-      </footer>
-    </article>
+    <GenderPicker
+      lemma={q.lemma}
+      en={q.en}
+      onGrade={(article) =>
+        api.recordGenderAttempt(story.id, { vocab_item_id: q.vocab_item_id, picked_article: article })
+      }
+      onResult={(correct) => onAnswered({ correct, revealed: false })}
+      onNext={onNext}
+      isLast={isLast}
+    />
   );
 }
 

@@ -68,6 +68,10 @@
       "chat": {
         "title": "Mit Klara sprechen",
         "dek": "Freies Gespräch, was dich gerade beschäftigt."
+      },
+      "genderReview": {
+        "title": "Genus üben",
+        "dek": "Wiederhole die der, die, das, die du verfehlst."
       }
     },
     "module": {
@@ -276,6 +280,14 @@
         }
       }
     }
+  },
+  "genderReview": {
+    "title": "Genus-Wiederholung",
+    "progress": "{{done}} / {{total}}",
+    "empty": "Hier kommen die Genera zurück, die du verfehlst. Im Moment keine.",
+    "summary": "{{correct}} von {{total}} richtig.",
+    "again": "Noch eine Runde",
+    "home": "Zurück zum Start"
   },
   "practice": {
     "setup": {
