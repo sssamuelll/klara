@@ -68,6 +68,10 @@
       "chat": {
         "title": "Falar com a Klara",
         "dek": "Conversa livre, o que tiveres na cabeça."
+      },
+      "genderReview": {
+        "title": "Revisar gêneros",
+        "dek": "Revise os der, die, das que você erra."
       }
     },
     "module": {
@@ -276,6 +280,14 @@
         }
       }
     }
+  },
+  "genderReview": {
+    "title": "Revisão de gênero",
+    "progress": "{{done}} / {{total}}",
+    "empty": "Os gêneros que você erra voltam aqui. Por enquanto, nenhum.",
+    "summary": "{{correct}} de {{total}} corretos.",
+    "again": "Outra rodada",
+    "home": "Voltar ao início"
   },
   "practice": {
     "setup": {

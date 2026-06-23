@@ -68,6 +68,10 @@
       "chat": {
         "title": "Klara と話す",
         "dek": "自由な会話、今あなたが考えていることを。"
+      },
+      "genderReview": {
+        "title": "性の復習",
+        "dek": "間違える der, die, das を復習。"
       }
     },
     "module": {
@@ -276,6 +280,14 @@
         }
       }
     }
+  },
+  "genderReview": {
+    "title": "性の復習",
+    "progress": "{{done}} / {{total}}",
+    "empty": "間違えた性はここに戻ってきます。今はありません。",
+    "summary": "{{total}}問中{{correct}}問正解。",
+    "again": "もう一度",
+    "home": "ホームに戻る"
   },
   "practice": {
     "setup": {
