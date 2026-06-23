@@ -17,6 +17,7 @@ from fastapi import (
 from sqlalchemy import func, select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.gender_eligibility import is_gender_eligible
 from klara.curriculum.gender_rules import detect_gender_rule, reconcile_rule
 from klara.curriculum.modules import (
     enroll_cards,
@@ -37,7 +38,6 @@ from klara.models import (
     UserCard,
     VocabItem,
 )
-from klara.models.enums import PartOfSpeech
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
@@ -323,14 +323,7 @@ async def get_story_l1_notes(
         return GenderL1NotesOut(notes=[])
     words = await _load_words(db, ids)
     # eligible[lower(lemma)] = oracle gender; German nouns with an authoritative gender only.
-    eligible: dict[str, str] = {
-        w.lemma.lower(): w.gender
-        for w in words
-        if w.language == "de"
-        and w.pos == PartOfSpeech.NOUN
-        and w.gender_source == "oracle"
-        and w.gender in ("der", "die", "das")
-    }
+    eligible: dict[str, str] = {w.lemma.lower(): w.gender for w in words if is_gender_eligible(w)}
     if not eligible:
         return GenderL1NotesOut(notes=[])
     l1 = (story.native_language or "").lower()

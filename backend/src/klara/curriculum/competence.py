@@ -12,9 +12,10 @@ from uuid import UUID
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.curriculum.gender_eligibility import gender_eligible_clause
 from klara.curriculum.lemmatize import canonical_lemma
 from klara.models import GenderAttempt, UserCard, VocabItem, module_vocab
-from klara.models.enums import CardState, PartOfSpeech
+from klara.models.enums import CardState
 
 
 async def known_set(db: AsyncSession, *, user_id: UUID, language: str) -> set[str]:
@@ -127,10 +128,7 @@ async def module_gender_progress(
                 .join(VocabItem, VocabItem.id == module_vocab.c.vocab_item_id)
                 .where(
                     module_vocab.c.module_id == module_id,
-                    VocabItem.language == "de",
-                    VocabItem.gender_source == "oracle",
-                    VocabItem.pos == PartOfSpeech.NOUN,
-                    VocabItem.gender.in_(["der", "die", "das"]),
+                    *gender_eligible_clause(),
                 )
             )
         )
