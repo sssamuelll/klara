@@ -602,3 +602,56 @@ def test_gender_cloze_quiz_item_has_no_rule_field():
     from klara.schemas.finish import GenderClozeQuizItem
 
     assert "rule" not in GenderClozeQuizItem.model_fields
+
+
+def test_build_gender_cloze_prefer_order_picks_weakest():
+    from klara.services.finish_lessons import build_gender_cloze
+
+    a = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Tisch",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+        translations={"es": "mesa"},
+    )
+    b = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Lampe",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+        translations={"es": "lámpara"},
+    )
+    # a is first in target order, but prefer_order ranks b ahead → b is chosen.
+    item = build_gender_cloze([a, b], native_language="es", prefer_order=[b.id, a.id])
+    assert item["vocab_item_id"] == str(b.id)
+    assert item["lemma"] == "Lampe"
+
+
+def test_build_gender_cloze_prefer_order_none_picks_first_eligible():
+    from klara.services.finish_lessons import build_gender_cloze
+
+    a = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Tisch",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+        translations={"es": "mesa"},
+    )
+    b = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Lampe",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+        translations={"es": "lámpara"},
+    )
+    # No prefer_order → first eligible in target order (back-compat).
+    item = build_gender_cloze([a, b], native_language="es")
+    assert item["vocab_item_id"] == str(a.id)
