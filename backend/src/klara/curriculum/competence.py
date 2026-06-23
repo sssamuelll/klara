@@ -224,3 +224,38 @@ async def gender_weakness_order(
         return (_GENDER_TIER[state], 0.0, idx)
 
     return [vid for _, vid in sorted(enumerate(vocab_item_ids), key=_key)]
+
+
+async def weak_gender_nouns(db: AsyncSession, *, user_id: UUID, limit: int = 20) -> list[UUID]:
+    """The user's encountered-but-not-mastered eligible gender nouns, CROSS-MODULE,
+    ordered by remediation priority (wrong_recent before in_progress; within a tier,
+    least-recently-attempted first). Derived on-read from the GenderAttempt ledger —
+    no scheduling state. `limit` caps the result AFTER sort (a SQL LIMIT would
+    truncate per-noun streaks and corrupt mastery classification).
+
+    LOAD-BEARING: this selects 4 COLUMNS and uses .all() (NOT .scalars() /
+    select(GenderAttempt)) so the JSONB `detail` is never loaded. Do not change to
+    full ORM rows — that reintroduces the JSONB-hydration cost on a hot path."""
+    stmt = (
+        select(
+            GenderAttempt.vocab_item_id,
+            GenderAttempt.was_correct,
+            GenderAttempt.attempted_at,
+            GenderAttempt.id,
+        )
+        .join(VocabItem, VocabItem.id == GenderAttempt.vocab_item_id)
+        .where(GenderAttempt.user_id == user_id, *gender_eligible_clause())
+        .order_by(GenderAttempt.attempted_at.desc(), GenderAttempt.id.desc())
+    )
+    rows = (await db.execute(stmt)).all()
+    by_noun: dict[UUID, list] = {}
+    for r in rows:
+        by_noun.setdefault(r.vocab_item_id, []).append(r)
+
+    weak: list[tuple[int, float, UUID]] = []
+    for vid, attempts in by_noun.items():
+        state = _gender_noun_state(attempts, GENDER_MASTERY_STREAK_N)
+        if state in _GENDER_WEAK_STATES:
+            weak.append((_GENDER_TIER[state], attempts[0].attempted_at.timestamp(), vid))
+    weak.sort(key=lambda t: (t[0], t[1], str(t[2])))
+    return [vid for _, _, vid in weak[:limit]]
