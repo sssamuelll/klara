@@ -170,7 +170,7 @@ def build_gender_cloze(
     eligible = [w for w in words if is_gender_eligible(w)]
     if not eligible:
         return None
-    if prefer_order:
+    if prefer_order is not None:
         rank = {vid: i for i, vid in enumerate(prefer_order)}
         eligible.sort(key=lambda w: rank.get(w.id, len(prefer_order)))
     chosen = eligible[0]
