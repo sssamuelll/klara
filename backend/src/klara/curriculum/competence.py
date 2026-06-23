@@ -12,9 +12,10 @@ from uuid import UUID
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.curriculum.gender_eligibility import gender_eligible_clause
 from klara.curriculum.lemmatize import canonical_lemma
 from klara.models import GenderAttempt, UserCard, VocabItem, module_vocab
-from klara.models.enums import CardState, PartOfSpeech
+from klara.models.enums import CardState
 
 
 async def known_set(db: AsyncSession, *, user_id: UUID, language: str) -> set[str]:
@@ -127,10 +128,7 @@ async def module_gender_progress(
                 .join(VocabItem, VocabItem.id == module_vocab.c.vocab_item_id)
                 .where(
                     module_vocab.c.module_id == module_id,
-                    VocabItem.language == "de",
-                    VocabItem.gender_source == "oracle",
-                    VocabItem.pos == PartOfSpeech.NOUN,
-                    VocabItem.gender.in_(["der", "die", "das"]),
+                    *gender_eligible_clause(),
                 )
             )
         )
@@ -162,3 +160,67 @@ async def module_gender_progress(
         1 for attempts in by_noun.values() if _streak_mastered(attempts, GENDER_MASTERY_STREAK_N)
     )
     return (encountered, mastered, total)
+
+
+def _gender_noun_state(attempts_desc: list, n: int) -> str:
+    """Classify one noun's gender evidence (attempts_desc[0] is newest):
+    'unseen' (no attempts) | 'mastered' (newest n all correct) |
+    'wrong_recent' (newest attempt wrong) | 'in_progress' (otherwise).
+    Reuses _streak_mastered as the mastery source of truth. Note: the state is a
+    function of (attempts, n, read-time), not a permanent property — a mastered
+    noun answered wrong becomes 'wrong_recent', which is the remediation trigger."""
+    if not attempts_desc:
+        return "unseen"
+    if _streak_mastered(attempts_desc, n):
+        return "mastered"
+    if not attempts_desc[0].was_correct:
+        return "wrong_recent"
+    return "in_progress"
+
+
+_GENDER_TIER = {"wrong_recent": 0, "in_progress": 1, "unseen": 2, "mastered": 3}
+_GENDER_WEAK_STATES = frozenset({"wrong_recent", "in_progress"})
+
+
+async def gender_weakness_order(
+    db: AsyncSession, *, user_id: UUID, vocab_item_ids: list[UUID]
+) -> list[UUID]:
+    """Order the given nouns by gender-cloze pick priority for this user:
+    wrong_recent > in_progress > unseen > mastered. Within the weak tiers,
+    least-recently-attempted first (cycle, don't hammer). Within unseen/mastered,
+    preserve the caller's input order (back-compat with the old first-eligible
+    pick). Returns every input id exactly once. Bounded by the input id list and
+    served by ix_gender_attempt_user_vocab — a handful of rows."""
+    if not vocab_item_ids:
+        return []
+    rows = (
+        (
+            await db.execute(
+                select(GenderAttempt)
+                .where(
+                    GenderAttempt.user_id == user_id,
+                    GenderAttempt.vocab_item_id.in_(vocab_item_ids),
+                )
+                .order_by(GenderAttempt.attempted_at.desc(), GenderAttempt.id.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+    by_noun: dict[UUID, list] = {}
+    for r in rows:
+        by_noun.setdefault(r.vocab_item_id, []).append(r)
+
+    def _key(idx_vid: tuple[int, UUID]) -> tuple[int, float, int]:
+        idx, vid = idx_vid
+        attempts = by_noun.get(vid, [])
+        state = _gender_noun_state(attempts, GENDER_MASTERY_STREAK_N)
+        if state in _GENDER_WEAK_STATES:
+            # attempts[0] is the most-recent attempt; ascending epoch surfaces the
+            # noun whose most-recent attempt is oldest (cycle). .timestamp() is a
+            # float, sidestepping any None/naive-aware datetime comparison.
+            return (_GENDER_TIER[state], attempts[0].attempted_at.timestamp(), idx)
+        # unseen/mastered: constant recency so idx (input/target order) decides.
+        return (_GENDER_TIER[state], 0.0, idx)
+
+    return [vid for _, vid in sorted(enumerate(vocab_item_ids), key=_key)]

@@ -602,3 +602,141 @@ def test_gender_cloze_quiz_item_has_no_rule_field():
     from klara.schemas.finish import GenderClozeQuizItem
 
     assert "rule" not in GenderClozeQuizItem.model_fields
+
+
+def test_build_gender_cloze_prefer_order_picks_weakest():
+    from klara.services.finish_lessons import build_gender_cloze
+
+    a = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Tisch",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+        translations={"es": "mesa"},
+    )
+    b = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Lampe",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+        translations={"es": "lámpara"},
+    )
+    # a is first in target order, but prefer_order ranks b ahead → b is chosen.
+    item = build_gender_cloze([a, b], native_language="es", prefer_order=[b.id, a.id])
+    assert item["vocab_item_id"] == str(b.id)
+    assert item["lemma"] == "Lampe"
+
+
+def test_build_gender_cloze_prefer_order_none_picks_first_eligible():
+    from klara.services.finish_lessons import build_gender_cloze
+
+    a = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Tisch",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+        translations={"es": "mesa"},
+    )
+    b = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma="Lampe",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+        translations={"es": "lámpara"},
+    )
+    # No prefer_order → first eligible in target order (back-compat).
+    item = build_gender_cloze([a, b], native_language="es")
+    assert item["vocab_item_id"] == str(a.id)
+
+
+@pytest.mark.asyncio
+async def test_get_quiz_targets_weakest_gender_noun(db_session):
+    from httpx import ASGITransport, AsyncClient
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+    from klara.models import Story, User
+    from klara.models.enums import CEFRLevel
+
+    u = User(
+        id=uuid.uuid4(),
+        email=f"gw-{uuid.uuid4().hex[:6]}@k.app",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="GW",
+        level=CEFRLevel.A1,
+        native_language="es",
+        target_language="de",
+    )
+    strong = VocabItem(  # FIRST in target order, but mastered → must NOT be picked
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"Tisch{uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="oracle",
+    )
+    weak = VocabItem(  # second in target order, recently wrong → must be picked
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"Lampe{uuid.uuid4().hex[:6]}",
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+    )
+    db_session.add_all([u, strong, weak])
+    await db_session.flush()
+    for _ in range(3):  # strong mastered
+        db_session.add(
+            GenderAttempt(
+                id=uuid.uuid4(),
+                user_id=u.id,
+                vocab_item_id=strong.id,
+                picked_article="der",
+                was_correct=True,
+            )
+        )
+    db_session.add(  # weak: most recent attempt wrong
+        GenderAttempt(
+            id=uuid.uuid4(),
+            user_id=u.id,
+            vocab_item_id=weak.id,
+            picked_article="der",
+            was_correct=False,
+        )
+    )
+    story = Story(
+        id=uuid.uuid4(),
+        user_id=u.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="t",
+        content={"sentences": [], "comprehension_questions": []},
+        target_vocab_item_ids=[strong.id, weak.id],  # strong first
+        quiz_items=[{"type": "shadow", "cap": "x", "sentence": "Hallo.", "en": "Hola."}],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: u
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.get(f"/api/v1/stories/{story.id}/quiz")
+    assert resp.status_code == 200, resp.text
+    gc = resp.json()["items"][-1]
+    assert gc["type"] == "gender_cloze"
+    assert gc["vocab_item_id"] == str(weak.id)  # weakest picked, not the first/mastered one

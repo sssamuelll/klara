@@ -10,14 +10,15 @@ from __future__ import annotations
 
 import json
 import re
+from uuid import UUID
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.curriculum.gender_eligibility import is_gender_eligible
 from klara.i18n import language_label
 from klara.llm.base import LLMClient, Message
 from klara.models import Story, VocabItem
-from klara.models.enums import PartOfSpeech
 
 log = structlog.get_logger(__name__)
 
@@ -147,31 +148,39 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start : end + 1])
 
 
-def build_gender_cloze(words: list[VocabItem], *, native_language: str) -> dict | None:
-    """Deterministically build a der/die/das cloze from the first story target
-    noun whose gender comes from the oracle (authoritative). Returns the quiz
-    item dict, or None when no oracle-gendered noun is available (e.g. the oracle
-    isn't loaded yet) — in which case the quiz is served unchanged. The correct
-    article is NOT included: grading is server-side (POST /gender/attempts).
+def build_gender_cloze(
+    words: list[VocabItem],
+    *,
+    native_language: str,
+    prefer_order: list[UUID] | None = None,
+) -> dict | None:
+    """Deterministically build a der/die/das cloze from an oracle-gendered story
+    target noun. Returns the quiz item dict, or None when no oracle-gendered noun
+    is available (the quiz is served unchanged). The correct article is NOT
+    included: grading is server-side (POST /gender/attempts).
 
-    Restricted to German: the der/die/das picker and grading contract are
-    German-specific, so a non-German oracle noun (a future fr/pt oracle) must not
-    surface here. v1 is German-only per the spec."""
-    for w in words:
-        if (
-            w.language == "de"
-            and w.pos == PartOfSpeech.NOUN
-            and w.gender_source == "oracle"
-            and w.gender in {"der", "die", "das"}
-        ):
-            return {
-                "type": "gender_cloze",
-                "cap": "gender",  # frontend localizes the caption
-                "lemma": w.lemma,
-                "vocab_item_id": str(w.id),
-                "en": (w.translations or {}).get(native_language),
-            }
-    return None
+    When prefer_order is given (a ranking of vocab ids, e.g. from
+    gender_weakness_order), the eligible nouns are ordered by it before the first
+    is picked, so the weakest gender noun present is remediated. With
+    prefer_order=None the first eligible noun in target order is picked —
+    identical to the prior behavior.
+
+    Eligibility (German der/die/das oracle NOUN) is delegated to
+    is_gender_eligible so the predicate stays single-sourced."""
+    eligible = [w for w in words if is_gender_eligible(w)]
+    if not eligible:
+        return None
+    if prefer_order is not None:
+        rank = {vid: i for i, vid in enumerate(prefer_order)}
+        eligible.sort(key=lambda w: rank.get(w.id, len(prefer_order)))
+    chosen = eligible[0]
+    return {
+        "type": "gender_cloze",
+        "cap": "gender",  # frontend localizes the caption
+        "lemma": chosen.lemma,
+        "vocab_item_id": str(chosen.id),
+        "en": (chosen.translations or {}).get(native_language),
+    }
 
 
 async def ensure_quiz_items(
