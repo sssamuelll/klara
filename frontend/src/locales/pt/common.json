@@ -336,6 +336,18 @@
       },
       "again": "Outra ronda",
       "home": "Voltar ao início"
+    },
+    "segment": {
+      "title": "O que revês?",
+      "pron": {
+        "title": "Pronunciar",
+        "dek": "As frases que te travam, outra vez em voz alta."
+      },
+      "gender": {
+        "title": "Géneros",
+        "dek": "Os der, die, das que erras."
+      },
+      "back": "Escolher outro"
     }
   },
   "wpop": {

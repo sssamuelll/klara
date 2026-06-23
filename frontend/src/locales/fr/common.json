@@ -336,6 +336,18 @@
       },
       "again": "Un autre tour",
       "home": "Retour à l’accueil"
+    },
+    "segment": {
+      "title": "Que révises-tu ?",
+      "pron": {
+        "title": "Prononcer",
+        "dek": "Les phrases qui coincent, à voix haute encore."
+      },
+      "gender": {
+        "title": "Genres",
+        "dek": "Les der, die, das que tu rates."
+      },
+      "back": "Choisir l’autre"
     }
   },
   "wpop": {

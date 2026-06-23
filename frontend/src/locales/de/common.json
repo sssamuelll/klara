@@ -336,6 +336,18 @@
       },
       "again": "Noch eine Runde",
       "home": "Zurück zum Start"
+    },
+    "segment": {
+      "title": "Was wiederholst du?",
+      "pron": {
+        "title": "Sprechen",
+        "dek": "Die Sätze, die dir schwerfallen, noch einmal laut."
+      },
+      "gender": {
+        "title": "Genus",
+        "dek": "Die der, die, das, die du verfehlst."
+      },
+      "back": "Anderes wählen"
     }
   },
   "wpop": {
