@@ -93,6 +93,22 @@ def test_parse_gender_csv_skips_bound_morphemes():
     assert {r.lemma for r in rows} == {"Tisch"}
 
 
+def test_parse_gender_csv_first_occurrence_wins_for_duplicate_lemma():
+    # gambolputty lists the primary sense first; a duplicate lemma's first valid
+    # genus wins ("der Kaffee", not the regional "das Kaffee" from a later row).
+    csv_text = "lemma,pos,genus\nKaffee,Substantiv,m\nKaffee,Substantiv,n\n"
+    rows = parse_gender_csv(csv_text)
+    assert [(r.lemma, r.gender) for r in rows] == [("Kaffee", "der")]
+
+
+def test_parse_gender_csv_duplicate_skips_first_unparseable_genus():
+    # If the first occurrence has no parseable genus (multi-gender words leave the
+    # primary genus column empty), the first VALID later occurrence wins.
+    csv_text = "lemma,pos,genus\nJoghurt,Substantiv,\nJoghurt,Substantiv,m\n"
+    rows = parse_gender_csv(csv_text)
+    assert [(r.lemma, r.gender) for r in rows] == [("Joghurt", "der")]
+
+
 @pytest.mark.asyncio
 async def test_load_gender_lexicon_is_idempotent(db_session):
     rows = [
