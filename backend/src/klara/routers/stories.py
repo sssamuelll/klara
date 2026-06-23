@@ -43,11 +43,8 @@ from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transc
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
-    GenderAttemptIn,
-    GenderAttemptOut,
     GenderL1NoteItem,
     GenderL1NotesOut,
-    GenderRuleOut,
     InsightOut,
     KlaraNoteOut,
     MCResolveOut,
@@ -60,6 +57,7 @@ from klara.schemas.finish import (
     ScheduleEntry,
     ScheduleOut,
 )
+from klara.schemas.gender import GenderAttemptIn, GenderAttemptOut, GenderRuleOut
 from klara.schemas.story import (
     ComprehensionQuestionOut,
     StoryContent,
