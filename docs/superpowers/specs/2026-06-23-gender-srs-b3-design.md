@@ -74,7 +74,7 @@ renders two choices:
 - **Pronunciar** — with its existing struggled/review counts; entering it runs
   the existing pronunciation session (unchanged).
 - **Género** — a static entry with NO count; entering it renders
-  `<GenderReviewSession onExit={backToSetup} exitLabel={t("practice.segment.backToSetup")} />`,
+  `<GenderReviewSession onExit={() => setSegment(null)} exitLabel={t("practice.segment.back")} />`,
   which lazily fetches `/gender/review` on mount.
 
 Concretely: a `segment: "pronunciation" | "gender" | null` state. `null` → the
@@ -85,10 +85,10 @@ the chooser (`setSegment(null)`), so the learner can do one then the other.
 ### 3. i18n + CSS
 
 - New keys for the chooser (es source, 6 locales, parity): `practice.segment.title`
-  (the chooser heading, if any), `practice.segment.pronunciation` (label),
-  `practice.segment.gender` (label), `practice.segment.backToSetup` (the gender
-  segment's exit button). The gender session itself reuses the existing
-  `genderReview.*` keys. **All new copy drafted via solace-wren.**
+  (the chooser heading), `practice.segment.pron.{title,dek}` and
+  `practice.segment.gender.{title,dek}` (the two choice cards), and
+  `practice.segment.back` (the gender segment's exit button). The gender session
+  itself reuses the existing `genderReview.*` keys. **All new copy drafted via solace-wren.**
 - **CSS:** style the segment chooser (two cards/tabs at setup), harmonizing with
   the existing Practice setup (`kp-*`) markup and the design tokens.
 
