@@ -65,7 +65,7 @@ export default function GenderReview(): JSX.Element {
     return (
       <main className="gr">
         <h1 className="gr__title">{t("genderReview.title")}</h1>
-        <p className="gr__empty">{t("genderReview.empty")}</p>
+        <p className="gr__empty">{t(phase === "failed" ? "genderReview.failed" : "genderReview.empty")}</p>
         <button type="button" className="fin-btn fin-btn--primary" onClick={goHome}>
           {t("genderReview.home")}
         </button>

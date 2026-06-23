@@ -285,6 +285,7 @@
     "title": "Genus-Wiederholung",
     "progress": "{{done}} / {{total}}",
     "empty": "Hier kommen die Genera zurück, die du verfehlst. Im Moment keine.",
+    "failed": "Die Wiederholung ließ sich nicht laden. Versuch es gleich noch einmal.",
     "summary": "{{correct}} von {{total}} richtig.",
     "again": "Noch eine Runde",
     "home": "Zurück zum Start"

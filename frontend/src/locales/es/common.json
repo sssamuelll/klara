@@ -285,6 +285,7 @@
     "title": "Repaso de género",
     "progress": "{{done}} / {{total}}",
     "empty": "Aquí vuelven los géneros que fallas. Por ahora, ninguno.",
+    "failed": "No se pudo cargar el repaso. Intenta de nuevo en un momento.",
     "summary": "{{correct}} de {{total}} correctos.",
     "again": "Otra ronda",
     "home": "Volver al inicio"

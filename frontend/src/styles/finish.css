@@ -598,7 +598,7 @@
   font-variant: small-caps;
   cursor: pointer;
   background: var(--paper);
-  border: 1px solid var(--rule);
+  border: 1px solid var(--ink-3);
   border-radius: var(--r-md);
   color: var(--ink-2);
   transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, color var(--dur-fast) ease;
@@ -610,7 +610,8 @@
 }
 
 .qcard__gender-btn:active {
-  background: var(--paper-2);
+  background: var(--ink);
+  color: var(--paper);
 }
 .qcard__next { align-self: flex-end; }
 .qcard__hint {

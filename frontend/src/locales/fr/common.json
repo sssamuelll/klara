@@ -285,6 +285,7 @@
     "title": "Révision du genre",
     "progress": "{{done}} / {{total}}",
     "empty": "Les genres que tu rates reviennent ici. Aucun pour l'instant.",
+    "failed": "La révision n'a pas pu se charger. Réessaie dans un instant.",
     "summary": "{{correct}} sur {{total}} corrects.",
     "again": "Encore un tour",
     "home": "Retour à l'accueil"
