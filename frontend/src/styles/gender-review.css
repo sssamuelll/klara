@@ -31,7 +31,6 @@
   letter-spacing: 0.08em;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
-  opacity: 0.6;
 }
 
 .gr__empty,
@@ -56,5 +55,4 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
-  opacity: 0.5;
 }

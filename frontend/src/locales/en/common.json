@@ -285,6 +285,7 @@
     "title": "Gender review",
     "progress": "{{done}} / {{total}}",
     "empty": "Genders you miss come back here. None for now.",
+    "failed": "Couldn't load the review. Try again in a moment.",
     "summary": "{{correct}} of {{total}} right.",
     "again": "Another round",
     "home": "Back home"

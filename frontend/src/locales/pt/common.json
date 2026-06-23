@@ -285,6 +285,7 @@
     "title": "Revisão de género",
     "progress": "{{done}} / {{total}}",
     "empty": "Os géneros que erras voltam aqui. Por enquanto, nenhum.",
+    "failed": "Não foi possível carregar a revisão. Tenta de novo daqui a pouco.",
     "summary": "{{correct}} de {{total}} corretos.",
     "again": "Outra ronda",
     "home": "Voltar ao início"
