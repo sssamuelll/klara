@@ -30,5 +30,5 @@ def gender_eligible_clause() -> tuple:
         VocabItem.language == "de",
         VocabItem.gender_source == "oracle",
         VocabItem.pos == PartOfSpeech.NOUN,
-        VocabItem.gender.in_(list(GENDER_ARTICLES)),
+        VocabItem.gender.in_(GENDER_ARTICLES),
     )
