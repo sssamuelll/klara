@@ -4,6 +4,7 @@ import type {
   CardOut,
   GenderAttemptIn,
   GenderAttemptOut,
+  GenderReviewItem,
   InsightResponse,
   Invitation,
   InvitationCreate,
@@ -297,6 +298,14 @@ export const api = {
 
   recordGenderAttempt: (storyId: string, payload: GenderAttemptIn) =>
     request<GenderAttemptOut>(`/stories/${storyId}/gender/attempts`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  genderReview: (limit = 20) => request<GenderReviewItem[]>(`/gender/review?limit=${limit}`),
+
+  gradeGender: (payload: GenderAttemptIn) =>
+    request<GenderAttemptOut>("/gender/attempts", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

@@ -200,6 +200,12 @@ export interface GenderClozeQuizItem {
   en?: string | null;
 }
 
+export interface GenderReviewItem {
+  vocab_item_id: string;
+  lemma: string;
+  en?: string | null;
+}
+
 export type QuizItem =
   | MCQuizItem
   | ClozeQuizItem
