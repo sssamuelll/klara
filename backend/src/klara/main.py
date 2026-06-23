@@ -19,6 +19,7 @@ from klara.logging_setup import configure_logging
 from klara.models import User
 from klara.models.enums import CEFRLevel
 from klara.routers import (
+    gender,
     health,
     invitations,
     modules,
@@ -221,6 +222,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/api/v1")
     app.include_router(stories.router, prefix="/api/v1")
     app.include_router(srs.router, prefix="/api/v1")
+    app.include_router(gender.router, prefix="/api/v1")
     app.include_router(tts.router, prefix="/api/v1")
     app.include_router(invitations.router, prefix="/api/v1", tags=["invitations"])
     app.include_router(pronunciation.router, prefix="/api/v1")
