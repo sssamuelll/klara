@@ -61,6 +61,38 @@ def test_parse_gender_csv_raises_on_missing_columns():
         parse_gender_csv("foo,bar\nTisch,der\n")
 
 
+def test_parse_gender_csv_collapses_composite_pos():
+    # gambolputty's pos is a comma-joined Wiktionary category list
+    # ("Gebundenes Lexem,Substantiv") that overflows gender_lexicon.pos
+    # varchar(16). It must collapse to a short token, never overflow the column.
+    csv_text = (
+        "lemma,pos,genus\n"
+        "Haus,Substantiv,n\n"
+        'Kompositum,"Gebundenes Lexem,Substantiv",f\n'  # composite pos, real noun
+        'Eigenname,"Vorname,Nachname",m\n'  # composite, non-noun categories
+    )
+    rows = parse_gender_csv(csv_text)
+    by_lemma = {r.lemma: r for r in rows}
+    assert set(by_lemma) == {"Haus", "Kompositum", "Eigenname"}
+    assert all(len(r.pos) <= 16 for r in rows)  # never overflows varchar(16)
+    assert by_lemma["Haus"].pos == "noun"
+    assert by_lemma["Kompositum"].pos == "noun"  # "...,Substantiv" → noun
+    assert by_lemma["Kompositum"].gender == "die"
+
+
+def test_parse_gender_csv_skips_bound_morphemes():
+    # Leading/trailing-hyphen lemmas (-algie, Vor-) are affixes/bound morphemes,
+    # not standalone nouns — they must not enter the oracle.
+    csv_text = (
+        "lemma,pos,genus\n"
+        "Tisch,Substantiv,m\n"
+        "-algie,Suffix,f\n"  # leading-hyphen affix
+        "Vor-,Substantiv,m\n"  # trailing-hyphen bound form
+    )
+    rows = parse_gender_csv(csv_text)
+    assert {r.lemma for r in rows} == {"Tisch"}
+
+
 @pytest.mark.asyncio
 async def test_load_gender_lexicon_is_idempotent(db_session):
     rows = [

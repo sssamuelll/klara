@@ -34,6 +34,18 @@ def _find_column(fieldnames: list[str], candidates: set[str]) -> str | None:
     return None
 
 
+def _normalize_pos(raw: str | None) -> str:
+    """Collapse a CSV pos cell to a short token that fits gender_lexicon.pos
+    (varchar(16)). gambolputty's pos is a comma-joined Wiktionary category list
+    ("Gebundenes Lexem,Substantiv") that overflows the column; a noun category
+    collapses to "noun", anything else to its first category capped at the column
+    width. pos is informational only — resolve_gender never reads it."""
+    cats = [c.strip() for c in (raw or "").lower().split(",") if c.strip()]
+    if not cats or "substantiv" in cats or "noun" in cats:
+        return "noun"
+    return cats[0][:16]
+
+
 def parse_gender_csv(text: str) -> list[GenderRow]:
     """Parse the gambolputty/german-nouns CSV. Reads the `lemma` and `genus`
     columns by name (case-insensitive); maps genus m/f/n → der/die/das. Rows
@@ -49,16 +61,18 @@ def parse_gender_csv(text: str) -> list[GenderRow]:
     out: list[GenderRow] = []
     for row in reader:
         lemma = (row.get(lemma_col) or "").strip()
-        genus = (row.get(genus_col) or "").strip().lower()
-        if not lemma:
+        # Bound morphemes (affixes/suffixes: "-algie", "Vor-") are not standalone
+        # nouns — keep them out of the oracle.
+        if not lemma or lemma.startswith("-") or lemma.endswith("-"):
             continue
+        genus = (row.get(genus_col) or "").strip().lower()
         # Accept both genus codes (m/f/n) and full articles (der/die/das), so an
         # article-valued column resolves instead of silently dropping every row.
         article = genus if genus in {"der", "die", "das"} else _GENUS_TO_ARTICLE.get(genus[:1])
         if article is None:
             continue
-        pos = (row.get(pos_col) or "noun").strip().lower() if pos_col else "noun"
-        out.append(GenderRow(lemma=lemma, pos=pos or "noun", gender=article))
+        pos = _normalize_pos(row.get(pos_col)) if pos_col else "noun"
+        out.append(GenderRow(lemma=lemma, pos=pos, gender=article))
     return out
 
 
