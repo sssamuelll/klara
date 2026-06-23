@@ -195,6 +195,14 @@ export default function Home() {
           </span>
           <span className="home__sec-arrow k-serif">→</span>
         </button>
+        <button className="home__sec-item" onClick={() => navigate("/gender")}>
+          <span className="k-mono home__sec-num">04</span>
+          <span className="home__sec-body">
+            <span className="home__sec-title">{t("home.sec.genderReview.title")}</span>
+            <span className="home__sec-dek">{t("home.sec.genderReview.dek")}</span>
+          </span>
+          <span className="home__sec-arrow k-serif">→</span>
+        </button>
       </section>
 
       <footer className="home__foot">
