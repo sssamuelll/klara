@@ -70,8 +70,8 @@
         "dek": "Conversa livre, o que tiveres na cabeça."
       },
       "genderReview": {
-        "title": "Revisar gêneros",
-        "dek": "Revise os der, die, das que você erra."
+        "title": "Rever géneros",
+        "dek": "Revê os der, die, das que erras."
       }
     },
     "module": {
@@ -282,11 +282,11 @@
     }
   },
   "genderReview": {
-    "title": "Revisão de gênero",
+    "title": "Revisão de género",
     "progress": "{{done}} / {{total}}",
-    "empty": "Os gêneros que você erra voltam aqui. Por enquanto, nenhum.",
+    "empty": "Os géneros que erras voltam aqui. Por enquanto, nenhum.",
     "summary": "{{correct}} de {{total}} corretos.",
-    "again": "Outra rodada",
+    "again": "Outra ronda",
     "home": "Voltar ao início"
   },
   "practice": {

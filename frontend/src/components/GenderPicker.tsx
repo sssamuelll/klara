@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { GenderAttemptOut, GenderRule } from "../api/types";
@@ -24,6 +24,7 @@ export default function GenderPicker({
   isLast,
 }: GenderPickerProps): JSX.Element {
   const { t } = useTranslation();
+  const lockRef = useRef(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [result, setResult] = useState<{
     correct: boolean;
@@ -32,7 +33,8 @@ export default function GenderPicker({
   } | null>(null);
 
   const onPick = (article: "der" | "die" | "das") => {
-    if (picked) return;
+    if (lockRef.current) return;
+    lockRef.current = true;
     setPicked(article);
     void onGrade(article)
       .then((r) => {
