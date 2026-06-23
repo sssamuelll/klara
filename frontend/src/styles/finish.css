@@ -580,6 +580,38 @@
   color: var(--ink-2);
   max-width: 64ch;
 }
+
+/* Gender article buttons — shared by in-story cloze AND /gender review */
+.qcard__gender-opts {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.qcard__gender-btn {
+  flex: 1 1 0;
+  padding: 0.75rem 0.5rem;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  font-variant: small-caps;
+  cursor: pointer;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+  transition: border-color var(--dur-fast) ease, background var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+
+.qcard__gender-btn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.qcard__gender-btn:active {
+  background: var(--paper-2);
+}
 .qcard__next { align-self: flex-end; }
 .qcard__hint {
   font-family: var(--font-serif);
