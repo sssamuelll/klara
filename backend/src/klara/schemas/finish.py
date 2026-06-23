@@ -106,24 +106,6 @@ class QuizAttemptOut(BaseModel):
     attempted_at: datetime
 
 
-class GenderAttemptIn(BaseModel):
-    vocab_item_id: UUID
-    picked_article: Literal["der", "die", "das"]
-
-
-class GenderRuleOut(BaseModel):
-    suffix: str
-    suffix_class: Literal["hard", "tendency"]
-    rule_gender: Literal["der", "die", "das"]
-    is_exception: bool
-
-
-class GenderAttemptOut(BaseModel):
-    was_correct: bool
-    correct_gender: str
-    rule: GenderRuleOut | None = None  # showable suffix rule (Case A/C); None otherwise
-
-
 class GenderL1NoteItem(BaseModel):
     lemma: str
     gender: Literal["der", "die", "das"]

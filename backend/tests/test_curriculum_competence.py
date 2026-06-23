@@ -17,6 +17,7 @@ from klara.curriculum.competence import (
     known_set,
     module_gender_progress,
     module_progress,
+    weak_gender_nouns,
 )
 from klara.models import GenderAttempt, Module, User, UserCard, VocabItem
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech
@@ -438,3 +439,70 @@ async def test_gender_weakness_order_cycles_least_recent_first_within_weak_tier(
 async def test_gender_weakness_order_empty(db_session):
     uid = await _user(db_session)
     assert await gender_weakness_order(db_session, user_id=uid, vocab_item_ids=[]) == []
+
+
+@pytest.mark.asyncio
+async def test_weak_gender_nouns_only_weak_cross_module(db_session):
+    uid = await _user(db_session)
+    mastered = await _de_oracle_noun(db_session, gender="der")  # 3 correct → excluded
+    wrong = await _de_oracle_noun(db_session, gender="die")  # newest wrong → included
+    progressing = await _de_oracle_noun(db_session, gender="das")  # 1 correct, <N → included
+    for _ in range(3):
+        await _attempt(db_session, uid=uid, vid=mastered.id, correct=True)
+    await _attempt(db_session, uid=uid, vid=wrong.id, correct=False)
+    await _attempt(db_session, uid=uid, vid=progressing.id, correct=True)
+    await db_session.commit()
+
+    ids = await weak_gender_nouns(db_session, user_id=uid)
+    assert set(ids) == {wrong.id, progressing.id}  # mastered excluded; unseen never appears
+    assert ids[0] == wrong.id  # wrong_recent (tier 0) before in_progress (tier 1)
+
+
+@pytest.mark.asyncio
+async def test_weak_gender_nouns_excludes_ineligible(db_session):
+    uid = await _user(db_session)
+    verb = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"V{uuid.uuid4().hex[:8]}",
+        pos=PartOfSpeech.VERB,
+        gender=None,
+        gender_source="oracle",
+    )
+    llm = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma=f"L{uuid.uuid4().hex[:8]}",
+        pos=PartOfSpeech.NOUN,
+        gender="der",
+        gender_source="llm",
+    )
+    db_session.add_all([verb, llm])
+    await db_session.flush()
+    await _attempt(db_session, uid=uid, vid=verb.id, correct=False)
+    await _attempt(db_session, uid=uid, vid=llm.id, correct=False)
+    await db_session.commit()
+    assert await weak_gender_nouns(db_session, user_id=uid) == []  # predicate filters both
+
+
+@pytest.mark.asyncio
+async def test_weak_gender_nouns_limit_after_sort(db_session):
+    uid = await _user(db_session)
+    wrong_recent = await _de_oracle_noun(db_session, gender="der")  # tier 0: wrong attempt
+    in_progress = await _de_oracle_noun(db_session, gender="die")  # tier 1: correct, streak < N
+    await _attempt(db_session, uid=uid, vid=wrong_recent.id, correct=False)
+    await _attempt(db_session, uid=uid, vid=in_progress.id, correct=True)
+    await db_session.commit()
+    ids = await weak_gender_nouns(db_session, user_id=uid, limit=1)
+    # wrong_recent (tier 0) must survive the limit=1 cap; proves sort happens BEFORE LIMIT
+    assert ids == [wrong_recent.id]
+
+
+@pytest.mark.asyncio
+async def test_weak_gender_nouns_empty_when_caught_up(db_session):
+    uid = await _user(db_session)
+    v = await _de_oracle_noun(db_session, gender="der")
+    for _ in range(3):
+        await _attempt(db_session, uid=uid, vid=v.id, correct=True)  # mastered
+    await db_session.commit()
+    assert await weak_gender_nouns(db_session, user_id=uid) == []

@@ -19,7 +19,6 @@ from starlette.concurrency import run_in_threadpool
 
 from klara.curriculum.competence import gender_weakness_order
 from klara.curriculum.gender_eligibility import is_gender_eligible
-from klara.curriculum.gender_rules import detect_gender_rule, reconcile_rule
 from klara.curriculum.modules import (
     enroll_cards,
     ensure_active_module,
@@ -31,7 +30,6 @@ from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, Setti
 from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.models import (
-    GenderAttempt,
     GenderL1Note,
     PronunciationAttempt,
     QuizAttempt,
@@ -43,11 +41,8 @@ from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transc
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
-    GenderAttemptIn,
-    GenderAttemptOut,
     GenderL1NoteItem,
     GenderL1NotesOut,
-    GenderRuleOut,
     InsightOut,
     KlaraNoteOut,
     MCResolveOut,
@@ -60,6 +55,7 @@ from klara.schemas.finish import (
     ScheduleEntry,
     ScheduleOut,
 )
+from klara.schemas.gender import GenderAttemptIn, GenderAttemptOut
 from klara.schemas.story import (
     ComprehensionQuestionOut,
     StoryContent,
@@ -75,6 +71,7 @@ from klara.services.finish_lessons import (
     ensure_klara_note,
     ensure_quiz_items,
 )
+from klara.services.gender_grading import grade_gender_attempt
 from klara.services.story_gen import StoryGenerationError, generate_story
 from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
@@ -509,32 +506,15 @@ async def record_gender_attempt(
     story = await _load_or_404(db, story_id, user.id, locale)
     if payload.vocab_item_id not in (story.target_vocab_item_ids or []):
         raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
-    vocab = await db.get(VocabItem, payload.vocab_item_id)
-    if vocab is None or vocab.gender_source != "oracle" or not vocab.gender:
-        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
-
-    was_correct = payload.picked_article == vocab.gender
-    rule = detect_gender_rule(vocab.lemma)
-    detail = reconcile_rule(rule, vocab.gender, vocab.lemma) if rule is not None else None
-    rule_out = None
-    if detail is not None and (detail["agreement"] or detail["is_exception"]):
-        rule_out = GenderRuleOut(
-            suffix=detail["suffix"],
-            suffix_class=detail["suffix_class"],
-            rule_gender=detail["rule_gender"],
-            is_exception=detail["is_exception"],
-        )
-    db.add(
-        GenderAttempt(
-            user_id=user.id,
-            vocab_item_id=vocab.id,
-            picked_article=payload.picked_article,
-            was_correct=was_correct,
-            detail=detail,
-        )
+    out = await grade_gender_attempt(
+        db,
+        user_id=user.id,
+        vocab_item_id=payload.vocab_item_id,
+        picked_article=payload.picked_article,
     )
-    await db.commit()
-    return GenderAttemptOut(was_correct=was_correct, correct_gender=vocab.gender, rule=rule_out)
+    if out is None:
+        raise HTTPException(status_code=404, detail=t("errors.vocab_not_found", locale))
+    return out
 
 
 def _resolve_bcp47(raw: str) -> str:
