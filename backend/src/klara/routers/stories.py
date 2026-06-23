@@ -17,6 +17,7 @@ from fastapi import (
 from sqlalchemy import func, select
 from starlette.concurrency import run_in_threadpool
 
+from klara.curriculum.competence import gender_weakness_order
 from klara.curriculum.gender_eligibility import is_gender_eligible
 from klara.curriculum.gender_rules import detect_gender_rule, reconcile_rule
 from klara.curriculum.modules import (
@@ -267,7 +268,10 @@ async def get_story_quiz(
     words = await _load_words(db, list(story.target_vocab_item_ids or []))
     lemmas = [w.lemma for w in words]
     items = list(await ensure_quiz_items(db, story, llm, lemmas=lemmas) or [])
-    gender_cloze = build_gender_cloze(words, native_language=user.native_language)
+    prefer = await gender_weakness_order(db, user_id=user.id, vocab_item_ids=[w.id for w in words])
+    gender_cloze = build_gender_cloze(
+        words, native_language=user.native_language, prefer_order=prefer
+    )
     if gender_cloze is not None:
         items.append(gender_cloze)
     return QuizOut(items=items)
