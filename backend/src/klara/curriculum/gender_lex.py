@@ -59,11 +59,16 @@ def parse_gender_csv(text: str) -> list[GenderRow]:
         raise ValueError(f"CSV must have a lemma and a genus column; got headers: {fields}")
     pos_col = _find_column(fields, {"pos", "wortart"})
     out: list[GenderRow] = []
+    seen: set[str] = set()
     for row in reader:
         lemma = (row.get(lemma_col) or "").strip()
         # Bound morphemes (affixes/suffixes: "-algie", "Vor-") are not standalone
         # nouns — keep them out of the oracle.
         if not lemma or lemma.startswith("-") or lemma.endswith("-"):
+            continue
+        if lemma in seen:
+            # gambolputty lists the primary sense first, so the first VALID genus
+            # for a lemma wins (der Kaffee, not a later regional das Kaffee).
             continue
         genus = (row.get(genus_col) or "").strip().lower()
         # Accept both genus codes (m/f/n) and full articles (der/die/das), so an
@@ -71,6 +76,7 @@ def parse_gender_csv(text: str) -> list[GenderRow]:
         article = genus if genus in {"der", "die", "das"} else _GENUS_TO_ARTICLE.get(genus[:1])
         if article is None:
             continue
+        seen.add(lemma)
         pos = _normalize_pos(row.get(pos_col)) if pos_col else "noun"
         out.append(GenderRow(lemma=lemma, pos=pos, gender=article))
     return out
