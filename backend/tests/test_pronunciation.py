@@ -314,3 +314,19 @@ async def test_short_language_code_resolves_to_bcp47(
     )
     assert r.status_code == 200, r.text
     assert captured["language"] == "de-DE"
+
+
+import json as _json
+
+
+def test_read_along_config_is_ipa():
+    from klara.pronunciation.azure_client import _read_along_config_json
+
+    cfg = _json.loads(_read_along_config_json("Ich fahre mit dem Autobus."))
+    assert cfg["phonemeAlphabet"] == "IPA"
+    assert cfg["granularity"] == "Phoneme"
+    assert cfg["gradingSystem"] == "HundredMark"
+    assert cfg["enableMiscue"] is False
+    # reference text is sanitized (trailing period stripped) but words survive
+    assert "Autobus" in cfg["referenceText"]
+    assert not cfg["referenceText"].endswith(".")
