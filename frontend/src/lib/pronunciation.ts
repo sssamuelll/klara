@@ -83,6 +83,17 @@ export function focusBand(
   return worstBand(bands);
 }
 
+/** The lowest-scoring word that bands as "bad", or null if none is bad.
+ *  Used to target the single corrective diagnose tip. */
+export function worstBadWord(words: WordScore[]): WordScore | null {
+  let worst: WordScore | null = null;
+  for (const w of words) {
+    if (scoreBand(w.accuracy_score) !== "bad") continue;
+    if (worst === null || w.accuracy_score < worst.accuracy_score) worst = w;
+  }
+  return worst;
+}
+
 /**
  * Map an Azure response back to one band per reference-text word token.
  *

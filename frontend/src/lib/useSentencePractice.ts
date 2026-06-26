@@ -32,10 +32,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
+import type { WordScore } from "../api/types";
 import {
   bandsByTokenIndex,
   scoreAudio,
   startMicRecording,
+  worstBadWord,
   type MicRecorder,
   type PronunciationError,
   type ScoreBand,
@@ -135,6 +137,7 @@ export interface UseSentencePractice {
   evaluating: boolean;
   feedback: PronScores | undefined;
   phoneticHints: Record<string, string> | undefined;
+  diagnosis?: { word: string; tip: string };
   micAnalyser: AnalyserNode | null;
   /** True when the *current* sentence is the one Klara is reading aloud. */
   sentencePlaying: boolean;
@@ -185,6 +188,9 @@ export function useSentencePractice({
   const [simulatedIndices, setSimulatedIndices] = useState<Set<number>>(new Set());
   const [phoneticHintsBySentence, setPhoneticHintsBySentence] = useState<
     Record<number, Record<string, string>>
+  >({});
+  const [diagnosisBySentence, setDiagnosisBySentence] = useState<
+    Record<number, { word: string; tip: string }>
   >({});
   const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [rate, setRate] = useState<Rate>(1);
@@ -246,6 +252,12 @@ export function useSentencePractice({
       delete next[currentIndex];
       return next;
     });
+    setDiagnosisBySentence((s) => {
+      if (!(currentIndex in s)) return s;
+      const next = { ...s };
+      delete next[currentIndex];
+      return next;
+    });
     setSimulatedIndices((s) => {
       if (!s.has(currentIndex)) return s;
       const next = new Set(s);
@@ -265,6 +277,21 @@ export function useSentencePractice({
       } catch {
         // best-effort: an empty hints map just means the verdict shows
         // without a phonetic tip.
+      }
+    },
+    [],
+  );
+
+  const fetchAndStoreDiagnosis = useCallback(
+    async (idx: number, words: WordScore[], language: string) => {
+      const worst = worstBadWord(words);
+      if (!worst) return;
+      try {
+        const resp = await api.diagnose(worst.word, worst.phonemes, language);
+        if (!resp.tip) return;
+        setDiagnosisBySentence((s) => ({ ...s, [idx]: { word: worst.word, tip: resp.tip } }));
+      } catch {
+        // best-effort: no tip, the stress hint stays.
       }
     },
     [],
@@ -329,6 +356,7 @@ export function useSentencePractice({
       }
       // Fire-and-forget: hints arrive after the panel is already on screen.
       void fetchAndStoreHints(idxAtStart, sentence.target, bands, targetLanguage);
+      void fetchAndStoreDiagnosis(idxAtStart, resp.words, targetLanguage);
     } catch (e) {
       const perr = e as PronunciationError;
       if (perr.kind === "service_unavailable") {
@@ -344,7 +372,7 @@ export function useSentencePractice({
     } finally {
       setEvaluatingIndex(null);
     }
-  }, [fetchAndStoreHints, persistTargets, recordingIndex, sentences, targetLanguage]);
+  }, [fetchAndStoreDiagnosis, fetchAndStoreHints, persistTargets, recordingIndex, sentences, targetLanguage]);
 
   const cancelRecording = useCallback(() => {
     recorderRef.current?.cancel();
@@ -399,6 +427,7 @@ export function useSentencePractice({
     setCurrentIndex(0);
     setScoresBySentence({});
     setPhoneticHintsBySentence({});
+    setDiagnosisBySentence({});
     setSimulatedIndices(new Set());
     setPronError(null);
   }, [cancelRecording]);
@@ -467,6 +496,7 @@ export function useSentencePractice({
   const evaluating = evaluatingIndex === currentIndex;
   const feedback = scoresBySentence[currentIndex];
   const phoneticHints = phoneticHintsBySentence[currentIndex];
+  const diagnosis = diagnosisBySentence[currentIndex];
   const sentencePlaying = playingIndex === currentIndex && tts.playing;
 
   return {
@@ -477,6 +507,7 @@ export function useSentencePractice({
     evaluating,
     feedback,
     phoneticHints,
+    diagnosis,
     micAnalyser: recording ? micAnalyser : null,
     sentencePlaying,
     progress: sentencePlaying ? tts.progress : 0,
