@@ -59,6 +59,9 @@ async def run_async_migrations() -> None:
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        # The DSN is passwordless (issue #81); the credential is injected here,
+        # out-of-band, exactly as the app does in klara.db.init_engine.
+        connect_args=settings.db_connect_args,
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
