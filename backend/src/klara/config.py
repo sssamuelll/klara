@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     # so a provider-side default flip can never put chain-of-thought on the
     # conversational critical path.
     llm_chat_extra_body: dict | None = None
+    # Same mechanism for the STORY model (JSON in env). DeepSeek V4 defaults to
+    # *thinking* mode, which spends the token budget on reasoning and truncates
+    # the JSON story mid-object (finish_reason=length → malformed JSON). Set
+    #   LLM_STORY_EXTRA_BODY={"thinking": {"type": "disabled"}}
+    # so structured story generation returns clean, complete JSON.
+    llm_story_extra_body: dict | None = None
 
     anthropic_api_key: str | None = None
     deepseek_api_key: str | None = None
@@ -70,13 +76,13 @@ class Settings(BaseSettings):
     tts_request_timeout_seconds: float = 30.0
     tts_max_text_chars: int = 4000
 
-    @field_validator("llm_chat_extra_body", mode="before")
+    @field_validator("llm_chat_extra_body", "llm_story_extra_body", mode="before")
     @classmethod
     def _blank_extra_body_is_none(cls, v: object) -> object:
-        # docker-compose delivers this as ${LLM_CHAT_EXTRA_BODY:-}, i.e. an
-        # EMPTY string whenever it isn't set (local dev, anthropic path). An
-        # empty string is not valid JSON and would crash Settings(); treat
-        # blank as "unset". A real value is JSON-decoded to a dict upstream.
+        # docker-compose delivers these as ${LLM_*_EXTRA_BODY:-}, i.e. an
+        # EMPTY string whenever unset (local dev, anthropic path). An empty
+        # string is not valid JSON and would crash Settings(); treat blank as
+        # "unset". A real value is JSON-decoded to a dict upstream.
         if isinstance(v, str) and not v.strip():
             return None
         return v
