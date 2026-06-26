@@ -83,12 +83,14 @@ export function focusBand(
   return worstBand(bands);
 }
 
-/** The lowest-scoring word that bands as "bad", or null if none is bad.
- *  Used to target the single corrective diagnose tip. */
+/** The lowest-scoring word that bands as "bad" and has at least one phoneme,
+ *  or null if none qualifies. Words with no phonemes are skipped so we never
+ *  POST phonemes:[] → 422 to the diagnose endpoint. */
 export function worstBadWord(words: WordScore[]): WordScore | null {
   let worst: WordScore | null = null;
   for (const w of words) {
     if (scoreBand(w.accuracy_score) !== "bad") continue;
+    if (w.phonemes.length === 0) continue;
     if (worst === null || w.accuracy_score < worst.accuracy_score) worst = w;
   }
   return worst;

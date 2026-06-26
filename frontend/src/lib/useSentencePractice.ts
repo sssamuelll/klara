@@ -138,6 +138,8 @@ export interface UseSentencePractice {
   feedback: PronScores | undefined;
   phoneticHints: Record<string, string> | undefined;
   diagnosis?: { word: string; tip: string };
+  /** True while the /diagnose request for the current sentence is in-flight. */
+  diagnosing: boolean;
   micAnalyser: AnalyserNode | null;
   /** True when the *current* sentence is the one Klara is reading aloud. */
   sentencePlaying: boolean;
@@ -192,6 +194,7 @@ export function useSentencePractice({
   const [diagnosisBySentence, setDiagnosisBySentence] = useState<
     Record<number, { word: string; tip: string }>
   >({});
+  const [diagnosingIndex, setDiagnosingIndex] = useState<number | null>(null);
   const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [rate, setRate] = useState<Rate>(1);
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
@@ -285,14 +288,19 @@ export function useSentencePractice({
   const fetchAndStoreDiagnosis = useCallback(
     async (idx: number, words: WordScore[], language: string) => {
       const worst = worstBadWord(words);
+      // Nothing to diagnose — skip entirely, don't enter loading state.
       if (!worst) return;
+      setDiagnosingIndex(idx);
+      let tip = "";
       try {
         const resp = await api.diagnose(worst.word, worst.phonemes, language);
-        if (!resp.tip) return;
-        setDiagnosisBySentence((s) => ({ ...s, [idx]: { word: worst.word, tip: resp.tip } }));
+        tip = resp.tip ?? "";
       } catch {
         // best-effort: no tip, the stress hint stays.
       }
+      setDiagnosisBySentence((s) => ({ ...s, [idx]: { word: worst.word, tip } }));
+      // Only clear if this sentence is still the one diagnosing (not superseded).
+      setDiagnosingIndex((cur) => (cur === idx ? null : cur));
     },
     [],
   );
@@ -428,6 +436,7 @@ export function useSentencePractice({
     setScoresBySentence({});
     setPhoneticHintsBySentence({});
     setDiagnosisBySentence({});
+    setDiagnosingIndex(null);
     setSimulatedIndices(new Set());
     setPronError(null);
   }, [cancelRecording]);
@@ -508,6 +517,7 @@ export function useSentencePractice({
     feedback,
     phoneticHints,
     diagnosis,
+    diagnosing: diagnosingIndex === currentIndex,
     micAnalyser: recording ? micAnalyser : null,
     sentencePlaying,
     progress: sentencePlaying ? tts.progress : 0,

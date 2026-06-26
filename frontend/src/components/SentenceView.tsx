@@ -68,6 +68,8 @@ interface Props {
   feedback?: Record<number, ScoreBand>;
   phoneticHints?: Record<string, string>;
   diagnosis?: { word: string; tip: string };
+  /** Explicit loading signal from the hook: /diagnose is in-flight for this sentence. */
+  diagnosing: boolean;
 
   // Speed
   rate: number;
@@ -197,6 +199,7 @@ export default function SentenceView({
   feedback,
   phoneticHints,
   diagnosis,
+  diagnosing,
   rate,
   onPlayPause,
   onCycleSpeed,
@@ -304,13 +307,18 @@ export default function SentenceView({
     }
     if (focus === null) return null;
     const tip = diagnosis && diagnosis.word === focus ? diagnosis.tip : null;
-    return { word: focus, hint: phoneticHints?.[focus] ?? null, tip };
+    // Case-insensitive hint lookup: try exact key first, then fall back to a
+    // lowercase match. Azure's WordScore.word casing may differ from the
+    // sentence-token spelling that phonetic_hints.py uses as its key.
+    const hint = phoneticHints
+      ? (phoneticHints[focus] ??
+          Object.entries(phoneticHints).find(
+            ([k]) => k.toLowerCase() === focus!.toLowerCase(),
+          )?.[1] ??
+          null)
+      : null;
+    return { word: focus, hint, tip };
   }, [feedback, phoneticHints, tokens, diagnosis]);
-
-  const diagnosing = useMemo(
-    () => Boolean(badWordTip && badWordTip.hint && !badWordTip.tip && !diagnosis),
-    [badWordTip, diagnosis],
-  );
 
   // ---- Playhead position --------------------------------------------------
   const playheadStyle: CSSProperties = useMemo(() => {
@@ -550,7 +558,7 @@ export default function SentenceView({
                   {badWordTip.tip && (
                     <span className="k-diagnose-tip"> {badWordTip.tip}</span>
                   )}
-                  {diagnosing && (
+                  {diagnosing && !badWordTip.tip && (
                     <span className="k-diagnose-tip k-diagnose-tip--loading">
                       {" "}
                       {t("story.sentence.feedback.diagnosing")}
