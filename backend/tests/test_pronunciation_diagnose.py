@@ -135,3 +135,61 @@ async def test_llm_failure_returns_empty_no_row(db_session):
     assert llm.calls == 1
     count = (await db_session.execute(select(func.count()).select_from(PronunciationDiagnosis))).scalar()
     assert count == 0
+
+
+# ---------------------------------------------------------------------------
+# Endpoint tests — POST /api/v1/pronunciation/diagnose
+# ---------------------------------------------------------------------------
+from tests.test_pronunciation import _register_and_login  # noqa: E402
+
+
+@pytest.mark.asyncio
+async def test_diagnose_requires_auth(client, app_settings):
+    r = await client.post(
+        "/api/v1/pronunciation/diagnose",
+        json={"language": "de", "word": "Haus", "phonemes": [{"phoneme": "aʊ", "accuracy_score": 40.0}]},
+    )
+    assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_diagnose_uses_user_native_language(client, app_settings, seed_invite, monkeypatch):
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    captured = {}
+
+    async def fake_generate(llm, db, *, word, phonemes, target_language, native_language):
+        from klara.pronunciation.schemas import DiagnoseResponse
+        captured["native_language"] = native_language
+        captured["word"] = word
+        return DiagnoseResponse(tip="redondea los labios", weakest_phoneme="uː")
+
+    monkeypatch.setattr("klara.routers.pronunciation.generate_diagnosis", fake_generate)
+
+    r = await client.post(
+        "/api/v1/pronunciation/diagnose",
+        headers={"Cookie": cookie},
+        json={"language": "de", "word": "Autobus",
+              "phonemes": [{"phoneme": "uː", "accuracy_score": 38.0}],
+              "native_language": "INVALID-CLIENT-VALUE"},   # must be ignored
+    )
+    assert r.status_code == 200, r.text
+    assert r.json()["tip"] == "redondea los labios"
+    assert captured["native_language"] == "es"   # from the seeded user, not the body
+
+
+@pytest.mark.asyncio
+async def test_diagnose_service_error_is_best_effort(client, app_settings, seed_invite, monkeypatch):
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+
+    async def boom(*a, **k):
+        raise RuntimeError("llm down")
+
+    monkeypatch.setattr("klara.routers.pronunciation.generate_diagnosis", boom)
+
+    r = await client.post(
+        "/api/v1/pronunciation/diagnose",
+        headers={"Cookie": cookie},
+        json={"language": "de", "word": "Haus", "phonemes": [{"phoneme": "aʊ", "accuracy_score": 40.0}]},
+    )
+    assert r.status_code == 200
+    assert r.json() == {"tip": "", "weakest_phoneme": ""}

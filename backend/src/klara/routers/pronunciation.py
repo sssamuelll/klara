@@ -15,7 +15,7 @@ import structlog
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from starlette.concurrency import run_in_threadpool
 
-from klara.dependencies import ChatLLM, CurrentUser, LocaleDep, SettingsDep
+from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, SettingsDep
 from klara.i18n import t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.pronunciation.audio import (
@@ -25,11 +25,14 @@ from klara.pronunciation.audio import (
 )
 from klara.pronunciation.azure_client import AzureSpeechError, score_pronunciation
 from klara.pronunciation.schemas import (
+    DiagnoseRequest,
+    DiagnoseResponse,
     PhoneticHintsRequest,
     PhoneticHintsResponse,
     ScoreResponse,
 )
 from klara.services.phonetic_hints import generate_phonetic_hints
+from klara.services.pronunciation_diagnose import generate_diagnosis
 
 router = APIRouter(prefix="/pronunciation", tags=["pronunciation"])
 
@@ -150,3 +153,29 @@ async def phonetic_hints(
     except Exception:
         hints = {}
     return PhoneticHintsResponse(hints=hints)
+
+
+@router.post("/diagnose", response_model=DiagnoseResponse)
+async def diagnose(
+    user: CurrentUser,
+    llm: ChatLLM,
+    db: DBSession,
+    payload: DiagnoseRequest,
+) -> DiagnoseResponse:
+    """Corrective tip for the single worst mispronounced word.
+
+    Best-effort: any failure returns an empty tip so the UI keeps the
+    stress hint. native_language comes from the authenticated user, never
+    the request body.
+    """
+    try:
+        return await generate_diagnosis(
+            llm,
+            db,
+            word=payload.word,
+            phonemes=payload.phonemes,
+            target_language=payload.language,
+            native_language=user.native_language,
+        )
+    except Exception:
+        return DiagnoseResponse()
