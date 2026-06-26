@@ -21,6 +21,7 @@ def init_engine(settings: Settings) -> AsyncEngine:
         max_overflow=settings.db_max_overflow,
         pool_pre_ping=settings.db_pool_pre_ping,
         echo=False,
+        connect_args=settings.db_connect_args,
     )
     _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False, class_=AsyncSession)
     return _engine

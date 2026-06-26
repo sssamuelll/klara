@@ -28,7 +28,9 @@ services:
     environment:
       APP_ENV: development
       APP_LOG_LEVEL: INFO
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-german}:${POSTGRES_PASSWORD:-german_dev_pw}@postgres:5432/${POSTGRES_DB:-german_app}
+      # Password injected out-of-band (issue #81) — kept out of the DSN string.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-german}@postgres:5432/${POSTGRES_DB:-german_app}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-german_dev_pw}
       LLM_PROVIDER: anthropic
       LLM_STORY_MODEL: ${LLM_STORY_MODEL:-anthropic/claude-haiku-4-5-20251001}
       LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-anthropic/claude-sonnet-4-6}

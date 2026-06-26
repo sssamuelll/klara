@@ -1,8 +1,9 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import field_validator
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import make_url
 
 
 class Settings(BaseSettings):
@@ -16,7 +17,18 @@ class Settings(BaseSettings):
     app_env: Literal["development", "staging", "production"] = "development"
     app_log_level: str = "INFO"
 
-    database_url: str = "postgresql+asyncpg://german:german_dev_pw@localhost:5432/german_app"
+    # DB credentials are split so the password never rides inside the DSN
+    # string (issue #81). A cleartext credential in a connection string leaks
+    # via repr(engine), tracebacks that interpolate the URL, or any direct log
+    # of settings.database_url; keeping it out of the DSN closes that vector
+    # (engine.url.password is then None). The password is a SecretStr injected
+    # out-of-band — see `db_connect_args`. A full DSN with an embedded password
+    # still works (the in-URL credential is respected, never overridden).
+    # The default is EMPTY: a passwordless DSN with no DB_PASSWORD fails closed
+    # rather than falling back to a baked-in dev credential. Supply it via
+    # .env / docker-compose (DB_PASSWORD=${POSTGRES_PASSWORD}).
+    database_url: str = "postgresql+asyncpg://german@localhost:5432/german_app"
+    db_password: SecretStr = SecretStr("")
     db_pool_size: int = 10
     db_max_overflow: int = 20
     db_pool_pre_ping: bool = True
@@ -152,6 +164,19 @@ class Settings(BaseSettings):
     @property
     def is_dev(self) -> bool:
         return self.app_env == "development"
+
+    @property
+    def db_connect_args(self) -> dict[str, str]:
+        # Inject the password out-of-band ONLY when the DSN doesn't already
+        # carry a usable one. A full DSN (e.g. a CI job that sets
+        # DATABASE_URL=user:pass@host) keeps its own credential — we never
+        # override it, so the migration-roundtrip path keeps working unchanged.
+        # An empty in-URL password (a stray trailing colon) counts as "no
+        # usable password", so the configured DB_PASSWORD wins.
+        pw = self.db_password.get_secret_value()
+        if not make_url(self.database_url).password and pw:
+            return {"password": pw}
+        return {}
 
     @property
     def initial_owner_email_normalized(self) -> str | None:

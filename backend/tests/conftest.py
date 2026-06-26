@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import text
+from sqlalchemy import make_url, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Test database URL — assumes a local Postgres reachable as the `german` user
@@ -22,9 +22,19 @@ SYNC_TEST_DATABASE_URL = TEST_DATABASE_URL.replace("+asyncpg", "+psycopg2").repl
     "postgresql+psycopg2", "postgresql"
 )
 
+# Issue #81: the app + Alembic take a passwordless DSN plus an out-of-band
+# DB_PASSWORD. Mirror that split for every settings-driven path (the `client`
+# fixture → init_engine, and `_run_alembic`) so tests exercise the real prod
+# contract. The direct test engines below keep the full DSN — they connect
+# straight, not via Settings.
+_test_url = make_url(TEST_DATABASE_URL)
+TEST_DB_PASSWORD = _test_url.password or ""
+TEST_DATABASE_URL_NO_PW = _test_url._replace(password=None).render_as_string(hide_password=False)
+
 # Force settings + auth code paths to use the test DB and stable secrets BEFORE
 # the app module is imported (config is loaded via lru_cache).
-os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL_NO_PW
+os.environ["DB_PASSWORD"] = TEST_DB_PASSWORD
 os.environ.setdefault("AUTH_JWT_SECRET", "test-secret-key-do-not-use-in-prod")
 os.environ.setdefault("AUTH_COOKIE_NAME", "klara_session")
 os.environ.setdefault("APP_ENV", "development")
@@ -33,7 +43,8 @@ os.environ.setdefault("APP_ENV", "development")
 def _run_alembic(cmd: list[str]) -> None:
     backend_dir = Path(__file__).resolve().parent.parent
     env = os.environ.copy()
-    env["DATABASE_URL"] = TEST_DATABASE_URL
+    env["DATABASE_URL"] = TEST_DATABASE_URL_NO_PW
+    env["DB_PASSWORD"] = TEST_DB_PASSWORD
     result = subprocess.run(
         ["uv", "run", "alembic", *cmd],
         cwd=backend_dir,
