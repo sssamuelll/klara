@@ -1,11 +1,11 @@
 """Regression guard for issue #81 — the Postgres password must never ride
 inside the DSN string.
 
-A cleartext credential in a connection string can leak via logs, tracebacks,
-``repr(engine)``, or — structurally, through the ORM — every query result, which
-is what trips CodeQL's ``py/clear-text-logging-sensitive-data`` query on the
-owner CLIs. The password is split out of ``database_url`` and injected
-out-of-band via ``connect_args`` so it never appears in the engine URL.
+A cleartext credential in a connection string can leak via ``repr(engine)``,
+tracebacks that interpolate the URL, or any direct log of ``settings.database_url``.
+The password is split out of ``database_url`` into a ``SecretStr`` and injected
+out-of-band via ``connect_args`` so it never appears in the engine URL, and the
+default is empty so a missing ``DB_PASSWORD`` fails closed.
 """
 
 from sqlalchemy import make_url, text
@@ -41,6 +41,13 @@ def test_db_connect_args_respects_a_password_already_in_the_dsn():
         db_password="other",
     )
     assert s.db_connect_args == {}
+
+
+def test_db_password_default_is_empty_so_missing_config_fails_closed():
+    # No baked dev credential in source: the field default is empty, so a
+    # passwordless DSN with no DB_PASSWORD yields no connect_args and the
+    # connection fails closed instead of silently using a fallback password.
+    assert Settings.model_fields["db_password"].default.get_secret_value() == ""
 
 
 def test_db_connect_args_empty_when_no_password_available():

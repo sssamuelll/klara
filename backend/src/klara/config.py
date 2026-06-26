@@ -24,11 +24,11 @@ class Settings(BaseSettings):
     # (engine.url.password is then None). The password is a SecretStr injected
     # out-of-band — see `db_connect_args`. A full DSN with an embedded password
     # still works (the in-URL credential is respected, never overridden).
-    # Whether this also clears the CodeQL clear-text-logging FP on the owner
-    # CLIs (which print row CONTENT, not the URL) is verified by the PR's CodeQL
-    # run, not assumed — that FP is handled separately by the ledger dismissal.
+    # The default is EMPTY: a passwordless DSN with no DB_PASSWORD fails closed
+    # rather than falling back to a baked-in dev credential. Supply it via
+    # .env / docker-compose (DB_PASSWORD=${POSTGRES_PASSWORD}).
     database_url: str = "postgresql+asyncpg://german@localhost:5432/german_app"
-    db_password: SecretStr = SecretStr("german_dev_pw")
+    db_password: SecretStr = SecretStr("")
     db_pool_size: int = 10
     db_max_overflow: int = 20
     db_pool_pre_ping: bool = True
