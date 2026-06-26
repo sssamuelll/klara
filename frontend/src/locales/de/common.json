@@ -148,6 +148,7 @@
       },
       "feedback": {
         "tipPrefix": "Achte auf",
+        "diagnosing": "Laut wird analysiert…",
         "listen": "Klara anhören",
         "retry": "Nochmal",
         "legend": {

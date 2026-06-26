@@ -148,6 +148,7 @@
       },
       "feedback": {
         "tipPrefix": "Revois",
+        "diagnosing": "analyse du son…",
         "listen": "Écouter Klara",
         "retry": "Recommencer",
         "legend": {

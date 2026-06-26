@@ -148,6 +148,7 @@
       },
       "feedback": {
         "tipPrefix": "確認",
+        "diagnosing": "音を分析中…",
         "listen": "Klaraを聞く",
         "retry": "もう一度",
         "legend": {

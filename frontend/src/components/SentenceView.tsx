@@ -67,6 +67,7 @@ interface Props {
   // Feedback state
   feedback?: Record<number, ScoreBand>;
   phoneticHints?: Record<string, string>;
+  diagnosis?: { word: string; tip: string };
 
   // Speed
   rate: number;
@@ -195,6 +196,7 @@ export default function SentenceView({
   evaluating,
   feedback,
   phoneticHints,
+  diagnosis,
   rate,
   onPlayPause,
   onCycleSpeed,
@@ -286,23 +288,29 @@ export default function SentenceView({
     return Math.round(vals.reduce((s, v) => s + map[v], 0) / vals.length);
   }, [feedback]);
 
-  // ---- Bad-word tip with optional phonetic hint ---------------------------
-  // Show ONE bad word, with the LLM-generated stress hint if we have it.
+  // ---- Bad-word tip: stress hint + optional corrective diagnose ------------
   const badWordTip = useMemo(() => {
     if (!feedback) return null;
-    // Walk tokens in order to pick the FIRST bad word. Feedback is keyed by
-    // full token index (matches bandsByTokenIndex).
-    for (let i = 0; i < tokens.length; i++) {
-      const tok = tokens[i];
-      if (tok.type !== "word") continue;
-      if (feedback[i] === "bad") {
-        const hint = phoneticHints?.[tok.text];
-        return { word: tok.text, hint: hint ?? null };
+    // Focus the diagnosed worst word when we have it; else the first bad word.
+    let focus: string | null = diagnosis?.word ?? null;
+    if (focus === null) {
+      for (let i = 0; i < tokens.length; i++) {
+        const tok = tokens[i];
+        if (tok.type === "word" && feedback[i] === "bad") {
+          focus = tok.text;
+          break;
+        }
       }
     }
-    // No "bad" word? Don't show a tip — verdict alone is fine.
-    return null;
-  }, [feedback, phoneticHints, tokens]);
+    if (focus === null) return null;
+    const tip = diagnosis && diagnosis.word === focus ? diagnosis.tip : null;
+    return { word: focus, hint: phoneticHints?.[focus] ?? null, tip };
+  }, [feedback, phoneticHints, tokens, diagnosis]);
+
+  const diagnosing = useMemo(
+    () => Boolean(badWordTip && badWordTip.hint && !badWordTip.tip && !diagnosis),
+    [badWordTip, diagnosis],
+  );
 
   // ---- Playhead position --------------------------------------------------
   const playheadStyle: CSSProperties = useMemo(() => {
@@ -538,6 +546,15 @@ export default function SentenceView({
                       {t("story.sentence.feedback.tipPrefix")}{" "}
                       <em>{badWordTip.word}</em>.
                     </>
+                  )}
+                  {badWordTip.tip && (
+                    <span className="k-diagnose-tip"> {badWordTip.tip}</span>
+                  )}
+                  {diagnosing && (
+                    <span className="k-diagnose-tip k-diagnose-tip--loading">
+                      {" "}
+                      {t("story.sentence.feedback.diagnosing")}
+                    </span>
                   )}
                 </>
               )}

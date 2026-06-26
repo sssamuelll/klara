@@ -148,6 +148,7 @@
       },
       "feedback": {
         "tipPrefix": "Revisa",
+        "diagnosing": "analizando el sonido…",
         "listen": "Escuchar a Klara",
         "retry": "Otra vez",
         "legend": {
