@@ -95,3 +95,25 @@ def test_settings_treats_blank_extra_body_as_none(monkeypatch):
     assert Settings().llm_chat_extra_body is None
     monkeypatch.setenv("LLM_CHAT_EXTRA_BODY", "   ")
     assert Settings().llm_chat_extra_body is None
+
+
+def test_settings_parses_json_story_extra_body_from_env(monkeypatch):
+    monkeypatch.setenv("LLM_STORY_EXTRA_BODY", '{"thinking": {"type": "disabled"}}')
+    assert Settings().llm_story_extra_body == {"thinking": {"type": "disabled"}}
+
+
+def test_settings_treats_blank_story_extra_body_as_none(monkeypatch):
+    monkeypatch.setenv("LLM_STORY_EXTRA_BODY", "")
+    assert Settings().llm_story_extra_body is None
+    monkeypatch.setenv("LLM_STORY_EXTRA_BODY", "   ")
+    assert Settings().llm_story_extra_body is None
+
+
+def test_get_story_llm_passes_story_extra_body(monkeypatch):
+    # The story client must carry the thinking-disabled pin: DeepSeek V4's
+    # thinking mode truncates the JSON story mid-object. Mirrors get_chat_llm.
+    from klara.dependencies import get_story_llm
+
+    monkeypatch.setenv("LLM_STORY_EXTRA_BODY", '{"thinking": {"type": "disabled"}}')
+    client = get_story_llm(Settings())
+    assert client.default_extra_body == {"thinking": {"type": "disabled"}}

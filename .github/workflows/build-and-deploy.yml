@@ -116,6 +116,7 @@ jobs:
             LLM_CHAT_MODEL=deepseek/deepseek-v4-flash
             LLM_CORRECTION_MODEL=deepseek/deepseek-v4-flash
             LLM_CHAT_EXTRA_BODY='{"thinking": {"type": "disabled"}}'
+            LLM_STORY_EXTRA_BODY='{"thinking": {"type": "disabled"}}'
 
             TTS_PROVIDER=${TTS_PROVIDER:-elevenlabs}
             ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-}

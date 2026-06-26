@@ -43,7 +43,11 @@ DBSession = Annotated[AsyncSession, Depends(db_session)]
 
 
 def get_story_llm(settings: SettingsDep) -> LLMClient:
-    return LiteLLMClient(settings, default_model=settings.llm_story_model)
+    return LiteLLMClient(
+        settings,
+        default_model=settings.llm_story_model,
+        default_extra_body=settings.llm_story_extra_body,
+    )
 
 
 def get_chat_llm(settings: SettingsDep) -> LLMClient:
