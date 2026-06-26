@@ -448,6 +448,21 @@
   text-align: left;
 }
 .k-feedback__verdict em { color: var(--accent-ink); font-style: italic; }
+.k-diagnose-tip {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-serif);
+  font-style: normal;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  opacity: 0.72;
+  text-align: left;
+}
+.k-diagnose-tip--loading {
+  font-style: italic;
+  opacity: 0.5;
+}
 .k-feedback__legend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .k-feedback__pill {
   display: inline-flex;
