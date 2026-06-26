@@ -163,6 +163,17 @@ export interface PhoneticHintsResponse {
   hints: Record<string, string>;
 }
 
+export interface DiagnoseRequest {
+  language: string;
+  word: string;
+  phonemes: PhonemeScore[];
+}
+
+export interface DiagnoseResponse {
+  tip: string;
+  weakest_phoneme: string;
+}
+
 // ---- Finish quiz + insight + attempts ----------------------------------
 
 export interface MCQuizItem {
