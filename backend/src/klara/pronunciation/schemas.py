@@ -42,3 +42,14 @@ class PhoneticHintsResponse(BaseModel):
         default_factory=dict,
         description="Map of input word → hyphenated stress hint (au-to-BÚS).",
     )
+
+
+class DiagnoseRequest(BaseModel):
+    language: str = Field(..., min_length=2, max_length=8)
+    word: str = Field(..., min_length=1, max_length=120)
+    phonemes: list[PhonemeScore] = Field(..., min_length=1)
+
+
+class DiagnoseResponse(BaseModel):
+    tip: str = ""
+    weakest_phoneme: str = ""

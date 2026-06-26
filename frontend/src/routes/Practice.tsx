@@ -466,6 +466,8 @@ export default function Practice() {
           evaluating={practice.evaluating}
           feedback={practice.feedback}
           phoneticHints={practice.phoneticHints}
+          diagnosis={practice.diagnosis}
+          diagnosing={practice.diagnosing}
           rate={practice.rate}
           onPlayPause={practice.handlePlayPause}
           onCycleSpeed={practice.cycleSpeed}

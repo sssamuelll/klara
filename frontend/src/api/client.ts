@@ -2,6 +2,7 @@ import i18n from "../i18n";
 import type { PracticeQueue } from "../lib/practiceQueue";
 import type {
   CardOut,
+  DiagnoseResponse,
   GenderAttemptIn,
   GenderAttemptOut,
   GenderReviewItem,
@@ -12,6 +13,7 @@ import type {
   L1GenderNotesResponse,
   MCResolveResponse,
   ModuleCurrent,
+  PhonemeScore,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
   PronunciationBatchOut,
@@ -269,6 +271,17 @@ export const api = {
     request<PhoneticHintsResponse>("/pronunciation/phonetic-hints", {
       method: "POST",
       body: JSON.stringify({ words, language }),
+    }),
+
+  /**
+   * Corrective tip for the single worst mispronounced word. Best-effort: the
+   * endpoint returns `{tip: "", weakest_phoneme: ""}` on any failure, so the
+   * caller keeps showing the stress hint.
+   */
+  diagnose: (word: string, phonemes: PhonemeScore[], language: string) =>
+    request<DiagnoseResponse>("/pronunciation/diagnose", {
+      method: "POST",
+      body: JSON.stringify({ word, phonemes, language }),
     }),
 
   // --- finish quiz + insight + attempts ---

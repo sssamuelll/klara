@@ -148,6 +148,7 @@
       },
       "feedback": {
         "tipPrefix": "Check",
+        "diagnosing": "analyzing the sound…",
         "listen": "Listen to Klara",
         "retry": "Try again",
         "legend": {

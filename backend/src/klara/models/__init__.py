@@ -8,6 +8,7 @@ from klara.models.gender_lexicon import GenderLexicon
 from klara.models.invitation import Invitation
 from klara.models.module import Module, module_vocab
 from klara.models.oauth import OAuthAccount
+from klara.models.pronunciation_diagnosis import PronunciationDiagnosis
 from klara.models.session import StudySession
 from klara.models.srs import Review, UserCard
 from klara.models.story import Story, StoryView
@@ -27,6 +28,7 @@ __all__ = [
     "OAuthAccount",
     "PartOfSpeech",
     "PronunciationAttempt",
+    "PronunciationDiagnosis",
     "QuizAttempt",
     "Review",
     "ReviewRating",

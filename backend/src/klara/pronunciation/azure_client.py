@@ -58,6 +58,24 @@ def _sanitize_reference(text: str) -> str:
     return re.sub(r"\s+", " ", cleaned).strip()
 
 
+def _read_along_config_json(reference_text: str) -> str:
+    """Read-along assessment config as a json_string so phonemeAlphabet can be
+    set to IPA (the SDK constructor has no kwarg for it). IPA keeps the
+    read-along phonemes consistent with score_unscripted and lets the
+    diagnose prompt reason over real symbols. enable_miscue stays False: in
+    read-along the learner is reading the reference, so miscue detection mostly
+    mis-flags accent variation and tanks the score."""
+    return json.dumps(
+        {
+            "referenceText": _sanitize_reference(reference_text),
+            "gradingSystem": "HundredMark",
+            "granularity": "Phoneme",
+            "phonemeAlphabet": "IPA",
+            "enableMiscue": False,
+        }
+    )
+
+
 def score_pronunciation(
     wav_path: Path,
     reference_text: str,
@@ -73,15 +91,8 @@ def score_pronunciation(
 
     sanitized_reference = _sanitize_reference(reference_text)
 
-    # enable_miscue=False: in read-along mode the learner is always reading the
-    # reference, so insertion/omission detection mostly mis-flags accent
-    # variations as miscues and tanks the score. Without miscue, Azure still
-    # returns phoneme-level accuracy — that's what the UI bands off of.
     pronunciation_config = speechsdk.PronunciationAssessmentConfig(
-        reference_text=sanitized_reference,
-        grading_system=speechsdk.PronunciationAssessmentGradingSystem.HundredMark,
-        granularity=speechsdk.PronunciationAssessmentGranularity.Phoneme,
-        enable_miscue=False,
+        json_string=_read_along_config_json(reference_text)
     )
 
     recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
