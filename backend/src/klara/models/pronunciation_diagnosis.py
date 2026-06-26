@@ -17,7 +17,10 @@ class PronunciationDiagnosis(Base):
     __tablename__ = "pronunciation_diagnoses"
     __table_args__ = (
         UniqueConstraint(
-            "native_language", "target_language", "word", "weakest_phoneme",
+            "native_language",
+            "target_language",
+            "word",
+            "weakest_phoneme",
             name="uq_pron_diag_key",
         ),
         Index("ix_pron_diag_phoneme", "native_language", "target_language", "weakest_phoneme"),
@@ -26,7 +29,7 @@ class PronunciationDiagnosis(Base):
     id: Mapped[uuid_pk]
     native_language: Mapped[str] = mapped_column(String(8), nullable=False)
     target_language: Mapped[str] = mapped_column(String(8), nullable=False)
-    word: Mapped[str] = mapped_column(String(120), nullable=False)         # canonical lower-cased key
+    word: Mapped[str] = mapped_column(String(120), nullable=False)  # canonical lower-cased key
     weakest_phoneme: Mapped[str] = mapped_column(String(32), nullable=False)
     phoneme_score: Mapped[float] = mapped_column(Float, nullable=False)
     tip: Mapped[str] = mapped_column(String(400), nullable=False)

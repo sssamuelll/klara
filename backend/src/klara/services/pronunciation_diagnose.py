@@ -77,7 +77,10 @@ async def generate_diagnosis(
     )
     try:
         resp = await llm.complete(
-            messages=[Message(role="system", content=system), Message(role="user", content="Give the tip.")],
+            messages=[
+                Message(role="system", content=system),
+                Message(role="user", content="Give the tip."),
+            ],
             max_tokens=128,
             temperature=0.0,
             response_format={"type": "json_object"},
@@ -94,8 +97,12 @@ async def generate_diagnosis(
 
     db.add(
         PronunciationDiagnosis(
-            native_language=nl, target_language=tl, word=key_word,
-            weakest_phoneme=weakest.phoneme, phoneme_score=weakest.accuracy_score, tip=tip,
+            native_language=nl,
+            target_language=tl,
+            word=key_word,
+            weakest_phoneme=weakest.phoneme,
+            phoneme_score=weakest.accuracy_score,
+            tip=tip,
         )
     )
     await db.commit()

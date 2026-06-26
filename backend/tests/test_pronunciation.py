@@ -7,6 +7,7 @@ authenticated successful path returns the schema as designed.
 
 from __future__ import annotations
 
+import json as _json
 from pathlib import Path
 
 import pytest
@@ -314,9 +315,6 @@ async def test_short_language_code_resolves_to_bcp47(
     )
     assert r.status_code == 200, r.text
     assert captured["language"] == "de-DE"
-
-
-import json as _json
 
 
 def test_read_along_config_is_ipa():
