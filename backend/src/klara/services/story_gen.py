@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 import structlog
+from json_repair import repair_json
 from sqlalchemy import case, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -97,9 +98,19 @@ def _extract_json(text: str) -> dict[str, Any]:
     end = text.rfind("}")
     if start == -1 or end == -1:
         raise StoryGenerationError("No JSON object found in LLM response")
+    candidate = text[start : end + 1]
     try:
-        return json.loads(text[start : end + 1])
+        return json.loads(candidate)
     except json.JSONDecodeError as exc:
+        # The story model occasionally emits not-quite-valid JSON (a stray token,
+        # a trailing comma). Repair as a fallback before surfacing the error or
+        # spending an LLM retry; this runs ONLY when strict parsing already
+        # failed, so well-formed responses are untouched. If the repair can't
+        # produce a usable object, surface the original error (never a raw
+        # JSONDecodeError, which would 500 the request).
+        repaired = repair_json(candidate, return_objects=True)
+        if isinstance(repaired, dict) and repaired:
+            return repaired
         raise StoryGenerationError(f"Malformed JSON in LLM response: {exc}") from exc
 
 
