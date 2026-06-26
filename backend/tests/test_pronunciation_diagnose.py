@@ -113,3 +113,25 @@ async def test_blank_tip_returns_empty_no_row(db_session):
     assert out.tip == ""
     count = (await db_session.execute(select(func.count()).select_from(PronunciationDiagnosis))).scalar()
     assert count == 0
+
+
+class RaisingLLM:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def complete(self, *, messages, model=None, max_tokens=1024, temperature=0.7, response_format=None):
+        self.calls += 1
+        raise RuntimeError("llm down")
+
+    async def stream(self, *, messages, model=None, max_tokens=1024, temperature=0.7):
+        raise NotImplementedError
+
+
+@pytest.mark.asyncio
+async def test_llm_failure_returns_empty_no_row(db_session):
+    llm = RaisingLLM()
+    out = await generate_diagnosis(llm, db_session, word="Haus", phonemes=_phonemes(), target_language="de", native_language="es")
+    assert out.tip == ""
+    assert llm.calls == 1
+    count = (await db_session.execute(select(func.count()).select_from(PronunciationDiagnosis))).scalar()
+    assert count == 0

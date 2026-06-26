@@ -8,8 +8,6 @@ showing the stress hint.
 
 from __future__ import annotations
 
-import json
-
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,16 +75,16 @@ async def generate_diagnosis(
         word=word.strip(),
         phoneme=weakest.phoneme,
     )
-    resp = await llm.complete(
-        messages=[Message(role="system", content=system), Message(role="user", content="Give the tip.")],
-        max_tokens=128,
-        temperature=0.0,
-        response_format={"type": "json_object"},
-    )
     try:
+        resp = await llm.complete(
+            messages=[Message(role="system", content=system), Message(role="user", content="Give the tip.")],
+            max_tokens=128,
+            temperature=0.0,
+            response_format={"type": "json_object"},
+        )
         payload = _extract_json(resp.content)
-    except (ValueError, json.JSONDecodeError) as e:
-        log.warning("diagnose.parse_failed", error=str(e), raw=resp.content[:300])
+    except Exception as e:  # best-effort: any LLM/transport/parse failure → no tip, no row
+        log.warning("diagnose.llm_failed", error=str(e))
         return DiagnoseResponse()
 
     tip = payload.get("tip")
