@@ -552,6 +552,177 @@ async def test_get_current_module_reports_gender_tristate(db_session):
     assert body["gender_mastered"] == 1
 
 
+@pytest.mark.asyncio
+async def test_load_modules_stamps_oracle_gender_for_de_nouns(db_session):
+    # A German noun the oracle covers must land gender_source='oracle' with the
+    # oracle's gender (the seed's hardcoded gender loses to the oracle), so the
+    # seeded noun is immediately gender-eligible.
+    from sqlalchemy import select
+
+    from klara.models import GenderLexicon
+
+    lemma = f"Mod{uuid.uuid4().hex[:8]}"  # oracle says die; seed says der (disagree on purpose)
+    db_session.add(GenderLexicon(lemma=lemma, pos="noun", gender="die"))
+    await db_session.flush()
+    spec = [
+        {
+            "sequence_order": 8001,
+            "title": f"T{uuid.uuid4().hex[:6]}",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {"lemma": lemma, "pos": "noun", "gender": "der", "translations": {"es": "x"}}
+            ],
+        }
+    ]
+    await load_modules(db_session, language="de", modules=spec)
+    await db_session.commit()
+    v = (
+        await db_session.execute(
+            select(VocabItem).where(VocabItem.lemma == lemma, VocabItem.language == "de")
+        )
+    ).scalar_one()
+    assert v.gender == "die"  # oracle wins over the seed's der
+    assert v.gender_source == "oracle"
+
+
+@pytest.mark.asyncio
+async def test_load_modules_does_not_stamp_gender_on_verbs(db_session):
+    # resolve_gender has a case-insensitive fallback: a verb lemma "modxxx" would
+    # match a noun "Modxxx" in the oracle. The pos guard must keep verbs ungendered.
+    from sqlalchemy import select
+
+    from klara.models import GenderLexicon
+
+    base = uuid.uuid4().hex[:8]
+    noun_lemma = f"Mod{base}"  # capitalized noun in the oracle
+    verb_lemma = f"mod{base}"  # lowercase homonym verb (CI-matches the noun)
+    db_session.add(GenderLexicon(lemma=noun_lemma, pos="noun", gender="das"))
+    await db_session.flush()
+    spec = [
+        {
+            "sequence_order": 8002,
+            "title": f"T{base}",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [{"lemma": verb_lemma, "pos": "verb", "translations": {"es": "hacer"}}],
+        }
+    ]
+    await load_modules(db_session, language="de", modules=spec)
+    await db_session.commit()
+    v = (
+        await db_session.execute(
+            select(VocabItem).where(
+                VocabItem.lemma == verb_lemma,
+                VocabItem.language == "de",
+                VocabItem.pos == PartOfSpeech.VERB,
+            )
+        )
+    ).scalar_one()
+    assert v.gender is None  # verb stays ungendered despite the CI-matching noun
+    assert v.gender_source == "llm"
+
+
+@pytest.mark.asyncio
+async def test_load_modules_falls_back_to_seed_gender_when_oracle_misses(db_session):
+    # A noun the oracle does NOT cover keeps the seed's hardcoded gender as 'llm'.
+    from sqlalchemy import select
+
+    lemma = f"Mod{uuid.uuid4().hex[:8]}"  # not in the oracle
+    spec = [
+        {
+            "sequence_order": 8003,
+            "title": f"T{uuid.uuid4().hex[:6]}",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {"lemma": lemma, "pos": "noun", "gender": "die", "translations": {"es": "x"}}
+            ],
+        }
+    ]
+    await load_modules(db_session, language="de", modules=spec)
+    await db_session.commit()
+    v = (
+        await db_session.execute(
+            select(VocabItem).where(VocabItem.lemma == lemma, VocabItem.language == "de")
+        )
+    ).scalar_one()
+    assert v.gender == "die"  # the seed gender
+    assert v.gender_source == "llm"  # oracle missed → llm
+
+
+@pytest.mark.asyncio
+async def test_load_modules_preserves_existing_oracle_gender_on_conflict(db_session):
+    # A re-seed must never clobber an already-oracle-stamped gender (the case()
+    # guard), even when the seed's hardcoded gender disagrees and the oracle no
+    # longer covers the lemma.
+    lemma = f"Mod{uuid.uuid4().hex[:8]}"
+    v0 = VocabItem(
+        id=uuid.uuid4(),
+        language="de",
+        lemma=lemma,
+        pos=PartOfSpeech.NOUN,
+        gender="die",
+        gender_source="oracle",
+    )
+    db_session.add(v0)
+    await db_session.flush()
+    spec = [
+        {
+            "sequence_order": 8004,
+            "title": f"T{uuid.uuid4().hex[:6]}",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {"lemma": lemma, "pos": "noun", "gender": "der", "translations": {"es": "x"}}
+            ],
+        }
+    ]
+    await load_modules(db_session, language="de", modules=spec)
+    await db_session.commit()
+    await db_session.refresh(v0)
+    assert v0.gender == "die"  # existing oracle gender preserved
+    assert v0.gender_source == "oracle"
+
+
+@pytest.mark.asyncio
+async def test_load_modules_merges_translations_on_reseed(db_session):
+    # On conflict, translations MERGE (jsonb ||) rather than replace, so a re-seed
+    # accumulates L1 keys instead of dropping ones added elsewhere (e.g. by story
+    # generation). Mirrors story_gen. Synthetic language → isolates the merge.
+    lemma = f"Mod{uuid.uuid4().hex[:8]}"
+    v0 = VocabItem(
+        id=uuid.uuid4(),
+        language="modtMrg",
+        lemma=lemma,
+        pos=PartOfSpeech.NOUN,
+        translations={"en": "thing"},  # an L1 key the seed will NOT supply
+    )
+    db_session.add(v0)
+    await db_session.flush()
+    spec = [
+        {
+            "sequence_order": 1,
+            "title": f"T{uuid.uuid4().hex[:6]}",
+            "cefr_level": "A1",
+            "can_dos": ["x"],
+            "grammatical_focus": ["y"],
+            "vocab": [
+                {"lemma": lemma, "pos": "noun", "gender": "der", "translations": {"es": "cosa"}}
+            ],
+        }
+    ]
+    await load_modules(db_session, language="modtMrg", modules=spec)
+    await db_session.commit()
+    # Raw pg_insert UPDATE bypasses the ORM, so refresh the identity-mapped row.
+    await db_session.refresh(v0)
+    assert v0.translations == {"en": "thing", "es": "cosa"}  # merged, not replaced
+
+
 def test_de_module_sequence_is_well_formed():
     from klara.scripts.load_de_modules import MODULES
 

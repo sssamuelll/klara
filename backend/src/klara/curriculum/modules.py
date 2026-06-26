@@ -6,11 +6,12 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import delete, select
+from sqlalchemy import case, delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.curriculum.competence import module_progress
+from klara.curriculum.gender_lex import resolve_gender
 from klara.models import Module, User, UserCard, VocabItem, module_vocab
 from klara.models.enums import CEFRLevel, PartOfSpeech
 
@@ -118,24 +119,45 @@ async def load_modules(db: AsyncSession, *, language: str, modules: list[dict]) 
         await db.execute(delete(module_vocab).where(module_vocab.c.module_id == module_id))
 
         for w in spec["vocab"]:
-            voc_stmt = (
-                pg_insert(VocabItem)
-                .values(
-                    lemma=w["lemma"],
-                    language=language,
-                    pos=PartOfSpeech(w.get("pos", "noun")),
-                    gender=w.get("gender"),
-                    translations=w.get("translations", {}),
-                )
-                .on_conflict_do_update(
-                    constraint="uq_vocab_lemma_lang_pos",
-                    set_={
-                        "gender": w.get("gender"),
-                        "translations": w.get("translations", {}),
-                    },
-                )
-                .returning(VocabItem.id)
+            pos = PartOfSpeech(w.get("pos", "noun"))
+            # Oracle wins (mirror services.story_gen): for German NOUNs the
+            # authoritative lexicon decides der/die/das and marks provenance
+            # 'oracle', so seeded nouns are immediately gender-eligible. Otherwise
+            # keep the hand-curated seed gender as 'llm'. Restrict to NOUNs:
+            # resolve_gender has a case-insensitive fallback, so a verb like
+            # "essen" would otherwise match the noun "Essen" (das).
+            oracle_gender = (
+                await resolve_gender(db, w["lemma"])
+                if language == "de" and pos == PartOfSpeech.NOUN
+                else None
             )
+            if oracle_gender is not None:
+                gender, gender_source = oracle_gender, "oracle"
+            else:
+                gender, gender_source = w.get("gender"), "llm"
+            voc_stmt = pg_insert(VocabItem).values(
+                lemma=w["lemma"],
+                language=language,
+                pos=pos,
+                gender=gender,
+                gender_source=gender_source,
+                translations=w.get("translations", {}),
+            )
+            voc_stmt = voc_stmt.on_conflict_do_update(
+                constraint="uq_vocab_lemma_lang_pos",
+                set_={
+                    "translations": VocabItem.translations.op("||")(voc_stmt.excluded.translations),
+                    # Never let the seed clobber an existing oracle gender/provenance.
+                    "gender": case(
+                        (VocabItem.gender_source == "oracle", VocabItem.gender),
+                        else_=voc_stmt.excluded.gender,
+                    ),
+                    "gender_source": case(
+                        (VocabItem.gender_source == "oracle", VocabItem.gender_source),
+                        else_=voc_stmt.excluded.gender_source,
+                    ),
+                },
+            ).returning(VocabItem.id)
             vocab_id = (await db.execute(voc_stmt)).scalar_one()
             link_stmt = (
                 pg_insert(module_vocab)
