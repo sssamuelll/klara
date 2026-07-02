@@ -73,6 +73,7 @@ class StreamingSession:
         self._queue: asyncio.Queue = asyncio.Queue()  # unbounded by design
         self._acc: list[WordScore] = []
         self._stopped = asyncio.Event()
+        self._consumer: asyncio.Future | None = None
 
     def _on_recognized(self, w: WordScore) -> None:  # SDK thread
         self._acc.append(w)  # accumulator: never dropped
@@ -80,6 +81,19 @@ class StreamingSession:
 
     def _on_session_stopped(self) -> None:  # SDK thread
         self._loop.call_soon_threadsafe(self._stopped.set)
+
+    def _on_canceled(self, reason: str) -> None:  # SDK thread
+        log.warning("pron_stream.azure_canceled", reason=reason)
+        self._loop.call_soon_threadsafe(self._cancel_consumer)
+
+    def _cancel_consumer(self) -> None:
+        if self._consumer is not None and not self._consumer.done():
+            self._consumer.cancel()
+
+    async def _max_duration_guard(self) -> None:
+        # Independent timer, not an inline check a parked consumer never reaches.
+        await asyncio.sleep(self._settings.pron_stream_max_session_s)
+        self._cancel_consumer()
 
     async def _consume(self) -> None:
         while not (self._stopped.is_set() and self._queue.empty()):
@@ -97,10 +111,12 @@ class StreamingSession:
     async def run(self) -> SessionOutcome:
         self._rec.on_recognized = self._on_recognized
         self._rec.on_session_stopped = self._on_session_stopped
+        self._rec.on_canceled = self._on_canceled
         self._rec.start()
-        consumer = asyncio.ensure_future(self._consume())
+        self._consumer = asyncio.ensure_future(self._consume())
+        guard = asyncio.ensure_future(self._max_duration_guard())
         try:
-            await consumer
+            await self._consumer
             scores = self._scores_of(self._acc)
             await asyncio.wait_for(
                 self._ws.send_json(final_message(self._acc, scores)),
@@ -119,10 +135,14 @@ class StreamingSession:
             log.error("pron_stream.session_error", error=str(exc))
             return SessionOutcome.FAILED
         finally:
-            if not consumer.done():
-                consumer.cancel()
+            if not guard.done():
+                guard.cancel()
             with contextlib.suppress(BaseException):
-                await consumer
+                await guard
+            if not self._consumer.done():
+                self._consumer.cancel()
+            with contextlib.suppress(BaseException):
+                await self._consumer
             try:
                 await asyncio.wait_for(
                     asyncio.to_thread(self._rec.stop),

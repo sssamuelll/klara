@@ -194,3 +194,48 @@ async def test_session_external_cancel_propagates():
 
     with pytest.raises(asyncio.CancelledError):
         await task
+
+
+@pytest.mark.asyncio
+async def test_session_long_utterance_no_depth_teardown():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    rec = FakeStreamingRecognizer(_words(500), cadence=0.0)  # far more than any queue guard
+    ws = FakeWebSocket()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+    assert outcome is SessionOutcome.COMPLETED
+    assert len([m for m in ws.sent if m["type"] == "word"]) == 500
+
+
+@pytest.mark.asyncio
+async def test_session_canceled_event_tears_down_no_final():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    # A recognizer that fires canceled shortly after start, never session_stopped.
+    class CancelingRec(FakeStreamingRecognizer):
+        def _run(self):
+            time.sleep(0.02)
+            self.fire_canceled("CancellationReason.Error - quota")
+
+    rec = CancelingRec(_words(5))
+    ws = FakeWebSocket()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+    assert outcome is SessionOutcome.FAILED
+    assert not ws.sent_final()
+
+
+@pytest.mark.asyncio
+async def test_session_max_duration_tears_down():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    s = Settings()
+    object.__setattr__(s, "pron_stream_max_session_s", 0.05)
+    # A recognizer that never stops on its own (no session_stopped, keeps idle).
+    rec = FakeStreamingRecognizer(_words(0))
+    rec._run = lambda: time.sleep(2.0)  # busy, never fires stopped
+    ws = FakeWebSocket()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=s).run()
+    assert outcome is SessionOutcome.FAILED
