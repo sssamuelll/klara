@@ -14,7 +14,9 @@ services:
     ports: !override
       - "127.0.0.1:8210:8000"
     volumes: !reset []
-    command: ["sh", "-c", "alembic upgrade head && uvicorn klara.main:app --host 0.0.0.0 --port 8000"]
+    # --ws-ping-*: keepalive for /pronunciation/stream (dead clients dropped
+    # by uvicorn -> session receiver raises -> teardown -> client falls to batch).
+    command: ["sh", "-c", "alembic upgrade head && uvicorn klara.main:app --host 0.0.0.0 --port 8000 --ws-ping-interval 10 --ws-ping-timeout 10"]
 
   frontend:
     image: ghcr.io/sssamuelll/klara-frontend:${IMAGE_TAG:-latest}

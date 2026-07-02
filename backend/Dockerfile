@@ -27,4 +27,7 @@ RUN uv sync
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn klara.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src"]
+# --ws-ping-*: protocol-level keepalive for /pronunciation/stream — a dead
+# client is dropped by uvicorn and surfaces as ws.receive() raising in the
+# session receiver (no app-level ping task needed).
+CMD ["sh", "-c", "alembic upgrade head && uvicorn klara.main:app --host 0.0.0.0 --port 8000 --ws-ping-interval 10 --ws-ping-timeout 10 --reload --reload-dir /app/src"]
