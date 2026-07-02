@@ -100,6 +100,9 @@ a {
   flex-direction: column;
   overflow-x: clip;
   min-width: 0;
+  /* Installed/standalone mode on notched phones: keep content above the
+     home indicator. env() is 0 everywhere else. */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 @media (min-width: 900px) {
@@ -117,6 +120,9 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
+  /* Sticky masthead sits under the status bar / notch in standalone mode
+     (index.html declares viewport-fit=cover). */
+  padding-top: calc(18px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--rule);
   position: sticky;
   top: 0;
@@ -214,7 +220,13 @@ a {
 .k-masthead__star:hover .k-masthead__star-icon { color: var(--accent); }
 
 @media (max-width: 600px) {
-  .k-masthead { padding: 14px 18px; gap: 10px; }
+  /* The shorthand resets padding-top — re-apply the safe-area inset (these
+     breakpoints are exactly the notched devices). */
+  .k-masthead {
+    padding: 14px 18px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    gap: 10px;
+  }
   .k-masthead .lockup .edition { display: none; }
   .k-masthead nav { gap: 12px; }
   .k-masthead__star-label { display: none; }
@@ -225,6 +237,7 @@ a {
     align-items: stretch;
     gap: 6px;
     padding: 12px 18px 10px;
+    padding-top: calc(12px + env(safe-area-inset-top));
   }
   .k-masthead nav { justify-content: flex-end; gap: 14px; }
 }
