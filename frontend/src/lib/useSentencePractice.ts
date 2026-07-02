@@ -32,16 +32,20 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { WordScore } from "../api/types";
+import type { PronunciationScoreResponse, WordScore } from "../api/types";
 import {
   bandsByTokenIndex,
   scoreAudio,
+  scoreBand,
   startMicRecording,
   worstBadWord,
   type MicRecorder,
   type PronunciationError,
   type ScoreBand,
 } from "./pronunciation";
+import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
+import { createAligner } from "./streamAlign";
+import { openScoreStream, type ScoreStream } from "./streamClient";
 import { startSilenceDetector } from "./silenceDetector";
 import { speak, stop, useTTS } from "./tts";
 
@@ -136,6 +140,8 @@ export interface UseSentencePractice {
   recording: boolean;
   evaluating: boolean;
   feedback: PronScores | undefined;
+  /** Live streaming bands for the sentence being recorded (undefined otherwise). */
+  liveBands: PronScores | undefined;
   phoneticHints: Record<string, string> | undefined;
   diagnosis?: { word: string; tip: string };
   /** True while the /diagnose request for the current sentence is in-flight. */
@@ -201,6 +207,16 @@ export function useSentencePractice({
 
   // While set, recorder is live; calling stop() returns the captured Blob.
   const recorderRef = useRef<MicRecorder | null>(null);
+  const [liveBands, setLiveBands] = useState<PronScores>({});
+  const streamRef = useRef<ScoreStream | null>(null);
+  const pcmRef = useRef<{ stop(): void } | null>(null);
+
+  const teardownStream = useCallback(() => {
+    streamRef.current?.close();
+    streamRef.current = null;
+    pcmRef.current?.stop();
+    pcmRef.current = null;
+  }, []);
 
   const tts = useTTS();
 
@@ -218,8 +234,9 @@ export function useSentencePractice({
       recorderRef.current?.cancel();
       recorderRef.current = null;
       setMicAnalyser(null);
+      teardownStream();
     };
-  }, []);
+  }, [teardownStream]);
 
   const handlePlayPause = useCallback(() => {
     if (!current) return;
@@ -316,10 +333,39 @@ export function useSentencePractice({
       recorderRef.current = rec;
       setMicAnalyser(rec.analyser);
       setRecordingIndex(currentIndex);
+      setLiveBands({});
+      // Live streaming is pure enhancement: any failure below leaves a
+      // batch-pure session, silently (spec: batch iff no `final`).
+      if (pcmStreamingSupported()) {
+        try {
+          const aligner = createAligner(current.target);
+          const stream = openScoreStream({
+            referenceText: current.target,
+            language: targetLanguage,
+            onWord: (w) => {
+              const idx = aligner(w.word, w.error_type);
+              if (idx === null) return;
+              const band = w.error_type === "Omission" ? "bad" : scoreBand(w.accuracy_score);
+              setLiveBands((b) => ({ ...b, [idx]: band }));
+            },
+          });
+          streamRef.current = stream;
+          const pcm = await startPcmCapture(rec.stream, (chunk) => stream.sendChunk(chunk));
+          if (pcm) {
+            pcmRef.current = pcm;
+          } else {
+            stream.close();
+            streamRef.current = null;
+          }
+        } catch (e) {
+          console.debug("pron_stream: setup failed, batch-pure", e);
+          teardownStream();
+        }
+      }
     } catch (e) {
       setPronError(e as PronunciationError);
     }
-  }, [clearFeedback, current, currentIndex, recordingIndex]);
+  }, [clearFeedback, current, currentIndex, recordingIndex, targetLanguage, teardownStream]);
 
   const stopRecording = useCallback(async () => {
     const rec = recorderRef.current;
@@ -329,15 +375,36 @@ export function useSentencePractice({
     setRecordingIndex(null);
     setMicAnalyser(null);
     setEvaluatingIndex(idxAtStart);
+    const stream = streamRef.current;
+    streamRef.current = null;
     try {
       const blob = await rec.stop();
+      pcmRef.current?.stop();
+      pcmRef.current = null;
       if (!blob || blob.size === 0) {
+        stream?.close();
         setPronError({ kind: "no_speech" });
         return;
       }
       const sentence = sentences[idxAtStart];
       if (!sentence) return;
-      const resp = await scoreAudio(blob, sentence.target, targetLanguage);
+      let resp: PronunciationScoreResponse | null = null;
+      if (stream) {
+        stream.sendEos();
+        const final = await stream.result; // bounded: 8 s post-eos inside the client
+        if (final) {
+          resp = {
+            recognized_text: final.words.map((w) => w.word).join(" "),
+            reference_text: sentence.target,
+            language: targetLanguage,
+            scores: final.scores,
+            words: final.words,
+          };
+        } else {
+          console.debug("pron_stream: no final, falling back to batch");
+        }
+      }
+      if (!resp) resp = await scoreAudio(blob, sentence.target, targetLanguage);
       const bands = bandsByTokenIndex(sentence.target, resp.words);
       setScoresBySentence((s) => ({ ...s, [idxAtStart]: bands }));
       setPronError(null);
@@ -379,6 +446,7 @@ export function useSentencePractice({
       }
     } finally {
       setEvaluatingIndex(null);
+      setLiveBands({});
     }
   }, [fetchAndStoreDiagnosis, fetchAndStoreHints, persistTargets, recordingIndex, sentences, targetLanguage]);
 
@@ -387,8 +455,10 @@ export function useSentencePractice({
     recorderRef.current = null;
     setRecordingIndex(null);
     setMicAnalyser(null);
+    teardownStream();
+    setLiveBands({});
     setPronError(null);
-  }, []);
+  }, [teardownStream]);
 
   // Primary stop trigger for the sentence pronunciation flow: 1.5s of
   // silence (after a 800ms grace period) auto-stops the take. Manual
@@ -515,6 +585,7 @@ export function useSentencePractice({
     recording,
     evaluating,
     feedback,
+    liveBands: recording ? liveBands : undefined,
     phoneticHints,
     diagnosis,
     diagnosing: diagnosingIndex === currentIndex,

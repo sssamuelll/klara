@@ -216,6 +216,7 @@ export default function StoryView() {
           micAnalyser={practice.micAnalyser}
           evaluating={practice.evaluating}
           feedback={practice.feedback}
+          liveBands={practice.liveBands}
           phoneticHints={practice.phoneticHints}
           diagnosis={practice.diagnosis}
           diagnosing={practice.diagnosing}

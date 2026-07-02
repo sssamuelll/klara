@@ -66,6 +66,8 @@ interface Props {
 
   // Feedback state
   feedback?: Record<number, ScoreBand>;
+  /** Live streaming bands while recording — same shape/classes as feedback. */
+  liveBands?: Record<number, ScoreBand>;
   phoneticHints?: Record<string, string>;
   diagnosis?: { word: string; tip: string };
   /** Explicit loading signal from the hook: /diagnose is in-flight for this sentence. */
@@ -197,6 +199,7 @@ export default function SentenceView({
   micAnalyser,
   evaluating,
   feedback,
+  liveBands,
   phoneticHints,
   diagnosis,
   diagnosing,
@@ -258,9 +261,10 @@ export default function SentenceView({
   // wordTokenIndices contract: each WORD-type token gets sequentially mapped
   // to feedback[i], skipping spaces/punct.
   const scoreByTokenIdx = useMemo(() => {
-    if (!showFeedback || !feedback) return null;
-    return feedback;
-  }, [feedback, showFeedback]);
+    if (showFeedback && feedback) return feedback;
+    if (recording && liveBands) return liveBands;
+    return null;
+  }, [feedback, showFeedback, recording, liveBands]);
 
   // Counts for the feedback legend
   const counts = useMemo(() => {
