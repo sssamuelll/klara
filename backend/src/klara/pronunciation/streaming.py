@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import enum
-from typing import Callable
+from collections.abc import Callable
 
 from klara.pronunciation.azure_stream import StreamingRecognizer
 from klara.pronunciation.schemas import PronunciationScores, WordScore
@@ -94,6 +94,12 @@ class StreamingSession:
             await self._ws.send_json(final_message(self._acc, scores))
             return SessionOutcome.COMPLETED
         finally:
-            await asyncio.wait_for(
-                asyncio.to_thread(self._rec.stop), timeout=self._settings.pron_stream_stop_timeout_s
-            )
+            try:
+                await asyncio.wait_for(
+                    asyncio.to_thread(self._rec.stop),
+                    timeout=self._settings.pron_stream_stop_timeout_s,
+                )
+            except (TimeoutError, Exception):
+                # An uncancellable wedged stop must not clobber the session
+                # outcome; the caller releases the cap slot regardless (spec).
+                pass
