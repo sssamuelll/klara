@@ -50,7 +50,8 @@ def test_word_score_from_azure_extracts_phonemes():
     from klara.pronunciation.azure_stream import word_score_from_azure
 
     class _P:
-        def __init__(self, ph, acc): self.phoneme, self.accuracy_score = ph, acc
+        def __init__(self, ph, acc):
+            self.phoneme, self.accuracy_score = ph, acc
 
     class _W:
         def __init__(self):
@@ -87,7 +88,7 @@ class FakeStreamingRecognizer:
                 break
             time.sleep(self._cadence)
             if self.on_recognized:
-                self.on_recognized(w)          # runs the bridge on THIS thread
+                self.on_recognized(w)  # runs the bridge on THIS thread
         if self.on_session_stopped:
             self.on_session_stopped()
 
@@ -116,7 +117,7 @@ class FakeWebSocket:
 
     async def send_json(self, obj: dict) -> None:
         if self.block_send:
-            await asyncio.Event().wait()       # never returns
+            await asyncio.Event().wait()  # never returns
         self.sent.append(obj)
 
     async def receive(self):
@@ -157,4 +158,21 @@ async def test_session_happy_path_one_final_all_words():
     finals = [m for m in ws.sent if m["type"] == "final"]
     assert len(finals) == 1
     assert len(finals[0]["words"]) == 12
+    assert not [t for t in threading.enumerate() if t.name == "fake-sdk" and t.is_alive()]
+
+
+@pytest.mark.asyncio
+async def test_session_stuck_send_tears_down_no_final():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    s = Settings()
+    object.__setattr__(s, "pron_stream_send_timeout_s", 0.1)  # fast for the test
+    rec = FakeStreamingRecognizer(_words(12))
+    ws = FakeWebSocket(block_send=True)  # client never drains
+
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=s).run()
+
+    assert outcome is SessionOutcome.FAILED
+    assert not ws.sent_final(), "no final on the failure path (double-score guard)"
     assert not [t for t in threading.enumerate() if t.name == "fake-sdk" and t.is_alive()]

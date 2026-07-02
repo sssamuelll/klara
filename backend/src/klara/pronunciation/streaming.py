@@ -82,18 +82,31 @@ class StreamingSession:
                 w = await asyncio.wait_for(self._queue.get(), timeout=0.2)
             except TimeoutError:
                 continue
-            await self._ws.send_json(word_message(w))
+            # SEND_TIMEOUT is the sole drain-health signal. A stuck ws.send
+            # raises TimeoutError here, which propagates out and fails the task.
+            await asyncio.wait_for(
+                self._ws.send_json(word_message(w)),
+                timeout=self._settings.pron_stream_send_timeout_s,
+            )
 
     async def run(self) -> SessionOutcome:
         self._rec.on_recognized = self._on_recognized
         self._rec.on_session_stopped = self._on_session_stopped
         self._rec.start()
+        consumer = asyncio.ensure_future(self._consume())
         try:
-            await self._consume()
+            await consumer
             scores = self._scores_of(self._acc)
-            await self._ws.send_json(final_message(self._acc, scores))
+            await asyncio.wait_for(
+                self._ws.send_json(final_message(self._acc, scores)),
+                timeout=self._settings.pron_stream_send_timeout_s,
+            )
             return SessionOutcome.COMPLETED
+        except (TimeoutError, asyncio.CancelledError, Exception):
+            return SessionOutcome.FAILED
         finally:
+            if not consumer.done():
+                consumer.cancel()
             try:
                 await asyncio.wait_for(
                     asyncio.to_thread(self._rec.stop),
