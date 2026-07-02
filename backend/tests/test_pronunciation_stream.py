@@ -114,13 +114,19 @@ class FakeWebSocket:
         self.block_send = block_send
         self._recv_q: asyncio.Queue = asyncio.Queue()
         self.pong_ok = True
+        self.raise_on_receive: Exception | None = None
 
     async def send_json(self, obj: dict) -> None:
         if self.block_send:
             await asyncio.Event().wait()  # never returns
         self.sent.append(obj)
 
+    def queue_recv(self, msg: dict) -> None:
+        self._recv_q.put_nowait(msg)
+
     async def receive(self):
+        if self.raise_on_receive is not None:
+            raise self.raise_on_receive
         return await self._recv_q.get()
 
     async def close(self, code: int) -> None:
@@ -239,3 +245,42 @@ async def test_session_max_duration_tears_down():
     ws = FakeWebSocket()
     outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=s).run()
     assert outcome is SessionOutcome.FAILED
+
+
+@pytest.mark.asyncio
+async def test_session_receiver_writes_pcm_and_eos_closes_input():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    written: list[bytes] = []
+    closed = {"n": 0}
+
+    class RecordingRec(FakeStreamingRecognizer):
+        def write(self, pcm):
+            written.append(pcm)
+
+        def close_input(self):
+            closed["n"] += 1
+
+    rec = RecordingRec(_words(3), cadence=0.02)
+    ws = FakeWebSocket()
+    ws.queue_recv({"bytes": b"\x00\x01"})
+    ws.queue_recv({"text": '{"type":"eos"}'})  # end-of-speech
+
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+    assert outcome is SessionOutcome.COMPLETED
+    assert written == [b"\x00\x01"]
+    assert closed["n"] == 1
+
+
+@pytest.mark.asyncio
+async def test_session_client_disconnect_tears_down_no_final():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    rec = FakeStreamingRecognizer(_words(50), cadence=0.05)  # still "speaking"
+    ws = FakeWebSocket()
+    ws.raise_on_receive = RuntimeError("client gone")  # disconnect
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+    assert outcome is SessionOutcome.FAILED
+    assert not ws.sent_final()

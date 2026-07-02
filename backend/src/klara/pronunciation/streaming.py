@@ -95,6 +95,17 @@ class StreamingSession:
         await asyncio.sleep(self._settings.pron_stream_max_session_s)
         self._cancel_consumer()
 
+    async def _receive_loop(self) -> None:
+        while True:
+            msg = await self._ws.receive()
+            text = msg.get("text")
+            if text is not None:  # any text frame == end-of-speech
+                self._rec.close_input()
+                return
+            data = msg.get("bytes")
+            if data:
+                self._rec.write(data)
+
     async def _consume(self) -> None:
         while not (self._stopped.is_set() and self._queue.empty()):
             try:
@@ -114,7 +125,16 @@ class StreamingSession:
         self._rec.on_canceled = self._on_canceled
         self._rec.start()
         self._consumer = asyncio.ensure_future(self._consume())
+        receiver = asyncio.ensure_future(self._receive_loop())
         guard = asyncio.ensure_future(self._max_duration_guard())
+
+        def _on_receiver_done(t: asyncio.Future) -> None:
+            # A receiver ERROR (client disconnect) tears the session down.
+            # A clean return (eos) does not — success comes from the consumer.
+            if not t.cancelled() and t.exception() is not None:
+                self._cancel_consumer()
+
+        receiver.add_done_callback(_on_receiver_done)
         try:
             await self._consumer
             scores = self._scores_of(self._acc)
@@ -135,14 +155,11 @@ class StreamingSession:
             log.error("pron_stream.session_error", error=str(exc))
             return SessionOutcome.FAILED
         finally:
-            if not guard.done():
-                guard.cancel()
-            with contextlib.suppress(BaseException):
-                await guard
-            if not self._consumer.done():
-                self._consumer.cancel()
-            with contextlib.suppress(BaseException):
-                await self._consumer
+            for t in (guard, receiver, self._consumer):
+                if not t.done():
+                    t.cancel()
+                with contextlib.suppress(BaseException):
+                    await t
             try:
                 await asyncio.wait_for(
                     asyncio.to_thread(self._rec.stop),
