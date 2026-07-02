@@ -15,6 +15,13 @@ export default function Login() {
 
   const from = (location.state as { from?: string } | null)?.from ?? "/";
 
+  // Google's OAuth gate 403s (disallowed_useragent) the iOS home-screen web
+  // app — its UA lacks the Safari token. navigator.standalone is iOS-only,
+  // so Android's installed PWA (normal Chrome UA, allowed) keeps the button;
+  // email/password login works everywhere.
+  const iosStandalone =
+    (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
@@ -83,14 +90,16 @@ export default function Login() {
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.login.submit")}
           </button>
-          <button
-            type="button"
-            className="k-btn k-btn--ghost"
-            onClick={onGoogle}
-            disabled={submitting}
-          >
-            {t("auth.login.googleBtn")}
-          </button>
+          {!iosStandalone && (
+            <button
+              type="button"
+              className="k-btn k-btn--ghost"
+              onClick={onGoogle}
+              disabled={submitting}
+            >
+              {t("auth.login.googleBtn")}
+            </button>
+          )}
         </div>
 
         <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>

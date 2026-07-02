@@ -206,6 +206,18 @@ export async function startMicRecording(): Promise<MicRecorder> {
     (window as unknown as { webkitAudioContext: typeof AudioContext })
       .webkitAudioContext) as typeof AudioContext;
   const audioCtx = new AudioCtx();
+  // Some engines (Safari) hand back a suspended context in async
+  // continuations of the user gesture (same behavior pcmCapture.ts guards
+  // against). A suspended analyser reads flat RMS 0, so the silence detector
+  // would truncate every take at ~1.5s. Best-effort: recording itself
+  // (MediaRecorder) doesn't depend on this context.
+  if (audioCtx.state !== "running") {
+    try {
+      await audioCtx.resume();
+    } catch {
+      // analyser degrades to flat bars; MediaRecorder is unaffected
+    }
+  }
   const source = audioCtx.createMediaStreamSource(stream);
   const analyser = audioCtx.createAnalyser();
   analyser.fftSize = 1024;
