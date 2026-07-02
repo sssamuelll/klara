@@ -67,12 +67,26 @@ describe("openScoreStream", () => {
     expect(ws.sent[0]).toBe(JSON.stringify({ reference_text: "Hallo Welt", language: "de" }));
   });
 
-  it("drops chunks before open, sends them after", () => {
+  it("buffers chunks before open and flushes them after the handshake", () => {
     const s = make();
-    s.sendChunk(new ArrayBuffer(4)); // CONNECTING → dropped
+    const a = new ArrayBuffer(4);
+    const b = new ArrayBuffer(8);
+    s.sendChunk(a); // CONNECTING → buffered
     ws.open();
-    s.sendChunk(new ArrayBuffer(4));
-    expect(ws.sent.length).toBe(2); // handshake + one chunk
+    s.sendChunk(b); // OPEN → sent immediately
+    expect(ws.sent).toEqual([
+      JSON.stringify({ reference_text: "Hallo Welt", language: "de" }),
+      a,
+      b,
+    ]);
+  });
+
+  it("buffered chunks are dropped if the stream settles before open", () => {
+    const s = make();
+    s.sendChunk(new ArrayBuffer(4)); // CONNECTING → buffered
+    s.close(); // settles before open
+    ws.open(); // late open after settle — onopen must no-op
+    expect(ws.sent.length).toBe(0);
   });
 
   it("routes word messages to onWord", () => {

@@ -67,6 +67,7 @@ export function openScoreStream(opts: {
   const result = new Promise<FinalPayload | null>((res) => {
     resolveResult = res;
   });
+  const pending: ArrayBuffer[] = [];
 
   let ws: WsLike;
   try {
@@ -80,6 +81,7 @@ export function openScoreStream(opts: {
   const settle = (v: FinalPayload | null) => {
     if (settled) return;
     settled = true;
+    pending.length = 0;
     if (timer) clearTimeout(timer);
     resolveResult(v);
     try {
@@ -89,12 +91,23 @@ export function openScoreStream(opts: {
     }
   };
 
+  const sendBinary = (buf: ArrayBuffer) => {
+    try {
+      ws.send(buf);
+    } catch {
+      // socket died between check and send — settle path will fire via onclose
+    }
+  };
+
   ws.binaryType = "arraybuffer";
   ws.onopen = () => {
+    if (settled) return;
     // Handshake MUST be the first frame (backend reads it before the session).
     ws.send(
       JSON.stringify({ reference_text: opts.referenceText, language: opts.language }),
     );
+    for (const buf of pending) sendBinary(buf);
+    pending.length = 0;
   };
   ws.onmessage = (ev) => {
     if (typeof ev.data !== "string") return;
@@ -120,12 +133,12 @@ export function openScoreStream(opts: {
 
   return {
     sendChunk(buf) {
-      if (settled || ws.readyState !== WS_OPEN) return; // pre-open/late chunks drop
-      try {
-        ws.send(buf);
-      } catch {
-        // socket died between check and send — settle path will fire via onclose
+      if (settled) return; // post-settle chunks drop
+      if (ws.readyState !== WS_OPEN) {
+        pending.push(buf); // pre-open chunks buffer, flushed on open after the handshake
+        return;
       }
+      sendBinary(buf);
     },
     sendEos() {
       if (settled) return;

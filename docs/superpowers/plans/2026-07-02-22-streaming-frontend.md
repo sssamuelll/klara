@@ -289,7 +289,7 @@ describe("openScoreStream", () => {
     expect(ws.sent[0]).toBe(JSON.stringify({ reference_text: "Hallo Welt", language: "de" }));
   });
 
-  it("drops chunks before open, sends them after", () => {
+  it("buffers chunks before open, flushes after the handshake", () => {
     const s = make();
     s.sendChunk(new ArrayBuffer(4)); // CONNECTING → dropped
     ws.open();

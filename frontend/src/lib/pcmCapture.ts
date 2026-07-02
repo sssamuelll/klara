@@ -70,16 +70,16 @@ export async function startPcmCapture(
   try {
     source = ctx.createMediaStreamSource(stream);
     node = new AudioWorkletNode(ctx, "pcm-chunker");
+    node.port.onmessage = (e: MessageEvent) => onChunk(e.data as ArrayBuffer);
+    source.connect(node);
+    // The worklet outputs silence; connecting to destination keeps the graph
+    // pulled so process() actually runs.
+    node.connect(ctx.destination);
   } catch (e) {
     console.debug("pron_stream: audio graph construction failed", e);
     void ctx.close();
     return null;
   }
-  node.port.onmessage = (e: MessageEvent) => onChunk(e.data as ArrayBuffer);
-  source.connect(node);
-  // The worklet outputs silence; connecting to destination keeps the graph
-  // pulled so process() actually runs.
-  node.connect(ctx.destination);
   return {
     stop() {
       try {

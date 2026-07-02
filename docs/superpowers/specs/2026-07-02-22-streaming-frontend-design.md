@@ -51,7 +51,7 @@ openScoreStream({ referenceText, language, onWord }): {
 - On open: send the handshake text frame `{"reference_text", "language"}`, then binary PCM frames. `binaryType = 'arraybuffer'`.
 - Incoming `{"type":"word", word, accuracy_score, error_type}` → `onWord`. Incoming `{"type":"final", words[], scores{}}` → resolves `result` with it.
 - **`result` resolves `null`** on: close (any code) without `final`, WS `error`, or a **post-eos timeout (~8 s)** with no `final`. After resolution the socket is closed if still open. The consumer never inspects close codes.
-- `sendChunk` after close is a no-op (drop, don't throw) — the capture pipeline may race the close.
+- `sendChunk` buffers chunks sent before open and flushes them after the handshake frame; after close it remains a no-op (drop, don't throw) — the capture pipeline may race the close.
 
 ## Aligner (`streamAlign.ts`)
 
