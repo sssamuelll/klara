@@ -992,7 +992,7 @@ Covers the worklet, the real WS, and the pending backend live smoke in one pass:
 3. **Latency:** p95 < 500 ms word-spoken → word-painted (#22 criterion; eyeball or performance.now logs).
 4. **Fallback:** stop the backend mid-sentence (or set `PRON_STREAM_GLOBAL_CAP=0`) → no visible error; score arrives via batch as today. DevTools console shows only `pron_stream:` debug lines.
 5. **No streaming support path:** dev-tools → disable AudioWorklet is impractical; instead temporarily hardcode `pcmStreamingSupported = () => false` and confirm batch-pure behavior is byte-identical to main.
-6. Prod deploy: confirm the reverse proxy forwards the WS upgrade for `/api/v1/pronunciation/stream` (backend spec checklist).
+6. Prod deploy: confirm the reverse proxy forwards the WS upgrade for `/api/v1/pronunciation/stream` (backend spec checklist); confirm `dist/assets/pcmWorklet-*.js` is emitted (not inlined as data:).
 
 ## Self-review notes (author)
 

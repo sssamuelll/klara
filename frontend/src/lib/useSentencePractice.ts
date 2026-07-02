@@ -402,7 +402,10 @@ export function useSentencePractice({
         const final = await stream.result; // bounded: 8 s post-eos inside the client
         if (final) {
           resp = {
-            recognized_text: final.words.map((w) => w.word).join(" "),
+            recognized_text: final.words
+              .filter((w) => w.error_type !== "Omission")
+              .map((w) => w.word)
+              .join(" "),
             reference_text: sentence.target,
             language: targetLanguage,
             scores: final.scores,

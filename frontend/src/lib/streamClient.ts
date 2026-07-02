@@ -107,8 +107,12 @@ export function openScoreStream(opts: {
     if (msg.type === "word") {
       opts.onWord(msg as unknown as LiveWord);
     } else if (msg.type === "final") {
-      const { type, ...payload } = msg;
-      settle(payload as unknown as FinalPayload);
+      const { type: _type, ...payload } = msg;
+      const final = payload as unknown as FinalPayload;
+      // An empty final (nothing recognized — VAD auto-stopped on silence) is
+      // not authoritative: settle as if no final arrived so the caller falls
+      // back to batch (which 422s → no_speech), matching main's behavior.
+      settle(final.words?.length ? final : null);
     }
   };
   ws.onclose = () => settle(null);

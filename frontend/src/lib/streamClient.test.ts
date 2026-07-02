@@ -118,12 +118,23 @@ describe("openScoreStream", () => {
     s.sendEos();
     ws.receive({
       type: "final",
-      words: [],
-      scores: { accuracy: 0, fluency: 0, completeness: 0, pronunciation: 0 },
+      words: [{ word: "Hallo", accuracy_score: 91, error_type: "None", phonemes: [] }],
+      scores: { accuracy: 91, fluency: 91, completeness: 100, pronunciation: 91 },
     });
     vi.advanceTimersByTime(10000);
     const r = await s.result;
     expect(r).not.toBeNull();
+  });
+
+  it("empty final (no words) resolves null", async () => {
+    const s = make();
+    ws.open();
+    ws.receive({
+      type: "final",
+      words: [],
+      scores: { accuracy: 0, fluency: 0, completeness: 0, pronunciation: 0 },
+    });
+    await expect(s.result).resolves.toBeNull();
   });
 
   it("sendChunk after close is a no-op", async () => {

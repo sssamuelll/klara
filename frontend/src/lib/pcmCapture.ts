@@ -43,6 +43,21 @@ export async function startPcmCapture(
     void ctx.close();
     return null;
   }
+  // Some engines (Safari) hand back a suspended context in async
+  // continuations of the user gesture — the worklet never processes, so
+  // resume it here, or bail cleanly (zero chunks, batch-pure).
+  if (ctx.state !== "running") {
+    try {
+      await ctx.resume();
+    } catch {
+      // fall through to the state check
+    }
+  }
+  if (ctx.state !== "running") {
+    console.debug("pron_stream: AudioContext not running", ctx.state);
+    void ctx.close();
+    return null;
+  }
   try {
     await ctx.audioWorklet.addModule(new URL("./pcmWorklet.js", import.meta.url));
   } catch (e) {
