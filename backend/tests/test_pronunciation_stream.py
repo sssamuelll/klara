@@ -24,6 +24,21 @@ def test_streaming_settings_defaults():
     assert s.pron_stream_per_user_cap == 2
 
 
+def test_origin_allowed_matches_cors_list():
+    from klara.config import Settings
+    from klara.pronunciation.ws_auth import origin_allowed
+
+    s = Settings()  # cors_origins default includes http://localhost:5173
+
+    class WS:
+        def __init__(self, origin):
+            self.headers = {"origin": origin} if origin else {}
+
+    assert origin_allowed(WS("http://localhost:5173"), s) is True
+    assert origin_allowed(WS("http://evil.example"), s) is False
+    assert origin_allowed(WS(None), s) is False
+
+
 def test_word_message_has_no_index():
     from klara.pronunciation.schemas import WordScore
     from klara.pronunciation.streaming import word_message
