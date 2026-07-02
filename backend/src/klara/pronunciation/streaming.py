@@ -8,11 +8,16 @@ The concurrency-risky logic lives here and is tested against a fake recognizer
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import enum
 from collections.abc import Callable
 
+import structlog
+
 from klara.pronunciation.azure_stream import StreamingRecognizer
 from klara.pronunciation.schemas import PronunciationScores, WordScore
+
+log = structlog.get_logger(__name__)
 
 # Close codes. The client's rule is: batch iff no `final` was received — the
 # code is only a hint. 4xxx are app-defined (RFC 6455 private range).
@@ -102,11 +107,22 @@ class StreamingSession:
                 timeout=self._settings.pron_stream_send_timeout_s,
             )
             return SessionOutcome.COMPLETED
-        except (TimeoutError, asyncio.CancelledError, Exception):
+        except TimeoutError:
+            log.warning("pron_stream.drain_timeout")  # stuck ws.send — drain-health teardown
+            return SessionOutcome.FAILED
+        except asyncio.CancelledError:
+            task = asyncio.current_task()
+            if task is not None and task.cancelling():
+                raise  # run() itself was cancelled externally — propagate
+            return SessionOutcome.FAILED
+        except Exception as exc:
+            log.error("pron_stream.session_error", error=str(exc))
             return SessionOutcome.FAILED
         finally:
             if not consumer.done():
                 consumer.cancel()
+            with contextlib.suppress(BaseException):
+                await consumer
             try:
                 await asyncio.wait_for(
                     asyncio.to_thread(self._rec.stop),

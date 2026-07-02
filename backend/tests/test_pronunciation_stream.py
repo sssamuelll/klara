@@ -176,3 +176,21 @@ async def test_session_stuck_send_tears_down_no_final():
     assert outcome is SessionOutcome.FAILED
     assert not ws.sent_final(), "no final on the failure path (double-score guard)"
     assert not [t for t in threading.enumerate() if t.name == "fake-sdk" and t.is_alive()]
+
+
+@pytest.mark.asyncio
+async def test_session_external_cancel_propagates():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import StreamingSession
+
+    rec = FakeStreamingRecognizer(_words(50), cadence=0.05)
+    ws = FakeWebSocket()
+
+    task = asyncio.ensure_future(
+        StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+    )
+    await asyncio.sleep(0.1)
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
