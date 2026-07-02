@@ -299,3 +299,54 @@ async def test_session_client_disconnect_tears_down_no_final():
     outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
     assert outcome is SessionOutcome.FAILED
     assert not ws.sent_final()
+
+
+# --- endpoint integration (thin glue; session policy covered above) ---
+
+
+def test_ws_rejects_without_cookie(app_settings):
+    """No klara_session cookie → accept, then app-close 4401; never enters a session."""
+    from starlette.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+
+    from klara.main import app
+    from klara.pronunciation.streaming import WS_CLOSE_AUTH
+
+    app_settings(AZURE_SPEECH_KEY="dummy-key")
+    client = TestClient(app)
+    with pytest.raises(WebSocketDisconnect) as exc_info:
+        with client.websocket_connect(
+            "/api/v1/pronunciation/stream",
+            headers={"origin": "http://localhost:5173"},  # pass the Origin gate
+        ) as ws:
+            ws.receive_text()
+    assert exc_info.value.code == WS_CLOSE_AUTH == 4401
+
+
+def test_ws_capacity_closes_when_global_cap_full(app_settings, monkeypatch):
+    """Authenticated but global cap exhausted → app-close 4408 (WS_CLOSE_CAPACITY)."""
+    from starlette.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+
+    from klara.main import app
+    from klara.pronunciation.streaming import WS_CLOSE_CAPACITY
+    from klara.routers import pronunciation as pron_router
+
+    app_settings(AZURE_SPEECH_KEY="dummy-key", PRON_STREAM_GLOBAL_CAP="0")
+
+    class _FakeUser:
+        id = "00000000-0000-0000-0000-000000000001"
+
+    async def _fake_auth(websocket, settings):
+        return _FakeUser()
+
+    monkeypatch.setattr(pron_router, "authenticate_ws", _fake_auth)
+
+    client = TestClient(app)
+    with pytest.raises(WebSocketDisconnect) as exc_info:
+        with client.websocket_connect(
+            "/api/v1/pronunciation/stream",
+            headers={"origin": "http://localhost:5173"},
+        ) as ws:
+            ws.receive_text()
+    assert exc_info.value.code == WS_CLOSE_CAPACITY == 4408
