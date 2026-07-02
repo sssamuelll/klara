@@ -7,6 +7,11 @@ The concurrency-risky logic lives here and is tested against a fake recognizer
 
 from __future__ import annotations
 
+import asyncio
+import enum
+from typing import Callable
+
+from klara.pronunciation.azure_stream import StreamingRecognizer
 from klara.pronunciation.schemas import PronunciationScores, WordScore
 
 # Close codes. The client's rule is: batch iff no `final` was received — the
@@ -34,3 +39,61 @@ def final_message(words: list[WordScore], scores: PronunciationScores) -> dict:
         "words": [w.model_dump() for w in words],
         "scores": scores.model_dump(),
     }
+
+
+class SessionOutcome(enum.Enum):
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class StreamingSession:
+    """Owns one recognizer + one websocket for the life of a pronunciation
+    stream. Bridge A only: SDK-thread callbacks marshal onto the loop via
+    call_soon_threadsafe — never run_coroutine_threadsafe(...).result(),
+    which would deadlock the SDK thread against the consumer it feeds."""
+
+    def __init__(
+        self,
+        recognizer: StreamingRecognizer,
+        websocket,
+        *,
+        scores_of: Callable[[list[WordScore]], PronunciationScores],
+        settings,
+    ):
+        self._rec = recognizer
+        self._ws = websocket
+        self._scores_of = scores_of
+        self._settings = settings
+        self._loop = asyncio.get_running_loop()
+        self._queue: asyncio.Queue = asyncio.Queue()  # unbounded by design
+        self._acc: list[WordScore] = []
+        self._stopped = asyncio.Event()
+
+    def _on_recognized(self, w: WordScore) -> None:  # SDK thread
+        self._acc.append(w)  # accumulator: never dropped
+        self._loop.call_soon_threadsafe(self._queue.put_nowait, w)
+
+    def _on_session_stopped(self) -> None:  # SDK thread
+        self._loop.call_soon_threadsafe(self._stopped.set)
+
+    async def _consume(self) -> None:
+        while not (self._stopped.is_set() and self._queue.empty()):
+            try:
+                w = await asyncio.wait_for(self._queue.get(), timeout=0.2)
+            except asyncio.TimeoutError:
+                continue
+            await self._ws.send_json(word_message(w))
+
+    async def run(self) -> SessionOutcome:
+        self._rec.on_recognized = self._on_recognized
+        self._rec.on_session_stopped = self._on_session_stopped
+        self._rec.start()
+        try:
+            await self._consume()
+            scores = self._scores_of(self._acc)
+            await self._ws.send_json(final_message(self._acc, scores))
+            return SessionOutcome.COMPLETED
+        finally:
+            await asyncio.wait_for(
+                asyncio.to_thread(self._rec.stop), timeout=self._settings.pron_stream_stop_timeout_s
+            )

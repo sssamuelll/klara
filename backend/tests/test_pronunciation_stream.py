@@ -4,7 +4,9 @@ import asyncio
 import threading
 import time
 
-from klara.pronunciation.schemas import WordScore
+import pytest
+
+from klara.pronunciation.schemas import PronunciationScores, WordScore
 
 FAKE_STOP_JOIN_TIMEOUT = 2.0  # stands in for the real SDK's *unbounded* stop() block — tests simulating in-flight callbacks slower than this will see stop() return early
 
@@ -128,3 +130,28 @@ class FakeWebSocket:
 
     def sent_final(self) -> bool:
         return any(m.get("type") == "final" for m in self.sent)
+
+
+def _stub_scores(words):
+    return PronunciationScores(accuracy=90.0, fluency=90.0, completeness=100.0, pronunciation=90.0)
+
+
+def _words(n):
+    return [WordScore(word=f"w{i}", accuracy_score=90.0, error_type="None", phonemes=[]) for i in range(n)]
+
+
+@pytest.mark.asyncio
+async def test_session_happy_path_one_final_all_words():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    rec = FakeStreamingRecognizer(_words(12))
+    ws = FakeWebSocket()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+
+    assert outcome is SessionOutcome.COMPLETED
+    assert [m for m in ws.sent if m["type"] == "word"].__len__() == 12
+    finals = [m for m in ws.sent if m["type"] == "final"]
+    assert len(finals) == 1
+    assert len(finals[0]["words"]) == 12
+    assert not [t for t in threading.enumerate() if t.name == "fake-sdk" and t.is_alive()]
