@@ -9,7 +9,7 @@
 
 Today Klara scores pronunciation in one shot: the client records a blob, POSTs it to `POST /api/v1/pronunciation/score`, and the backend calls Azure `recognize_once()` inside `run_in_threadpool` (`backend/src/klara/pronunciation/azure_client.py`, `routers/pronunciation.py:59`). There is no WebSocket, no continuous recognition, and no callback-driven code anywhere in the repo.
 
-#22 wants a live experience: words underline and colour progressively while the user speaks. That requires Azure *continuous* recognition (`PushAudioInputStream` + `start_continuous_recognition` + `PronunciationAssessmentConfig`), where Azure fires `recognized` events on SDK-internal threads that must be marshalled onto the single uvicorn event loop and pushed over a per-session WebSocket.
+`#22` wants a live experience: words underline and colour progressively while the user speaks. That requires Azure *continuous* recognition (`PushAudioInputStream` + `start_continuous_recognition` + `PronunciationAssessmentConfig`), where Azure fires `recognized` events on SDK-internal threads that must be marshalled onto the single uvicorn event loop and pushed over a per-session WebSocket.
 
 The concurrency spike (`backend/spikes/spike_22_streaming_bridge.py`, merged in PR #100) settled the **bridge primitive**:
 

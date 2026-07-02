@@ -127,21 +127,28 @@ class StreamingSession:
         self._rec.on_recognized = self._on_recognized
         self._rec.on_session_stopped = self._on_session_stopped
         self._rec.on_canceled = self._on_canceled
-        # Real start_continuous_recognition() blocks on network connect — keep
-        # it off the event loop. Callbacks are already assigned above.
-        await asyncio.to_thread(self._rec.start)
-        self._consumer = asyncio.ensure_future(self._consume())
-        receiver = asyncio.ensure_future(self._receive_loop())
-        guard = asyncio.ensure_future(self._max_duration_guard())
-
-        def _on_receiver_done(t: asyncio.Future) -> None:
-            # A receiver ERROR (client disconnect) tears the session down.
-            # A clean return (eos) does not — success comes from the consumer.
-            if not t.cancelled() and t.exception() is not None:
-                self._cancel_consumer()
-
-        receiver.add_done_callback(_on_receiver_done)
+        receiver = None
+        guard = None
         try:
+            # Real start_continuous_recognition() blocks on network connect —
+            # keep it off the event loop, and bound it: a wedged Azure startup
+            # must not hang run() forever holding the endpoint's capacity slot.
+            # ponytail: reuse the stop timeout as the start bound; dedicated knob when someone needs it
+            await asyncio.wait_for(
+                asyncio.to_thread(self._rec.start),
+                timeout=self._settings.pron_stream_stop_timeout_s,
+            )
+            self._consumer = asyncio.ensure_future(self._consume())
+            receiver = asyncio.ensure_future(self._receive_loop())
+            guard = asyncio.ensure_future(self._max_duration_guard())
+
+            def _on_receiver_done(t: asyncio.Future) -> None:
+                # A receiver ERROR (client disconnect) tears the session down.
+                # A clean return (eos) does not — success comes from the consumer.
+                if not t.cancelled() and t.exception() is not None:
+                    self._cancel_consumer()
+
+            receiver.add_done_callback(_on_receiver_done)
             await self._consumer
             scores = self._scores_of(self._acc)
             await asyncio.wait_for(
@@ -162,6 +169,8 @@ class StreamingSession:
             return SessionOutcome.FAILED
         finally:
             for t in (guard, receiver, self._consumer):
+                if t is None:
+                    continue
                 if not t.done():
                     t.cancel()
                 with contextlib.suppress(asyncio.CancelledError, Exception):

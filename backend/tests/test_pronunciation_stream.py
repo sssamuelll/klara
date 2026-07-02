@@ -379,6 +379,49 @@ async def test_session_client_disconnect_tears_down_no_final():
     assert not ws.sent_final()
 
 
+@pytest.mark.asyncio
+async def test_session_start_raises_returns_failed():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    class RaisingStartRec(FakeStreamingRecognizer):
+        def start(self) -> None:
+            raise RuntimeError("connect failed")
+
+    rec = RaisingStartRec(_words(5))
+    ws = FakeWebSocket()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
+
+    assert outcome is SessionOutcome.FAILED
+    assert not ws.sent_final()
+    assert not [t for t in threading.enumerate() if t.name == "fake-sdk" and t.is_alive()]
+
+
+@pytest.mark.asyncio
+async def test_session_start_wedged_times_out_failed():
+    from klara.config import Settings
+    from klara.pronunciation.streaming import SessionOutcome, StreamingSession
+
+    class WedgedStartRec(FakeStreamingRecognizer):
+        def start(self) -> None:
+            time.sleep(2.0)  # wedged — never returns within the bound
+
+    s = Settings()
+    object.__setattr__(s, "pron_stream_stop_timeout_s", 0.1)  # reused as the start bound
+    rec = WedgedStartRec(_words(5))
+    ws = FakeWebSocket()
+
+    t0 = time.monotonic()
+    outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=s).run()
+    elapsed = time.monotonic() - t0
+
+    assert outcome is SessionOutcome.FAILED
+    assert not ws.sent_final()
+    # bounded, not hung on the wedged start; the to_thread worker outlives this
+    # test briefly (daemon-like executor thread) — no zombie-thread assertion here.
+    assert elapsed < 1.5
+
+
 # --- endpoint integration (thin glue; session policy covered above) ---
 
 
