@@ -17,11 +17,16 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: apiBase,
           changeOrigin: true,
+          ws: true,
         },
       },
     },
     build: {
       sourcemap: true,
+      // pcmWorklet must be a real emitted asset: audioWorklet.addModule(data:) is
+      // unreliable cross-engine and CSP-hostile; everything else keeps the default.
+      assetsInlineLimit: (filePath) =>
+        filePath.endsWith("pcmWorklet.js") ? false : undefined,
     },
   };
 });

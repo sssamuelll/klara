@@ -149,6 +149,8 @@ export interface MicRecorder {
    * when stop() or cancel() fires.
    */
   analyser: AnalyserNode;
+  /** The underlying mic stream — the live-streaming PCM capture hangs off it. */
+  stream: MediaStream;
 }
 
 /**
@@ -245,7 +247,7 @@ export async function startMicRecording(): Promise<MicRecorder> {
         cleanup();
       }
     };
-    recorder.onstart = () => resolve({ stop, cancel, analyser });
+    recorder.onstart = () => resolve({ stop, cancel, analyser, stream });
     recorder.start();
   });
 }
