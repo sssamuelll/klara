@@ -8,7 +8,10 @@ mispronounced parts.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
+import functools
+import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Annotated
@@ -236,12 +239,19 @@ def _build_stream_recognizer(
     )
 
 
-def _session_scores(words: list[WordScore]) -> PronunciationScores:
+def _session_scores(reference_text: str, words: list[WordScore]) -> PronunciationScores:
     """v1: summarise the accumulator. Azure's session-level PronunciationScores
-    are available via the last result; for v1 we average per-word accuracy and
-    leave fluency/completeness to the batch floor if the client needs exactness."""
+    are available via the last result; for v1 we average per-word accuracy."""
     acc = sum(w.accuracy_score for w in words) / len(words) if words else 0.0
-    return PronunciationScores(accuracy=acc, fluency=acc, completeness=100.0, pronunciation=acc)
+    if reference_text.strip():  # read-along: recognized words vs reference length
+        completeness = min(100.0, 100.0 * len(words) / max(1, len(reference_text.split())))
+    else:  # unscripted: no reference to be incomplete against
+        completeness = 100.0
+    # ponytail: v1 approximation — real fluency needs Azure session-level metrics;
+    # client contract: only accuracy/pronunciation/completeness are meaningful
+    return PronunciationScores(
+        accuracy=acc, fluency=acc, completeness=completeness, pronunciation=acc
+    )
 
 
 async def _safe_close(websocket: WebSocket, code: int) -> None:
@@ -270,7 +280,7 @@ async def stream(websocket: WebSocket) -> None:
 
     uid = str(user.id)
     if _active_global >= settings.pron_stream_global_cap or (
-        _active_per_user[uid] >= settings.pron_stream_per_user_cap
+        _active_per_user.get(uid, 0) >= settings.pron_stream_per_user_cap
     ):
         await _safe_close(websocket, WS_CLOSE_CAPACITY)
         return
@@ -281,7 +291,9 @@ async def stream(websocket: WebSocket) -> None:
         # Consumed here, BEFORE the session starts — the only text frame the
         # session's receiver ever sees is end-of-speech.
         try:
-            handshake = await websocket.receive_json()
+            handshake = await asyncio.wait_for(
+                websocket.receive_json(), timeout=settings.pron_stream_send_timeout_s
+            )
             reference_text = handshake["reference_text"]
             language = handshake["language"]
             if not (isinstance(reference_text, str) and isinstance(language, str)):
@@ -290,9 +302,31 @@ async def stream(websocket: WebSocket) -> None:
             await _safe_close(websocket, WS_CLOSE_FAILURE)
             return
         recognizer = _build_stream_recognizer(settings, reference_text, language)
-        outcome = await StreamingSession(
-            recognizer, _WSAdapter(websocket), scores_of=_session_scores, settings=settings
-        ).run()
+        session = StreamingSession(
+            recognizer,
+            _WSAdapter(websocket),
+            scores_of=functools.partial(_session_scores, reference_text),
+            settings=settings,
+        )
+        started = time.monotonic()
+        try:
+            outcome = await session.run()
+        except asyncio.CancelledError:
+            log.info(
+                "pron_stream.session_end",
+                outcome="cancelled",
+                user_id=uid,
+                words=session.word_count,
+                duration_s=round(time.monotonic() - started, 3),
+            )
+            raise
+        log.info(
+            "pron_stream.session_end",
+            outcome=outcome.value,
+            user_id=uid,
+            words=session.word_count,
+            duration_s=round(time.monotonic() - started, 3),
+        )
         await _safe_close(
             websocket, WS_CLOSE_OK if outcome is SessionOutcome.COMPLETED else WS_CLOSE_FAILURE
         )

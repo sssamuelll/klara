@@ -160,8 +160,6 @@ class Settings(BaseSettings):
     # Offloaded stop_continuous_recognition() is uncancellable; cap the wait,
     # then release the cap slot regardless so a wedged Azure stop can't leak it.
     pron_stream_stop_timeout_s: float = 3.0
-    pron_stream_ping_interval_s: float = 10.0
-    pron_stream_pong_timeout_s: float = 5.0
     # Memory bound on the never-dropped accumulator (unscripted has no word
     # ceiling) and the backstop if the client never sends end-of-speech.
     pron_stream_max_session_s: float = 90.0

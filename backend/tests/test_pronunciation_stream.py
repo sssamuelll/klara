@@ -17,8 +17,6 @@ def test_streaming_settings_defaults():
     s = Settings()
     assert s.pron_stream_send_timeout_s == 5.0
     assert s.pron_stream_stop_timeout_s == 3.0
-    assert s.pron_stream_ping_interval_s == 10.0
-    assert s.pron_stream_pong_timeout_s == 5.0
     assert s.pron_stream_max_session_s == 90.0
     assert s.pron_stream_global_cap == 8
     assert s.pron_stream_per_user_cap == 2
@@ -77,6 +75,85 @@ def test_word_score_from_azure_extracts_phonemes():
     assert out[0].word == "Hallo"
     assert out[0].phonemes[1].phoneme == "a"
     assert out[0].error_type == "None"
+
+
+# --- AzureStreamingRecognizer._handle_canceled (stub evts, no Azure creds) ---
+# Bare-instance construction: __new__ skips __init__ (which needs SpeechConfig).
+
+
+def _bare_azure_recognizer():
+    from klara.pronunciation.azure_stream import AzureStreamingRecognizer
+
+    rec = AzureStreamingRecognizer.__new__(AzureStreamingRecognizer)
+    rec.on_canceled = None
+    return rec
+
+
+class _CanceledEvt:
+    def __init__(self, reason, error_details=""):
+        class _Details:
+            pass
+
+        self.cancellation_details = _Details()
+        self.cancellation_details.reason = reason
+        self.cancellation_details.error_details = error_details
+
+
+def test_azure_canceled_end_of_stream_does_not_fire_callback():
+    import azure.cognitiveservices.speech as speechsdk
+
+    rec = _bare_azure_recognizer()
+    calls: list[str] = []
+    rec.on_canceled = calls.append
+    rec._handle_canceled(_CanceledEvt(speechsdk.CancellationReason.EndOfStream))
+    assert calls == []
+
+
+def test_azure_canceled_error_fires_callback_with_reason_and_details():
+    import azure.cognitiveservices.speech as speechsdk
+
+    rec = _bare_azure_recognizer()
+    calls: list[str] = []
+    rec.on_canceled = calls.append
+    rec._handle_canceled(_CanceledEvt(speechsdk.CancellationReason.Error, "quota exceeded"))
+    assert len(calls) == 1
+    assert "Error" in calls[0]
+    assert "quota exceeded" in calls[0]
+
+
+def test_azure_canceled_error_without_callback_is_noop():
+    import azure.cognitiveservices.speech as speechsdk
+
+    rec = _bare_azure_recognizer()  # on_canceled stays None
+    rec._handle_canceled(_CanceledEvt(speechsdk.CancellationReason.Error, "boom"))
+
+
+# --- _session_scores (pure function) ------------------------------------------
+
+
+def test_session_scores_read_along_partial_completeness():
+    from klara.routers.pronunciation import _session_scores
+
+    ref = "eins zwei drei vier fuenf sechs sieben acht neun zehn"  # 10 words
+    scores = _session_scores(ref, _words(5))
+    assert scores.completeness == 50.0
+    assert scores.accuracy == 90.0
+    assert scores.fluency == 90.0
+    assert scores.pronunciation == 90.0
+
+
+def test_session_scores_unscripted_completeness_is_100():
+    from klara.routers.pronunciation import _session_scores
+
+    scores = _session_scores("", _words(3))
+    assert scores.completeness == 100.0
+
+
+def test_session_scores_completeness_capped_at_100():
+    from klara.routers.pronunciation import _session_scores
+
+    scores = _session_scores("nur zwei", _words(5))  # more recognized than reference
+    assert scores.completeness == 100.0
 
 
 class FakeStreamingRecognizer:
@@ -285,7 +362,8 @@ async def test_session_receiver_writes_pcm_and_eos_closes_input():
     outcome = await StreamingSession(rec, ws, scores_of=_stub_scores, settings=Settings()).run()
     assert outcome is SessionOutcome.COMPLETED
     assert written == [b"\x00\x01"]
-    assert closed["n"] == 1
+    # eos closed it during the session; teardown's safety-net close may add one more
+    assert closed["n"] >= 1
 
 
 @pytest.mark.asyncio

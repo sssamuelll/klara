@@ -86,16 +86,20 @@ class AzureStreamingRecognizer:
 
     def start(self) -> None:
         self._rec.recognized.connect(self._handle_recognized)
-        self._rec.session_stopped.connect(
-            lambda _evt: self.on_session_stopped and self.on_session_stopped()
-        )
-        self._rec.canceled.connect(
-            lambda evt: (
-                self.on_canceled
-                and self.on_canceled(f"{evt.reason} - {getattr(evt, 'error_details', '')}")
-            )
-        )
+        self._rec.session_stopped.connect(self._handle_session_stopped)
+        self._rec.canceled.connect(self._handle_canceled)
         self._rec.start_continuous_recognition()
+
+    def _handle_session_stopped(self, _evt) -> None:
+        if self.on_session_stopped:
+            self.on_session_stopped()
+
+    def _handle_canceled(self, evt) -> None:
+        details = evt.cancellation_details
+        if details.reason == speechsdk.CancellationReason.EndOfStream:
+            return  # normal end of pushed audio; session_stopped follows
+        if self.on_canceled:
+            self.on_canceled(f"{details.reason} - {details.error_details}")
 
     def _handle_recognized(self, evt) -> None:
         if evt.result.reason != speechsdk.ResultReason.RecognizedSpeech or not self.on_recognized:

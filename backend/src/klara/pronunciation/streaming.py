@@ -75,6 +75,10 @@ class StreamingSession:
         self._stopped = asyncio.Event()
         self._consumer: asyncio.Future | None = None
 
+    @property
+    def word_count(self) -> int:
+        return len(self._acc)
+
     def _on_recognized(self, w: WordScore) -> None:  # SDK thread
         self._acc.append(w)  # accumulator: never dropped
         self._loop.call_soon_threadsafe(self._queue.put_nowait, w)
@@ -123,7 +127,9 @@ class StreamingSession:
         self._rec.on_recognized = self._on_recognized
         self._rec.on_session_stopped = self._on_session_stopped
         self._rec.on_canceled = self._on_canceled
-        self._rec.start()
+        # Real start_continuous_recognition() blocks on network connect — keep
+        # it off the event loop. Callbacks are already assigned above.
+        await asyncio.to_thread(self._rec.start)
         self._consumer = asyncio.ensure_future(self._consume())
         receiver = asyncio.ensure_future(self._receive_loop())
         guard = asyncio.ensure_future(self._max_duration_guard())
@@ -151,15 +157,17 @@ class StreamingSession:
             if task is not None and task.cancelling():
                 raise  # run() itself was cancelled externally — propagate
             return SessionOutcome.FAILED
-        except Exception as exc:
-            log.error("pron_stream.session_error", error=str(exc))
+        except Exception:
+            log.exception("pron_stream.session_error")
             return SessionOutcome.FAILED
         finally:
             for t in (guard, receiver, self._consumer):
                 if not t.done():
                     t.cancel()
-                with contextlib.suppress(BaseException):
+                with contextlib.suppress(asyncio.CancelledError, Exception):
                     await t
+            with contextlib.suppress(Exception):
+                self._rec.close_input()  # zero-leak teardown: push stream closed even if the receiver never saw eos
             try:
                 await asyncio.wait_for(
                     asyncio.to_thread(self._rec.stop),
