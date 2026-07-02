@@ -135,6 +135,8 @@ jobs:
       - working-directory: frontend
         run: npm run i18n:check
       - working-directory: frontend
+        run: npm run test
+      - working-directory: frontend
         run: npm run build
 
   docker-build-smoke:
