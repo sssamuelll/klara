@@ -137,7 +137,10 @@ def _stub_scores(words):
 
 
 def _words(n):
-    return [WordScore(word=f"w{i}", accuracy_score=90.0, error_type="None", phonemes=[]) for i in range(n)]
+    return [
+        WordScore(word=f"w{i}", accuracy_score=90.0, error_type="None", phonemes=[])
+        for i in range(n)
+    ]
 
 
 @pytest.mark.asyncio

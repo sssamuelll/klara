@@ -80,7 +80,7 @@ class StreamingSession:
         while not (self._stopped.is_set() and self._queue.empty()):
             try:
                 w = await asyncio.wait_for(self._queue.get(), timeout=0.2)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             await self._ws.send_json(word_message(w))
 
