@@ -6,6 +6,8 @@ import time
 
 from klara.pronunciation.schemas import WordScore
 
+FAKE_STOP_JOIN_TIMEOUT = 2.0  # stands in for the real SDK's *unbounded* stop() block — tests simulating in-flight callbacks slower than this will see stop() return early
+
 
 def test_streaming_settings_defaults():
     from klara.config import Settings
@@ -61,7 +63,8 @@ def test_word_score_from_azure_extracts_phonemes():
 
 class FakeStreamingRecognizer:
     """Honors the SDK contract that breaks bridges: callbacks fire serially on
-    one internal thread; stop() blocks until the in-flight callback returns."""
+    one internal thread; stop() blocks until the in-flight callback returns
+    (via a bounded join — see FAKE_STOP_JOIN_TIMEOUT)."""
 
     def __init__(self, words: list[WordScore], cadence: float = 0.01):
         self._words = words
@@ -92,7 +95,7 @@ class FakeStreamingRecognizer:
     def stop(self) -> None:
         self._stop.set()
         if self._thread:
-            self._thread.join(2.0)
+            self._thread.join(FAKE_STOP_JOIN_TIMEOUT)
 
     def fire_canceled(self, reason: str) -> None:
         if self.on_canceled:
