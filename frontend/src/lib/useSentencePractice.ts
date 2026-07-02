@@ -343,6 +343,7 @@ export function useSentencePractice({
             referenceText: current.target,
             language: targetLanguage,
             onWord: (w) => {
+              if (streamRef.current !== stream) return; // stale post-EOS drain frame
               const idx = aligner(w.word, w.error_type);
               if (idx === null) return;
               const band = w.error_type === "Omission" ? "bad" : scoreBand(w.accuracy_score);
@@ -351,6 +352,10 @@ export function useSentencePractice({
           });
           streamRef.current = stream;
           const pcm = await startPcmCapture(rec.stream, (chunk) => stream.sendChunk(chunk));
+          if (streamRef.current !== stream) {
+            pcm?.stop();
+            return;
+          }
           if (pcm) {
             pcmRef.current = pcm;
           } else {
@@ -387,7 +392,10 @@ export function useSentencePractice({
         return;
       }
       const sentence = sentences[idxAtStart];
-      if (!sentence) return;
+      if (!sentence) {
+        stream?.close();
+        return;
+      }
       let resp: PronunciationScoreResponse | null = null;
       if (stream) {
         stream.sendEos();
