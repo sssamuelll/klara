@@ -12,7 +12,10 @@ from klara.models.enums import CEFRLevel
 
 class Story(Base):
     __tablename__ = "stories"
-    __table_args__ = (Index("ix_story_user_created", "user_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_story_user_created", "user_id", "created_at"),
+        Index("ix_story_user_module", "user_id", "module_id"),
+    )
 
     id: Mapped[uuid_pk]
     user_id: Mapped[UUID] = mapped_column(
