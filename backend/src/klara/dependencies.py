@@ -1,13 +1,12 @@
-from collections.abc import AsyncGenerator
 from typing import Annotated
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.auth.db import get_auth_session
 from klara.auth.manager import UserManager, get_user_manager
 from klara.auth.users import current_active_user
 from klara.config import Settings, get_settings
-from klara.db import get_session
 from klara.i18n.messages import DEFAULT_LOCALE
 from klara.llm.base import LLMClient
 from klara.llm.litellm_impl import LiteLLMClient
@@ -34,9 +33,12 @@ def get_locale(request: Request) -> str:
 LocaleDep = Annotated[str, Depends(get_locale)]
 
 
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    async for s in get_session():
-        yield s
+async def db_session(session: Annotated[AsyncSession, Depends(get_auth_session)]) -> AsyncSession:
+    # Reuse the same per-request session as the auth deps (get_auth_session):
+    # CurrentUser and DBSession must be the SAME session, or a route that
+    # mutates `user` fields and commits via `db` silently loses the write
+    # (the auth session's context manager closes without committing).
+    return session
 
 
 DBSession = Annotated[AsyncSession, Depends(db_session)]

@@ -19,6 +19,7 @@ from starlette.concurrency import run_in_threadpool
 
 from klara.curriculum.competence import gender_weakness_order
 from klara.curriculum.gender_eligibility import is_gender_eligible
+from klara.curriculum.library import advance_module_if_completed
 from klara.curriculum.modules import (
     enroll_cards,
     ensure_active_module,
@@ -34,6 +35,7 @@ from klara.models import (
     PronunciationAttempt,
     QuizAttempt,
     Story,
+    StoryView,
     UserCard,
     VocabItem,
 )
@@ -54,6 +56,7 @@ from klara.schemas.finish import (
     ScheduleBucket,
     ScheduleEntry,
     ScheduleOut,
+    StoryFinishOut,
 )
 from klara.schemas.gender import GenderAttemptIn, GenderAttemptOut
 from klara.schemas.story import (
@@ -616,3 +619,30 @@ async def resolve_mc(
 
     picked, scores = resolve_option(transcript, opts)
     return MCResolveOut(transcript=transcript, picked_index=picked, option_scores=scores)
+
+
+@router.post("/{story_id}/finish", response_model=StoryFinishOut)
+async def finish_story(
+    story_id: UUID, db: DBSession, user: CurrentUser, locale: LocaleDep
+) -> StoryFinishOut:
+    """The 'historia completada' event (fires when the reader reaches the
+    Finish summary). Idempotent. Feeds the completar gate."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    view = (
+        await db.execute(
+            select(StoryView)
+            .where(StoryView.story_id == story.id, StoryView.user_id == user.id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
+    if view is None:
+        view = StoryView(story_id=story.id, user_id=user.id)
+        db.add(view)
+    if view.finished_at is None:
+        view.finished_at = datetime.now(UTC)
+    advanced = False
+    if story.module_id is not None and story.module_id == user.current_module_id:
+        await db.flush()  # the new view must be visible to the count
+        advanced = await advance_module_if_completed(db, user=user)
+    await db.commit()
+    return StoryFinishOut(finished_at=view.finished_at, module_advanced=advanced)
