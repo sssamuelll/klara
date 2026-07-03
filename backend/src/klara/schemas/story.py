@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -62,11 +63,17 @@ class StoryOut(BaseModel):
     generation_cost_usd: float | None = None
     created_at: datetime
     curriculum_note: str | None = None
+    module_id: UUID | None = None
 
 
 class StoryCreateRequest(BaseModel):
     topic: str | None = None
     level: CEFRLevel | None = None
+    # Explicit module conditioning (path module screen). None → active module.
+    module_id: UUID | None = None
+    # The backend can't distinguish a suggestion chip from free text; the pool
+    # must never serve personal free-text topics to other users (spec §7).
+    topic_origin: Literal["chip", "free", "none"] = "none"
 
 
 class StoryListItem(BaseModel):

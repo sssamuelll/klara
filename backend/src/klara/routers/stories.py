@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
+import structlog
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -19,7 +20,7 @@ from starlette.concurrency import run_in_threadpool
 
 from klara.curriculum.competence import gender_weakness_order
 from klara.curriculum.gender_eligibility import is_gender_eligible
-from klara.curriculum.library import advance_module_if_completed
+from klara.curriculum.library import advance_module_if_completed, maybe_recycle_to_library
 from klara.curriculum.modules import (
     enroll_cards,
     ensure_active_module,
@@ -32,6 +33,7 @@ from klara.i18n import language_label, t
 from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.models import (
     GenderL1Note,
+    Module,
     PronunciationAttempt,
     QuizAttempt,
     Story,
@@ -80,6 +82,7 @@ from klara.services.tts_precache import collect_story_texts, precache_texts
 from klara.services.voice_mc import resolve_option
 
 router = APIRouter(prefix="/stories", tags=["stories"])
+log = structlog.get_logger(__name__)
 
 
 def _serialize_story(story: Story, words: list[VocabItem], native_language: str) -> StoryOut:
@@ -121,6 +124,7 @@ def _serialize_story(story: Story, words: list[VocabItem], native_language: str)
         generation_cost_usd=story.generation_cost_usd,
         created_at=story.created_at,
         curriculum_note=curriculum_note,
+        module_id=story.module_id,
     )
 
 
@@ -154,7 +158,14 @@ async def create_story(
     background: BackgroundTasks,
 ) -> StoryOut:
     level = payload.level or user.level
-    active = await ensure_active_module(db, user)
+    if payload.module_id is not None:
+        active = await db.get(Module, payload.module_id)
+        if active is None or active.language != user.target_language:
+            raise HTTPException(status_code=404, detail="module.not_found")
+        # Starting a story in module M moves the pointer to M (gated suave).
+        user.current_module_id = active.id
+    else:
+        active = await ensure_active_module(db, user)
     if active is not None:
         target_lemmas = await module_target_lemmas(db, active)
         mod_vids = await module_vocab_ids(db, active)
@@ -190,6 +201,18 @@ async def create_story(
     if active is not None:
         enrolled = [w.id for w in result.target_words if w.id in mod_vids]
         await enroll_cards(db, user_id=user.id, vocab_item_ids=enrolled)
+    result.story.module_id = active.id if active is not None else None
+    # Pool growth is best-effort: never let it break story creation.
+    try:
+        await maybe_recycle_to_library(
+            db,
+            story=result.story,
+            dropped_lemmas=result.dropped_lemmas,
+            topic=payload.topic,
+            topic_origin=payload.topic_origin,
+        )
+    except Exception:
+        log.warning("library.pool.recycle_failed", story_id=str(result.story.id))
     # Single commit owns both the story (flushed in generate_story) and the
     # module enrollment — atomic: a failed enroll rolls back the story too.
     await db.commit()
@@ -211,6 +234,7 @@ async def list_stories(
     user: CurrentUser,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    module_id: Annotated[UUID | None, Query()] = None,
 ) -> list[StoryListItem]:
     # Filter by current target_language so home / lists never surface stories
     # the user can no longer practice. get_story() still serves any owned story
@@ -225,6 +249,8 @@ async def list_stories(
         .limit(limit)
         .offset(offset)
     )
+    if module_id is not None:
+        stmt = stmt.where(Story.module_id == module_id)
     rows = (await db.execute(stmt)).scalars().all()
     return [
         StoryListItem(
