@@ -1,6 +1,6 @@
 """story_library + stories.module_id/library_source_id
 
-Revision ID: 20260703_0010
+Revision ID: 20260703_0014
 Revises: 20260626_0013
 Create Date: 2026-07-03
 
@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import ENUM as PG_ENUM
 
 from alembic import op
 
-revision: str = "20260703_0010"
+revision: str = "20260703_0014"
 down_revision: str | None = "20260626_0013"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
