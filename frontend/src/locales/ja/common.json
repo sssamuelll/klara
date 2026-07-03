@@ -85,6 +85,29 @@
       "aria": "Klara"
     }
   },
+  "path": {
+    "kicker": "学習ルート",
+    "continue": "ここから続ける",
+    "completedTag": "完了",
+    "lockedTag": "ロック中",
+    "startAnyway": "ここから始める",
+    "stories": "ストーリー {{count}} / {{total}}",
+    "words": "単語 {{count}} / {{total}}",
+    "empty": "この言語のルートはまだありません。今は自由にストーリーを作りましょう。"
+  },
+  "module": {
+    "back": "ルートに戻る",
+    "canDo": "できるようになること",
+    "grammarFocus": "文法フォーカス",
+    "readStory": "ストーリーを読む",
+    "createStory": "自分のストーリーを作る",
+    "noLibrary": "用意されたストーリーがありません — 自分で作りましょう",
+    "yourStories": "このモジュールのストーリー",
+    "storiesDone": "完了ストーリー {{count}} / {{total}}",
+    "mastered": "習得単語 {{count}} / {{total}}",
+    "gender": "der·die·das {{count}} / {{total}}",
+    "claimError": "ストーリーを開けませんでした。もう一度お試しください。"
+  },
   "newstory": {
     "kicker": "Klara へのリクエスト",
     "title": "今日は何について話そう?",
@@ -189,7 +212,9 @@
       },
       "cta": {
         "another": "別の物語",
-        "reread": "もう一度読む"
+        "reread": "もう一度読む",
+        "nextInModule": "このモジュールの次のストーリー",
+        "backToPath": "ルートに戻る"
       }
     },
     "finish": {

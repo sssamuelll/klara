@@ -85,6 +85,29 @@
       "aria": "Klara"
     }
   },
+  "path": {
+    "kicker": "Sua trilha",
+    "continue": "Continuar aqui",
+    "completedTag": "Concluído",
+    "lockedTag": "Bloqueado",
+    "startAnyway": "Começar aqui mesmo assim",
+    "stories": "{{count}} de {{total}} histórias",
+    "words": "{{count}} de {{total}} palavras",
+    "empty": "Ainda não há trilha para este idioma. Enquanto isso, gere histórias livres."
+  },
+  "module": {
+    "back": "Voltar à trilha",
+    "canDo": "Você vai conseguir",
+    "grammarFocus": "Foco gramatical",
+    "readStory": "Ler uma história",
+    "createStory": "Criar minha própria história",
+    "noLibrary": "Nenhuma história pronta — crie a sua",
+    "yourStories": "Suas histórias deste módulo",
+    "storiesDone": "{{count}} de {{total}} histórias concluídas",
+    "mastered": "{{count}} de {{total}} palavras dominadas",
+    "gender": "der·die·das {{count}} de {{total}}",
+    "claimError": "Não foi possível abrir a história. Tente de novo."
+  },
   "newstory": {
     "kicker": "Pedido à Klara",
     "title": "Sobre o que falamos hoje?",
@@ -189,7 +212,9 @@
       },
       "cta": {
         "another": "Outra história",
-        "reread": "Reler esta"
+        "reread": "Reler esta",
+        "nextInModule": "Próxima história do módulo",
+        "backToPath": "Voltar à trilha"
       }
     },
     "finish": {

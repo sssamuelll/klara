@@ -85,6 +85,29 @@
       "aria": "Klara"
     }
   },
+  "path": {
+    "kicker": "Your path",
+    "continue": "Continue here",
+    "completedTag": "Completed",
+    "lockedTag": "Locked",
+    "startAnyway": "Start here anyway",
+    "stories": "{{count}} of {{total}} stories",
+    "words": "{{count}} of {{total}} words",
+    "empty": "No path for this language yet. Meanwhile, generate free stories."
+  },
+  "module": {
+    "back": "Back to the path",
+    "canDo": "You will be able to",
+    "grammarFocus": "Grammar focus",
+    "readStory": "Read a story",
+    "createStory": "Create my own story",
+    "noLibrary": "No ready stories — create your own",
+    "yourStories": "Your stories in this module",
+    "storiesDone": "{{count}} of {{total}} stories completed",
+    "mastered": "{{count}} of {{total}} words mastered",
+    "gender": "der·die·das {{count}} of {{total}}",
+    "claimError": "Couldn't open the story. Try again."
+  },
   "newstory": {
     "kicker": "Request to Klara",
     "title": "What shall we talk about today?",
@@ -189,7 +212,9 @@
       },
       "cta": {
         "another": "Another story",
-        "reread": "Read again"
+        "reread": "Read again",
+        "nextInModule": "Next story in this module",
+        "backToPath": "Back to the path"
       }
     },
     "finish": {

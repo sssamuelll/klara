@@ -85,6 +85,29 @@
       "aria": "Klara"
     }
   },
+  "path": {
+    "kicker": "Ton parcours",
+    "continue": "Continuer ici",
+    "completedTag": "Terminé",
+    "lockedTag": "Verrouillé",
+    "startAnyway": "Commencer ici quand même",
+    "stories": "{{count}} sur {{total}} histoires",
+    "words": "{{count}} sur {{total}} mots",
+    "empty": "Pas encore de parcours pour cette langue. En attendant, génère des histoires libres."
+  },
+  "module": {
+    "back": "Retour au parcours",
+    "canDo": "Tu sauras",
+    "grammarFocus": "Point de grammaire",
+    "readStory": "Lire une histoire",
+    "createStory": "Créer ma propre histoire",
+    "noLibrary": "Pas d'histoires prêtes — crée la tienne",
+    "yourStories": "Tes histoires de ce module",
+    "storiesDone": "{{count}} sur {{total}} histoires terminées",
+    "mastered": "{{count}} sur {{total}} mots maîtrisés",
+    "gender": "der·die·das {{count}} sur {{total}}",
+    "claimError": "Impossible d'ouvrir l'histoire. Réessaie."
+  },
   "newstory": {
     "kicker": "Demande à Klara",
     "title": "De quoi parlons-nous aujourd'hui ?",
@@ -189,7 +212,9 @@
       },
       "cta": {
         "another": "Une autre histoire",
-        "reread": "Relire celle-ci"
+        "reread": "Relire celle-ci",
+        "nextInModule": "Histoire suivante du module",
+        "backToPath": "Retour au parcours"
       }
     },
     "finish": {
