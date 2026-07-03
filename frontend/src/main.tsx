@@ -8,6 +8,7 @@ import "./styles/onboarding.css";
 import "./styles/sentence-view.css";
 import "./styles/finish.css";
 import "./styles/speak.css";
+import "./styles/path.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");

@@ -186,6 +186,23 @@ export default function StoryView() {
         onNew={() => navigate("/story/new")}
         onHome={() => navigate("/")}
         onToggleReview={toggleReview}
+        onSummaryShown={() => {
+          api.finishStory(story.id).catch(() => {});
+        }}
+        onNextInModule={
+          story.module_id
+            ? async () => {
+                try {
+                  const next = await api.claimModuleStory(story.module_id!);
+                  navigate(`/story/${next.id}`);
+                  setFinished(false);
+                  practice.reset();
+                } catch {
+                  navigate(`/story/new?module=${story.module_id}`);
+                }
+              }
+            : undefined
+        }
       />
     );
   }

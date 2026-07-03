@@ -87,7 +87,7 @@ Historia recién leída (en {target_label}):
 
 Reglas:
 - UNA sola línea, máximo 18 palabras, en {native_label}.
-- NO reveles una historia específica de mañana (no hay ninguna en cola). El tono es vibe-set, no spoiler.
+- NO reveles una historia específica de mañana. El tono es vibe-set, no spoiler.
 - Referencia tonalmente el nivel y temática de la actual: si fue cotidiana, sugiere algo cotidiano; si fue corta, sugiere que la siguiente puede ser más larga.
 - Tono: columnista cálida, despedida breve. Sin "te veo mañana", sin emojis, sin signos de exclamación.
 - Sin firma ni "— K" al final — eso lo añade el UI.

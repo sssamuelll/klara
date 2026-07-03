@@ -74,16 +74,33 @@
         "dek": "Revois les der, die, das que tu rates."
       }
     },
-    "module": {
-      "kicker": "Ton module",
-      "progress_one": "Tu as rencontré {{count}} mot sur {{total}}.",
-      "progress_other": "Tu as rencontré {{count}} mots sur {{total}}.",
-      "empty": "Pas encore de module. Génère ta première histoire."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
     }
+  },
+  "path": {
+    "kicker": "Ton parcours",
+    "continue": "Continuer ici",
+    "completedTag": "Terminé",
+    "lockedTag": "Verrouillé",
+    "startAnyway": "Commencer ici quand même",
+    "stories": "{{count}} sur {{total}} histoires",
+    "words": "{{count}} sur {{total}} mots",
+    "empty": "Pas encore de parcours pour cette langue. En attendant, génère des histoires libres."
+  },
+  "module": {
+    "back": "Retour au parcours",
+    "canDo": "Tu sauras",
+    "grammarFocus": "Point de grammaire",
+    "readStory": "Lire une histoire",
+    "createStory": "Créer ma propre histoire",
+    "noLibrary": "Pas d'histoires prêtes — crée la tienne",
+    "yourStories": "Tes histoires de ce module",
+    "storiesDone": "{{count}} sur {{total}} histoires terminées",
+    "mastered": "{{count}} sur {{total}} mots maîtrisés",
+    "gender": "der·die·das {{count}} sur {{total}}",
+    "claimError": "Impossible d'ouvrir l'histoire. Réessaie."
   },
   "newstory": {
     "kicker": "Demande à Klara",
@@ -189,7 +206,8 @@
       },
       "cta": {
         "another": "Une autre histoire",
-        "reread": "Relire celle-ci"
+        "reread": "Relire celle-ci",
+        "nextInModule": "Histoire suivante du module"
       }
     },
     "finish": {

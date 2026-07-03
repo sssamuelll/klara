@@ -51,7 +51,12 @@ interface Props {
   onToggleReview: (word: StoryWord) => void;
   onRestart: () => void;
   onNew: () => void;
+  onNextInModule?: () => void;
   onHome: () => void;
+  /** Fired once per transition into the summary view (spec §4/§9: the
+   * "historia completada" event fires at the Finish SUMMARY, not at quiz
+   * entry). Backend is idempotent, so a StrictMode double-invoke is fine. */
+  onSummaryShown?: () => void;
 }
 
 interface QuizResult {
@@ -69,13 +74,24 @@ export default function StoryFinish({
   onToggleReview,
   onRestart,
   onNew,
+  onNextInModule,
   onHome,
+  onSummaryShown,
 }: Props): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<"quiz" | "summary">("quiz");
   const [quizItems, setQuizItems] = useState<QuizItem[] | null>(null);
   const [quizError, setQuizError] = useState<boolean>(false);
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
+
+  // Fire once per transition into the summary view. Deliberately not
+  // depending on onSummaryShown (Story.tsx passes an inline callback, so its
+  // identity changes on every parent re-render) — only `view` flipping to
+  // "summary" should re-fire this.
+  useEffect(() => {
+    if (view === "summary") onSummaryShown?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   // Load quiz items on mount. If the backend returns an empty list (LLM
   // gen failed for some reason), skip directly to the summary.
@@ -115,6 +131,7 @@ export default function StoryFinish({
         onToggleReview={onToggleReview}
         onRestart={onRestart}
         onNew={onNew}
+        onNextInModule={onNextInModule}
         onHome={onHome}
         onBackToQuiz={quizError ? null : () => setView("quiz")}
       />
@@ -928,6 +945,7 @@ interface SummaryProps {
   onToggleReview: (word: StoryWord) => void;
   onRestart: () => void;
   onNew: () => void;
+  onNextInModule?: () => void;
   onHome: () => void;
   onBackToQuiz: (() => void) | null;
 }
@@ -942,6 +960,7 @@ function Summary({
   onToggleReview,
   onRestart,
   onNew,
+  onNextInModule,
   onHome,
   onBackToQuiz,
 }: SummaryProps): JSX.Element {
@@ -1271,7 +1290,16 @@ function Summary({
       <hr className="fin-rule" />
 
       <nav className="fin-cta">
-        <button type="button" className="fin-btn fin-btn--primary" onClick={onNew}>
+        {onNextInModule && (
+          <button type="button" className="fin-btn fin-btn--primary" onClick={onNextInModule}>
+            {t("story.end.cta.nextInModule")} <span className="fin-arr">→</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className={onNextInModule ? "fin-btn" : "fin-btn fin-btn--primary"}
+          onClick={onNew}
+        >
           {t("story.end.cta.another")} <span className="fin-arr">→</span>
         </button>
         <button type="button" className="fin-btn fin-btn--ghost" onClick={onRestart}>

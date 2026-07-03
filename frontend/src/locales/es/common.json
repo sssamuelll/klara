@@ -74,16 +74,33 @@
         "dek": "Repasa los der, die, das que fallas."
       }
     },
-    "module": {
-      "kicker": "Tu módulo",
-      "progress_one": "Has encontrado {{count}} de {{total}} palabras.",
-      "progress_other": "Has encontrado {{count}} de {{total}} palabras.",
-      "empty": "Aún sin módulo. Genera tu primera historia para empezar."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
     }
+  },
+  "path": {
+    "kicker": "Tu ruta",
+    "continue": "Continuar aquí",
+    "completedTag": "Completado",
+    "lockedTag": "Bloqueado",
+    "startAnyway": "Empezar aquí igual",
+    "stories": "{{count}} de {{total}} historias",
+    "words": "{{count}} de {{total}} palabras",
+    "empty": "Aún no hay ruta para este idioma. Mientras tanto, genera historias libres."
+  },
+  "module": {
+    "back": "Volver a la ruta",
+    "canDo": "Vas a poder",
+    "grammarFocus": "Foco gramatical",
+    "readStory": "Leer una historia",
+    "createStory": "Crear mi propia historia",
+    "noLibrary": "No hay historias listas — crea la tuya",
+    "yourStories": "Tus historias de este módulo",
+    "storiesDone": "{{count}} de {{total}} historias completadas",
+    "mastered": "{{count}} de {{total}} palabras dominadas",
+    "gender": "der·die·das {{count}} de {{total}}",
+    "claimError": "No se pudo abrir la historia. Intenta otra vez."
   },
   "newstory": {
     "kicker": "Petición a Klara",
@@ -189,7 +206,8 @@
       },
       "cta": {
         "another": "Otra historia",
-        "reread": "Releer esta"
+        "reread": "Releer esta",
+        "nextInModule": "Siguiente historia del módulo"
       }
     },
     "finish": {

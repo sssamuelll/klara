@@ -74,16 +74,33 @@
         "dek": "Wiederhole die der, die, das, die du verfehlst."
       }
     },
-    "module": {
-      "kicker": "Dein Modul",
-      "progress_one": "Du kennst {{count}} von {{total}} Wörtern.",
-      "progress_other": "Du kennst {{count}} von {{total}} Wörtern.",
-      "empty": "Noch kein Modul. Erstelle deine erste Geschichte."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
     }
+  },
+  "path": {
+    "kicker": "Dein Weg",
+    "continue": "Hier weitermachen",
+    "completedTag": "Abgeschlossen",
+    "lockedTag": "Gesperrt",
+    "startAnyway": "Trotzdem hier anfangen",
+    "stories": "{{count}} von {{total}} Geschichten",
+    "words": "{{count}} von {{total}} Wörtern",
+    "empty": "Für diese Sprache gibt es noch keinen Weg. Erzeuge derweil freie Geschichten."
+  },
+  "module": {
+    "back": "Zurück zum Weg",
+    "canDo": "Du wirst können",
+    "grammarFocus": "Grammatikfokus",
+    "readStory": "Eine Geschichte lesen",
+    "createStory": "Meine eigene Geschichte erstellen",
+    "noLibrary": "Keine fertigen Geschichten — erstelle deine eigene",
+    "yourStories": "Deine Geschichten in diesem Modul",
+    "storiesDone": "{{count}} von {{total}} Geschichten abgeschlossen",
+    "mastered": "{{count}} von {{total}} Wörtern gemeistert",
+    "gender": "der·die·das {{count}} von {{total}}",
+    "claimError": "Geschichte konnte nicht geöffnet werden. Versuch es noch einmal."
   },
   "newstory": {
     "kicker": "Anfrage an Klara",
@@ -189,7 +206,8 @@
       },
       "cta": {
         "another": "Eine andere Geschichte",
-        "reread": "Nochmal lesen"
+        "reread": "Nochmal lesen",
+        "nextInModule": "Nächste Geschichte im Modul"
       }
     },
     "finish": {

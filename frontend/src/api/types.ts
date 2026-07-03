@@ -71,6 +71,7 @@ export interface Story {
   generated_by_model: string | null;
   generation_cost_usd: number | null;
   created_at: string;
+  module_id?: string | null;
 }
 
 export interface StoryListItem {
@@ -399,8 +400,9 @@ export interface SpeakFinishResponse {
   skipped: number;
 }
 
-export interface ModuleCurrent {
+export interface ModulePathItem {
   id: string;
+  sequence_order: number;
   title: string;
   cefr_level: string;
   can_dos: string[];
@@ -408,4 +410,13 @@ export interface ModuleCurrent {
   encountered: number;
   mastered: number;
   total: number;
+  gender_encountered: number;
+  gender_mastered: number;
+  gender_total: number;
+  stories_finished: number;
+  stories_to_complete: number;
+  completed: boolean;
+  is_current: boolean;
+  unlocked: boolean;
+  library_available: number;
 }

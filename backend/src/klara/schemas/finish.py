@@ -152,3 +152,11 @@ class MCResolveOut(BaseModel):
     transcript: str
     picked_index: int | None
     option_scores: list[float] = Field(default_factory=list)
+
+
+class StoryFinishOut(BaseModel):
+    """The 'historia completada' event. Idempotent — finished_at is the first
+    finish, not the latest."""
+
+    finished_at: datetime
+    module_advanced: bool
