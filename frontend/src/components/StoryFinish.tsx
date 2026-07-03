@@ -51,6 +51,7 @@ interface Props {
   onToggleReview: (word: StoryWord) => void;
   onRestart: () => void;
   onNew: () => void;
+  onNextInModule?: () => void;
   onHome: () => void;
 }
 
@@ -69,6 +70,7 @@ export default function StoryFinish({
   onToggleReview,
   onRestart,
   onNew,
+  onNextInModule,
   onHome,
 }: Props): JSX.Element {
   const { t } = useTranslation();
@@ -115,6 +117,7 @@ export default function StoryFinish({
         onToggleReview={onToggleReview}
         onRestart={onRestart}
         onNew={onNew}
+        onNextInModule={onNextInModule}
         onHome={onHome}
         onBackToQuiz={quizError ? null : () => setView("quiz")}
       />
@@ -928,6 +931,7 @@ interface SummaryProps {
   onToggleReview: (word: StoryWord) => void;
   onRestart: () => void;
   onNew: () => void;
+  onNextInModule?: () => void;
   onHome: () => void;
   onBackToQuiz: (() => void) | null;
 }
@@ -942,6 +946,7 @@ function Summary({
   onToggleReview,
   onRestart,
   onNew,
+  onNextInModule,
   onHome,
   onBackToQuiz,
 }: SummaryProps): JSX.Element {
@@ -1271,7 +1276,16 @@ function Summary({
       <hr className="fin-rule" />
 
       <nav className="fin-cta">
-        <button type="button" className="fin-btn fin-btn--primary" onClick={onNew}>
+        {onNextInModule && (
+          <button type="button" className="fin-btn fin-btn--primary" onClick={onNextInModule}>
+            {t("story.end.cta.nextInModule")} <span className="fin-arr">→</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className={onNextInModule ? "fin-btn" : "fin-btn fin-btn--primary"}
+          onClick={onNew}
+        >
           {t("story.end.cta.another")} <span className="fin-arr">→</span>
         </button>
         <button type="button" className="fin-btn fin-btn--ghost" onClick={onRestart}>

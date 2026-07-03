@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./routes/Home";
+import Module from "./routes/Module";
 import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
 import Practice from "./routes/Practice";
@@ -75,6 +76,14 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <StoryView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/module/:id"
+            element={
+              <ProtectedRoute>
+                <Module />
               </ProtectedRoute>
             }
           />
