@@ -5,8 +5,9 @@ Usage:
 
 Generates PER_MODULE stories per German A1 module for native_language=es using
 the real generation pipeline (coverage-gated), inserts them as source='seed',
-and pre-warms the global TTS audio cache. Idempotent: modules that already
-have >= PER_MODULE active seed entries for the pair are skipped, and duplicate
+and pre-warms the global TTS audio cache. Idempotent: resume is topic-based —
+only curated topics with no active seed entry for the (module, native) pair are
+(re)generated, so a partial run picks up exactly the missing topics. Duplicate
 content hashes are never inserted.
 """
 
@@ -151,9 +152,25 @@ async def build_library(
             log.info("library.build.skip_full", module=module.title, have=have)
             continue
         topics = TOPICS.get(module.sequence_order, [])[:per_module]
+        # Topic-based resume: positional resume (topics[have:]) misaligns after
+        # a partial run — a mid-list failure would leave that topic forever
+        # skipped while re-generating an already-seeded one. Diff against the
+        # topics actually present instead.
+        existing_topics = set(
+            (
+                await db.execute(
+                    select(StoryLibrary.topic).where(
+                        StoryLibrary.module_id == module.id,
+                        StoryLibrary.native_language == native,
+                        StoryLibrary.is_active.is_(True),
+                        StoryLibrary.source == "seed",
+                    )
+                )
+            ).scalars()
+        )
         lemmas = await module_target_lemmas(db, module)
         objective = _module_objective(module)
-        for topic in topics[have:]:
+        for topic in [t for t in topics if t not in existing_topics]:
             draft = None
             for attempt in range(max_attempts):
                 try:
