@@ -6,7 +6,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from klara.curriculum.library import (
@@ -325,6 +325,58 @@ async def test_pool_recycle_hash_race_never_poisons_session(db_session, monkeypa
         await db_session.execute(select(Story).where(Story.id == story.id))
     ).scalar_one() is not None
     assert (await db_session.execute(select(StoryLibrary))).scalars().all() == []
+
+
+@pytest.mark.asyncio
+async def test_pool_recycle_respects_cap(db_session, monkeypatch):
+    monkeypatch.setattr("klara.curriculum.library.POOL_CAP_PER_PAIR", 1)
+    user = await _user(db_session)
+    module = await _module(db_session)
+    other_content = {
+        "sentences": [{"target": "Ich esse Brot.", "native": "Como pan.", "new_words": []}],
+        "comprehension_questions": [],
+    }
+    story1 = Story(
+        user_id=user.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="P1",
+        content=CONTENT,
+        target_vocab_item_ids=[],
+        module_id=module.id,
+    )
+    story2 = Story(
+        user_id=user.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="P2",
+        content=other_content,
+        target_vocab_item_ids=[],
+        module_id=module.id,
+    )
+    db_session.add_all([story1, story2])
+    await db_session.commit()
+
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story1, dropped_lemmas=[], topic=None, topic_origin="none"
+        )
+        is True
+    )
+    await db_session.commit()
+    # Cap already met by story1 → story2 (different content, so not a hash-dup)
+    # is rejected on the cap check, not the dedup check.
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story2, dropped_lemmas=[], topic=None, topic_origin="none"
+        )
+        is False
+    )
+    await db_session.commit()
+    count = (await db_session.execute(select(func.count()).select_from(StoryLibrary))).scalar_one()
+    assert count == 1
 
 
 def test_content_hash_is_stable_and_target_only():

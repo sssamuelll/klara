@@ -52,7 +52,7 @@ async def test_list_modules_states(client, seed_invite, db_session):
     # Arrange three modules; user finished 3 stories in m1 and is current on m2.
     user = (
         await db_session.execute(select(User).where(User.email == "path@example.com"))
-    ).scalar_one()  # the client fixture's user
+    ).scalar_one()  # the user _register_and_login just registered
     mods = []
     for seq in (1, 2, 3):
         m = Module(

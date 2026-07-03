@@ -17,7 +17,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.config import get_settings
@@ -27,7 +27,7 @@ from klara.db import dispose_engine, get_sessionmaker, init_engine
 from klara.llm.base import LLMClient
 from klara.llm.litellm_impl import LiteLLMClient
 from klara.models import Module, StoryLibrary
-from klara.services.story_gen import StoryGenerationError, generate_story_draft
+from klara.services.story_gen import generate_story_draft
 from klara.services.tts_precache import collect_story_texts, precache_texts
 
 log = structlog.get_logger(__name__)
@@ -109,21 +109,6 @@ def _module_objective(module: Module) -> str:
     return " ".join(parts)
 
 
-async def _seed_count(db: AsyncSession, module_id, native: str) -> int:
-    return (
-        await db.execute(
-            select(func.count())
-            .select_from(StoryLibrary)
-            .where(
-                StoryLibrary.module_id == module_id,
-                StoryLibrary.native_language == native,
-                StoryLibrary.is_active.is_(True),
-                StoryLibrary.source == "seed",
-            )
-        )
-    ).scalar_one()
-
-
 async def build_library(
     db: AsyncSession,
     llm: LLMClient,
@@ -147,10 +132,6 @@ async def build_library(
     )
     inserted = 0
     for module in modules:
-        have = await _seed_count(db, module.id, native)
-        if have >= per_module:
-            log.info("library.build.skip_full", module=module.title, have=have)
-            continue
         topics = TOPICS.get(module.sequence_order, [])[:per_module]
         # Topic-based resume: positional resume (topics[have:]) misaligns after
         # a partial run — a mid-list failure would leave that topic forever
@@ -168,6 +149,10 @@ async def build_library(
                 )
             ).scalars()
         )
+        have = len(existing_topics)
+        if have >= per_module:
+            log.info("library.build.skip_full", module=module.title, have=have)
+            continue
         lemmas = await module_target_lemmas(db, module)
         objective = _module_objective(module)
         for topic in [t for t in topics if t not in existing_topics]:
@@ -187,7 +172,11 @@ async def build_library(
                         module_objective=objective,
                         avoid_lemmas=[],
                     )
-                except StoryGenerationError as exc:
+                except Exception as exc:
+                    # Broad on purpose: a litellm provider/network error is as
+                    # much a "this attempt failed" signal as StoryGenerationError
+                    # — narrowing to the latter aborted the whole run on the
+                    # first transient provider hiccup.
                     log.warning(
                         "library.build.gen_failed", topic=topic, attempt=attempt, error=str(exc)
                     )
@@ -243,6 +232,10 @@ async def build_library(
                 if draft.title:
                     texts = [draft.title] + [t for t in texts if t != draft.title]
                 await warm_audio(texts)
+            # Commit per row: a mid-run crash (or a later exhausted-retry topic)
+            # keeps every already-paid generation, and topic-based resume above
+            # has committed state to resume from.
+            await db.commit()
             log.info(
                 "library.build.inserted", module=module.title, topic=topic, cost=draft.cost_usd
             )
@@ -264,10 +257,10 @@ async def _run() -> None:
 
         sessionmaker = get_sessionmaker()
         async with sessionmaker() as db:
+            # build_library commits per inserted row — nothing left to commit here.
             n = await build_library(
                 db, llm, language="de", native="es", per_module=PER_MODULE, warm_audio=warm
             )
-            await db.commit()
         print(f"Insertadas {n} historia(s) en la librería.")
     finally:
         await dispose_engine()
