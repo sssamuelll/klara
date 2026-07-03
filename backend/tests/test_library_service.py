@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+from sqlalchemy import select
 
 from klara.curriculum.library import (
     STORIES_TO_COMPLETE,
@@ -17,8 +18,9 @@ from klara.curriculum.library import (
     pick_library_entry,
     stories_finished_count,
 )
-from klara.models import Module, Story, StoryLibrary, StoryView, User
-from klara.models.enums import CEFRLevel
+from klara.curriculum.modules import load_modules
+from klara.models import Module, Story, StoryLibrary, StoryView, User, UserCard, VocabItem
+from klara.models.enums import CEFRLevel, PartOfSpeech
 
 CONTENT = {
     "sentences": [{"target": "Ich trinke Kaffee.", "native": "Bebo café.", "new_words": []}],
@@ -134,6 +136,95 @@ async def test_completion_gate_advances_pointer(db_session):
     assert user.current_module_id == m2.id
     # Idempotent / forward-only: m2 has no finished stories → no advance.
     assert await advance_module_if_completed(db_session, user=user) is False
+
+
+@pytest.mark.asyncio
+async def test_claim_enrolls_only_module_vocab(db_session):
+    user = await _user(db_session)
+    # Seed the module + its vocab via the real loader (same path prod uses).
+    await load_modules(
+        db_session,
+        language="de",
+        modules=[
+            {
+                "sequence_order": 1,
+                "title": "En el café",
+                "cefr_level": "A1",
+                "can_dos": [],
+                "grammatical_focus": [],
+                "vocab": [
+                    {"lemma": "Kaffee", "pos": "noun", "gender": "der", "translations": {"es": "café"}}
+                ],
+            }
+        ],
+    )
+    await db_session.commit()
+    module = (
+        await db_session.execute(
+            select(Module).where(Module.language == "de", Module.sequence_order == 1)
+        )
+    ).scalar_one()
+    kaffee_id = (
+        await db_session.execute(
+            select(VocabItem.id).where(VocabItem.lemma == "Kaffee", VocabItem.language == "de")
+        )
+    ).scalar_one()
+    # A vocab item that exists but is NOT in the module. Unique lemma: the
+    # vocab_items table isn't truncated between tests.
+    outsider = VocabItem(
+        id=uuid.uuid4(), language="de", lemma=f"out-{uuid.uuid4().hex[:6]}", pos=PartOfSpeech.NOUN
+    )
+    db_session.add(outsider)
+    entry = _entry(module, hash_suffix="c")
+    entry.target_vocab_item_ids = [kaffee_id, outsider.id]
+    db_session.add(entry)
+    await db_session.commit()
+
+    story = await claim_library_entry(db_session, user=user, entry=entry, module=module)
+    await db_session.commit()
+
+    # Clone is faithful: the story keeps BOTH ids...
+    assert set(story.target_vocab_item_ids) == {kaffee_id, outsider.id}
+    # ...but enrollment is intersected with the module's vocab.
+    enrolled = set(
+        (
+            await db_session.execute(
+                select(UserCard.vocab_item_id).where(UserCard.user_id == user.id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    assert kaffee_id in enrolled
+    assert outsider.id not in enrolled
+
+
+@pytest.mark.asyncio
+async def test_advance_stays_on_last_module(db_session):
+    user = await _user(db_session)
+    m1 = await _module(db_session, seq=1)  # the only module
+    user.current_module_id = m1.id
+    for i in range(STORIES_TO_COMPLETE):
+        s = Story(
+            user_id=user.id,
+            level=CEFRLevel.A1,
+            target_language="de",
+            native_language="es",
+            title=f"L{i}",
+            content=CONTENT,
+            target_vocab_item_ids=[],
+            module_id=m1.id,
+        )
+        db_session.add(s)
+        await db_session.flush()
+        db_session.add(
+            StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC))
+        )
+    await db_session.commit()
+
+    # Gate is met but there is no next module → no advance, pointer stays.
+    assert await advance_module_if_completed(db_session, user=user) is False
+    assert user.current_module_id == m1.id
 
 
 @pytest.mark.asyncio
