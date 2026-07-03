@@ -5,8 +5,9 @@ from __future__ import annotations
 import uuid
 
 import pytest
+from sqlalchemy import select
 
-from klara.models import Module, StoryLibrary
+from klara.models import Module, StoryLibrary, User
 from klara.models.enums import CEFRLevel
 
 CONTENT = {
@@ -43,16 +44,29 @@ async def test_claim_clones_and_moves_pointer(client, seed_invite, db_session):
     cookie = await _register_and_login(client, seed_invite)
 
     module = Module(
-        id=uuid.uuid4(), language="de", cefr_level=CEFRLevel.A1,
-        sequence_order=1, title="En el café", can_dos=[], grammatical_focus=[],
+        id=uuid.uuid4(),
+        language="de",
+        cefr_level=CEFRLevel.A1,
+        sequence_order=1,
+        title="En el café",
+        can_dos=[],
+        grammatical_focus=[],
     )
     db_session.add(module)
     await db_session.flush()
-    db_session.add(StoryLibrary(
-        module_id=module.id, language="de", native_language="es", level=CEFRLevel.A1,
-        title="Der Kaffee", content=CONTENT, target_vocab_item_ids=[],
-        source="seed", content_hash="d" * 64,
-    ))
+    db_session.add(
+        StoryLibrary(
+            module_id=module.id,
+            language="de",
+            native_language="es",
+            level=CEFRLevel.A1,
+            title="Der Kaffee",
+            content=CONTENT,
+            target_vocab_item_ids=[],
+            source="seed",
+            content_hash="d" * 64,
+        )
+    )
     await db_session.commit()
 
     resp = await client.post(f"/api/v1/modules/{module.id}/story", headers={"Cookie": cookie})
@@ -60,6 +74,14 @@ async def test_claim_clones_and_moves_pointer(client, seed_invite, db_session):
     body = resp.json()
     assert body["title"] == "Der Kaffee"
     assert body["content"]["sentences"][0]["target"] == "Ich trinke Kaffee."
+
+    # The claim's pointer move must PERSIST (regression: DBSession/CurrentUser
+    # once used two different sessions, silently losing this write). Verify
+    # through the independent db_session, not the app's.
+    user = (
+        await db_session.execute(select(User).where(User.email == "claim@example.com"))
+    ).scalar_one()
+    assert user.current_module_id == module.id
 
     # Second claim: entry already seen by this user → library.empty.
     resp2 = await client.post(f"/api/v1/modules/{module.id}/story", headers={"Cookie": cookie})
@@ -73,15 +95,26 @@ async def test_claim_same_entry_by_two_users(client, seed_invite, db_session):
     A regression that flips is_active or filters globally instead of per-user
     fails here."""
     module = Module(
-        id=uuid.uuid4(), language="de", cefr_level=CEFRLevel.A1,
-        sequence_order=1, title="En el café", can_dos=[], grammatical_focus=[],
+        id=uuid.uuid4(),
+        language="de",
+        cefr_level=CEFRLevel.A1,
+        sequence_order=1,
+        title="En el café",
+        can_dos=[],
+        grammatical_focus=[],
     )
     db_session.add(module)
     await db_session.flush()
     entry = StoryLibrary(
-        module_id=module.id, language="de", native_language="es", level=CEFRLevel.A1,
-        title="Der Kaffee", content=CONTENT, target_vocab_item_ids=[],
-        source="seed", content_hash="d" * 64,
+        module_id=module.id,
+        language="de",
+        native_language="es",
+        level=CEFRLevel.A1,
+        title="Der Kaffee",
+        content=CONTENT,
+        target_vocab_item_ids=[],
+        source="seed",
+        content_hash="d" * 64,
     )
     db_session.add(entry)
     await db_session.commit()
@@ -114,8 +147,13 @@ async def test_claim_wrong_language_module_404(client, seed_invite, db_session):
     not library.empty."""
     cookie = await _register_and_login(client, seed_invite)
     module = Module(
-        id=uuid.uuid4(), language="fr", cefr_level=CEFRLevel.A1,
-        sequence_order=1, title="Au café", can_dos=[], grammatical_focus=[],
+        id=uuid.uuid4(),
+        language="fr",
+        cefr_level=CEFRLevel.A1,
+        sequence_order=1,
+        title="Au café",
+        can_dos=[],
+        grammatical_focus=[],
     )
     db_session.add(module)
     await db_session.commit()
