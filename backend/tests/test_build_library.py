@@ -54,31 +54,7 @@ class SequenceLLM:
 
 @pytest.mark.asyncio
 async def test_build_inserts_per_module_and_is_idempotent(db_session):
-    # Seed the module + its vocab via the real loader (same path prod uses).
-    from klara.curriculum.modules import load_modules
-
-    await load_modules(
-        db_session,
-        language="de",
-        modules=[
-            {
-                "sequence_order": 1,
-                "title": "En el café",
-                "cefr_level": "A1",
-                "can_dos": ["pedir"],
-                "grammatical_focus": ["género"],
-                "vocab": [
-                    {
-                        "lemma": "Kaffee",
-                        "pos": "noun",
-                        "gender": "der",
-                        "translations": {"es": "café"},
-                    }
-                ],
-            }
-        ],
-    )
-    await db_session.commit()
+    await _seed_cafe_module(db_session)
 
     warmed: list[list[str]] = []
 
@@ -210,21 +186,25 @@ async def test_resume_regenerates_only_the_missing_topic(db_session):
     await _seed_cafe_module(db_session)
     topic_a, topic_b = TOPICS[1][:2]
 
-    # Run 1: topic B exhausts retries, topic A succeeds → partial seed.
-    llm = TopicLLM(failing={topic_b})
+    # Run 1: topic A (NON-final) exhausts retries, topic B succeeds → partial
+    # seed with a hole in the middle. This is the order that distinguishes
+    # topic-based resume from positional topics[have:]: with have=1 the old
+    # slice retried [topic_b] (duplicating B, never revisiting A) and only
+    # looked correct when the FINAL topic was the failing one.
+    llm = TopicLLM(failing={topic_a})
     n1 = await build_library(db_session, llm, language="de", native="es", per_module=2)
     await db_session.commit()
     assert n1 == 1
 
     # Run 2 (LLM healthy again): only the missing topic is generated. Reuse the
-    # instance (call counter keeps rising) so run 2's content differs from run
-    # 1's — a fresh counter would reproduce run 1's sentence and hash-dup out.
+    # instance so the call counter never resets — success sentences stay unique
+    # across runs and an accidental hash-dup can't mask the resume assertion.
     llm.failing = set()
     n2 = await build_library(db_session, llm, language="de", native="es", per_module=2)
     await db_session.commit()
     assert n2 == 1
     rows = (await db_session.execute(select(StoryLibrary.topic))).scalars().all()
-    assert sorted(rows) == sorted([topic_a, topic_b])  # A not duplicated, B present
+    assert sorted(rows) == sorted([topic_a, topic_b])  # B not duplicated, A backfilled
 
 
 @pytest.mark.asyncio
