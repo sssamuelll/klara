@@ -132,6 +132,11 @@ export default function Home() {
                           ? t("path.lockedTag")
                           : t("path.words", { count: m.encountered, total: m.total })}
                       </span>
+                      {m.gender_total > 0 && (
+                        <span className="path__meta k-mono">
+                          {t("module.gender", { count: m.gender_mastered, total: m.gender_total })}
+                        </span>
+                      )}
                       <span className="path__bar" aria-hidden>
                         <span
                           className="path__bar-fast"

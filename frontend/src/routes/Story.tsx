@@ -29,16 +29,6 @@ export default function StoryView() {
   const [adding, setAdding] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
 
-  // Fire the finish event once per transition into the summary screen — the
-  // backend is idempotent (finished_at is set-once) so a StrictMode dev
-  // double-invoke is harmless, but this only re-runs when `finished` or the
-  // story id actually changes.
-  useEffect(() => {
-    if (finished && story) {
-      api.finishStory(story.id).catch(() => {});
-    }
-  }, [finished, story?.id]);
-
   const sentences = useMemo(() => story?.content.sentences ?? [], [story]);
 
   // Per-item persistence targets for the shared hook (new per-item firma in
@@ -196,6 +186,9 @@ export default function StoryView() {
         onNew={() => navigate("/story/new")}
         onHome={() => navigate("/")}
         onToggleReview={toggleReview}
+        onSummaryShown={() => {
+          api.finishStory(story.id).catch(() => {});
+        }}
         onNextInModule={
           story.module_id
             ? async () => {

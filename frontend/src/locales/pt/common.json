@@ -74,12 +74,6 @@
         "dek": "Revê os der, die, das que erras."
       }
     },
-    "module": {
-      "kicker": "Seu módulo",
-      "progress_one": "Você encontrou {{count}} de {{total}} palavras.",
-      "progress_other": "Você encontrou {{count}} de {{total}} palavras.",
-      "empty": "Ainda sem módulo. Gere sua primeira história."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
@@ -213,8 +207,7 @@
       "cta": {
         "another": "Outra história",
         "reread": "Reler esta",
-        "nextInModule": "Próxima história do módulo",
-        "backToPath": "Voltar à trilha"
+        "nextInModule": "Próxima história do módulo"
       }
     },
     "finish": {

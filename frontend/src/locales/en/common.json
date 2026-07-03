@@ -74,12 +74,6 @@
         "dek": "Revisit the der, die, das you miss."
       }
     },
-    "module": {
-      "kicker": "Your module",
-      "progress_one": "You've met {{count}} of {{total}} words.",
-      "progress_other": "You've met {{count}} of {{total}} words.",
-      "empty": "No module yet. Generate your first story to start."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
@@ -213,8 +207,7 @@
       "cta": {
         "another": "Another story",
         "reread": "Read again",
-        "nextInModule": "Next story in this module",
-        "backToPath": "Back to the path"
+        "nextInModule": "Next story in this module"
       }
     },
     "finish": {

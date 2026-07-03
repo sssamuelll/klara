@@ -400,17 +400,6 @@ export interface SpeakFinishResponse {
   skipped: number;
 }
 
-export interface ModuleCurrent {
-  id: string;
-  title: string;
-  cefr_level: string;
-  can_dos: string[];
-  grammatical_focus: string[];
-  encountered: number;
-  mastered: number;
-  total: number;
-}
-
 export interface ModulePathItem {
   id: string;
   sequence_order: number;

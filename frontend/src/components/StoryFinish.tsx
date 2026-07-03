@@ -53,6 +53,10 @@ interface Props {
   onNew: () => void;
   onNextInModule?: () => void;
   onHome: () => void;
+  /** Fired once per transition into the summary view (spec §4/§9: the
+   * "historia completada" event fires at the Finish SUMMARY, not at quiz
+   * entry). Backend is idempotent, so a StrictMode double-invoke is fine. */
+  onSummaryShown?: () => void;
 }
 
 interface QuizResult {
@@ -72,12 +76,22 @@ export default function StoryFinish({
   onNew,
   onNextInModule,
   onHome,
+  onSummaryShown,
 }: Props): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<"quiz" | "summary">("quiz");
   const [quizItems, setQuizItems] = useState<QuizItem[] | null>(null);
   const [quizError, setQuizError] = useState<boolean>(false);
   const [quizResults, setQuizResults] = useState<QuizResult[]>([]);
+
+  // Fire once per transition into the summary view. Deliberately not
+  // depending on onSummaryShown (Story.tsx passes an inline callback, so its
+  // identity changes on every parent re-render) — only `view` flipping to
+  // "summary" should re-fire this.
+  useEffect(() => {
+    if (view === "summary") onSummaryShown?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   // Load quiz items on mount. If the backend returns an empty list (LLM
   // gen failed for some reason), skip directly to the summary.

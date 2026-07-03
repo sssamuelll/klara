@@ -74,12 +74,6 @@
         "dek": "Revois les der, die, das que tu rates."
       }
     },
-    "module": {
-      "kicker": "Ton module",
-      "progress_one": "Tu as rencontré {{count}} mot sur {{total}}.",
-      "progress_other": "Tu as rencontré {{count}} mots sur {{total}}.",
-      "empty": "Pas encore de module. Génère ta première histoire."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
@@ -213,8 +207,7 @@
       "cta": {
         "another": "Une autre histoire",
         "reread": "Relire celle-ci",
-        "nextInModule": "Histoire suivante du module",
-        "backToPath": "Retour au parcours"
+        "nextInModule": "Histoire suivante du module"
       }
     },
     "finish": {

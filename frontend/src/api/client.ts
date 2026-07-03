@@ -12,7 +12,6 @@ import type {
   KlaraNoteResponse,
   L1GenderNotesResponse,
   MCResolveResponse,
-  ModuleCurrent,
   ModulePathItem,
   PhonemeScore,
   PhoneticHintsResponse,
@@ -202,8 +201,6 @@ export const api = {
     }),
 
   dueCards: (limit = 20) => request<CardOut[]>(`/srs/cards/due?limit=${limit}`),
-
-  currentModule: () => request<ModuleCurrent | null>("/modules/current"),
 
   listModules: () => request<ModulePathItem[]>("/modules"),
 

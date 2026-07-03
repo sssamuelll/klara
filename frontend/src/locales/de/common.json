@@ -74,12 +74,6 @@
         "dek": "Wiederhole die der, die, das, die du verfehlst."
       }
     },
-    "module": {
-      "kicker": "Dein Modul",
-      "progress_one": "Du kennst {{count}} von {{total}} Wörtern.",
-      "progress_other": "Du kennst {{count}} von {{total}} Wörtern.",
-      "empty": "Noch kein Modul. Erstelle deine erste Geschichte."
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
@@ -213,8 +207,7 @@
       "cta": {
         "another": "Eine andere Geschichte",
         "reread": "Nochmal lesen",
-        "nextInModule": "Nächste Geschichte im Modul",
-        "backToPath": "Zurück zum Weg"
+        "nextInModule": "Nächste Geschichte im Modul"
       }
     },
     "finish": {

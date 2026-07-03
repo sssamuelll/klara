@@ -74,12 +74,6 @@
         "dek": "間違える der, die, das を復習。"
       }
     },
-    "module": {
-      "kicker": "あなたのモジュール",
-      "progress_one": "{{total}} 語中 {{count}} 語に出会いました。",
-      "progress_other": "{{total}} 語中 {{count}} 語に出会いました。",
-      "empty": "まだモジュールがありません。最初のストーリーを作成してください。"
-    },
     "footer": {
       "edition": "Klara",
       "aria": "Klara"
@@ -213,8 +207,7 @@
       "cta": {
         "another": "別の物語",
         "reread": "もう一度読む",
-        "nextInModule": "このモジュールの次のストーリー",
-        "backToPath": "ルートに戻る"
+        "nextInModule": "このモジュールの次のストーリー"
       }
     },
     "finish": {
