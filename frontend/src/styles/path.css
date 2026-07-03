@@ -1,0 +1,87 @@
+/* frontend/src/styles/path.css — the learning path on Home + module screen.
+   Editorial idiom: k-mono counters, hairline rules, no gamification chrome. */
+
+.path {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0;
+}
+.path__kicker {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.path__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.path__node {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 2px;
+  cursor: pointer;
+  color: inherit;
+}
+.path__node:hover .path__title { color: var(--accent); }
+.path__num { font-size: 12px; color: var(--ink-3); padding-top: 3px; }
+.path__body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.path__title { font-family: var(--font-serif); font-size: 18px; }
+.path__check { color: var(--accent); }
+.path__meta { font-size: 11px; color: var(--ink-3); }
+.path__cta { font-size: 11px; color: var(--accent); padding-top: 4px; white-space: nowrap; }
+.path__empty { color: var(--ink-3); }
+
+/* Dual progress: fast visible signal (encountered) under slow fill (mastered). */
+.path__bar {
+  position: relative;
+  height: 2px;
+  background: var(--rule);
+  margin-top: 4px;
+  overflow: hidden;
+}
+.path__bar-fast,
+.path__bar-slow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+}
+.path__bar-fast { background: var(--ink-3); opacity: 0.5; }
+.path__bar-slow { background: var(--accent); }
+
+.path__node--locked { opacity: 0.55; }
+.path__node--current .path__title { font-style: italic; }
+.path__node--completed .path__meta { color: var(--accent); }
+
+/* Module screen */
+.mod__head { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 18px; }
+.mod__title { font-family: var(--font-serif); font-size: 26px; }
+.mod__list { list-style: none; margin: 0; padding: 0; }
+.mod__facts { display: flex; flex-direction: column; gap: 4px; }
+.mod__fact { font-size: 12px; color: var(--ink-3); }
+.mod__actions { display: flex; gap: 10px; margin: 18px 0; flex-wrap: wrap; }
+.mod__stories { display: flex; flex-direction: column; margin-top: 10px; }
+.mod__story {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 2px;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.mod__story:hover { color: var(--accent); }
