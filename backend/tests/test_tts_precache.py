@@ -59,7 +59,16 @@ async def test_precache_story_contextualizes_sentences(monkeypatch):
     monkeypatch.setattr(tts_precache, "get_or_synthesize", fake_get_or_synthesize)
     monkeypatch.setattr(tts_precache, "get_sessionmaker", lambda: lambda: _FakeSessionCM())
 
-    content = {"sentences": [{"target": "S1."}, {"target": "S2?"}, {"target": "S3."}]}
+    content = {
+        "sentences": [
+            {"target": "S1."},
+            {"target": "S2?"},
+            # Repeated refrain: same cache key as the first occurrence — a
+            # second concurrent task would double-bill the synthesis.
+            {"target": "S1."},
+            {"target": "S3."},
+        ]
+    }
     # "S1." as a lemma collides with a sentence — must NOT synthesize twice.
     words = [
         {"lemma": "S1.", "example_target": "Ein Beispiel."},
@@ -76,8 +85,14 @@ async def test_precache_story_contextualizes_sentences(monkeypatch):
     assert by_text["S1."]["previous_text"] == "Titel"
     assert by_text["S1."]["next_text"] == "S2?"
     assert by_text["S2?"]["previous_text"] == "S1."
-    assert by_text["S2?"]["next_text"] == "S3."
+    # The repeated occurrence still serves as its neighbors' context even
+    # though it is not synthesized again itself.
+    assert by_text["S2?"]["next_text"] == "S1."
+    assert by_text["S3."]["previous_text"] == "S1."
     assert by_text["S3."]["next_text"] is None
+    # And the refrain was synthesized exactly once, with the FIRST
+    # occurrence's context (Titel → S2?).
+    assert by_text["S1."]["next_text"] == "S2?"
 
     # Everything precached rides the narration tier with the story's lang.
     assert all(c["narration"] for c in calls)

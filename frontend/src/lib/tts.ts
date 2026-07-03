@@ -34,7 +34,12 @@ export type TTSMode = "narration" | "realtime";
 function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
   let url = `/api/v1/tts?text=${encodeURIComponent(text)}`;
   if (lang) url += `&lang=${encodeURIComponent(lang)}`;
-  if (mode === "realtime") url += "&mode=realtime";
+  // Always explicit: the mode also VERSIONS the URL. TTS responses are
+  // immutable-cached for a year, so without a new param existing devices
+  // would keep replaying the old model's audio from the browser HTTP cache
+  // and never hear the narration upgrade. waveform.ts mirrors this exactly —
+  // same param order — so playback + waveform stay one cache entry.
+  url += `&mode=${mode ?? "narration"}`;
   return url;
 }
 

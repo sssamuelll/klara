@@ -106,7 +106,14 @@ async def precache_story(
                     log.warning("tts.precache.unexpected", error=str(e), chars=len(text))
 
     tasks = []
+    scheduled: set[str] = set()
     for i, text in enumerate(sequence):
+        # A repeated sentence (or a title equal to a sentence) shares the same
+        # cache key; concurrent tasks would BOTH miss and pay double synthesis.
+        # First occurrence's context wins — consistent with the cache design.
+        if text in scheduled:
+            continue
+        scheduled.add(text)
         prev = sequence[i - 1] if i > 0 else None
         nxt = sequence[i + 1] if i + 1 < len(sequence) else None
         tasks.append(one(text, prev, nxt))

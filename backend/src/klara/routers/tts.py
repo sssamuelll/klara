@@ -85,6 +85,7 @@ async def tts_stats(db: DBSession) -> dict:
     # else (multilingual v2, v3) at 1.0 — estimate per row now that narration
     # and realtime audio live on different models.
     credit_factor = case(
+        (AudioCache.provider != "elevenlabs", 0.0),
         (AudioCache.model.like("%flash%"), 0.5),
         (AudioCache.model.like("%turbo%"), 0.5),
         else_=1.0,

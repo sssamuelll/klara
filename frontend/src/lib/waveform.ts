@@ -16,8 +16,13 @@ const BARS = 64;
 const cache = new Map<string, Promise<number[]>>();
 
 function urlFor(text: string, lang?: string): string {
-  const base = `/api/v1/tts?text=${encodeURIComponent(text)}`;
-  return lang ? `${base}&lang=${encodeURIComponent(lang)}` : base;
+  // Must stay byte-identical to tts.ts ttsUrl() for narration — same params,
+  // same order — so the <audio> element and this fetch share one browser
+  // HTTP cache entry. Waveforms only exist on the narration path.
+  let url = `/api/v1/tts?text=${encodeURIComponent(text)}`;
+  if (lang) url += `&lang=${encodeURIComponent(lang)}`;
+  url += "&mode=narration";
+  return url;
 }
 
 function cacheKey(text: string, lang?: string): string {
