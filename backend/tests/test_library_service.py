@@ -256,6 +256,15 @@ async def test_pool_recycle_rules(db_session):
         )
         is False
     )
+    # non-empty topic + origin "none" (omitted field / old client / raw API
+    # caller) → rejected. Fail closed: only an explicit "chip" origin may
+    # carry a topic into the shared pool (privacy, spec §7).
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story, dropped_lemmas=[], topic="mi perra Luna", topic_origin="none"
+        )
+        is False
+    )
     # dropped lemmas → rejected
     assert (
         await maybe_recycle_to_library(

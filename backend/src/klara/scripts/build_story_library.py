@@ -223,6 +223,14 @@ async def build_library(
             )
             await db.flush()
             inserted += 1
+            # Commit first so audio warming can never lose a paid generation:
+            # a mid-run crash (or a later exhausted-retry topic) keeps every
+            # already-committed row, and topic-based resume above has
+            # committed state to resume from.
+            await db.commit()
+            log.info(
+                "library.build.inserted", module=module.title, topic=topic, cost=draft.cost_usd
+            )
             if warm_audio is not None:
                 words = [
                     {"lemma": w.lemma, "example_target": w.example_target}
@@ -231,14 +239,10 @@ async def build_library(
                 texts = collect_story_texts(draft.content, words)
                 if draft.title:
                     texts = [draft.title] + [t for t in texts if t != draft.title]
-                await warm_audio(texts)
-            # Commit per row: a mid-run crash (or a later exhausted-retry topic)
-            # keeps every already-paid generation, and topic-based resume above
-            # has committed state to resume from.
-            await db.commit()
-            log.info(
-                "library.build.inserted", module=module.title, topic=topic, cost=draft.cost_usd
-            )
+                try:
+                    await warm_audio(texts)
+                except Exception as exc:
+                    log.warning("library.build.warm_failed", topic=topic, error=str(exc))
     return inserted
 
 

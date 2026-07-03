@@ -162,7 +162,12 @@ async def maybe_recycle_to_library(
     (spec §7): no free-text topics (privacy), full coverage only (quality),
     module-conditioned only, hash-deduped, capped per (module, native).
     Best-effort — callers must never let a failure here break story creation."""
-    if topic_origin == "free" or story.module_id is None or dropped_lemmas:
+    if story.module_id is None or dropped_lemmas:
+        return False
+    # Fail closed on provenance (privacy, spec §7): a present topic is only
+    # shareable when the client explicitly marked it as a suggestion chip.
+    # "none" is trusted only for surprise-me (no topic) generations.
+    if topic_origin != "chip" and topic is not None:
         return False
     content = story.content or {}
     h = library_content_hash(content)

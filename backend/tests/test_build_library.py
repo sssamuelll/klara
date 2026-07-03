@@ -81,6 +81,36 @@ async def test_build_inserts_per_module_and_is_idempotent(db_session):
     assert n2 == 0
 
 
+@pytest.mark.asyncio
+async def test_warm_audio_failure_does_not_lose_committed_rows(db_session, monkeypatch):
+    """warm_audio runs AFTER the row is committed. If it raises, the row must
+    stay committed and the build must keep going (best-effort warming)."""
+    await _seed_cafe_module(db_session)
+
+    warnings: list[dict] = []
+    from klara.scripts import build_story_library as mod
+
+    monkeypatch.setattr(
+        mod.log, "warning", lambda event, **kw: warnings.append({"event": event, **kw})
+    )
+
+    calls: list[list[str]] = []
+
+    async def flaky_warm(texts: list[str]) -> None:
+        calls.append(texts)
+        if len(calls) == 1:
+            raise RuntimeError("tts provider init failed")
+
+    n = await build_library(
+        db_session, SequenceLLM(), language="de", native="es", per_module=2, warm_audio=flaky_warm
+    )
+    assert n == 2  # both rows inserted despite the first warm_audio raising
+    assert len(calls) == 2  # warming was attempted for both
+    count = (await db_session.execute(select(func.count()).select_from(StoryLibrary))).scalar_one()
+    assert count == 2  # committed rows survive the warm_audio exception
+    assert [w for w in warnings if w["event"] == "library.build.warm_failed"]
+
+
 async def _seed_cafe_module(db) -> None:
     """Module seq 1 with the single lemma 'Kaffee' (same loader path as prod)."""
     from klara.curriculum.modules import load_modules

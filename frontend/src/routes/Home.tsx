@@ -102,7 +102,9 @@ export default function Home() {
       {!loading && modules !== undefined && (
         <section className="path">
           <span className="k-mono path__kicker">{t("path.kicker")}</span>
-          {modules && modules.length > 0 ? (
+          {modules === null ? (
+            <p className="path__empty">{t("common.unknownError")}</p>
+          ) : modules.length > 0 ? (
             <ol className="path__list">
               {modules.map((m) => (
                 <li key={m.id}>
