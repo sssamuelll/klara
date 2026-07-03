@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from klara.curriculum.library import (
     STORIES_TO_COMPLETE,
@@ -276,6 +277,54 @@ async def test_pool_recycle_rules(db_session):
         )
         is False
     )
+
+
+@pytest.mark.asyncio
+async def test_pool_recycle_hash_race_never_poisons_session(db_session, monkeypatch):
+    """A concurrent request can commit the same content_hash between the
+    precheck and the INSERT. The unique violation must roll back ONLY the
+    savepoint — the caller's transaction (the story) stays healthy and the
+    endpoint's subsequent commit must succeed."""
+    user = await _user(db_session)
+    module = await _module(db_session)
+    story = Story(
+        user_id=user.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="R",
+        content=CONTENT,
+        target_vocab_item_ids=[],
+        module_id=module.id,
+    )
+    db_session.add(story)
+    await db_session.flush()
+
+    # Deterministic race: the only flush inside a SAVEPOINT is the pool
+    # INSERT — make it raise the unique-violation the DB would raise. Flushes
+    # outside a nested transaction (precheck autoflush, the final commit)
+    # pass through untouched.
+    real_flush = db_session.sync_session.flush
+
+    def racing_flush(objects=None):
+        if db_session.sync_session.in_nested_transaction():
+            raise IntegrityError("INSERT INTO story_library", {}, Exception("uq content_hash"))
+        return real_flush(objects)
+
+    monkeypatch.setattr(db_session.sync_session, "flush", racing_flush)
+
+    ok = await maybe_recycle_to_library(
+        db_session, story=story, dropped_lemmas=[], topic=None, topic_origin="none"
+    )
+    assert ok is False
+
+    # The session survived: the endpoint's commit still lands the story,
+    # and the aborted pool entry was expunged (not retried at commit).
+    await db_session.commit()
+    assert (
+        await db_session.execute(select(Story).where(Story.id == story.id))
+    ).scalar_one() is not None
+    assert (await db_session.execute(select(StoryLibrary))).scalars().all() == []
 
 
 def test_content_hash_is_stable_and_target_only():

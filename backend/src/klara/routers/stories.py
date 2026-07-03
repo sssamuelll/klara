@@ -213,8 +213,10 @@ async def create_story(
         )
     except Exception:
         log.warning("library.pool.recycle_failed", story_id=str(result.story.id))
-    # Single commit owns both the story (flushed in generate_story) and the
-    # module enrollment — atomic: a failed enroll rolls back the story too.
+    # Single commit owns the story (flushed in generate_story), the module
+    # enrollment, and the best-effort pool insert (savepoint-guarded inside
+    # maybe_recycle_to_library, so a hash race never poisons this commit) —
+    # atomic: a failed enroll rolls back the story too.
     await db.commit()
 
     serialized = _serialize_story(result.story, result.target_words, user.native_language)

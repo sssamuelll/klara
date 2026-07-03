@@ -8,6 +8,7 @@ from uuid import UUID
 
 import structlog
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.curriculum.modules import enroll_cards, module_vocab_ids
@@ -183,26 +184,41 @@ async def maybe_recycle_to_library(
     ).scalar_one()
     if n >= POOL_CAP_PER_PAIR:
         return False
-    db.add(
-        StoryLibrary(
-            module_id=story.module_id,
-            language=story.target_language,
-            native_language=story.native_language,
-            level=story.level,
-            title=story.title,
-            content=content,
-            target_vocab_item_ids=list(story.target_vocab_item_ids or []),
-            quiz_items=story.quiz_items,
-            insight_title=story.insight_title,
-            insight_body=story.insight_body,
-            topic=topic,
-            source="pool",
-            source_story_id=story.id,
-            content_hash=h,
-            generated_by_provider=story.generated_by_provider,
-            generated_by_model=story.generated_by_model,
-            generation_cost_usd=story.generation_cost_usd,
-        )
-    )
+    # Secure everything already pending at the OUTER transaction level, so the
+    # savepoint rollback below can only ever undo the pool insert — never the
+    # caller's story/pointer writes (which would otherwise flush inside the
+    # savepoint and be lost with it). No-op when autoflush already ran.
+    await db.flush()
+    # A concurrent request can commit the same content_hash between the
+    # precheck above and this INSERT; the SAVEPOINT confines the unique
+    # violation so the caller's transaction stays healthy (a poisoned session
+    # would turn the endpoint's commit into PendingRollbackError → 500).
+    try:
+        async with db.begin_nested():
+            db.add(
+                StoryLibrary(
+                    module_id=story.module_id,
+                    language=story.target_language,
+                    native_language=story.native_language,
+                    level=story.level,
+                    title=story.title,
+                    content=content,
+                    target_vocab_item_ids=list(story.target_vocab_item_ids or []),
+                    quiz_items=story.quiz_items,
+                    insight_title=story.insight_title,
+                    insight_body=story.insight_body,
+                    topic=topic,
+                    source="pool",
+                    source_story_id=story.id,
+                    content_hash=h,
+                    generated_by_provider=story.generated_by_provider,
+                    generated_by_model=story.generated_by_model,
+                    generation_cost_usd=story.generation_cost_usd,
+                )
+            )
+            # flush happens on savepoint exit
+    except IntegrityError:
+        log.info("library.pool.hash_race", story_id=str(story.id))
+        return False
     log.info("library.pool.recycled", story_id=str(story.id), module_id=str(story.module_id))
     return True
