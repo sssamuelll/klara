@@ -34,6 +34,17 @@ class Story(Base):
     generated_by_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     generated_by_model: Mapped[str | None] = mapped_column(String(120), nullable=True)
     generation_cost_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # Provenance: which module conditioned this story (Story→Module — the June
+    # invariant forbids the opposite direction). Basis for "N stories of this
+    # module finished". NULL for pre-path stories and module-less generation.
+    module_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("modules.id", ondelete="SET NULL"), nullable=True
+    )
+    # Which library entry this story was claimed from; doubles as the
+    # "don't re-serve this entry to this user" filter.
+    library_source_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("story_library.id", ondelete="SET NULL"), nullable=True
+    )
     # Finish-quiz items, persisted with the story so re-reads quiz on the
     # same questions (testing recall on the same prompts is the whole point
     # of SRS). Shape: [{type, ...}, ...], 4 entries, mixed types. Nullable
