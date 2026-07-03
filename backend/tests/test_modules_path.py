@@ -12,7 +12,10 @@ from klara.curriculum.library import STORIES_TO_COMPLETE
 from klara.models import Module, Story, StoryLibrary, StoryView, User
 from klara.models.enums import CEFRLevel
 
-CONTENT = {"sentences": [{"target": "Hallo.", "native": "Hola.", "new_words": []}], "comprehension_questions": []}
+CONTENT = {
+    "sentences": [{"target": "Hallo.", "native": "Hola.", "new_words": []}],
+    "comprehension_questions": [],
+}
 
 
 async def _register_and_login(client, seed_invite) -> str:
@@ -47,30 +50,50 @@ async def test_list_modules_states(client, seed_invite, db_session):
     cookie = await _register_and_login(client, seed_invite)
 
     # Arrange three modules; user finished 3 stories in m1 and is current on m2.
-    user = (await db_session.execute(select(User).where(User.email == "path@example.com"))).scalar_one()  # the client fixture's user
+    user = (
+        await db_session.execute(select(User).where(User.email == "path@example.com"))
+    ).scalar_one()  # the client fixture's user
     mods = []
     for seq in (1, 2, 3):
         m = Module(
-            id=uuid.uuid4(), language="de", cefr_level=CEFRLevel.A1,
-            sequence_order=seq, title=f"M{seq}", can_dos=[], grammatical_focus=[],
+            id=uuid.uuid4(),
+            language="de",
+            cefr_level=CEFRLevel.A1,
+            sequence_order=seq,
+            title=f"M{seq}",
+            can_dos=[],
+            grammatical_focus=[],
         )
         db_session.add(m)
         mods.append(m)
     await db_session.flush()
     for i in range(STORIES_TO_COMPLETE):
         s = Story(
-            user_id=user.id, level=CEFRLevel.A1, target_language="de",
-            native_language="es", title=f"S{i}", content=CONTENT,
-            target_vocab_item_ids=[], module_id=mods[0].id,
+            user_id=user.id,
+            level=CEFRLevel.A1,
+            target_language="de",
+            native_language="es",
+            title=f"S{i}",
+            content=CONTENT,
+            target_vocab_item_ids=[],
+            module_id=mods[0].id,
         )
         db_session.add(s)
         await db_session.flush()
         db_session.add(StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC)))
-    db_session.add(StoryLibrary(
-        module_id=mods[1].id, language="de", native_language="es", level=CEFRLevel.A1,
-        title="L", content=CONTENT, target_vocab_item_ids=[], source="seed",
-        content_hash="c" * 64,
-    ))
+    db_session.add(
+        StoryLibrary(
+            module_id=mods[1].id,
+            language="de",
+            native_language="es",
+            level=CEFRLevel.A1,
+            title="L",
+            content=CONTENT,
+            target_vocab_item_ids=[],
+            source="seed",
+            content_hash="c" * 64,
+        )
+    )
     user.current_module_id = mods[1].id
     await db_session.commit()
 
