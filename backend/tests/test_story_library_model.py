@@ -53,7 +53,12 @@ async def test_story_library_roundtrip(db_session):
         native_language="es",
         level=CEFRLevel.A1,
         title="Der Kaffee",
-        content={"sentences": [{"target": "Ich trinke Kaffee.", "native": "Bebo café.", "new_words": []}], "comprehension_questions": []},
+        content={
+            "sentences": [
+                {"target": "Ich trinke Kaffee.", "native": "Bebo café.", "new_words": []}
+            ],
+            "comprehension_questions": [],
+        },
         target_vocab_item_ids=[],
         topic="pedir un café",
         source="seed",

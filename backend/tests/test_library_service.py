@@ -102,9 +102,12 @@ async def test_pick_prefers_least_served_and_skips_claimed(db_session):
         db_session, user_id=user.id, module_id=module.id, native_language="es"
     )
     assert second is not None and second.id == worn.id
-    assert await count_available(
-        db_session, user_id=user.id, module_id=module.id, native_language="es"
-    ) == 1
+    assert (
+        await count_available(
+            db_session, user_id=user.id, module_id=module.id, native_language="es"
+        )
+        == 1
+    )
 
 
 @pytest.mark.asyncio
@@ -126,9 +129,7 @@ async def test_completion_gate_advances_pointer(db_session):
         )
         db_session.add(s)
         await db_session.flush()
-        db_session.add(
-            StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC))
-        )
+        db_session.add(StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC)))
     await db_session.commit()
 
     assert await stories_finished_count(db_session, user_id=user.id, module_id=m1.id) == 3
@@ -153,7 +154,12 @@ async def test_claim_enrolls_only_module_vocab(db_session):
                 "can_dos": [],
                 "grammatical_focus": [],
                 "vocab": [
-                    {"lemma": "Kaffee", "pos": "noun", "gender": "der", "translations": {"es": "café"}}
+                    {
+                        "lemma": "Kaffee",
+                        "pos": "noun",
+                        "gender": "der",
+                        "translations": {"es": "café"},
+                    }
                 ],
             }
         ],
@@ -217,9 +223,7 @@ async def test_advance_stays_on_last_module(db_session):
         )
         db_session.add(s)
         await db_session.flush()
-        db_session.add(
-            StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC))
-        )
+        db_session.add(StoryView(story_id=s.id, user_id=user.id, finished_at=datetime.now(UTC)))
     await db_session.commit()
 
     # Gate is met but there is no next module → no advance, pointer stays.
@@ -245,27 +249,43 @@ async def test_pool_recycle_rules(db_session):
     await db_session.commit()
 
     # free topic → rejected
-    assert await maybe_recycle_to_library(
-        db_session, story=story, dropped_lemmas=[], topic="mi perra Luna", topic_origin="free"
-    ) is False
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story, dropped_lemmas=[], topic="mi perra Luna", topic_origin="free"
+        )
+        is False
+    )
     # dropped lemmas → rejected
-    assert await maybe_recycle_to_library(
-        db_session, story=story, dropped_lemmas=["Zucker"], topic=None, topic_origin="none"
-    ) is False
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story, dropped_lemmas=["Zucker"], topic=None, topic_origin="none"
+        )
+        is False
+    )
     # clean → accepted once, hash-deduped after
-    assert await maybe_recycle_to_library(
-        db_session, story=story, dropped_lemmas=[], topic=None, topic_origin="none"
-    ) is True
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story, dropped_lemmas=[], topic=None, topic_origin="none"
+        )
+        is True
+    )
     await db_session.commit()
-    assert await maybe_recycle_to_library(
-        db_session, story=story, dropped_lemmas=[], topic=None, topic_origin="none"
-    ) is False
+    assert (
+        await maybe_recycle_to_library(
+            db_session, story=story, dropped_lemmas=[], topic=None, topic_origin="none"
+        )
+        is False
+    )
 
 
 def test_content_hash_is_stable_and_target_only():
     h1 = library_content_hash(CONTENT)
     h2 = library_content_hash(
-        {"sentences": [{"target": "Ich trinke Kaffee.", "native": "OTRA traducción", "new_words": []}]}
+        {
+            "sentences": [
+                {"target": "Ich trinke Kaffee.", "native": "OTRA traducción", "new_words": []}
+            ]
+        }
     )
     assert h1 == h2
     assert len(h1) == 64
