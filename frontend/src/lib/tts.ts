@@ -24,9 +24,18 @@ function set(patch: Partial<TTSState>) {
   emit();
 }
 
-function ttsUrl(text: string, lang?: string): string {
-  const base = `/api/v1/tts?text=${encodeURIComponent(text)}`;
-  return lang ? `${base}&lang=${encodeURIComponent(lang)}` : base;
+/**
+ * "realtime" routes to the backend's low-latency TTS model — only Speak's
+ * conversational replies want it. Everything else (story sentences, word
+ * audio) defaults to the expressive narration model server-side.
+ */
+export type TTSMode = "narration" | "realtime";
+
+function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
+  let url = `/api/v1/tts?text=${encodeURIComponent(text)}`;
+  if (lang) url += `&lang=${encodeURIComponent(lang)}`;
+  if (mode === "realtime") url += "&mode=realtime";
+  return url;
 }
 
 /**
@@ -106,7 +115,7 @@ export function unlockAudio(): void {
 export function speak(
   text: string,
   language?: string,
-  opts?: { rate?: number; onDone?: (reason: TTSDoneReason) => void },
+  opts?: { rate?: number; mode?: TTSMode; onDone?: (reason: TTSDoneReason) => void },
 ): void {
   stop(); // settles any previous utterance's onDone as "interrupted"
   if (!text.trim()) {
@@ -128,7 +137,7 @@ export function speak(
   const a = unlockedEl ?? new Audio();
   listenerCtrl = new AbortController();
   const sig = listenerCtrl.signal;
-  a.src = ttsUrl(text, language);
+  a.src = ttsUrl(text, language, opts?.mode);
   a.preload = "auto";
   const rate = opts?.rate ?? 1;
   // Reset playback knobs every utterance — the element is reused.

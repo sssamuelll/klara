@@ -28,7 +28,7 @@ from klara.llm.base import LLMClient
 from klara.llm.litellm_impl import LiteLLMClient
 from klara.models import Module, StoryLibrary
 from klara.services.story_gen import generate_story_draft
-from klara.services.tts_precache import collect_story_texts, precache_texts
+from klara.services.tts_precache import precache_story
 
 log = structlog.get_logger(__name__)
 
@@ -116,7 +116,7 @@ async def build_library(
     language: str,
     native: str,
     per_module: int,
-    warm_audio: Callable[[list[str]], Awaitable[None]] | None = None,
+    warm_audio: Callable[[dict, list[dict], str | None], Awaitable[None]] | None = None,
     max_attempts: int = MAX_ATTEMPTS,
 ) -> int:
     modules = (
@@ -236,11 +236,8 @@ async def build_library(
                     {"lemma": w.lemma, "example_target": w.example_target}
                     for w in draft.target_words
                 ]
-                texts = collect_story_texts(draft.content, words)
-                if draft.title:
-                    texts = [draft.title] + [t for t in texts if t != draft.title]
                 try:
-                    await warm_audio(texts)
+                    await warm_audio(draft.content, words, draft.title)
                 except Exception as exc:
                     log.warning("library.build.warm_failed", topic=topic, error=str(exc))
     return inserted
@@ -256,8 +253,8 @@ async def _run() -> None:
             default_extra_body=settings.llm_story_extra_body,
         )
 
-        async def warm(texts: list[str]) -> None:
-            await precache_texts(settings, texts, "de")
+        async def warm(content: dict, words: list[dict], title: str | None) -> None:
+            await precache_story(settings, content, words, title, "de")
 
         sessionmaker = get_sessionmaker()
         async with sessionmaker() as db:

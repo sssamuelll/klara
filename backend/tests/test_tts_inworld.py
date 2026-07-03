@@ -91,6 +91,18 @@ async def test_synthesize_uses_override_voice(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_synthesize_ignores_narration_and_context(monkeypatch):
+    """Protocol parity: Inworld accepts the narration/context kwargs but its
+    request is unchanged — the API has no cross-request conditioning."""
+    captured = _patch_post(monkeypatch, _audio_response)
+    tts = InworldTTS(_settings())
+    assert tts.narration_model == tts.model
+    await tts.synthesize("Hallo", narration=True, previous_text="Davor.", next_text="Danach.")
+    assert "previous_text" not in captured["json"]
+    assert captured["json"]["modelId"] == "inworld-tts-1.5-mini"
+
+
+@pytest.mark.asyncio
 async def test_synthesize_decodes_base64_audio(monkeypatch):
     raw = b"actual-bytes-of-mp3\xff\xfe\xfd"
     _patch_post(monkeypatch, lambda: _audio_response(raw))

@@ -64,6 +64,12 @@ class InworldTTS:
         return self._model
 
     @property
+    def narration_model(self) -> str:
+        # Inworld has no separate expressive tier we target; one model serves
+        # both narration and realtime.
+        return self._model
+
+    @property
     def default_voice_id(self) -> str:
         return self._default_voice
 
@@ -74,7 +80,19 @@ class InworldTTS:
                 return specific
         return self._default_voice
 
-    async def synthesize(self, text: str, voice_id: str | None = None) -> TTSResult:
+    async def synthesize(
+        self,
+        text: str,
+        voice_id: str | None = None,
+        *,
+        narration: bool = False,
+        previous_text: str | None = None,
+        next_text: str | None = None,
+    ) -> TTSResult:
+        # narration/context accepted for protocol parity; Inworld's 1.5 API
+        # has no cross-request conditioning (and its markups are English-only),
+        # so they are deliberately unused.
+        del narration, previous_text, next_text
         text = text.strip()
         if not text:
             raise InworldTTSError("text is empty")

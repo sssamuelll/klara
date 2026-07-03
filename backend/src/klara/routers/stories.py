@@ -78,7 +78,7 @@ from klara.services.finish_lessons import (
 )
 from klara.services.gender_grading import grade_gender_attempt
 from klara.services.story_gen import StoryGenerationError, generate_story
-from klara.services.tts_precache import collect_story_texts, precache_texts
+from klara.services.tts_precache import precache_story
 from klara.services.voice_mc import resolve_option
 
 router = APIRouter(prefix="/stories", tags=["stories"])
@@ -223,10 +223,14 @@ async def create_story(
     target_words_dicts = [
         {"lemma": w.lemma, "example_target": w.example_target} for w in result.target_words
     ]
-    texts = collect_story_texts(result.story.content, target_words_dicts)
-    if serialized.title:
-        texts = [serialized.title] + [t for t in texts if t != serialized.title]
-    background.add_task(precache_texts, settings, texts, result.story.target_language)
+    background.add_task(
+        precache_story,
+        settings,
+        result.story.content,
+        target_words_dicts,
+        serialized.title,
+        result.story.target_language,
+    )
     return serialized
 
 
