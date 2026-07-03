@@ -1,12 +1,22 @@
-from fastapi import APIRouter
+from uuid import UUID
+
+from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 from klara.curriculum.competence import module_gender_progress, module_progress
-from klara.curriculum.library import STORIES_TO_COMPLETE, count_available, stories_finished_count
+from klara.curriculum.library import (
+    STORIES_TO_COMPLETE,
+    claim_library_entry,
+    count_available,
+    pick_library_entry,
+    stories_finished_count,
+)
 from klara.curriculum.modules import read_active_module
 from klara.dependencies import CurrentUser, DBSession
 from klara.models import Module
+from klara.routers.stories import _load_words, _serialize_story
 from klara.schemas.module import ModuleCurrentOut, ModulePathItemOut
+from klara.schemas.story import StoryOut
 
 router = APIRouter(prefix="/modules", tags=["modules"])
 
@@ -88,3 +98,23 @@ async def list_modules(db: DBSession, user: CurrentUser) -> list[ModulePathItemO
         )
         prev_completed = completed
     return out
+
+
+@router.post("/{module_id}/story", response_model=StoryOut, status_code=status.HTTP_201_CREATED)
+async def claim_module_story(module_id: UUID, db: DBSession, user: CurrentUser) -> StoryOut:
+    """Instant story: clone the next unseen library entry for this module into
+    the user's stories. No LLM in this path — milliseconds, audio already warm
+    from library-build precache. detail codes ('module.not_found',
+    'library.empty') are contracts with the frontend, not display strings."""
+    module = await db.get(Module, module_id)
+    if module is None or module.language != user.target_language:
+        raise HTTPException(status_code=404, detail="module.not_found")
+    entry = await pick_library_entry(
+        db, user_id=user.id, module_id=module.id, native_language=user.native_language
+    )
+    if entry is None:
+        raise HTTPException(status_code=404, detail="library.empty")
+    story = await claim_library_entry(db, user=user, entry=entry, module=module)
+    await db.commit()
+    words = await _load_words(db, list(story.target_vocab_item_ids or []))
+    return _serialize_story(story, words, user.native_language)
