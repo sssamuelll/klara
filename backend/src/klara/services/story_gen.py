@@ -29,6 +29,21 @@ class StoryGenerationError(RuntimeError):
 class GeneratedStory:
     story: Story
     target_words: list[VocabItem]
+    dropped_lemmas: list[str]
+
+
+@dataclass(slots=True)
+class StoryDraft:
+    title: str
+    content: dict
+    target_words: list[VocabItem]
+    dropped_lemmas: list[str]
+    quiz_items: list[dict] | None
+    insight_title: str | None
+    insight_body: str | None
+    provider: str | None
+    model: str | None
+    cost_usd: float | None
 
 
 def _parse_pos(value: str | None) -> PartOfSpeech:
@@ -203,11 +218,10 @@ async def _recent_vocab_lemmas(db: AsyncSession, user_id: UUID, limit: int = 25)
     return [r[0] for r in (await db.execute(lemma_stmt)).all()]
 
 
-async def generate_story(
+async def generate_story_draft(
     db: AsyncSession,
     llm: LLMClient,
     *,
-    user_id: UUID,
     level: CEFRLevel,
     target_language: str,
     native_language: str,
@@ -216,10 +230,11 @@ async def generate_story(
     model: str | None,
     target_lemmas: list[str] | None = None,
     module_objective: str | None = None,
-) -> GeneratedStory:
+    avoid_lemmas: list[str] | None = None,
+) -> StoryDraft:
     target_label = language_label(target_language)
     native_label = language_label(native_language)
-    recent = await _recent_vocab_lemmas(db, user_id)
+    recent = avoid_lemmas or []
     system = build_story_system_prompt(
         target_label=target_label,
         native_label=native_label,
@@ -235,14 +250,6 @@ async def generate_story(
         module_objective=module_objective,
     )
 
-    log.info(
-        "story.generate.request",
-        user_id=str(user_id),
-        level=level.value,
-        target_language=target_language,
-        native_language=native_language,
-        topic=topic,
-    )
     # The LLM occasionally returns malformed JSON despite json_object mode.
     # Retry once before surfacing a clean error so a single bad generation
     # doesn't 500 the request.
@@ -295,7 +302,6 @@ async def generate_story(
     content = {"sentences": sentences, "comprehension_questions": questions}
     covered = verify_coverage(content, [w.lemma for w in target_words], target_language)
     kept_words = [w for w in target_words if canonical_lemma(w.lemma, target_language) in covered]
-    kept_ids = [w.id for w in kept_words]
     dropped = [
         w.lemma for w in target_words if canonical_lemma(w.lemma, target_language) not in covered
     ]
@@ -314,32 +320,83 @@ async def generate_story(
         if missed:
             log.info("story.curriculum.missed", missed=missed, target_language=target_language)
 
+    return StoryDraft(
+        title=title,
+        content=content,
+        target_words=kept_words,
+        dropped_lemmas=dropped,
+        quiz_items=quiz_items_raw if isinstance(quiz_items_raw, list) else None,
+        insight_title=insight_title,
+        insight_body=insight_body,
+        provider=response.provider,
+        model=response.model,
+        cost_usd=response.cost_usd,
+    )
+
+
+async def generate_story(
+    db: AsyncSession,
+    llm: LLMClient,
+    *,
+    user_id: UUID,
+    level: CEFRLevel,
+    target_language: str,
+    native_language: str,
+    learning_context: str | None,
+    topic: str | None,
+    model: str | None,
+    target_lemmas: list[str] | None = None,
+    module_objective: str | None = None,
+) -> GeneratedStory:
+    log.info(
+        "story.generate.request",
+        user_id=str(user_id),
+        level=level.value,
+        target_language=target_language,
+        native_language=native_language,
+        topic=topic,
+    )
+    avoid = await _recent_vocab_lemmas(db, user_id)
+    draft = await generate_story_draft(
+        db,
+        llm,
+        level=level,
+        target_language=target_language,
+        native_language=native_language,
+        learning_context=learning_context,
+        topic=topic,
+        model=model,
+        target_lemmas=target_lemmas,
+        module_objective=module_objective,
+        avoid_lemmas=avoid,
+    )
     story = Story(
         user_id=user_id,
         level=level,
         target_language=target_language,
         native_language=native_language,
-        title=title,
-        content=content,
-        target_vocab_item_ids=kept_ids,
-        generated_by_provider=response.provider,
-        generated_by_model=response.model,
-        generation_cost_usd=response.cost_usd,
-        quiz_items=quiz_items_raw if isinstance(quiz_items_raw, list) else None,
-        insight_title=insight_title,
-        insight_body=insight_body,
+        title=draft.title,
+        content=draft.content,
+        target_vocab_item_ids=[w.id for w in draft.target_words],
+        generated_by_provider=draft.provider,
+        generated_by_model=draft.model,
+        generation_cost_usd=draft.cost_usd,
+        quiz_items=draft.quiz_items,
+        insight_title=draft.insight_title,
+        insight_body=draft.insight_body,
     )
     db.add(story)
     await db.flush()
     await db.refresh(story)
     # NOTE: no commit here — the caller (create_story) owns the commit so the
     # story and its module card-enrollment land in a single transaction.
-
     log.info(
         "story.generate.done",
         story_id=str(story.id),
-        n_sentences=len(sentences),
-        n_target_words=len(target_words),
-        cost_usd=response.cost_usd,
+        n_sentences=len(draft.content.get("sentences") or []),
+        n_target_words=len(draft.target_words),
+        cost_usd=draft.cost_usd,
     )
-    return GeneratedStory(story=story, target_words=kept_words)
+    return GeneratedStory(
+        story=story, target_words=draft.target_words, dropped_lemmas=draft.dropped_lemmas
+    )
