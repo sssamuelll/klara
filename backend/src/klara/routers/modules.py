@@ -70,7 +70,9 @@ async def list_modules(db: DBSession, user: CurrentUser) -> list[ModulePathItemO
         g_enc, g_mast, g_total = await module_gender_progress(db, user_id=user.id, module_id=m.id)
         finished = await stories_finished_count(db, user_id=user.id, module_id=m.id)
         completed = finished >= STORIES_TO_COMPLETE
-        unlocked = prev_completed or (active is not None and m.sequence_order <= active.sequence_order)
+        unlocked = prev_completed or (
+            active is not None and m.sequence_order <= active.sequence_order
+        )
         available = await count_available(
             db, user_id=user.id, module_id=m.id, native_language=user.native_language
         )
