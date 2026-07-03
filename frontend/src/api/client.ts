@@ -13,6 +13,7 @@ import type {
   L1GenderNotesResponse,
   MCResolveResponse,
   ModuleCurrent,
+  ModulePathItem,
   PhonemeScore,
   PhoneticHintsResponse,
   PronunciationAttemptIn,
@@ -181,10 +182,17 @@ export const api = {
 
   getStory: (id: string) => request<Story>(`/stories/${id}`),
 
-  createStory: (topic?: string) =>
+  createStory: (
+    topic?: string,
+    opts?: { moduleId?: string; topicOrigin?: "chip" | "free" | "none" }
+  ) =>
     request<Story>("/stories", {
       method: "POST",
-      body: JSON.stringify({ topic: topic ?? null }),
+      body: JSON.stringify({
+        topic: topic ?? null,
+        module_id: opts?.moduleId ?? null,
+        topic_origin: opts?.topicOrigin ?? "none",
+      }),
     }),
 
   addCard: (vocabItemId: string) =>
@@ -196,6 +204,20 @@ export const api = {
   dueCards: (limit = 20) => request<CardOut[]>(`/srs/cards/due?limit=${limit}`),
 
   currentModule: () => request<ModuleCurrent | null>("/modules/current"),
+
+  listModules: () => request<ModulePathItem[]>("/modules"),
+
+  claimModuleStory: (moduleId: string) =>
+    request<Story>(`/modules/${moduleId}/story`, { method: "POST" }),
+
+  finishStory: (storyId: string) =>
+    request<{ finished_at: string; module_advanced: boolean }>(
+      `/stories/${storyId}/finish`,
+      { method: "POST" }
+    ),
+
+  listModuleStories: (moduleId: string, limit = 20) =>
+    request<StoryListItem[]>(`/stories?limit=${limit}&module_id=${moduleId}`),
 
   // --- practice ("Pronunciar") ---
   // Backend emits camelCase (focusText, focusTx, targetLanguage, sourceTitle)
