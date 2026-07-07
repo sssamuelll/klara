@@ -69,7 +69,12 @@ class Settings(BaseSettings):
     elevenlabs_voice_id_ja: str = ""
     elevenlabs_voice_id_pt: str = ""
     elevenlabs_voice_id_en: str = ""
-    elevenlabs_model: str = "eleven_turbo_v2_5"
+    # Two ElevenLabs models: `elevenlabs_model` serves latency-sensitive audio
+    # (Speak replies), `elevenlabs_narration_model` serves pre-cached story
+    # narration where latency is irrelevant and expressiveness wins. Turbo is
+    # deprecated by ElevenLabs; Flash is its official drop-in replacement.
+    elevenlabs_model: str = "eleven_flash_v2_5"
+    elevenlabs_narration_model: str = "eleven_multilingual_v2"
     # Inworld TTS — alternative provider. Flip TTS_PROVIDER=inworld to use.
     # The API key from Inworld Portal is already base64-encoded; paste as-is.
     # Inworld voices are language-locked (unlike ElevenLabs), so the per-lang

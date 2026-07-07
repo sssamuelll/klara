@@ -1,9 +1,13 @@
-"""Unit tests for ElevenLabs per-language voice resolution.
+"""Unit tests for ElevenLabs voice resolution and request payloads.
 
 ElevenLabs voices are technically multilingual but quality varies by native
 language (Bella nails German, butchers Spanish). The per-lang mapping lets
 you pick a native voice per target_language; this verifies the lookup falls
 back gracefully when a language has no override.
+
+Payload tests pin the narration/realtime split: narration selects the
+expressive model + livelier voice settings and may carry neighbor-sentence
+context; realtime keeps the low-latency model with default settings.
 """
 
 from __future__ import annotations
@@ -24,7 +28,8 @@ def _settings(**overrides) -> Settings:
         "elevenlabs_voice_id_ja": "",
         "elevenlabs_voice_id_pt": "",
         "elevenlabs_voice_id_en": "",
-        "elevenlabs_model": "eleven_turbo_v2_5",
+        "elevenlabs_model": "eleven_flash_v2_5",
+        "elevenlabs_narration_model": "eleven_multilingual_v2",
         "tts_request_timeout_seconds": 30.0,
     }
     defaults.update(overrides)
@@ -73,4 +78,39 @@ def test_default_voice_id_property_returns_fallback():
     tts = ElevenLabsTTS(_settings())
     assert tts.default_voice_id == "FALLBACK"
     assert tts.name == "elevenlabs"
-    assert tts.model == "eleven_turbo_v2_5"
+    assert tts.model == "eleven_flash_v2_5"
+    assert tts.narration_model == "eleven_multilingual_v2"
+
+
+def test_payload_realtime_uses_low_latency_model_and_default_settings():
+    tts = ElevenLabsTTS(_settings())
+    payload = tts._build_payload("Hallo.", narration=False, previous_text=None, next_text=None)
+    assert payload["model_id"] == "eleven_flash_v2_5"
+    assert payload["voice_settings"]["style"] == 0.0
+    assert payload["voice_settings"]["stability"] == 0.5
+    assert "previous_text" not in payload
+    assert "next_text" not in payload
+
+
+def test_payload_narration_uses_expressive_model_and_settings():
+    tts = ElevenLabsTTS(_settings())
+    payload = tts._build_payload("Hallo.", narration=True, previous_text=None, next_text=None)
+    assert payload["model_id"] == "eleven_multilingual_v2"
+    assert payload["voice_settings"]["style"] == 0.3
+    assert payload["voice_settings"]["stability"] == 0.4
+
+
+def test_payload_carries_neighbor_context_only_when_given():
+    tts = ElevenLabsTTS(_settings())
+    payload = tts._build_payload(
+        "Ich bin dran.",
+        narration=True,
+        previous_text="Die Nummer wechselt.",
+        next_text="Guten Tag.",
+    )
+    assert payload["previous_text"] == "Die Nummer wechselt."
+    assert payload["next_text"] == "Guten Tag."
+    # Empty strings must not produce empty context keys.
+    payload = tts._build_payload("Ich bin dran.", narration=True, previous_text="", next_text="")
+    assert "previous_text" not in payload
+    assert "next_text" not in payload

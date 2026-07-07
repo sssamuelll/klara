@@ -24,6 +24,15 @@ class TTSProvider(Protocol):
     def model(self) -> str: ...
 
     @property
+    def narration_model(self) -> str:
+        """Model used when `synthesize(narration=True)`. Providers without a
+        separate narration tier return `model` — the split only exists where
+        the provider offers a more expressive (slower/pricier) model worth
+        using for pre-cached story audio.
+        """
+        ...
+
+    @property
     def default_voice_id(self) -> str: ...
 
     def voice_for_lang(self, lang: str | None) -> str:
@@ -36,4 +45,19 @@ class TTSProvider(Protocol):
         """
         ...
 
-    async def synthesize(self, text: str, voice_id: str | None = None) -> TTSResult: ...
+    async def synthesize(
+        self,
+        text: str,
+        voice_id: str | None = None,
+        *,
+        narration: bool = False,
+        previous_text: str | None = None,
+        next_text: str | None = None,
+    ) -> TTSResult:
+        """`narration=True` selects the expressive narration tier (where the
+        provider has one). `previous_text`/`next_text` give the provider the
+        neighboring sentences so a sentence synthesized in isolation is still
+        intoned as part of the passage; providers without context conditioning
+        ignore them.
+        """
+        ...

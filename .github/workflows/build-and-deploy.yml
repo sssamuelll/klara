@@ -127,7 +127,8 @@ jobs:
             ELEVENLABS_VOICE_ID_JA=${ELEVENLABS_VOICE_ID_JA:-}
             ELEVENLABS_VOICE_ID_PT=${ELEVENLABS_VOICE_ID_PT:-}
             ELEVENLABS_VOICE_ID_EN=${ELEVENLABS_VOICE_ID_EN:-}
-            ELEVENLABS_MODEL=eleven_turbo_v2_5
+            ELEVENLABS_MODEL=eleven_flash_v2_5
+            ELEVENLABS_NARRATION_MODEL=eleven_multilingual_v2
             INWORLD_API_KEY=${INWORLD_API_KEY:-}
             INWORLD_VOICE_ID=${INWORLD_VOICE_ID:-}
             INWORLD_VOICE_ID_DE=${INWORLD_VOICE_ID_DE:-}

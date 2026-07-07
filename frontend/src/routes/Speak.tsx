@@ -380,6 +380,8 @@ export default function Speak() {
       if (reply && !mutedRef.current) {
         setState("speaking");
         speak(reply.target, targetLanguage, {
+          // Conversational reply: latency beats narration polish here.
+          mode: "realtime",
           // Transition ONLY if we still own the state — an interruption
           // (mic tap, model-play button) means someone else moved it.
           onDone: () => setState((s) => (s === "speaking" ? "idle" : s)),
@@ -726,7 +728,9 @@ export default function Speak() {
                         aria-label={t("speak.note.playAria")}
                         disabled={state === "listening" || state === "thinking"}
                         onClick={() =>
-                          speak(turn.note!.modelSentence ?? turn.note!.word, targetLanguage)
+                          speak(turn.note!.modelSentence ?? turn.note!.word, targetLanguage, {
+                            mode: "realtime",
+                          })
                         }
                       >
                         <span className="kac-tri" />

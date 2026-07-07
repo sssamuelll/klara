@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, Response
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 
 from klara.config import get_settings
 from klara.dependencies import DBSession, LocaleDep, SettingsDep
@@ -30,7 +30,12 @@ async def synthesize(
     text: str = Query(..., min_length=1),
     voice: str | None = Query(None),
     lang: str | None = Query(None, max_length=8),
+    mode: str = Query("narration", pattern="^(narration|realtime)$"),
 ) -> Response:
+    """`mode=realtime` (Speak replies) uses the low-latency model; the default
+    `narration` serves everything a learner re-listens to — story sentences,
+    word audio — on the expressive model. Old cached frontends that don't send
+    `mode` just get narration quality everywhere, which is safe."""
     if len(text) > settings.tts_max_text_chars:
         raise HTTPException(
             status_code=413,
@@ -44,7 +49,12 @@ async def synthesize(
 
     try:
         audio, mime, hit = await get_or_synthesize(
-            db, provider, text=text, voice_id=voice, lang=lang
+            db,
+            provider,
+            text=text,
+            voice_id=voice,
+            lang=lang,
+            narration=mode != "realtime",
         )
     except TTSError as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
@@ -71,6 +81,15 @@ async def tts_health() -> dict[str, str]:
 
 @router.get("/stats")
 async def tts_stats(db: DBSession) -> dict:
+    # ElevenLabs bills flash/turbo at 0.5 credits per character, everything
+    # else (multilingual v2, v3) at 1.0 — estimate per row now that narration
+    # and realtime audio live on different models.
+    credit_factor = case(
+        (AudioCache.provider != "elevenlabs", 0.0),
+        (AudioCache.model.like("%flash%"), 0.5),
+        (AudioCache.model.like("%turbo%"), 0.5),
+        else_=1.0,
+    )
     row = (
         await db.execute(
             select(
@@ -78,17 +97,20 @@ async def tts_stats(db: DBSession) -> dict:
                 func.coalesce(func.sum(AudioCache.char_count), 0),
                 func.coalesce(func.sum(AudioCache.access_count), 0),
                 func.coalesce(func.sum(AudioCache.access_count - 1), 0),
+                func.coalesce(func.sum(AudioCache.char_count * credit_factor), 0),
+                func.coalesce(
+                    func.sum((AudioCache.access_count - 1) * AudioCache.char_count * credit_factor),
+                    0,
+                ),
             )
         )
     ).one()
-    entries, chars_synthesized, total_plays, replays = row
-    estimated_credits_used = chars_synthesized * 0.5
-    estimated_credits_saved = (replays or 0) * (chars_synthesized / max(entries, 1)) * 0.5
+    entries, chars_synthesized, total_plays, replays, credits_used, credits_saved = row
     return {
         "entries": int(entries),
         "chars_synthesized": int(chars_synthesized),
         "total_plays": int(total_plays),
         "replays_from_cache": int(replays),
-        "estimated_credits_used": round(estimated_credits_used, 1),
-        "estimated_credits_saved_by_cache": round(estimated_credits_saved, 1),
+        "estimated_credits_used": round(float(credits_used), 1),
+        "estimated_credits_saved_by_cache": round(float(credits_saved), 1),
     }

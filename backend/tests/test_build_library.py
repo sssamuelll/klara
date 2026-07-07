@@ -56,10 +56,10 @@ class SequenceLLM:
 async def test_build_inserts_per_module_and_is_idempotent(db_session):
     await _seed_cafe_module(db_session)
 
-    warmed: list[list[str]] = []
+    warmed: list[dict] = []
 
-    async def warm(texts: list[str]) -> None:
-        warmed.append(texts)
+    async def warm(content: dict, words: list[dict], title: str | None) -> None:
+        warmed.append({"content": content, "words": words, "title": title})
 
     n = await build_library(
         db_session, SequenceLLM(), language="de", native="es", per_module=2, warm_audio=warm
@@ -94,10 +94,10 @@ async def test_warm_audio_failure_does_not_lose_committed_rows(db_session, monke
         mod.log, "warning", lambda event, **kw: warnings.append({"event": event, **kw})
     )
 
-    calls: list[list[str]] = []
+    calls: list[dict] = []
 
-    async def flaky_warm(texts: list[str]) -> None:
-        calls.append(texts)
+    async def flaky_warm(content: dict, words: list[dict], title: str | None) -> None:
+        calls.append({"content": content, "words": words, "title": title})
         if len(calls) == 1:
             raise RuntimeError("tts provider init failed")
 
