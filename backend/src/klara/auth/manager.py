@@ -329,6 +329,14 @@ def _apply_profile_defaults(user_dict: dict[str, Any], settings: Settings) -> di
     user_dict.setdefault("native_language", settings.default_user_native_language)
     user_dict.setdefault("target_language", settings.default_user_target_language)
     user_dict.setdefault("learning_context", settings.default_user_learning_context)
+    # Signup.tsx seeds native_language from the browser locale, so a German-
+    # locale visitor sends native="de" while target_language defaults to "de" —
+    # which would persist an invalid native==target row. Fall the native back to
+    # the configured default so we never store an equal pair.
+    # ponytail: assumes default_user_native_language != default_user_target_language
+    # (es != de); a config with both equal is a misconfig, out of scope here.
+    if user_dict["native_language"] == user_dict["target_language"]:
+        user_dict["native_language"] = settings.default_user_native_language
     return user_dict
 
 

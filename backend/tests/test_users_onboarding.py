@@ -486,3 +486,22 @@ async def test_patch_me_rejects_setting_langs_equal(db_session):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         resp = await ac.patch("/api/v1/me", json={"native_language": "de"})
     assert resp.status_code == 422, resp.text
+
+
+def test_apply_profile_defaults_never_persists_equal_langs():
+    """Seed hardening: a browser-seeded native_language that collides with the
+    default target (de-locale signup → native="de", target defaults to "de")
+    is fixed at creation, never persisting native==target."""
+    from klara.auth.manager import _apply_profile_defaults
+    from klara.config import get_settings
+
+    settings = get_settings()
+    out = _apply_profile_defaults({"native_language": "de"}, settings)
+    assert out["native_language"] != out["target_language"]
+    assert out["target_language"] == "de"
+    assert out["native_language"] == "es"
+
+    # A non-colliding seed is left untouched.
+    out2 = _apply_profile_defaults({"native_language": "en"}, settings)
+    assert out2["native_language"] == "en"
+    assert out2["target_language"] == "de"
