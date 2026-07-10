@@ -64,14 +64,21 @@ async def update_me(
 ) -> UserOut:
     data = payload.model_dump(exclude_unset=True)
 
-    # cross-check after merging with existing values
-    new_native = data.get("native_language", user.native_language)
-    new_target = data.get("target_language", user.target_language)
-    if new_native == new_target:
-        raise HTTPException(
-            status_code=422,
-            detail=t("errors.languages_must_differ", locale),
-        )
+    # cross-check after merging with existing values — but only when this PATCH
+    # actually touches a language. A display_name-only update must not be
+    # rejected just because the *stored* pair is equal: a German-locale signup
+    # seeds native="de" (browser lang) while target defaults to "de", and the
+    # onboarding name step PATCHes before the languages step that would fix it.
+    # Guarding pre-existing equality here traps the user before they can reach
+    # that step. Only the incoming change is our business.
+    if "native_language" in data or "target_language" in data:
+        new_native = data.get("native_language", user.native_language)
+        new_target = data.get("target_language", user.target_language)
+        if new_native == new_target:
+            raise HTTPException(
+                status_code=422,
+                detail=t("errors.languages_must_differ", locale),
+            )
 
     if data.get("display_name"):
         user.display_name = data["display_name"]
