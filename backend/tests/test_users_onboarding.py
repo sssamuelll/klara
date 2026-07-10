@@ -415,3 +415,74 @@ async def test_post_password_requires_auth(client):
     """Sin sesión → 401."""
     resp = await client.post("/api/v1/me/password", json={"password": "newpassword123"})
     assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_patch_me_display_name_ok_when_stored_langs_equal(db_session):
+    """Regression: a display_name-only PATCH must succeed even when the stored
+    native==target (e.g. German-locale signup seeds native="de", target defaults
+    to "de"). The onboarding name step runs before the languages step, so
+    rejecting it here trapped the user."""
+    user = User(
+        id=uuid.uuid4(),
+        email="olaf@example.com",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="",
+        level=CEFRLevel.A0,
+        native_language="de",
+        target_language="de",  # equal pair — the trap
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.patch("/api/v1/me", json={"display_name": "Olaf"})
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["display_name"] == "Olaf"
+
+
+@pytest.mark.asyncio
+async def test_patch_me_rejects_setting_langs_equal(db_session):
+    """The distinctness guard still fires when the PATCH itself makes the pair
+    equal — here setting native to the stored target."""
+    user = User(
+        id=uuid.uuid4(),
+        email="pair@example.com",
+        hashed_password="x",
+        is_active=True,
+        is_verified=True,
+        is_superuser=False,
+        display_name="Pair",
+        level=CEFRLevel.A0,
+        native_language="es",
+        target_language="de",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from klara.auth.users import current_active_user
+    from klara.dependencies import db_session as db_session_dep
+    from klara.main import create_app
+
+    app = create_app()
+    app.dependency_overrides[current_active_user] = lambda: user
+    app.dependency_overrides[db_session_dep] = lambda: db_session
+    from httpx import ASGITransport, AsyncClient
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        resp = await ac.patch("/api/v1/me", json={"native_language": "de"})
+    assert resp.status_code == 422, resp.text
