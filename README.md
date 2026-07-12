@@ -106,11 +106,24 @@ owner issues invites from the admin panel (`/api/v1/admin/invitations`).
 ### Seeding the curriculum
 
 A fresh database has no learning-path modules — `GET /api/v1/modules/current`
-returns null and library story claims 404 — until the seed scripts run.
-Nothing runs them automatically. They live in `backend/src/klara/scripts/`
-(`load_de_lexical`, `load_de_gender`, `load_de_modules`, `load_de_l1_notes`,
-plus `build_story_library` to pre-generate and pre-cache library stories,
-which costs LLM/TTS credits). Order matters — follow
+returns null — until the seed scripts in `backend/src/klara/scripts/` run.
+Nothing runs them automatically. For a local dev database (against the compose
+`backend` service):
+
+```bash
+# the 8 A1 modules — self-contained; the minimum for the learning path to work
+docker compose exec backend python -m klara.scripts.load_de_modules
+# optional: the 20 ES→DE gender trap notes — self-contained
+docker compose exec backend python -m klara.scripts.load_de_l1_notes
+# optional: pre-generate + pre-cache the story library so module story-claims
+# skip the LLM (costs LLM + TTS credits)
+docker compose exec backend python -m klara.scripts.build_story_library
+```
+
+The der/die/das gender oracle (`load_de_gender`) and the frequency/CEFR data
+(`load_de_lexical`) need datasets that aren't vendored in the repo, and the
+gender loaders have a strict ordering constraint. Turning the gender axis on —
+in dev or prod — is documented end to end in
 [`docs/runbooks/gender-prod-activation.md`](docs/runbooks/gender-prod-activation.md).
 
 ## Environment variables
