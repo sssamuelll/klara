@@ -104,3 +104,49 @@ async def test_finish_is_idempotent_and_advances_on_third(client, seed_invite, d
         .all()
     )
     assert len(views) == 3
+
+
+@pytest.mark.asyncio
+async def test_quiz_pronunciation_attempt_accepts_sentinel_index(client, seed_invite, db_session):
+    """Finish-quiz pronunciation (shadow/cloze) records with sentence_index=-1,
+    the sentinel for 'not a story sentence' (StoryFinish.tsx recordPronunciationAttempt).
+    Regression: the schema required ge=0, so every quiz pronunciation attempt 422'd
+    and the frontend swallowed it — the attempts never persisted.
+    """
+    cookie = await _register_and_login(client, seed_invite, email="pron@example.com")
+    user = (
+        await db_session.execute(select(User).where(User.email == "pron@example.com"))
+    ).scalar_one()
+    story = Story(
+        user_id=user.id,
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        title="S",
+        content=CONTENT,
+        target_vocab_item_ids=[],
+    )
+    db_session.add(story)
+    await db_session.commit()
+
+    url = f"/api/v1/stories/{story.id}/pronunciation/attempts"
+
+    def _payload(idx: int) -> dict:
+        return {
+            "sentence_index": idx,
+            "reference_text": "Ich habe gegessen.",
+            "recognized_text": "Ich habe gegessen.",
+            "overall_score": 82.0,
+            "word_bands": {"0": "good"},
+        }
+
+    # The quiz sentinel must persist (was a swallowed 422 before the fix).
+    r = await client.post(url, json=_payload(-1), headers={"Cookie": cookie})
+    assert r.status_code == 201, r.text
+    assert r.json()["sentence_index"] == -1
+    # A real story-sentence index still works.
+    r0 = await client.post(url, json=_payload(0), headers={"Cookie": cookie})
+    assert r0.status_code == 201, r0.text
+    # -1 is the ONLY sentinel: other negatives stay rejected.
+    r_bad = await client.post(url, json=_payload(-2), headers={"Cookie": cookie})
+    assert r_bad.status_code == 422, r_bad.text
