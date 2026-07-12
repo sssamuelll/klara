@@ -18,10 +18,12 @@ class CardOut(BaseModel):
     pos: PartOfSpeech
     translation: str | None
     example_target: str | None
+    gender: str | None = None
     state: CardState
     interval_days: float
     next_review_at: datetime | None
     repetitions: int
+    ease: float
 
 
 class ReviewSubmitRequest(BaseModel):

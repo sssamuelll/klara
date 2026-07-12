@@ -9,6 +9,7 @@ from klara.curriculum.modules import advance_module_if_mastered
 from klara.dependencies import CurrentUser, DBSession, LocaleDep
 from klara.i18n import t
 from klara.models import Review, UserCard, VocabItem
+from klara.models.enums import PartOfSpeech
 from klara.schemas.srs import (
     CardCreateRequest,
     CardOut,
@@ -24,6 +25,11 @@ router = APIRouter(prefix="/srs", tags=["srs"])
 
 
 def _card_to_out(card: UserCard, vocab: VocabItem, native_language: str) -> CardOut:
+    # Only surface an oracle-known article (der/die/das). An LLM-guessed gender is
+    # never shown as fact — same honesty gate as the gender-cloze axis.
+    gender = (
+        vocab.gender if vocab.pos == PartOfSpeech.NOUN and vocab.gender_source == "oracle" else None
+    )
     return CardOut(
         id=card.id,
         vocab_item_id=vocab.id,
@@ -31,10 +37,12 @@ def _card_to_out(card: UserCard, vocab: VocabItem, native_language: str) -> Card
         pos=vocab.pos,
         translation=(vocab.translations or {}).get(native_language),
         example_target=vocab.example_target,
+        gender=gender,
         state=card.state,
         interval_days=card.interval_days,
         next_review_at=card.next_review_at,
         repetitions=card.repetitions,
+        ease=card.ease,
     )
 
 
