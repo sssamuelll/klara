@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: "Klara",
           short_name: "Klara",
-          description: "Aprende alemán leyendo historias",
+          description: "Aprende idiomas leyendo historias",
           lang: "es",
           start_url: "/",
           display: "standalone",
