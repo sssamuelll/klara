@@ -128,10 +128,10 @@ in dev or prod — is documented end to end in
 
 ## Environment variables
 
-`.env.example` covers the common set; two ops-only settings
-(`LLM_STORY_EXTRA_BODY`, `DB_PASSWORD`) are wired through
-`docker-compose.yml` → `config.py` but aren't in the example file. The
-highlights:
+`.env.example` is the compose stack's env contract (`cp .env.example .env`).
+The optional LLM `*_EXTRA_BODY` extras are shown commented out; the Postgres
+password is the `POSTGRES_PASSWORD` knob, injected into the DB connection
+out-of-band so it never lands in the DSN (issue #81). The highlights:
 
 | Variable | Required? | Notes |
 |---|---|---|
