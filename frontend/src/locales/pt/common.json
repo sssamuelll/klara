@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Hoje",
-    "review": "Pronunciar",
+    "review": "Revisão",
     "chat": "Falar",
     "settings": "Ajustes",
     "theme": {
@@ -358,6 +358,7 @@
     },
     "segment": {
       "title": "O que revês?",
+      "cards": { "title": "Fichas", "dek": "As palavras que guardaste, uma a uma." },
       "pron": {
         "title": "Pronunciar",
         "dek": "As frases que te travam, outra vez em voz alta."
@@ -367,6 +368,38 @@
         "dek": "Os der, die, das que erras."
       },
       "back": "Escolher outro"
+    }
+  },
+  "recall": {
+    "title": "A caixa de fichas",
+    "kicker": "REVISÃO · HOJE",
+    "exit": "← Hoje",
+    "loading": "A abrir a caixa…",
+    "failed": "Não foi possível abrir a revisão. Tenta de novo daqui a pouco.",
+    "empty": "Não há fichas para rever hoje. Volta amanhã.",
+    "progress": "{{done}} / {{total}}",
+    "cue": "O que significa? Lembra-te, depois vira a ficha.",
+    "listen": "Ouvir",
+    "flip": "Virar",
+    "flipHint": "ESPAÇO para virar",
+    "rateHint": "1–4 para avaliar · isto agenda a próxima revisão",
+    "rate": { "again": "Outra vez", "hard": "Difícil", "good": "Bem", "easy": "Fácil" },
+    "interval": {
+      "minutes": "~{{count}} min",
+      "hours": "~{{count}} h",
+      "day": "{{count}} dia",
+      "days": "{{count}} dias",
+      "weeks": "{{count}} sem.",
+      "months": "{{count}} mês"
+    },
+    "done": {
+      "kicker": "REVISÃO TERMINADA",
+      "label": "fichas revistas",
+      "again": "voltam em breve",
+      "rest": "descansam",
+      "note": "As que erraste voltam daqui a pouco; as outras, quando estiverem quase esquecidas. Não há sequência para quebrar — a caixa espera por ti amanhã.",
+      "sign": "— K",
+      "home": "Voltar a hoje"
     }
   },
   "wpop": {

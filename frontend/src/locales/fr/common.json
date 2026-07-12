@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Aujourd'hui",
-    "review": "Prononcer",
+    "review": "Révision",
     "chat": "Parler",
     "settings": "Réglages",
     "theme": {
@@ -358,6 +358,7 @@
     },
     "segment": {
       "title": "Que révises-tu ?",
+      "cards": { "title": "Fiches", "dek": "Les mots que tu as enregistrés, un par un." },
       "pron": {
         "title": "Prononcer",
         "dek": "Les phrases qui coincent, à voix haute encore."
@@ -367,6 +368,38 @@
         "dek": "Les der, die, das que tu rates."
       },
       "back": "Choisir l’autre"
+    }
+  },
+  "recall": {
+    "title": "La boîte de fiches",
+    "kicker": "RÉVISION · AUJOURD'HUI",
+    "exit": "← Aujourd'hui",
+    "loading": "Ouverture de la boîte…",
+    "failed": "Impossible d'ouvrir la révision. Réessaie dans un instant.",
+    "empty": "Aucune fiche à réviser aujourd'hui. Reviens demain.",
+    "progress": "{{done}} / {{total}}",
+    "cue": "Qu'est-ce que ça veut dire ? Rappelle-toi, puis retourne la fiche.",
+    "listen": "Écouter",
+    "flip": "Retourner",
+    "flipHint": "ESPACE pour retourner",
+    "rateHint": "1–4 pour noter · ça programme la prochaine révision",
+    "rate": { "again": "Encore", "hard": "Difficile", "good": "Bien", "easy": "Facile" },
+    "interval": {
+      "minutes": "~{{count}} min",
+      "hours": "~{{count}} h",
+      "day": "{{count}} jour",
+      "days": "{{count}} jours",
+      "weeks": "{{count}} sem.",
+      "months": "{{count}} mois"
+    },
+    "done": {
+      "kicker": "RÉVISION TERMINÉE",
+      "label": "fiches révisées",
+      "again": "reviennent bientôt",
+      "rest": "se reposent",
+      "note": "Celles que tu as ratées reviennent bientôt ; les autres, juste avant que tu les oublies. Pas de série à casser — la boîte t'attend demain.",
+      "sign": "— K",
+      "home": "Retour à aujourd'hui"
     }
   },
   "wpop": {

@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Heute",
-    "review": "Aussprechen",
+    "review": "Wiederholen",
     "chat": "Sprechen",
     "settings": "Einstellungen",
     "theme": {
@@ -358,6 +358,7 @@
     },
     "segment": {
       "title": "Was wiederholst du?",
+      "cards": { "title": "Karteikarten", "dek": "Die Wörter, die du gespeichert hast, eine nach der anderen." },
       "pron": {
         "title": "Sprechen",
         "dek": "Die Sätze, die dir schwerfallen, noch einmal laut."
@@ -367,6 +368,38 @@
         "dek": "Die der, die, das, die du verfehlst."
       },
       "back": "Anderes wählen"
+    }
+  },
+  "recall": {
+    "title": "Die Kartenbox",
+    "kicker": "WIEDERHOLUNG · HEUTE",
+    "exit": "← Heute",
+    "loading": "Box wird geöffnet…",
+    "failed": "Die Wiederholung ließ sich nicht laden. Versuch es gleich noch einmal.",
+    "empty": "Heute nichts zu wiederholen. Komm morgen wieder.",
+    "progress": "{{done}} / {{total}}",
+    "cue": "Was bedeutet es? Erinnere dich, dann dreh die Karte um.",
+    "listen": "Anhören",
+    "flip": "Umdrehen",
+    "flipHint": "LEERTASTE zum Umdrehen",
+    "rateHint": "1–4 bewerten · das plant die nächste Wiederholung",
+    "rate": { "again": "Nochmal", "hard": "Schwer", "good": "Gut", "easy": "Leicht" },
+    "interval": {
+      "minutes": "~{{count}} Min.",
+      "hours": "~{{count}} Std.",
+      "day": "{{count}} Tag",
+      "days": "{{count}} Tage",
+      "weeks": "{{count}} Wo.",
+      "months": "{{count}} Mon."
+    },
+    "done": {
+      "kicker": "WIEDERHOLUNG BEENDET",
+      "label": "Karten wiederholt",
+      "again": "kommen bald zurück",
+      "rest": "ruhen",
+      "note": "Die, die du verfehlt hast, kommen bald zurück; die anderen, kurz bevor du sie vergisst. Keine Serie, die man brechen könnte — die Box wartet morgen auf dich.",
+      "sign": "— K",
+      "home": "Zurück zu heute"
     }
   },
   "wpop": {

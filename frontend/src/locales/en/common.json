@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Today",
-    "review": "Pronounce",
+    "review": "Review",
     "chat": "Speak",
     "settings": "Settings",
     "theme": {
@@ -358,6 +358,7 @@
     },
     "segment": {
       "title": "What do you review?",
+      "cards": { "title": "Flashcards", "dek": "The words you saved, one by one." },
       "pron": {
         "title": "Speaking",
         "dek": "The sentences that trip you up, out loud again."
@@ -367,6 +368,38 @@
         "dek": "The der, die, das you miss."
       },
       "back": "Pick another"
+    }
+  },
+  "recall": {
+    "title": "The card box",
+    "kicker": "REVIEW · TODAY",
+    "exit": "← Today",
+    "loading": "Opening the box…",
+    "failed": "Couldn't open the review. Try again in a moment.",
+    "empty": "No cards to review today. Come back tomorrow.",
+    "progress": "{{done}} / {{total}}",
+    "cue": "What does it mean? Recall it, then flip the card.",
+    "listen": "Listen",
+    "flip": "Flip",
+    "flipHint": "SPACE to flip",
+    "rateHint": "1–4 to rate · this schedules the next review",
+    "rate": { "again": "Again", "hard": "Hard", "good": "Good", "easy": "Easy" },
+    "interval": {
+      "minutes": "~{{count}} min",
+      "hours": "~{{count}} hr",
+      "day": "{{count}} day",
+      "days": "{{count}} days",
+      "weeks": "{{count}} wk",
+      "months": "{{count}} mo"
+    },
+    "done": {
+      "kicker": "REVIEW CLOSED",
+      "label": "cards reviewed",
+      "again": "coming back soon",
+      "rest": "resting",
+      "note": "The ones you missed come back shortly; the rest, right before you'd forget them. No streak to break — the box will be here tomorrow.",
+      "sign": "— K",
+      "home": "Back to today"
     }
   },
   "wpop": {
