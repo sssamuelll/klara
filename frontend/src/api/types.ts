@@ -89,10 +89,12 @@ export interface CardOut {
   pos: PartOfSpeech;
   translation: string | null;
   example_target: string | null;
+  gender: string | null;
   state: "new" | "learning" | "reviewing" | "relearning" | "suspended";
   interval_days: number;
   next_review_at: string | null;
   repetitions: number;
+  ease: number;
 }
 
 export type AuthMethod = "password" | "google";

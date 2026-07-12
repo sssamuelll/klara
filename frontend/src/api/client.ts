@@ -21,6 +21,7 @@ import type {
   PronunciationScoreResponse,
   QuizAttemptIn,
   QuizResponse,
+  ReviewRating,
   ScheduleResponse,
   SpeakFinishRequest,
   SpeakFinishResponse,
@@ -222,10 +223,12 @@ export const api = {
   getPracticeQueue: (limit = 6) =>
     request<PracticeQueue>(`/practice/queue?limit=${limit}`),
 
-  reviewCard: (cardId: string, rating: "again" | "hard" | "good" | "easy") =>
+  reviewCard: (cardId: string, rating: ReviewRating, elapsedSeconds?: number) =>
     request(`/srs/cards/${cardId}/review`, {
       method: "POST",
-      body: JSON.stringify({ rating }),
+      body: JSON.stringify(
+        elapsedSeconds === undefined ? { rating } : { rating, elapsed_seconds: elapsedSeconds },
+      ),
     }),
 
   submitPronunciationReviews: (reviews: PronunciationReviewIn[]) =>
