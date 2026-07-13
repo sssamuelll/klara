@@ -213,6 +213,7 @@ async def create_story(
             dropped_lemmas=result.dropped_lemmas,
             topic=payload.topic,
             topic_origin=payload.topic_origin,
+            gender_violations=result.gender_violations,
         )
     except Exception:
         log.warning("library.pool.recycle_failed", story_id=str(result.story.id))

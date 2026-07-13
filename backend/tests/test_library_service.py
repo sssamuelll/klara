@@ -335,6 +335,19 @@ async def test_pool_recycle_rules(db_session):
         )
         is False
     )
+    # gender violations → rejected: the lint gate guards POOL ENTRY (what gets
+    # shared); serving the on-demand story itself is not blocked here.
+    assert (
+        await maybe_recycle_to_library(
+            db_session,
+            story=story,
+            dropped_lemmas=[],
+            topic=None,
+            topic_origin="none",
+            gender_violations=["die Haus (oracle: das)"],
+        )
+        is False
+    )
     # clean → accepted once, hash-deduped after
     assert (
         await maybe_recycle_to_library(

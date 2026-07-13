@@ -191,12 +191,14 @@ async def maybe_recycle_to_library(
     dropped_lemmas: list[str],
     topic: str | None,
     topic_origin: str,
+    gender_violations: list[str] | None = None,
 ) -> bool:
     """Pool growth: copy a clean live generation into the library. Rules
     (spec §7): no free-text topics (privacy), full coverage only (quality),
-    module-conditioned only, hash-deduped, capped per (module, native).
-    Best-effort — callers must never let a failure here break story creation."""
-    if story.module_id is None or dropped_lemmas:
+    lint-clean only (no provable gender-article errors), module-conditioned
+    only, hash-deduped, capped per (module, native). Best-effort — callers
+    must never let a failure here break story creation."""
+    if story.module_id is None or dropped_lemmas or gender_violations:
         return False
     # Fail closed on provenance (privacy, spec §7): a present topic is only
     # shareable when the client explicitly marked it as a suggestion chip.

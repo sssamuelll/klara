@@ -1,9 +1,27 @@
 """services.story_lint: flags ONLY provable gender-article errors (sub-flag by design)."""
 
+import json
+
 import pytest
 
 from klara.curriculum.gender_lex import GenderRow, load_gender_lexicon
+from klara.llm.base import LLMResponse
+from klara.models.enums import CEFRLevel
+from klara.services.story_gen import generate_story_draft
 from klara.services.story_lint import gender_article_violations
+
+
+class _FakeLLM:
+    """Devuelve un payload fijo; cumple el Protocol de complete()."""
+
+    def __init__(self, payload: dict):
+        self._payload = payload
+
+    async def complete(self, **kwargs):
+        return LLMResponse(content=json.dumps(self._payload), model="fake", provider="fake")
+
+    async def stream(self, **kwargs):  # pragma: no cover — protocol completeness
+        raise NotImplementedError
 
 
 def _content(*targets: str) -> dict:
@@ -93,3 +111,28 @@ async def test_multiple_violations_reported_in_order(db_session, lexicon):
         db_session, _content("Das Frau kocht.", "Der Haus brennt."), language="de"
     )
     assert out == ["Das Frau (oracle: die)", "Der Haus (oracle: das)"]
+
+
+@pytest.mark.asyncio
+async def test_draft_carries_gender_violations(db_session, lexicon):
+    payload = {
+        "title": "Die Haus",
+        "sentences": [{"target": "Ich sehe die Haus.", "native": "Veo la casa.", "new_words": []}],
+        "comprehension_questions": [],
+        "target_words": [{"lemma": "Haus", "pos": "noun", "gender": "das", "translation": "casa"}],
+    }
+    draft = await generate_story_draft(
+        db_session,
+        _FakeLLM(payload),
+        level=CEFRLevel.A1,
+        target_language="de",
+        native_language="es",
+        learning_context=None,
+        topic=None,
+        model=None,
+        target_lemmas=["Haus"],
+        module_objective=None,
+        avoid_lemmas=[],
+    )
+    assert draft.dropped_lemmas == []  # coverage OK: "Haus" aparece en el texto
+    assert draft.gender_violations == ["die Haus (oracle: das)"]
