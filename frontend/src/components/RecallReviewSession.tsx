@@ -47,7 +47,7 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
     (rating: ReviewRating) => {
       if (!card) return;
       const elapsed = Math.max(0, Math.round((performance.now() - shownAt.current) / 1000));
-      void api.reviewCard(card.id, rating, elapsed).catch(() => undefined);
+      void api.reviewCard(card.id, rating, elapsed).catch(() => dispatch({ type: "rateFailed" }));
       dispatch({ type: "rate", rating });
     },
     [card],
@@ -102,6 +102,9 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
             </div>
           </div>
           <p className="rr-done__note">{t("recall.done.note")}</p>
+          {state.failedCount > 0 && (
+            <p className="rr-done__note">{t("recall.done.unsaved", { count: state.failedCount })}</p>
+          )}
           <span className="rr-done__sign">{t("recall.done.sign")}</span>
           <button type="button" className="rr-done__cta" onClick={onExit}>
             {t("recall.done.home")} →

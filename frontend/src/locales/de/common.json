@@ -390,6 +390,7 @@
       "day": "{{count}} Tag",
       "days": "{{count}} Tage",
       "weeks": "{{count}} Wo.",
+      "month": "{{count}} Mon.",
       "months": "{{count}} Mon."
     },
     "done": {
@@ -398,6 +399,7 @@
       "again": "kommen bald zurück",
       "rest": "ruhen",
       "note": "Die, die du verfehlt hast, kommen bald zurück; die anderen, kurz bevor du sie vergisst. Keine Serie, die man brechen könnte — die Box wartet morgen auf dich.",
+      "unsaved": "{{count}} wurden nicht gespeichert — sie kommen beim nächsten Mal zurück.",
       "sign": "— K",
       "home": "Zurück zu heute"
     }

@@ -43,5 +43,6 @@ export function formatInterval(days: number): string {
     return k(d === 1 ? "day" : "days", d);
   }
   if (days < 30) return k("weeks", Math.max(1, Math.round(days / 7)));
-  return k("months", Math.max(1, Math.round(days / 30)));
+  const m = Math.max(1, Math.round(days / 30));
+  return k(m === 1 ? "month" : "months", m);
 }

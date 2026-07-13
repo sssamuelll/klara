@@ -13,19 +13,22 @@ export interface RecallState {
   idx: number;
   phase: RecallPhase;
   againCount: number;
+  failedCount: number;
 }
 
 export type RecallAction =
   | { type: "loaded"; cards: CardOut[] }
   | { type: "failed" }
   | { type: "flip" }
-  | { type: "rate"; rating: ReviewRating };
+  | { type: "rate"; rating: ReviewRating }
+  | { type: "rateFailed" };
 
 export const initialRecallState: RecallState = {
   cards: [],
   idx: 0,
   phase: "loading",
   againCount: 0,
+  failedCount: 0,
 };
 
 export function recallReducer(state: RecallState, action: RecallAction): RecallState {
@@ -36,11 +39,14 @@ export function recallReducer(state: RecallState, action: RecallAction): RecallS
         idx: 0,
         phase: action.cards.length === 0 ? "empty" : "prompt",
         againCount: 0,
+        failedCount: 0,
       };
     case "failed":
       return { ...state, phase: "failed" };
     case "flip":
       return state.phase === "prompt" ? { ...state, phase: "revealed" } : state;
+    case "rateFailed":
+      return { ...state, failedCount: state.failedCount + 1 };
     case "rate": {
       if (state.phase !== "revealed") return state;
       const againCount = state.againCount + (action.rating === "again" ? 1 : 0);

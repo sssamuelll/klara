@@ -390,7 +390,8 @@
       "day": "{{count}} dia",
       "days": "{{count}} dias",
       "weeks": "{{count}} sem.",
-      "months": "{{count}} mês"
+      "month": "{{count}} mês",
+      "months": "{{count}} meses"
     },
     "done": {
       "kicker": "REVISÃO TERMINADA",
@@ -398,6 +399,7 @@
       "again": "voltam em breve",
       "rest": "descansam",
       "note": "As que erraste voltam daqui a pouco; as outras, quando estiverem quase esquecidas. Não há sequência para quebrar — a caixa espera por ti amanhã.",
+      "unsaved": "{{count}} não foram guardadas — voltam na próxima vez.",
       "sign": "— K",
       "home": "Voltar a hoje"
     }

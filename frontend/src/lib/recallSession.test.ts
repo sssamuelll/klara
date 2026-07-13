@@ -53,4 +53,20 @@ describe("recallReducer", () => {
     expect(s.againCount).toBe(1);
     expect(restedCount(s)).toBe(1); // 2 total - 1 again
   });
+
+  it("rateFailed increments failedCount", () => {
+    let s = recallReducer(initialRecallState, { type: "loaded", cards: [card("a")] });
+    s = recallReducer(s, { type: "rateFailed" });
+    expect(s.failedCount).toBe(1);
+    s = recallReducer(s, { type: "rateFailed" });
+    expect(s.failedCount).toBe(2);
+  });
+
+  it("loaded resets failedCount to 0", () => {
+    let s = recallReducer(initialRecallState, { type: "loaded", cards: [card("a")] });
+    s = recallReducer(s, { type: "rateFailed" });
+    expect(s.failedCount).toBe(1);
+    s = recallReducer(s, { type: "loaded", cards: [card("b")] });
+    expect(s.failedCount).toBe(0);
+  });
 });

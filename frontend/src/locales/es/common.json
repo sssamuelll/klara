@@ -390,7 +390,8 @@
       "day": "{{count}} día",
       "days": "{{count}} días",
       "weeks": "{{count}} sem",
-      "months": "{{count}} mes"
+      "month": "{{count}} mes",
+      "months": "{{count}} meses"
     },
     "done": {
       "kicker": "REPASO CERRADO",
@@ -398,6 +399,7 @@
       "again": "vuelven pronto",
       "rest": "descansan",
       "note": "Las que fallaste vuelven en un rato; las demás, cuando estén a punto de olvidarse. No hay racha que romper — la caja te espera mañana.",
+      "unsaved": "{{count}} no se guardaron — vuelven la próxima.",
       "sign": "— K",
       "home": "Volver a hoy"
     }

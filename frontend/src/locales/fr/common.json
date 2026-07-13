@@ -390,6 +390,7 @@
       "day": "{{count}} jour",
       "days": "{{count}} jours",
       "weeks": "{{count}} sem.",
+      "month": "{{count}} mois",
       "months": "{{count}} mois"
     },
     "done": {
@@ -398,6 +399,7 @@
       "again": "reviennent bientôt",
       "rest": "se reposent",
       "note": "Celles que tu as ratées reviennent bientôt ; les autres, juste avant que tu les oublies. Pas de série à casser — la boîte t'attend demain.",
+      "unsaved": "{{count}} n'ont pas été enregistrées — elles reviendront la prochaine fois.",
       "sign": "— K",
       "home": "Retour à aujourd'hui"
     }

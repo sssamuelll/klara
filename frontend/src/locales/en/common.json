@@ -390,6 +390,7 @@
       "day": "{{count}} day",
       "days": "{{count}} days",
       "weeks": "{{count}} wk",
+      "month": "{{count}} mo",
       "months": "{{count}} mo"
     },
     "done": {
@@ -398,6 +399,7 @@
       "again": "coming back soon",
       "rest": "resting",
       "note": "The ones you missed come back shortly; the rest, right before you'd forget them. No streak to break — the box will be here tomorrow.",
+      "unsaved": "{{count}} didn't save — they'll come back next time.",
       "sign": "— K",
       "home": "Back to today"
     }

@@ -40,4 +40,10 @@ describe("formatInterval", () => {
     expect(formatInterval(14)).toContain("weeks"); // 2 sem
     expect(formatInterval(60)).toContain("months"); // 2 mes
   });
+
+  it("uses the singular month key for a single month, not months", () => {
+    const label = formatInterval(30); // round(30 / 30) = 1
+    expect(label).toContain("month");
+    expect(label).not.toContain("months");
+  });
 });
