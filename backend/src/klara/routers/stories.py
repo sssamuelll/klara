@@ -58,6 +58,8 @@ from klara.schemas.finish import (
     ScheduleBucket,
     ScheduleEntry,
     ScheduleOut,
+    StoryDifficultyIn,
+    StoryDifficultyOut,
     StoryFinishOut,
 )
 from klara.schemas.gender import GenderAttemptIn, GenderAttemptOut
@@ -125,6 +127,7 @@ def _serialize_story(story: Story, words: list[VocabItem], native_language: str)
         created_at=story.created_at,
         curriculum_note=curriculum_note,
         module_id=story.module_id,
+        perceived_difficulty=story.perceived_difficulty,
     )
 
 
@@ -678,3 +681,21 @@ async def finish_story(
         advanced = await advance_module_if_completed(db, user=user)
     await db.commit()
     return StoryFinishOut(finished_at=view.finished_at, module_advanced=advanced)
+
+
+@router.post("/{story_id}/difficulty", response_model=StoryDifficultyOut)
+async def set_story_difficulty(
+    story_id: UUID,
+    payload: StoryDifficultyIn,
+    db: DBSession,
+    user: CurrentUser,
+    locale: LocaleDep,
+) -> StoryDifficultyOut:
+    """One-tap difficulty signal from the Finish summary (consenso 2026-07-13:
+    the user says how the story felt instead of Klara inferring it from noisy
+    n=1 telemetry). Last tap wins; future story selection/generation may read
+    it — nothing consumes it automatically yet."""
+    story = await _load_or_404(db, story_id, user.id, locale)
+    story.perceived_difficulty = payload.value
+    await db.commit()
+    return StoryDifficultyOut(value=payload.value)

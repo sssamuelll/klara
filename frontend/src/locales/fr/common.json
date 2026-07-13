@@ -269,6 +269,12 @@
         "clear": "claires",
         "questions": "questions",
         "backToQuiz": "Voir mes réponses",
+        "difficulty": {
+          "title": "Cette histoire, tu l'as trouvée comment ?",
+          "tooEasy": "Trop facile",
+          "right": "Juste bien",
+          "tooHard": "Trop difficile"
+        },
         "souvenir": {
           "title": "La ligne qui reste",
           "sub": "De toute l’histoire, celle-ci tient toute seule."

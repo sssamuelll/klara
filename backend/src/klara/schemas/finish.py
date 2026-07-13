@@ -160,3 +160,14 @@ class StoryFinishOut(BaseModel):
 
     finished_at: datetime
     module_advanced: bool
+
+
+StoryDifficulty = Literal["too_easy", "right", "too_hard"]
+
+
+class StoryDifficultyIn(BaseModel):
+    value: StoryDifficulty
+
+
+class StoryDifficultyOut(BaseModel):
+    value: StoryDifficulty

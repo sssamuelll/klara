@@ -72,6 +72,7 @@ export interface Story {
   generation_cost_usd: number | null;
   created_at: string;
   module_id?: string | null;
+  perceived_difficulty?: StoryDifficultyValue | null;
 }
 
 export interface StoryListItem {
@@ -314,6 +315,8 @@ export interface MCResolveResponse {
   picked_index: number | null;
   option_scores: number[];
 }
+
+export type StoryDifficultyValue = "too_easy" | "right" | "too_hard";
 
 export interface UserUpdate {
   display_name?: string;

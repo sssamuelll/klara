@@ -269,6 +269,12 @@
         "clear": "claras",
         "questions": "perguntas",
         "backToQuiz": "Ver as minhas respostas",
+        "difficulty": {
+          "title": "Como foi esta história?",
+          "tooEasy": "Fácil demais",
+          "right": "No ponto",
+          "tooHard": "Difícil demais"
+        },
         "souvenir": {
           "title": "A linha que fica",
           "sub": "De toda a história, esta sustenta-se sozinha."

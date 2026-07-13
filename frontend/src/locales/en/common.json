@@ -269,6 +269,12 @@
         "clear": "clear",
         "questions": "questions",
         "backToQuiz": "See my answers",
+        "difficulty": {
+          "title": "How did this story feel?",
+          "tooEasy": "Too easy",
+          "right": "Just right",
+          "tooHard": "Too hard"
+        },
         "souvenir": {
           "title": "The line that stays",
           "sub": "Of the whole story, this one stands on its own."

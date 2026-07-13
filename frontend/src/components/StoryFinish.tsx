@@ -32,6 +32,7 @@ import type {
   ScheduleEntry,
   ShadowQuizItem,
   Story,
+  StoryDifficultyValue,
   StoryWord,
 } from "../api/types";
 import GenderPicker from "./GenderPicker";
@@ -946,6 +947,45 @@ function GenderClozeQuestion({
    SUMMARY
    ============================================================ */
 
+function DifficultyTap({ story }: { story: Story }): JSX.Element {
+  const { t } = useTranslation();
+  const [value, setValue] = useState<StoryDifficultyValue | null>(
+    story.perceived_difficulty ?? null,
+  );
+  const pick = (v: StoryDifficultyValue) => {
+    setValue(v);
+    // Best-effort like every other Finish signal.
+    void api.setStoryDifficulty(story.id, v).catch(() => undefined);
+  };
+  const opts: StoryDifficultyValue[] = ["too_easy", "right", "too_hard"];
+  const labels: Record<StoryDifficultyValue, string> = {
+    too_easy: t("story.finish.summary.difficulty.tooEasy"),
+    right: t("story.finish.summary.difficulty.right"),
+    too_hard: t("story.finish.summary.difficulty.tooHard"),
+  };
+  return (
+    <section
+      className="fin-difficulty"
+      aria-label={t("story.finish.summary.difficulty.title")}
+    >
+      <span className="fin-cap">{t("story.finish.summary.difficulty.title")}</span>
+      <div className="qcard__actions" style={{ marginTop: 8 }}>
+        {opts.map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={value === v ? "fin-btn fin-btn--primary" : "fin-btn fin-btn--ghost"}
+            aria-pressed={value === v}
+            onClick={() => pick(v)}
+          >
+            {labels[v]}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 interface SummaryProps {
   story: Story;
   scoresBySentence: Record<number, PronScores>;
@@ -1153,6 +1193,8 @@ function Summary({
           )}
         </p>
       </header>
+
+      <DifficultyTap story={story} />
 
       {souvenir && (
         <>

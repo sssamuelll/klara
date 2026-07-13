@@ -269,6 +269,12 @@
         "clear": "明瞭",
         "questions": "問",
         "backToQuiz": "回答を見る",
+        "difficulty": {
+          "title": "この物語の難しさは？",
+          "tooEasy": "簡単すぎた",
+          "right": "ちょうどいい",
+          "tooHard": "難しすぎた"
+        },
         "souvenir": {
           "title": "残る一行",
           "sub": "この物語の中で、これだけで成り立ちます。"

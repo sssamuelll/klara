@@ -269,6 +269,12 @@
         "clear": "klar",
         "questions": "Fragen",
         "backToQuiz": "Meine Antworten ansehen",
+        "difficulty": {
+          "title": "Wie war diese Geschichte für dich?",
+          "tooEasy": "Zu leicht",
+          "right": "Genau richtig",
+          "tooHard": "Zu schwer"
+        },
         "souvenir": {
           "title": "Die Zeile, die bleibt",
           "sub": "Von der ganzen Geschichte steht diese für sich."
