@@ -6,6 +6,16 @@
    Reads on top of tokens.css. Class names match Task 5's component.
    ============================================================ */
 
+.rr {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 720px;
+  min-height: 70vh;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
 /* ============================================================
    BODY + HEADER + PROGRESS
    ============================================================ */
