@@ -189,6 +189,14 @@ async def build_library(
                         dropped=candidate.dropped_lemmas,
                     )
                     continue
+                if candidate.gender_violations:
+                    log.info(
+                        "library.build.lint_retry",
+                        topic=topic,
+                        attempt=attempt,
+                        violations=candidate.gender_violations,
+                    )
+                    continue
                 draft = candidate
                 break
             if draft is None:

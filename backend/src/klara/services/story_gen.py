@@ -17,6 +17,7 @@ from klara.llm.base import LLMClient, Message
 from klara.llm.prompts import build_story_system_prompt, build_story_user_prompt
 from klara.models import Story, VocabItem
 from klara.models.enums import CEFRLevel, PartOfSpeech
+from klara.services.story_lint import gender_article_violations
 
 log = structlog.get_logger(__name__)
 
@@ -30,6 +31,7 @@ class GeneratedStory:
     story: Story
     target_words: list[VocabItem]
     dropped_lemmas: list[str]
+    gender_violations: list[str]
 
 
 @dataclass(slots=True)
@@ -44,6 +46,7 @@ class StoryDraft:
     provider: str | None
     model: str | None
     cost_usd: float | None
+    gender_violations: list[str]
 
 
 def _parse_pos(value: str | None) -> PartOfSpeech:
@@ -320,6 +323,16 @@ async def generate_story_draft(
         if missed:
             log.info("story.curriculum.missed", missed=missed, target_language=target_language)
 
+    gender_violations = await gender_article_violations(db, content, language=target_language)
+    if gender_violations:
+        # Señal de calidad. NO bloquea servir la story on-demand; bloquea
+        # compartirla (recycle/build la leen).
+        log.info(
+            "story.lint.gender_violations",
+            violations=gender_violations,
+            target_language=target_language,
+        )
+
     return StoryDraft(
         title=title,
         content=content,
@@ -331,6 +344,7 @@ async def generate_story_draft(
         provider=response.provider,
         model=response.model,
         cost_usd=response.cost_usd,
+        gender_violations=gender_violations,
     )
 
 
@@ -398,5 +412,8 @@ async def generate_story(
         cost_usd=draft.cost_usd,
     )
     return GeneratedStory(
-        story=story, target_words=draft.target_words, dropped_lemmas=draft.dropped_lemmas
+        story=story,
+        target_words=draft.target_words,
+        dropped_lemmas=draft.dropped_lemmas,
+        gender_violations=draft.gender_violations,
     )

@@ -64,6 +64,7 @@ class StoryOut(BaseModel):
     created_at: datetime
     curriculum_note: str | None = None
     module_id: UUID | None = None
+    perceived_difficulty: str | None = None
 
 
 class StoryCreateRequest(BaseModel):

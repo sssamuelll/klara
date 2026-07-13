@@ -63,6 +63,10 @@ class Story(Base):
     # summary, previewing tomorrow's lesson at a tonal/level register. The
     # next story isn't pre-generated; this is a vibe-set, not a spoiler.
     klara_note: Mapped[str | None] = mapped_column(String(400), nullable=True)
+    # One-tap difficulty signal from the Finish summary (consenso 2026-07-13:
+    # the user SAYS how the story felt — señal primaria; passive telemetry is
+    # the backup). Last tap wins. Values: too_easy | right | too_hard.
+    perceived_difficulty: Mapped[str | None] = mapped_column(String(16), nullable=True)
     created_at: Mapped[created_ts]
 
 

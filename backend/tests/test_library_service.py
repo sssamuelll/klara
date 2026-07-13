@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import func, select
@@ -109,6 +109,69 @@ async def test_pick_prefers_least_served_and_skips_claimed(db_session):
         )
         == 1
     )
+
+
+@pytest.mark.asyncio
+async def test_pick_prefers_due_vocab_overlap(db_session):
+    """Sesgo offline (consenso 2026-07-13): la entry con más overlap con las
+    cards due del usuario gana AUNQUE esté más servida — avanzar ya repasa."""
+    user = await _user(db_session)
+    module = await _module(db_session)
+    v_due = VocabItem(
+        id=uuid.uuid4(), language="de", lemma=f"due-{uuid.uuid4().hex[:6]}", pos=PartOfSpeech.NOUN
+    )
+    v_other = VocabItem(
+        id=uuid.uuid4(), language="de", lemma=f"oth-{uuid.uuid4().hex[:6]}", pos=PartOfSpeech.NOUN
+    )
+    db_session.add_all([v_due, v_other])
+    await db_session.flush()
+    db_session.add(
+        UserCard(
+            user_id=user.id,
+            vocab_item_id=v_due.id,
+            next_review_at=datetime.now(UTC) - timedelta(days=1),
+        )
+    )
+    fresh = _entry(module, served=0, hash_suffix="d")
+    fresh.target_vocab_item_ids = [v_other.id]
+    overlapping = _entry(module, served=5, hash_suffix="e")
+    overlapping.target_vocab_item_ids = [v_due.id]
+    db_session.add_all([fresh, overlapping])
+    await db_session.commit()
+
+    picked = await pick_library_entry(
+        db_session, user_id=user.id, module_id=module.id, native_language="es"
+    )
+    assert picked is not None and picked.id == overlapping.id
+
+
+@pytest.mark.asyncio
+async def test_pick_falls_back_to_least_served_when_nothing_due(db_session):
+    """Card programada al futuro → overlap 0 en todas → orden viejo."""
+    user = await _user(db_session)
+    module = await _module(db_session)
+    v = VocabItem(
+        id=uuid.uuid4(), language="de", lemma=f"fut-{uuid.uuid4().hex[:6]}", pos=PartOfSpeech.NOUN
+    )
+    db_session.add(v)
+    await db_session.flush()
+    db_session.add(
+        UserCard(
+            user_id=user.id,
+            vocab_item_id=v.id,
+            next_review_at=datetime.now(UTC) + timedelta(days=30),
+        )
+    )
+    fresh = _entry(module, served=0, hash_suffix="f")
+    worn = _entry(module, served=5, hash_suffix="9")
+    worn.target_vocab_item_ids = [v.id]  # overlap solo si la card estuviera due
+    db_session.add_all([fresh, worn])
+    await db_session.commit()
+
+    picked = await pick_library_entry(
+        db_session, user_id=user.id, module_id=module.id, native_language="es"
+    )
+    assert picked is not None and picked.id == fresh.id
 
 
 @pytest.mark.asyncio
@@ -269,6 +332,19 @@ async def test_pool_recycle_rules(db_session):
     assert (
         await maybe_recycle_to_library(
             db_session, story=story, dropped_lemmas=["Zucker"], topic=None, topic_origin="none"
+        )
+        is False
+    )
+    # gender violations → rejected: the lint gate guards POOL ENTRY (what gets
+    # shared); serving the on-demand story itself is not blocked here.
+    assert (
+        await maybe_recycle_to_library(
+            db_session,
+            story=story,
+            dropped_lemmas=[],
+            topic=None,
+            topic_origin="none",
+            gender_violations=["die Haus (oracle: das)"],
         )
         is False
     )

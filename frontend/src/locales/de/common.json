@@ -214,6 +214,7 @@
       "quiz": {
         "title": "Bevor wir Schluss machen, vier Fragen.",
         "sub": "Eine für das Verständnis, eine für die Produktion. Wenn du sie nicht hast, kannst du die Antwort aufdecken.",
+        "retry": { "cap": "Kurzes Nachspiel", "sub": "Die, die dir entwischt sind — noch einmal." },
         "mc": {
           "readAloud": "Lies sie laut vor oder tippe sie an",
           "heardButNoMatch": "Ich habe «{{transcript}}» gehört, aber das passt zu keiner Option.",
@@ -268,6 +269,12 @@
         "clear": "klar",
         "questions": "Fragen",
         "backToQuiz": "Meine Antworten ansehen",
+        "difficulty": {
+          "title": "Wie war diese Geschichte für dich?",
+          "tooEasy": "Zu leicht",
+          "right": "Genau richtig",
+          "tooHard": "Zu schwer"
+        },
         "souvenir": {
           "title": "Die Zeile, die bleibt",
           "sub": "Von der ganzen Geschichte steht diese für sich."

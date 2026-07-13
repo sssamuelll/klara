@@ -28,6 +28,7 @@ import type {
   SpeakHistoryTurn,
   SpeakTurnResponse,
   Story,
+  StoryDifficultyValue,
   StoryListItem,
   User,
   UserUpdate,
@@ -335,6 +336,12 @@ export const api = {
     request<GenderAttemptOut>(`/stories/${storyId}/gender/attempts`, {
       method: "POST",
       body: JSON.stringify(payload),
+    }),
+
+  setStoryDifficulty: (storyId: string, value: StoryDifficultyValue) =>
+    request<{ value: StoryDifficultyValue }>(`/stories/${storyId}/difficulty`, {
+      method: "POST",
+      body: JSON.stringify({ value }),
     }),
 
   genderReview: (limit = 20) => request<GenderReviewItem[]>(`/gender/review?limit=${limit}`),

@@ -214,6 +214,7 @@
       "quiz": {
         "title": "Antes de fechar, quatro perguntas.",
         "sub": "Uma para fixar a compreensão, outra para produzi-la. Se não a tiveres, podes ver a resposta.",
+        "retry": { "cap": "Revisão rápida", "sub": "As que escaparam — mais uma vez." },
         "mc": {
           "readAloud": "Lê em voz alta ou toca",
           "heardButNoMatch": "Ouvi «{{transcript}}», mas não corresponde a nenhuma opção.",
@@ -268,6 +269,12 @@
         "clear": "claras",
         "questions": "perguntas",
         "backToQuiz": "Ver as minhas respostas",
+        "difficulty": {
+          "title": "Como foi esta história?",
+          "tooEasy": "Fácil demais",
+          "right": "No ponto",
+          "tooHard": "Difícil demais"
+        },
         "souvenir": {
           "title": "A linha que fica",
           "sub": "De toda a história, esta sustenta-se sozinha."

@@ -4,15 +4,16 @@ completar gate (finished stories), and pool recycling (spec 2026-07-03)."""
 from __future__ import annotations
 
 import hashlib
+from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.curriculum.modules import enroll_cards, module_vocab_ids
-from klara.models import Module, Story, StoryLibrary, StoryView, User
+from klara.models import Module, Story, StoryLibrary, StoryView, User, UserCard
 
 log = structlog.get_logger(__name__)
 
@@ -39,19 +40,52 @@ def _claimed_by_user(user_id: UUID):
 async def pick_library_entry(
     db: AsyncSession, *, user_id: UUID, module_id: UUID, native_language: str
 ) -> StoryLibrary | None:
-    """Least-served active entry the user hasn't claimed; ties → oldest."""
-    stmt = (
-        select(StoryLibrary)
-        .where(
-            StoryLibrary.module_id == module_id,
-            StoryLibrary.native_language == native_language,
-            StoryLibrary.is_active.is_(True),
-            StoryLibrary.id.not_in(_claimed_by_user(user_id)),
+    """Entry with the most overlap with the user's due SRS vocab wins
+    (consenso 2026-07-13: avanzar ya repasa — the bias picks WHICH shared
+    entry to clone; claim-time stays LLM-free); ties → least served, then
+    oldest. Nothing due → every overlap is 0 → the old least-served order.
+    ponytail: Python-side scoring — the pool is capped at 50 rows per pair."""
+    entries = (
+        (
+            await db.execute(
+                select(StoryLibrary).where(
+                    StoryLibrary.module_id == module_id,
+                    StoryLibrary.native_language == native_language,
+                    StoryLibrary.is_active.is_(True),
+                    StoryLibrary.id.not_in(_claimed_by_user(user_id)),
+                )
+            )
         )
-        .order_by(StoryLibrary.times_served.asc(), StoryLibrary.created_at.asc())
-        .limit(1)
+        .scalars()
+        .all()
     )
-    return (await db.execute(stmt)).scalar_one_or_none()
+    if not entries:
+        return None
+    # Same "due" predicate as GET /srs/cards/due (routers/srs.py): NULL means
+    # enrolled-but-never-reviewed, which also deserves surfacing.
+    due_ids = set(
+        (
+            await db.execute(
+                select(UserCard.vocab_item_id).where(
+                    UserCard.user_id == user_id,
+                    or_(
+                        UserCard.next_review_at.is_(None),
+                        UserCard.next_review_at <= datetime.now(UTC),
+                    ),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+    return min(
+        entries,
+        key=lambda e: (
+            -len(due_ids & set(e.target_vocab_item_ids or [])),
+            e.times_served,
+            e.created_at,
+        ),
+    )
 
 
 async def count_available(
@@ -157,12 +191,14 @@ async def maybe_recycle_to_library(
     dropped_lemmas: list[str],
     topic: str | None,
     topic_origin: str,
+    gender_violations: list[str] | None = None,
 ) -> bool:
     """Pool growth: copy a clean live generation into the library. Rules
     (spec §7): no free-text topics (privacy), full coverage only (quality),
-    module-conditioned only, hash-deduped, capped per (module, native).
-    Best-effort — callers must never let a failure here break story creation."""
-    if story.module_id is None or dropped_lemmas:
+    lint-clean only (no provable gender-article errors), module-conditioned
+    only, hash-deduped, capped per (module, native). Best-effort — callers
+    must never let a failure here break story creation."""
+    if story.module_id is None or dropped_lemmas or gender_violations:
         return False
     # Fail closed on provenance (privacy, spec §7): a present topic is only
     # shareable when the client explicitly marked it as a suggestion chip.

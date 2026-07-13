@@ -17,7 +17,7 @@
  *  - NextSteps: Another story / Re-read / Home.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type {
@@ -32,11 +32,18 @@ import type {
   ScheduleEntry,
   ShadowQuizItem,
   Story,
+  StoryDifficultyValue,
   StoryWord,
 } from "../api/types";
 import GenderPicker from "./GenderPicker";
 import { startAudioBars } from "../lib/audioBars";
 import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
+import {
+  currentItem,
+  initQuizSession,
+  mainResults,
+  quizSessionReducer,
+} from "../lib/quizSession";
 import { startSilenceDetector } from "../lib/silenceDetector";
 import { speak, stop as stopTTS } from "../lib/tts";
 import { useMicScorer } from "../lib/useMicScorer";
@@ -175,87 +182,92 @@ interface QuizProps {
 }
 
 function Quiz({ items, story, onComplete }: QuizProps): JSX.Element {
-  const [idx, setIdx] = useState(0);
-  const [results, setResults] = useState<QuizResult[]>([]);
+  const [state, dispatch] = useReducer(quizSessionReducer, items, initQuizSession);
 
-  const total = items.length;
-  const q = items[idx];
-  const isLast = idx === total - 1;
+  // Timing per item (patrón #115 / RecallReviewSession): shownAt resets each
+  // time a new item lands on screen.
+  const shownAtRef = useRef(performance.now());
+  useEffect(() => {
+    shownAtRef.current = performance.now();
+  }, [state.phase, state.pos]);
+
+  // Deliberately not depending on onComplete (parent passes an inline
+  // callback) — only the phase flipping to "done" should fire this.
+  useEffect(() => {
+    if (state.phase === "done") onComplete(mainResults(state));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.phase]);
+
+  const cur = currentItem(state);
+  if (cur === null) return <></>;
+  const { item: q, index } = cur;
+
+  // "toSummary" only when no retry round can follow: in retry, or in main
+  // with a clean sheet so far (children render the label AFTER answering,
+  // when the current answer is already in state.answers).
+  const failedSoFar = state.answers.some((a) => a.phase === "main" && !a.correct);
+  const isLast =
+    state.pos === state.order.length - 1 && (state.phase === "retry" || !failedSoFar);
 
   const onAnswered = (r: Omit<QuizResult, "index" | "qType">) => {
-    const full: QuizResult = { index: idx, qType: q.type, ...r };
-    setResults((rs) => [...rs, full]);
+    const elapsedMs = Math.max(0, Math.round(performance.now() - shownAtRef.current));
+    dispatch({ type: "answer", correct: r.correct, revealed: r.revealed });
     // Best-effort persistence — failures don't block the UX. Gender items
     // record their own diadic evidence (recordGenderAttempt), so skip the
     // generic quiz-attempt record for them.
     if (q.type !== "gender_cloze") {
       void api
         .recordQuizAttempt(story.id, {
-          question_index: idx,
+          question_index: index,
           question_type: q.type,
-          was_correct: full.correct,
-          was_revealed: full.revealed,
+          was_correct: r.correct,
+          was_revealed: r.revealed,
+          detail: { elapsed_ms: elapsedMs, phase: state.phase === "retry" ? "retry" : "main" },
         })
         .catch(() => undefined);
     }
   };
 
-  const onNext = () => {
-    if (isLast) onComplete(results);
-    else setIdx((i) => i + 1);
-  };
+  const onNext = () => dispatch({ type: "next" });
 
   return (
     <>
-      <QuizHero idx={idx} total={total} />
-      <div className="qstage" key={idx /* remount each q for clean state */}>
+      <QuizHero
+        idx={state.pos}
+        total={state.order.length}
+        retry={state.phase === "retry"}
+      />
+      <div
+        className="qstage"
+        key={`${state.phase}-${state.pos}` /* remount each q for clean state */}
+      >
         {q.type === "mc" && (
-          <MCQuestion
-            q={q}
-            story={story}
-            onAnswered={onAnswered}
-            onNext={onNext}
-            isLast={isLast}
-          />
+          <MCQuestion q={q} story={story} onAnswered={onAnswered} onNext={onNext} isLast={isLast} />
         )}
         {q.type === "cloze" && (
-          <ClozeQuestion
-            q={q}
-            story={story}
-            onAnswered={onAnswered}
-            onNext={onNext}
-            isLast={isLast}
-          />
+          <ClozeQuestion q={q} story={story} onAnswered={onAnswered} onNext={onNext} isLast={isLast} />
         )}
         {q.type === "shadow" && (
-          <ShadowQuestion
-            q={q}
-            story={story}
-            onAnswered={onAnswered}
-            onNext={onNext}
-            isLast={isLast}
-          />
+          <ShadowQuestion q={q} story={story} onAnswered={onAnswered} onNext={onNext} isLast={isLast} />
         )}
         {q.type === "gender_cloze" && (
-          <GenderClozeQuestion
-            q={q}
-            story={story}
-            onAnswered={onAnswered}
-            onNext={onNext}
-            isLast={isLast}
-          />
+          <GenderClozeQuestion q={q} story={story} onAnswered={onAnswered} onNext={onNext} isLast={isLast} />
         )}
       </div>
     </>
   );
 }
 
-function QuizHero({ idx, total }: { idx: number; total: number }): JSX.Element {
+function QuizHero({ idx, total, retry }: { idx: number; total: number; retry: boolean }): JSX.Element {
   const { t } = useTranslation();
   return (
     <header className="quiz-hero">
-      <h1 className="quiz-hero__title">{t("story.finish.quiz.title")}</h1>
-      <p className="quiz-hero__sub">{t("story.finish.quiz.sub")}</p>
+      <h1 className="quiz-hero__title">
+        {retry ? t("story.finish.quiz.retry.cap") : t("story.finish.quiz.title")}
+      </h1>
+      <p className="quiz-hero__sub">
+        {retry ? t("story.finish.quiz.retry.sub") : t("story.finish.quiz.sub")}
+      </p>
       <div className="quiz-hero__prog">
         <span className="quiz-hero__count">
           {String(idx + 1).padStart(2, "0")}{" "}
@@ -935,6 +947,45 @@ function GenderClozeQuestion({
    SUMMARY
    ============================================================ */
 
+function DifficultyTap({ story }: { story: Story }): JSX.Element {
+  const { t } = useTranslation();
+  const [value, setValue] = useState<StoryDifficultyValue | null>(
+    story.perceived_difficulty ?? null,
+  );
+  const pick = (v: StoryDifficultyValue) => {
+    setValue(v);
+    // Best-effort like every other Finish signal.
+    void api.setStoryDifficulty(story.id, v).catch(() => undefined);
+  };
+  const opts: StoryDifficultyValue[] = ["too_easy", "right", "too_hard"];
+  const labels: Record<StoryDifficultyValue, string> = {
+    too_easy: t("story.finish.summary.difficulty.tooEasy"),
+    right: t("story.finish.summary.difficulty.right"),
+    too_hard: t("story.finish.summary.difficulty.tooHard"),
+  };
+  return (
+    <section
+      className="fin-difficulty"
+      aria-label={t("story.finish.summary.difficulty.title")}
+    >
+      <span className="fin-cap">{t("story.finish.summary.difficulty.title")}</span>
+      <div className="qcard__actions" style={{ marginTop: 8 }}>
+        {opts.map((v) => (
+          <button
+            key={v}
+            type="button"
+            className={value === v ? "fin-btn fin-btn--primary" : "fin-btn fin-btn--ghost"}
+            aria-pressed={value === v}
+            onClick={() => pick(v)}
+          >
+            {labels[v]}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 interface SummaryProps {
   story: Story;
   scoresBySentence: Record<number, PronScores>;
@@ -1142,6 +1193,8 @@ function Summary({
           )}
         </p>
       </header>
+
+      <DifficultyTap story={story} />
 
       {souvenir && (
         <>

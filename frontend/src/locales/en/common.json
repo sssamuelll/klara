@@ -214,6 +214,7 @@
       "quiz": {
         "title": "Before we close, four questions.",
         "sub": "One to lock in comprehension, another to produce it. If you don’t have it on hand, you can reveal the answer.",
+        "retry": { "cap": "Quick review", "sub": "The ones that got away — one more try." },
         "mc": {
           "readAloud": "Read it aloud or tap",
           "heardButNoMatch": "I heard «{{transcript}}», but it doesn’t match any option.",
@@ -268,6 +269,12 @@
         "clear": "clear",
         "questions": "questions",
         "backToQuiz": "See my answers",
+        "difficulty": {
+          "title": "How did this story feel?",
+          "tooEasy": "Too easy",
+          "right": "Just right",
+          "tooHard": "Too hard"
+        },
         "souvenir": {
           "title": "The line that stays",
           "sub": "Of the whole story, this one stands on its own."
