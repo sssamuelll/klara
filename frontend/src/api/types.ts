@@ -283,8 +283,11 @@ export interface QuizAttemptIn {
   // to these three at the call site.
   question_type: "mc" | "cloze" | "shadow";
   was_correct: boolean;
-  was_revealed?: boolean;
-  detail?: Record<string, unknown> | null;
+  was_revealed: boolean;
+  // Instrumentación (consenso 2026-07-13): elapsed desde que el ítem aparece
+  // hasta que se responde, y en qué pase ocurrió. Va al slot JSONB
+  // quiz_attempts.detail que ya existía sin uso.
+  detail?: { elapsed_ms: number; phase: "main" | "retry" } | null;
 }
 
 export type ScheduleBucket =

@@ -214,6 +214,7 @@
       "quiz": {
         "title": "Before we close, four questions.",
         "sub": "One to lock in comprehension, another to produce it. If you don’t have it on hand, you can reveal the answer.",
+        "retry": { "cap": "Quick review", "sub": "The ones that got away — one more try." },
         "mc": {
           "readAloud": "Read it aloud or tap",
           "heardButNoMatch": "I heard «{{transcript}}», but it doesn’t match any option.",

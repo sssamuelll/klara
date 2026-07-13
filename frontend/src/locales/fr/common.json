@@ -214,6 +214,7 @@
       "quiz": {
         "title": "Avant de conclure, quatre questions.",
         "sub": "Une pour fixer la compréhension, une pour la produire. Si tu ne l’as pas, tu peux voir la réponse.",
+        "retry": { "cap": "Révision rapide", "sub": "Celles qui t'ont échappé — encore une fois." },
         "mc": {
           "readAloud": "Lis-la à voix haute ou touche",
           "heardButNoMatch": "J’ai entendu « {{transcript}} », mais ça ne correspond à aucune option.",
