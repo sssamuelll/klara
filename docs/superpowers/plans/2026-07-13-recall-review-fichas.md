@@ -504,100 +504,211 @@ git commit -m "feat(recall): i18n (6 locales) + ported ficha styles; relabel /re
 
 ---
 
-## Task 5: Frontend — `RecallReviewSession` component
+## Task 5a: Frontend — `lib/recallSession.ts` (pure session reducer)
 
 **Files:**
-- Create: `frontend/src/components/RecallReviewSession.tsx`
-- Test: `frontend/src/components/RecallReviewSession.test.tsx`
+- Create: `frontend/src/lib/recallSession.ts`
+- Test: `frontend/src/lib/recallSession.test.ts`
 
 **Interfaces:**
-- Consumes: `api.dueCards`, `api.reviewCard` (Task 2), `projectIntervals` + `formatInterval` (Task 3), `speak` from `../lib/tts`, `recall.*` i18n + `.rr-*` CSS (Task 4), `CardOut`/`ReviewRating` types.
-- Produces: `default export RecallReviewSession(props: { onExit: () => void; exitLabel: string })`. Root element `<main className="rr" data-state={phase}>`.
+- Consumes: `CardOut`, `ReviewRating` from `../api/types`.
+- Produces: `RecallState`, `RecallAction`, `initialRecallState`, `recallReducer(state, action)`, `restedCount(state)`. The component (Task 5b) drives this via `useReducer`; all side effects (`api.dueCards`, `api.reviewCard`, `speak`, elapsed timing) stay in the component — the reducer is pure.
+
+Rationale: the repo has no component-test infra and, by convention, keeps testable logic in `lib/` as pure functions (all existing tests are `lib/*.test.ts`). This task extracts the session state machine so it is unit-tested like the rest of `lib/`; Task 5b is a thin, untested view (like `GenderReviewSession`).
 
 - [ ] **Step 1: Write the failing test**
 
-Create `frontend/src/components/RecallReviewSession.test.tsx`:
+Create `frontend/src/lib/recallSession.test.ts`:
 
-```tsx
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+```ts
+import { describe, expect, it } from "vitest";
+import type { CardOut } from "../api/types";
+import { initialRecallState, recallReducer, restedCount } from "./recallSession";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k) }),
-}));
-vi.mock("../lib/tts", () => ({ speak: vi.fn() }));
-
-const dueCards = vi.fn();
-const reviewCard = vi.fn(async () => ({}));
-vi.mock("../api/client", () => ({ api: { dueCards: (...a: unknown[]) => dueCards(...a), reviewCard: (...a: unknown[]) => reviewCard(...a) } }));
-
-import RecallReviewSession from "./RecallReviewSession";
-
-const card = (over = {}) => ({
-  id: "c1", vocab_item_id: "v1", lemma: "Bäckerei", pos: "noun",
-  translation: "la panadería", example_target: "Die Bäckerei öffnet.", gender: "die",
-  state: "new", interval_days: 0, next_review_at: null, repetitions: 0, ease: 2.5, ...over,
+const card = (id: string): CardOut => ({
+  id, vocab_item_id: `v-${id}`, lemma: "Wort", pos: "noun", translation: "palabra",
+  example_target: "Ein Wort.", gender: "das", state: "new", interval_days: 0,
+  next_review_at: null, repetitions: 0, ease: 2.5,
 });
 
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
-
-describe("RecallReviewSession", () => {
-  it("flips a card then submits a rating with a numeric elapsed and advances", async () => {
-    dueCards.mockResolvedValue([card({ id: "c1" }), card({ id: "c2", lemma: "Haus" })]);
-    render(<RecallReviewSession onExit={() => {}} exitLabel="Salir" />);
-
-    await waitFor(() => expect(screen.getByText("Bäckerei")).toBeInTheDocument());
-    // front hides the article; flip to reveal
-    fireEvent.click(screen.getByText("recall.flip"));
-    fireEvent.click(screen.getByText("recall.rate.good"));
-
-    expect(reviewCard).toHaveBeenCalledTimes(1);
-    const [id, rating, elapsed] = reviewCard.mock.calls[0];
-    expect(id).toBe("c1");
-    expect(rating).toBe("good");
-    expect(typeof elapsed).toBe("number");
-    // advanced to card 2
-    await waitFor(() => expect(screen.getByText("Haus")).toBeInTheDocument());
+describe("recallReducer", () => {
+  it("loaded with cards → prompt at index 0", () => {
+    const s = recallReducer(initialRecallState, { type: "loaded", cards: [card("a"), card("b")] });
+    expect(s.phase).toBe("prompt");
+    expect(s.idx).toBe(0);
+    expect(s.cards).toHaveLength(2);
   });
 
-  it("shows the done summary after the last card", async () => {
-    dueCards.mockResolvedValue([card()]);
-    render(<RecallReviewSession onExit={() => {}} exitLabel="Salir" />);
-    await waitFor(() => expect(screen.getByText("Bäckerei")).toBeInTheDocument());
-    fireEvent.click(screen.getByText("recall.flip"));
-    fireEvent.click(screen.getByText("recall.rate.easy"));
-    await waitFor(() => expect(screen.getByText("recall.done.label")).toBeInTheDocument());
+  it("loaded with no cards → empty", () => {
+    expect(recallReducer(initialRecallState, { type: "loaded", cards: [] }).phase).toBe("empty");
   });
 
-  it("renders the empty state when nothing is due", async () => {
-    dueCards.mockResolvedValue([]);
-    render(<RecallReviewSession onExit={() => {}} exitLabel="Salir" />);
-    await waitFor(() => expect(screen.getByText("recall.empty")).toBeInTheDocument());
+  it("failed → failed phase", () => {
+    expect(recallReducer(initialRecallState, { type: "failed" }).phase).toBe("failed");
+  });
+
+  it("flip only advances prompt → revealed; it is a no-op from any other phase", () => {
+    const prompt = recallReducer(initialRecallState, { type: "loaded", cards: [card("a")] });
+    expect(recallReducer(prompt, { type: "flip" }).phase).toBe("revealed");
+    const revealed = recallReducer(prompt, { type: "flip" });
+    expect(recallReducer(revealed, { type: "flip" })).toBe(revealed); // no-op returns same ref
+  });
+
+  it("rate is a no-op unless revealed", () => {
+    const prompt = recallReducer(initialRecallState, { type: "loaded", cards: [card("a")] });
+    expect(recallReducer(prompt, { type: "rate", rating: "good" })).toBe(prompt);
+  });
+
+  it("rate advances to the next card (back to prompt) and counts 'again'", () => {
+    let s = recallReducer(initialRecallState, { type: "loaded", cards: [card("a"), card("b")] });
+    s = recallReducer(s, { type: "flip" });
+    s = recallReducer(s, { type: "rate", rating: "again" });
+    expect(s.phase).toBe("prompt");
+    expect(s.idx).toBe(1);
+    expect(s.againCount).toBe(1);
+  });
+
+  it("rating the last card → done; restedCount = total - again", () => {
+    let s = recallReducer(initialRecallState, { type: "loaded", cards: [card("a"), card("b")] });
+    s = recallReducer(recallReducer(s, { type: "flip" }), { type: "rate", rating: "good" }); // card a: good
+    s = recallReducer(recallReducer(s, { type: "flip" }), { type: "rate", rating: "again" }); // card b: again (last)
+    expect(s.phase).toBe("done");
+    expect(s.againCount).toBe(1);
+    expect(restedCount(s)).toBe(1); // 2 total - 1 again
   });
 });
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-From `frontend/`: `npx vitest run src/components/RecallReviewSession.test.tsx`
+From `frontend/`: `npx vitest run src/lib/recallSession.test.ts`
 Expected: FAIL — module not found.
 
-- [ ] **Step 3: Implement the component**
+- [ ] **Step 3: Implement `recallSession.ts`**
+
+Create `frontend/src/lib/recallSession.ts`:
+
+```ts
+import type { CardOut, ReviewRating } from "../api/types";
+
+/**
+ * Pure state machine for a recall-review session. The component (RecallReviewSession)
+ * drives this via useReducer and owns all side effects (fetching due cards, POSTing
+ * the review with its elapsed time, TTS). Keeping the transitions here makes the
+ * session's behaviour unit-testable without a DOM renderer.
+ */
+export type RecallPhase = "loading" | "failed" | "empty" | "prompt" | "revealed" | "done";
+
+export interface RecallState {
+  cards: CardOut[];
+  idx: number;
+  phase: RecallPhase;
+  againCount: number;
+}
+
+export type RecallAction =
+  | { type: "loaded"; cards: CardOut[] }
+  | { type: "failed" }
+  | { type: "flip" }
+  | { type: "rate"; rating: ReviewRating };
+
+export const initialRecallState: RecallState = {
+  cards: [],
+  idx: 0,
+  phase: "loading",
+  againCount: 0,
+};
+
+export function recallReducer(state: RecallState, action: RecallAction): RecallState {
+  switch (action.type) {
+    case "loaded":
+      return {
+        cards: action.cards,
+        idx: 0,
+        phase: action.cards.length === 0 ? "empty" : "prompt",
+        againCount: 0,
+      };
+    case "failed":
+      return { ...state, phase: "failed" };
+    case "flip":
+      return state.phase === "prompt" ? { ...state, phase: "revealed" } : state;
+    case "rate": {
+      if (state.phase !== "revealed") return state;
+      const againCount = state.againCount + (action.rating === "again" ? 1 : 0);
+      const nextIdx = state.idx + 1;
+      return nextIdx < state.cards.length
+        ? { ...state, idx: nextIdx, phase: "prompt", againCount }
+        : { ...state, phase: "done", againCount };
+    }
+    default:
+      return state;
+  }
+}
+
+/** Cards that were NOT rated "again" this session — the "descansan" count. */
+export function restedCount(state: RecallState): number {
+  return state.cards.length - state.againCount;
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+From `frontend/`: `npx vitest run src/lib/recallSession.test.ts` → Expected: PASS (7/7)
+`npm run typecheck` → clean
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add frontend/src/lib/recallSession.ts frontend/src/lib/recallSession.test.ts
+git commit -m "feat(recall): pure session reducer (recallSession)"
+```
+
+---
+
+## Task 5b: Frontend — `RecallReviewSession` component (thin view)
+
+**Files:**
+- Create: `frontend/src/components/RecallReviewSession.tsx`
+- Modify: `frontend/src/styles/recall-review.css` (add the `.rr` base layout rule)
+
+**Interfaces:**
+- Consumes: `recallReducer`/`initialRecallState`/`restedCount` (Task 5a), `api.dueCards`/`api.reviewCard` (Task 2), `projectIntervals`/`formatInterval` (Task 3), `speak` from `../lib/tts`, `recall.*` i18n + `.rr-*` CSS (Task 4), `CardOut`/`ReviewRating` types.
+- Produces: `default export RecallReviewSession(props: { onExit: () => void; exitLabel: string })`. Root: `<main className="rr" data-state={phase}>`.
+
+No unit test (the repo does not test components — `GenderReviewSession` has none either; the session's logic is covered by `recallSession.test.ts`, `srsProjection.test.ts`, and `client.reviewCard.test.ts`).
+
+- [ ] **Step 1: Add the `.rr` base layout rule**
+
+The ported CSS (Task 4) excluded the mockup's APP-SHELL group, so `.rr` has no layout of its own and `.rr-deck { flex: 1 }` has no flex parent. Model the frame on the sibling session screen `.gr` (`frontend/src/styles/gender-review.css`: `max-width: 36rem; margin: 0 auto; padding: 2rem 1.25rem;`), but make `.rr` a flex column so the deck can center. Add to the TOP of `frontend/src/styles/recall-review.css` (after the header comment):
+
+```css
+.rr {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 720px;
+  min-height: 70vh;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+```
+
+- [ ] **Step 2: Implement the component**
 
 Create `frontend/src/components/RecallReviewSession.tsx`:
 
 ```tsx
 import "../styles/recall-review.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "../api/client";
-import type { CardOut, ReviewRating } from "../api/types";
+import type { ReviewRating } from "../api/types";
 import { speak } from "../lib/tts";
 import { formatInterval, projectIntervals } from "../lib/srsProjection";
+import { initialRecallState, recallReducer, restedCount } from "../lib/recallSession";
 
-type Phase = "loading" | "failed" | "empty" | "prompt" | "revealed" | "done";
 const RATINGS: ReviewRating[] = ["again", "hard", "good", "easy"];
 
 interface Props {
@@ -607,10 +718,7 @@ interface Props {
 
 export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.Element {
   const { t } = useTranslation();
-  const [cards, setCards] = useState<CardOut[]>([]);
-  const [idx, setIdx] = useState(0);
-  const [phase, setPhase] = useState<Phase>("loading");
-  const [againCount, setAgainCount] = useState(0);
+  const [state, dispatch] = useReducer(recallReducer, initialRecallState);
   const shownAt = useRef<number>(0);
 
   useEffect(() => {
@@ -619,76 +727,85 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
       .dueCards(50)
       .then((rows) => {
         if (!alive) return;
-        setCards(rows);
-        setPhase(rows.length === 0 ? "empty" : "prompt");
+        dispatch({ type: "loaded", cards: rows });
         shownAt.current = performance.now();
       })
-      .catch(() => alive && setPhase("failed"));
+      .catch(() => alive && dispatch({ type: "failed" }));
     return () => {
       alive = false;
     };
   }, []);
 
-  const card = cards[idx];
+  // Reset the per-card timer whenever a new card comes on screen.
+  useEffect(() => {
+    if (state.phase === "prompt") shownAt.current = performance.now();
+  }, [state.idx, state.phase]);
+
+  const card = state.cards[state.idx];
 
   const rate = useCallback(
     (rating: ReviewRating) => {
       if (!card) return;
       const elapsed = Math.max(0, Math.round((performance.now() - shownAt.current) / 1000));
       void api.reviewCard(card.id, rating, elapsed).catch(() => undefined);
-      if (rating === "again") setAgainCount((n) => n + 1);
-      if (idx + 1 < cards.length) {
-        setIdx(idx + 1);
-        setPhase("prompt");
-        shownAt.current = performance.now();
-      } else {
-        setPhase("done");
-      }
+      dispatch({ type: "rate", rating });
     },
-    [card, idx, cards.length],
+    [card],
   );
 
-  // Keyboard: space flips, 1-4 rate.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (phase === "prompt" && e.code === "Space") {
+      if (state.phase === "prompt" && e.code === "Space") {
         e.preventDefault();
-        setPhase("revealed");
-      } else if (phase === "revealed" && ["1", "2", "3", "4"].includes(e.key)) {
+        dispatch({ type: "flip" });
+      } else if (state.phase === "revealed" && ["1", "2", "3", "4"].includes(e.key)) {
         rate(RATINGS[Number(e.key) - 1]);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, rate]);
+  }, [state.phase, rate]);
 
-  if (phase === "loading") {
-    return <main className="rr"><p className="rr__loading k-mono">{t("recall.loading")}</p></main>;
-  }
-  if (phase === "failed" || phase === "empty") {
+  if (state.phase === "loading") {
     return (
       <main className="rr">
-        <h1 className="rr__title">{t("recall.title")}</h1>
-        <p className="rr__empty">{t(phase === "failed" ? "recall.failed" : "recall.empty")}</p>
-        <button type="button" className="rr-done__cta" onClick={onExit}>{exitLabel}</button>
+        <p className="rr__loading k-mono">{t("recall.loading")}</p>
       </main>
     );
   }
-  if (phase === "done") {
-    const rested = cards.length - againCount;
+  if (state.phase === "failed" || state.phase === "empty") {
+    return (
+      <main className="rr">
+        <h1 className="rr__title">{t("recall.title")}</h1>
+        <p className="rr__empty">{t(state.phase === "failed" ? "recall.failed" : "recall.empty")}</p>
+        <button type="button" className="rr-done__cta" onClick={onExit}>
+          {exitLabel}
+        </button>
+      </main>
+    );
+  }
+  if (state.phase === "done") {
     return (
       <main className="rr" data-state="done">
         <section className="rr-done">
           <span className="rr-done__folio k-mono">{t("recall.done.kicker")}</span>
-          <span className="rr-done__count">{cards.length}</span>
+          <span className="rr-done__count">{state.cards.length}</span>
           <span className="rr-done__label">{t("recall.done.label")}</span>
           <div className="rr-done__ledger">
-            <div className="rr-done__stat"><span className="rr-done__stat-n rr-done__stat-n--accent">{againCount}</span><span className="rr-done__stat-l">{t("recall.done.again")}</span></div>
-            <div className="rr-done__stat"><span className="rr-done__stat-n">{rested}</span><span className="rr-done__stat-l">{t("recall.done.rest")}</span></div>
+            <div className="rr-done__stat">
+              <span className="rr-done__stat-n rr-done__stat-n--accent">{state.againCount}</span>
+              <span className="rr-done__stat-l">{t("recall.done.again")}</span>
+            </div>
+            <div className="rr-done__stat">
+              <span className="rr-done__stat-n">{restedCount(state)}</span>
+              <span className="rr-done__stat-l">{t("recall.done.rest")}</span>
+            </div>
           </div>
           <p className="rr-done__note">{t("recall.done.note")}</p>
           <span className="rr-done__sign">{t("recall.done.sign")}</span>
-          <button type="button" className="rr-done__cta" onClick={onExit}>{t("recall.done.home")} →</button>
+          <button type="button" className="rr-done__cta" onClick={onExit}>
+            {t("recall.done.home")} →
+          </button>
         </section>
       </main>
     );
@@ -697,15 +814,22 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
   // phase === "prompt" | "revealed"
   const intervals = projectIntervals(card);
   return (
-    <main className="rr" data-state={phase}>
+    <main className="rr" data-state={state.phase}>
       <header className="rr-head">
-        <button type="button" className="rr-head__exit k-mono" onClick={onExit}>{t("recall.exit")}</button>
-        <div className="rr-head__title"><span className="rr-head__k">K</span><span className="rr-head__name">{t("recall.title")}</span></div>
+        <button type="button" className="rr-head__exit k-mono" onClick={onExit}>
+          {t("recall.exit")}
+        </button>
+        <div className="rr-head__title">
+          <span className="rr-head__k">K</span>
+          <span className="rr-head__name">{t("recall.title")}</span>
+        </div>
         <span className="rr-head__meta k-mono">{t("recall.kicker")}</span>
       </header>
 
       <div className="rr-prog">
-        <span className="rr-prog__count k-mono">{t("recall.progress", { done: idx + 1, total: cards.length })}</span>
+        <span className="rr-prog__count k-mono">
+          {t("recall.progress", { done: state.idx + 1, total: state.cards.length })}
+        </span>
       </div>
 
       <section className="rr-deck">
@@ -713,7 +837,11 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
           <div className="rr-ficha__inner">
             <div className="rr-ficha__face rr-ficha__face--front">
               <span className="rr-ficha__word">{card.lemma}</span>
-              {card.gender && <span className="rr-ficha__gender-cue k-mono"><b>der</b> · <b>die</b> · <b>das</b> ?</span>}
+              {card.gender && (
+                <span className="rr-ficha__gender-cue k-mono">
+                  <b>der</b> · <b>die</b> · <b>das</b> ?
+                </span>
+              )}
               <span className="rr-ficha__cue">{t("recall.cue")}</span>
               <button type="button" className="rr-listen k-mono" onClick={() => speak(card.lemma)}>
                 <span className="rr-listen__tri" /> {t("recall.listen")}
@@ -736,7 +864,7 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
         </div>
 
         <div data-show="prompt" className="rr-deck__prompt">
-          <button type="button" className="rr-flip" onClick={() => setPhase("revealed")}>
+          <button type="button" className="rr-flip" onClick={() => dispatch({ type: "flip" })}>
             {t("recall.flip")} <span className="rr-flip__arrow">↻</span>
           </button>
           <p className="rr-deck__hint">{t("recall.flipHint")}</p>
@@ -755,26 +883,28 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
             </button>
           ))}
         </div>
-        <p className="rr-deck__hint" data-show="revealed">{t("recall.rateHint")}</p>
+        <p className="rr-deck__hint" data-show="revealed">
+          {t("recall.rateHint")}
+        </p>
       </section>
     </main>
   );
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 3: Verify**
 
-From `frontend/`: `npx vitest run src/components/RecallReviewSession.test.tsx`
-Expected: PASS (all three tests). If the flip/rate visibility interferes with `getByText` (elements hidden via CSS `display:none` still exist in the DOM and are found by `getByText`), the tests pass regardless of visual state.
+From `frontend/`:
+`npm run typecheck` → clean
+`npx vitest run` → all existing + new lib tests pass (no component test added)
+`npm run build` → succeeds
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add frontend/src/components/RecallReviewSession.tsx frontend/src/components/RecallReviewSession.test.tsx
-git commit -m "feat(recall): RecallReviewSession — flip card, rate, elapsed timing, done summary"
+git add frontend/src/components/RecallReviewSession.tsx frontend/src/styles/recall-review.css
+git commit -m "feat(recall): RecallReviewSession view over the session reducer + .rr layout"
 ```
-
----
 
 ## Task 6: Frontend — wire `"cards"` segment into `Practice.tsx` + verify
 
