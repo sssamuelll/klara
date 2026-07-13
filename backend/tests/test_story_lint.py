@@ -66,6 +66,28 @@ async def test_unknown_noun_skipped_and_non_de_empty(db_session, lexicon):
 
 
 @pytest.mark.asyncio
+async def test_relative_pronoun_not_flagged(db_session, lexicon):
+    # "der" tras coma es pronombre relativo (der Mann, der ...), NO artículo de
+    # Brot — la coma obligatoria de la cláusula relativa lo delata. Under-flag.
+    await load_gender_lexicon(db_session, rows=[GenderRow(lemma="Brot", pos="noun", gender="das")])
+    await db_session.commit()
+    out = await gender_article_violations(
+        db_session, _content("Der Mann, der Brot kauft, ist müde."), language="de"
+    )
+    assert out == []
+
+
+@pytest.mark.asyncio
+async def test_flags_after_clause_when_not_preceded_by_punct(db_session, lexicon):
+    # Control positivo: el error dentro de la cláusula SÍ se flaggea cuando el
+    # artículo no viene precedido de puntuación.
+    out = await gender_article_violations(
+        db_session, _content("Er sagt, dass die Haus brennt."), language="de"
+    )
+    assert out == ["die Haus (oracle: das)"]
+
+
+@pytest.mark.asyncio
 async def test_multiple_violations_reported_in_order(db_session, lexicon):
     out = await gender_article_violations(
         db_session, _content("Das Frau kocht.", "Der Haus brennt."), language="de"

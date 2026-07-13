@@ -8,8 +8,6 @@ PROVABLE from the lexicon; a miss is fine, a false positive is not."""
 
 from __future__ import annotations
 
-from itertools import pairwise
-
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,10 +53,24 @@ async def gender_article_violations(db: AsyncSession, content: dict, *, language
     for sentence in content.get("sentences", []) or []:
         if not isinstance(sentence, dict):
             continue  # el JSON del LLM puede traer entradas malformadas
-        tokens = list(word_tokens_by_index(sentence.get("target") or "").values())
-        for art, noun in pairwise(tokens):
+        # Los ÍNDICES cuentan TODOS los tokens (palabra/espacio/puntuación) —
+        # ver word_tokens_by_index. Dos palabras separadas solo por un espacio
+        # distan exactamente 2; cualquier puntuación entre medio abre el gap.
+        items = sorted(word_tokens_by_index(sentence.get("target") or "").items())
+        for k in range(len(items) - 1):
+            art_idx, art = items[k]
+            noun_idx, noun = items[k + 1]
             a = art.lower()
             if a not in _DEFINITE_ARTICLES or not noun[:1].isupper():
+                continue
+            if noun_idx - art_idx != 2:
+                continue  # puntuación entre artículo y sustantivo — no es bigrama
+            # Un der/die/das precedido de puntuación puede ser PRONOMBRE
+            # RELATIVO, no artículo: la cláusula relativa alemana EXIGE coma
+            # antes ("Der Mann, der Brot kauft"). Saltarlo — under-flag by
+            # design. Artículo inicial de oración (sin palabra previa) sí se
+            # chequea: una relativa nunca abre oración.
+            if k > 0 and art_idx - items[k - 1][0] > 2:
                 continue
             oracle = await _oracle_gender_exact(db, noun)
             if oracle is not None and a not in _VALID_ARTICLES[oracle]:
