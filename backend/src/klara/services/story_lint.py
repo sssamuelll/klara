@@ -18,12 +18,23 @@ from klara.services.tokens import word_tokens_by_index
 # declension table (nom/acc/dat/gen) of each oracle gender. An article is
 # evidence of error only when it fits NO case of the oracle gender:
 # "die Haus" can never be right; "der Frau" is dative feminine and fine.
+# Residual aceptado: los adjetivos nominalizados son multi-género en superficie
+# (der/die/das Deutsche) mientras el léxico guarda UN género por lema
+# (first-genus-wins), así que una forma gramatical podría en principio
+# flaggearse según el contenido del léxico — mismo blast radius (pool-block,
+# nunca user-facing).
 _VALID_ARTICLES: dict[str, set[str]] = {
     "der": {"der", "den", "dem", "des"},
     "die": {"die", "der"},
     "das": {"das", "dem", "des"},
 }
 _DEFINITE_ARTICLES = {"der", "die", "das"}
+
+# Sufijos de plural-cero: el plural es idéntico al lema (die Mädchen, der
+# Fenster genitivo...), así que un hit exacto en el oráculo puede ser una
+# lectura plural gramatical. die/der + estos sufijos → skip (under-flag by
+# design); "das" nunca acompaña plurales, así que conserva el chequeo entero.
+_ZERO_PLURAL_SUFFIXES = ("chen", "lein", "er", "el", "en")
 
 
 async def _oracle_gender_exact(db: AsyncSession, noun: str) -> str | None:
@@ -63,6 +74,12 @@ async def gender_article_violations(db: AsyncSession, content: dict, *, language
             a = art.lower()
             if a not in _DEFINITE_ARTICLES or not noun[:1].isupper():
                 continue
+            if a in {"die", "der"} and noun.lower().endswith(_ZERO_PLURAL_SUFFIXES):
+                continue  # posible lectura plural gramatical — skip
+            # Techo aceptado: una coma sin espacio ("Mann,der") tokeniza sin
+            # gap y derrota esta heurística de índices — cerrarlo requiere
+            # TIPOS de token, que word_tokens_by_index no expone. Consecuencia:
+            # pool-block solamente.
             if noun_idx - art_idx != 2:
                 continue  # puntuación entre artículo y sustantivo — no es bigrama
             # Un der/die/das precedido de puntuación puede ser PRONOMBRE

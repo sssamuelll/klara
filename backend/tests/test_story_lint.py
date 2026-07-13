@@ -106,6 +106,40 @@ async def test_flags_after_clause_when_not_preceded_by_punct(db_session, lexicon
 
 
 @pytest.mark.asyncio
+async def test_zero_plural_nouns_not_flagged(db_session, lexicon):
+    # "Die Mädchen" es plural gramatical aunque el oráculo diga das (singular);
+    # "der Fenster" es genitivo plural. Plural-cero → skip, under-flag by design.
+    await load_gender_lexicon(
+        db_session,
+        rows=[
+            GenderRow(lemma="Mädchen", pos="noun", gender="das"),
+            GenderRow(lemma="Fenster", pos="noun", gender="das"),
+        ],
+    )
+    await db_session.commit()
+    out = await gender_article_violations(
+        db_session,
+        _content("Die Mädchen spielen.", "Ich mag die Farbe der Fenster."),
+        language="de",
+    )
+    assert out == []
+
+
+@pytest.mark.asyncio
+async def test_das_with_zero_plural_suffix_still_checked(db_session, lexicon):
+    # "das" nunca es artículo plural: "das Lehrer" (oracle: der) sigue siendo
+    # un error probable y se flaggea.
+    await load_gender_lexicon(
+        db_session, rows=[GenderRow(lemma="Lehrer", pos="noun", gender="der")]
+    )
+    await db_session.commit()
+    out = await gender_article_violations(
+        db_session, _content("Ich sehe das Lehrer."), language="de"
+    )
+    assert out == ["das Lehrer (oracle: der)"]
+
+
+@pytest.mark.asyncio
 async def test_multiple_violations_reported_in_order(db_session, lexicon):
     out = await gender_article_violations(
         db_session, _content("Das Frau kocht.", "Der Haus brennt."), language="de"
