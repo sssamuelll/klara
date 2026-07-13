@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Hoy",
-    "review": "Pronunciar",
+    "review": "Repaso",
     "chat": "Hablar",
     "settings": "Ajustes",
     "theme": {
@@ -358,6 +358,7 @@
     },
     "segment": {
       "title": "¿Qué repasas?",
+      "cards": { "title": "Fichas", "dek": "Las palabras que guardaste, una a una." },
       "pron": {
         "title": "Pronunciar",
         "dek": "Las frases que se te traban, otra vez en voz alta."
@@ -367,6 +368,40 @@
         "dek": "Los der, die, das que fallas."
       },
       "back": "Elegir otro"
+    }
+  },
+  "recall": {
+    "title": "La caja de fichas",
+    "kicker": "REPASO · HOY",
+    "exit": "← Hoy",
+    "loading": "Abriendo la caja…",
+    "failed": "No se pudo abrir el repaso. Intenta de nuevo en un momento.",
+    "empty": "No hay fichas por repasar hoy. Vuelve mañana.",
+    "progress": "{{done}} / {{total}}",
+    "cue": "¿Qué significa? Recuérdala, luego voltéala.",
+    "listen": "Escuchar",
+    "flip": "Voltear",
+    "flipHint": "ESPACIO voltear",
+    "rateHint": "1–4 calificar · esto agenda el próximo repaso",
+    "rate": { "again": "Otra vez", "hard": "Difícil", "good": "Bien", "easy": "Fácil" },
+    "interval": {
+      "minutes": "~{{count}} min",
+      "hours": "~{{count}} h",
+      "day": "{{count}} día",
+      "days": "{{count}} días",
+      "weeks": "{{count}} sem",
+      "month": "{{count}} mes",
+      "months": "{{count}} meses"
+    },
+    "done": {
+      "kicker": "REPASO CERRADO",
+      "label": "fichas repasadas",
+      "again": "vuelven pronto",
+      "rest": "descansan",
+      "note": "Las que fallaste vuelven en un rato; las demás, cuando estén a punto de olvidarse. No hay racha que romper — la caja te espera mañana.",
+      "unsaved": "{{count}} no se guardaron — vuelven la próxima.",
+      "sign": "— K",
+      "home": "Volver a hoy"
     }
   },
   "wpop": {

@@ -1,0 +1,351 @@
+/* ============================================================
+   KLARA — Repaso (la caja de fichas)
+   SRS recall review. Postcard flashcards: paper, ink, one big
+   word on the front, the meaning on the back. No streaks, no XP.
+   Ported from the design handoff (styles.css); k-* renamed rr-*.
+   Reads on top of tokens.css. Class names match Task 5's component.
+   ============================================================ */
+
+.rr {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 720px;
+  min-height: 70vh;
+  margin: 0 auto;
+  padding: 28px 24px 40px;
+}
+
+/* ============================================================
+   LOADING / FAILED / EMPTY — bare states inside the .rr frame
+   ============================================================ */
+.rr__loading {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.rr__title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+.rr__empty {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ============================================================
+   BODY + HEADER + PROGRESS
+   ============================================================ */
+.rr-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+.rr-head__exit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  justify-self: start;
+}
+.rr-head__title { display: inline-flex; align-items: baseline; gap: 8px; }
+.rr-head__k { font-family: var(--font-serif); font-style: italic; font-size: 14px; }
+.rr-head__name {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+.rr-head__meta {
+  justify-self: end;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rr-prog { display: flex; align-items: center; gap: 18px; }
+.rr-prog__count {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-2);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+.rr-prog__slash { color: var(--ink-4); margin: 0 2px; }
+.rr-prog__track { flex: 1; display: flex; gap: 6px; }
+.rr-prog__pip { flex: 1; height: 2px; background: var(--rule); transition: background 240ms; }
+.rr-prog__pip[data-state="done"] { background: var(--ink-2); }
+.rr-prog__pip[data-state="now"]  { background: var(--ink); }
+/* an "again" card leaves a faint bermellón tick — it comes back this session */
+.rr-prog__pip[data-state="again"] { background: color-mix(in oklch, var(--accent) 55%, var(--rule)); }
+
+/* ============================================================
+   DECK — centres the ficha
+   ============================================================ */
+.rr-deck {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 0 4px;
+}
+
+/* ---- the ficha (flip card) ---- */
+.rr-ficha {
+  perspective: 1600px;
+  width: 100%;
+  max-width: 560px;
+}
+.rr-ficha__inner {
+  position: relative;
+  width: 100%;
+  min-height: 384px;
+  transform-style: preserve-3d;
+  transition: transform var(--dur-slow) var(--ease-page);
+}
+.rr[data-state="revealed"] .rr-ficha__inner { transform: rotateY(180deg); }
+
+.rr-ficha__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-rest);
+  padding: 34px 40px;
+}
+/* the corner folio, like a filed index card */
+.rr-ficha__folio {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-4);
+  text-transform: uppercase;
+}
+
+/* FRONT — the prompt (recall the meaning) */
+.rr-ficha__face--front { align-items: center; justify-content: center; text-align: center; gap: 18px; }
+.rr-ficha__front-folio {
+  position: absolute; top: 18px; left: 20px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-4);
+}
+.rr-ficha__pos {
+  position: absolute; top: 18px; right: 20px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-3);
+}
+.rr-ficha__word {
+  font-family: var(--font-serif);
+  font-size: 60px;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  font-weight: 400;
+  text-wrap: balance;
+}
+/* for nouns, the article is hidden on the front — recalling it is part of the test */
+.rr-ficha__gender-cue {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
+}
+.rr-ficha__gender-cue b { color: var(--ink-3); font-weight: 500; }
+.rr-ficha__cue {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-3);
+}
+
+/* BACK — the answer */
+.rr-ficha__face--back {
+  transform: rotateY(180deg);
+  justify-content: center;
+  gap: 16px;
+}
+.rr-ficha__back-folio {
+  position: absolute; top: 18px; left: 20px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-4);
+}
+.rr-ficha__answer { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rr-ficha__article { font-family: var(--font-serif); font-size: 30px; color: var(--accent-ink); font-style: italic; }
+.rr-ficha__answer-word { font-family: var(--font-serif); font-size: 38px; letter-spacing: -0.02em; color: var(--ink); }
+.rr-ficha__tx { font-family: var(--font-serif); font-style: italic; font-size: 21px; color: var(--ink-2); }
+.rr-ficha__rule { height: 1px; background: var(--rule); margin: 4px 0; }
+.rr-ficha__eg { font-family: var(--font-serif); font-size: var(--t-read); line-height: 1.45; color: var(--ink); margin: 0; }
+.rr-ficha__eg em { font-style: normal; box-shadow: inset 0 -0.5em 0 var(--accent-wash); }
+.rr-ficha__eg-tx { font-family: var(--font-serif); font-style: italic; font-size: 15px; color: var(--ink-3); margin: 6px 0 0; }
+.rr-ficha__src { margin-top: auto; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-4); }
+.rr-ficha__src em { font-style: italic; font-family: var(--font-serif); font-size: 12px; letter-spacing: 0; color: var(--ink-3); }
+
+/* small "listen" affordance (both faces) */
+.rr-listen {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  align-self: center;
+}
+.rr-listen:hover { border-color: var(--ink); color: var(--ink); }
+.rr-listen__tri {
+  width: 0; height: 0;
+  border-left: 7px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+}
+
+/* ============================================================
+   ACTIONS — flip (front) · rate (back)
+   ============================================================ */
+/* FRONT: single reveal button */
+.rr-flip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 26px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 500;
+  transition: transform var(--dur-fast);
+}
+.rr-flip:hover { transform: translateY(-1px); }
+.rr-flip__arrow { font-style: italic; }
+.rr-flip__hint { font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--ink-3); }
+
+/* BACK: four ratings — editorial, not a rainbow. Only "otra vez" carries the accent. */
+.rr-rate {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+}
+.rr-rate__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 13px 10px 11px;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  transition: border-color var(--dur-fast), transform var(--dur-fast), background var(--dur-fast);
+}
+.rr-rate__btn:hover { border-color: var(--ink); transform: translateY(-1px); }
+.rr-rate__lbl { font-family: var(--font-serif); font-size: 17px; color: var(--ink); }
+.rr-rate__when {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.rr-rate__key { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ink-4); }
+/* "otra vez" — the one that matters; the single accent */
+.rr-rate__btn--again { background: var(--accent-wash); border-color: color-mix(in oklch, var(--accent) 28%, transparent); }
+.rr-rate__btn--again .rr-rate__lbl { color: var(--accent-ink); }
+.rr-rate__btn--again:hover { border-color: var(--accent); }
+
+.rr-deck__hint { font-family: var(--font-serif); font-style: italic; font-size: 13px; color: var(--ink-3); margin: 0; }
+.rr-deck__hint kbd {
+  font-family: var(--font-mono); font-style: normal; font-size: 10px; letter-spacing: 0.06em;
+  padding: 2px 6px; border: 1px solid var(--rule); border-radius: 3px; color: var(--ink-2); margin: 0 2px;
+}
+
+/* ============================================================
+   DONE — the session closes like a filed edition, no fanfare
+   ============================================================ */
+.rr-done {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+  padding: 20px;
+}
+.rr-done__folio { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--ink-3); }
+.rr-done__count { font-family: var(--font-serif); font-size: 88px; line-height: 1; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rr-done__label { font-family: var(--font-serif); font-style: italic; font-size: 24px; color: var(--ink-2); }
+.rr-done__note {
+  max-width: 460px;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+.rr-done__ledger { display: flex; gap: 34px; padding: 18px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.rr-done__stat { display: flex; flex-direction: column; gap: 4px; }
+.rr-done__stat-n { font-family: var(--font-serif); font-size: 30px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rr-done__stat-n--accent { color: var(--accent-ink); }
+.rr-done__stat-l { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-3); text-transform: uppercase; }
+.rr-done__sign { font-family: var(--font-serif); font-style: italic; font-size: 16px; color: var(--ink-3); }
+.rr-done__cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 22px; border-radius: 999px;
+  background: var(--ink); color: var(--paper);
+  font-family: var(--font-serif); font-size: 16px; font-weight: 500;
+}
+
+/* ============================================================
+   STATE VISIBILITY
+   ============================================================ */
+[data-show] { display: none; }
+.rr[data-state="prompt"]   [data-show~="prompt"]   { display: flex; }
+.rr[data-state="revealed"] [data-show~="revealed"] { display: flex; }
+.rr[data-state="revealed"] [data-show~="revealed"].rr-rate { display: grid; }
+.rr[data-state="done"]     [data-show~="done"]     { display: flex; }
+/* the deck (ficha + actions) shows in prompt & revealed, hides on done */
+.rr[data-state="done"] .rr-deck { display: none; }
+.rr[data-state="done"] .rr-prog { visibility: hidden; }
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 720px) {
+  .rr { padding: 20px 16px 28px; }
+  .rr-ficha__inner { min-height: 340px; }
+  .rr-ficha__face { padding: 26px 22px; }
+  .rr-ficha__word { font-size: 44px; }
+  .rr-rate { grid-template-columns: repeat(2, 1fr); max-width: 340px; }
+  .rr-done__count { font-size: 64px; }
+  .rr-done__ledger { gap: 22px; }
+}
