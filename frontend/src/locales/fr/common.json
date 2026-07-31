@@ -669,5 +669,20 @@
     "session_expired": "Ta session a expiré. Reconnecte-toi.",
     "invalid_credentials": "E-mail ou mot de passe invalide.",
     "email_not_verified": "Vérifie ton e-mail avant de continuer."
+  },
+  "tabbar": {
+    "inicio": "Accueil",
+    "mas": "Plus",
+    "perfil": "Profil",
+    "navAria": "Navigation",
+    "moreAria": "Plus d'options"
+  },
+  "nuevo": {
+    "kicker": "Nouveau sujet",
+    "prontoTitulo": "Bientôt.",
+    "prontoDek": "Un sujet ou tes notes — Klara construira le plan. Cette partie n'est pas encore prête."
+  },
+  "biblioteca": {
+    "titulo": "Ta bibliothèque"
   }
 }

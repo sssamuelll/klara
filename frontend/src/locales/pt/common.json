@@ -669,5 +669,20 @@
     "session_expired": "A tua sessão expirou. Inicia sessão novamente.",
     "invalid_credentials": "Email ou palavra-passe inválidos.",
     "email_not_verified": "Confirma o teu email antes de continuar."
+  },
+  "tabbar": {
+    "inicio": "Início",
+    "mas": "Mais",
+    "perfil": "Perfil",
+    "navAria": "Navegação",
+    "moreAria": "Mais opções"
+  },
+  "nuevo": {
+    "kicker": "Novo tema",
+    "prontoTitulo": "Em breve.",
+    "prontoDek": "Um tema ou suas anotações — a Klara montará o plano. Esta parte ainda não está pronta."
+  },
+  "biblioteca": {
+    "titulo": "Sua biblioteca"
   }
 }

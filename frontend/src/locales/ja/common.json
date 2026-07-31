@@ -669,5 +669,20 @@
     "session_expired": "セッションの期限が切れました。もう一度ログインしてください。",
     "invalid_credentials": "メールアドレスまたはパスワードが正しくありません。",
     "email_not_verified": "続行する前にメールアドレスを確認してください。"
+  },
+  "tabbar": {
+    "inicio": "ホーム",
+    "mas": "その他",
+    "perfil": "プロフィール",
+    "navAria": "ナビゲーション",
+    "moreAria": "その他のオプション"
+  },
+  "nuevo": {
+    "kicker": "新しいテーマ",
+    "prontoTitulo": "近日公開。",
+    "prontoDek": "テーマやノートから、Klaraがプランを作ります。この機能はまだ準備中です。"
+  },
+  "biblioteca": {
+    "titulo": "あなたのライブラリ"
   }
 }

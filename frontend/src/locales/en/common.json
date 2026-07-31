@@ -669,5 +669,20 @@
     "session_expired": "Your session expired. Please sign in again.",
     "invalid_credentials": "Invalid email or password.",
     "email_not_verified": "Please verify your email before continuing."
+  },
+  "tabbar": {
+    "inicio": "Home",
+    "mas": "More",
+    "perfil": "Profile",
+    "navAria": "Navigation",
+    "moreAria": "More options"
+  },
+  "nuevo": {
+    "kicker": "New topic",
+    "prontoTitulo": "Soon.",
+    "prontoDek": "A topic or your notes — Klara will build the plan. This part isn't ready yet."
+  },
+  "biblioteca": {
+    "titulo": "Your library"
   }
 }

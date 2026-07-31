@@ -669,5 +669,20 @@
     "session_expired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
     "invalid_credentials": "E-Mail oder Passwort ungültig.",
     "email_not_verified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
+  },
+  "tabbar": {
+    "inicio": "Start",
+    "mas": "Mehr",
+    "perfil": "Profil",
+    "navAria": "Navigation",
+    "moreAria": "Weitere Optionen"
+  },
+  "nuevo": {
+    "kicker": "Neues Thema",
+    "prontoTitulo": "Bald.",
+    "prontoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan. Dieser Teil ist noch nicht fertig."
+  },
+  "biblioteca": {
+    "titulo": "Deine Bibliothek"
   }
 }
