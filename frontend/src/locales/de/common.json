@@ -683,6 +683,32 @@
     "prontoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan. Dieser Teil ist noch nicht fertig."
   },
   "biblioteca": {
-    "titulo": "Deine Bibliothek"
+    "titulo": "Deine Bibliothek",
+    "estadoHoy": "● heute",
+    "estadoDue_one": "{{count}} fällig",
+    "estadoDue_other": "{{count}} fällig",
+    "cursoSub": "Nürnberg-Ausgabe · {{level}}",
+    "nuevoTitulo": "Neues Thema",
+    "nuevoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan",
+    "heroTag": "Weiter · {{curso}}"
+  },
+  "curso": {
+    "paso": {
+      "leer": { "titulo": "Lesen", "dek": "Die Geschichte von heute", "meta": "3 Min." },
+      "pronunciar": {
+        "titulo": "Aussprechen",
+        "dek": "Sätze aus deinen Geschichten, laut gesprochen",
+        "meta": "4 Min."
+      },
+      "hablar": { "titulo": "Sprechen", "dek": "Ein Gespräch mit Klara", "meta": "3 Min." },
+      "repasar": {
+        "titulo": "Wiederholen",
+        "dek_zero": "Heute ist nichts fällig",
+        "dek": "Deine Karten für heute",
+        "dek_due_one": "{{count}} Karte ist heute fällig",
+        "dek_due_other": "{{count}} Karten sind heute fällig",
+        "meta": "5 Min."
+      }
+    }
   }
 }

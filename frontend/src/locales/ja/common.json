@@ -683,6 +683,32 @@
     "prontoDek": "テーマやノートから、Klaraがプランを作ります。この機能はまだ準備中です。"
   },
   "biblioteca": {
-    "titulo": "あなたのライブラリ"
+    "titulo": "あなたのライブラリ",
+    "estadoHoy": "● 今日",
+    "estadoDue_one": "{{count}} 件が今日",
+    "estadoDue_other": "{{count}} 件が今日",
+    "cursoSub": "ニュルンベルク版 · {{level}}",
+    "nuevoTitulo": "新しいテーマ",
+    "nuevoDek": "テーマかノートを渡せば、Klara がプランを作ります",
+    "heroTag": "続ける · {{curso}}"
+  },
+  "curso": {
+    "paso": {
+      "leer": { "titulo": "読む", "dek": "今日の物語", "meta": "3 分" },
+      "pronunciar": {
+        "titulo": "発音する",
+        "dek": "あなたの物語の文を、声に出して",
+        "meta": "4 分"
+      },
+      "hablar": { "titulo": "話す", "dek": "Klara との会話", "meta": "3 分" },
+      "repasar": {
+        "titulo": "復習する",
+        "dek_zero": "今日の復習はありません",
+        "dek": "今日のカード",
+        "dek_due_one": "今日は {{count}} 件のカードが復習です",
+        "dek_due_other": "今日は {{count}} 件のカードが復習です",
+        "meta": "5 分"
+      }
+    }
   }
 }

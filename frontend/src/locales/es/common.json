@@ -683,6 +683,32 @@
     "prontoDek": "Un tema o tus apuntes — Klara armará el plan. Esta parte todavía no está lista."
   },
   "biblioteca": {
-    "titulo": "Tu biblioteca"
+    "titulo": "Tu biblioteca",
+    "estadoHoy": "● hoy",
+    "estadoDue_one": "{{count}} vence",
+    "estadoDue_other": "{{count}} vencen",
+    "cursoSub": "Edición Nürnberg · {{level}}",
+    "nuevoTitulo": "Nuevo tema",
+    "nuevoDek": "Un tema o tus apuntes — Klara arma el plan",
+    "heroTag": "Continuar · {{curso}}"
+  },
+  "curso": {
+    "paso": {
+      "leer": { "titulo": "Leer", "dek": "La historia de hoy", "meta": "3 min" },
+      "pronunciar": {
+        "titulo": "Pronunciar",
+        "dek": "Frases de tus historias, en voz alta",
+        "meta": "4 min"
+      },
+      "hablar": { "titulo": "Hablar", "dek": "Una conversación con Klara", "meta": "3 min" },
+      "repasar": {
+        "titulo": "Repasar",
+        "dek_zero": "Nada vence hoy",
+        "dek": "Tus fichas de hoy",
+        "dek_due_one": "{{count}} ficha vence hoy",
+        "dek_due_other": "{{count}} fichas vencen hoy",
+        "meta": "5 min"
+      }
+    }
   }
 }

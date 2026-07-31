@@ -683,6 +683,32 @@
     "prontoDek": "Un sujet ou tes notes — Klara construira le plan. Cette partie n'est pas encore prête."
   },
   "biblioteca": {
-    "titulo": "Ta bibliothèque"
+    "titulo": "Ta bibliothèque",
+    "estadoHoy": "● aujourd'hui",
+    "estadoDue_one": "{{count}} à revoir",
+    "estadoDue_other": "{{count}} à revoir",
+    "cursoSub": "Édition Nürnberg · {{level}}",
+    "nuevoTitulo": "Nouveau sujet",
+    "nuevoDek": "Un sujet ou tes notes — Klara construit le plan",
+    "heroTag": "Continuer · {{curso}}"
+  },
+  "curso": {
+    "paso": {
+      "leer": { "titulo": "Lire", "dek": "L'histoire du jour", "meta": "3 min" },
+      "pronunciar": {
+        "titulo": "Prononcer",
+        "dek": "Des phrases de tes histoires, à voix haute",
+        "meta": "4 min"
+      },
+      "hablar": { "titulo": "Parler", "dek": "Une conversation avec Klara", "meta": "3 min" },
+      "repasar": {
+        "titulo": "Réviser",
+        "dek_zero": "Rien à revoir aujourd'hui",
+        "dek": "Tes fiches du jour",
+        "dek_due_one": "{{count}} fiche à revoir aujourd'hui",
+        "dek_due_other": "{{count}} fiches à revoir aujourd'hui",
+        "meta": "5 min"
+      }
+    }
   }
 }
