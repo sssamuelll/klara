@@ -36,3 +36,6 @@ e2e-shots*/
 .DS_Store
 Thumbs.db
 *.log
+
+# Superpowers scratch (SDD ledger, brainstorm mockups)
+.superpowers/
