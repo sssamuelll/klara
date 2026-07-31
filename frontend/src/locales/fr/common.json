@@ -721,5 +721,15 @@
     "progressAria": "Progression : {{pct}} %",
     "encurso": "● {{done}}/{{total}}",
     "proximo": "Suivant"
+  },
+  "perfil": {
+    "kicker": "Profil",
+    "sub": "Allemand · {{level}}",
+    "tema": "Thème",
+    "temaClaro": "Clair",
+    "temaOscuro": "Sombre",
+    "editar": "Modifier le profil et les invitations",
+    "salir": "Se déconnecter",
+    "pie": "Klara — Édition Nürnberg"
   }
 }

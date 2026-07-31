@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -182,6 +182,10 @@ function AppShell() {
           }
         />
       </Route>
+
+      {/* ponytail: sin pantalla 404 — con el Masthead dentro de LegacyShell una URL
+          suelta pinta en blanco; redirigir a Inicio es la respuesta correcta y barata. */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

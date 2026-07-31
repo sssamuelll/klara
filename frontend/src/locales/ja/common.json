@@ -721,5 +721,15 @@
     "progressAria": "進捗: {{pct}}%",
     "encurso": "● {{done}}/{{total}}",
     "proximo": "次"
+  },
+  "perfil": {
+    "kicker": "プロフィール",
+    "sub": "ドイツ語 · {{level}}",
+    "tema": "テーマ",
+    "temaClaro": "ライト",
+    "temaOscuro": "ダーク",
+    "editar": "プロフィールと招待の編集",
+    "salir": "ログアウト",
+    "pie": "Klara — ニュルンベルク版"
   }
 }
