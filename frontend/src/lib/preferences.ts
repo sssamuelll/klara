@@ -69,8 +69,21 @@ function readTheme(): Theme {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+// ponytail: set de suscriptores a nivel de módulo en vez de un store o un context.
+// Con useState suelto, cada useTheme() tenía su propia copia: /perfil escribía "dark"
+// y el AppShell seguía creyendo "light", así que el primer click en el Masthead
+// reescribía el mismo valor y no pasaba nada. Notificar a los montados lo cierra.
+const themeSubs = new Set<(t: Theme) => void>();
+
 export function useTheme(): [Theme, (t: Theme) => void] {
   const [theme, setThemeState] = useState<Theme>(readTheme);
+
+  useEffect(() => {
+    themeSubs.add(setThemeState);
+    return () => {
+      themeSubs.delete(setThemeState);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -89,7 +102,7 @@ export function useTheme(): [Theme, (t: Theme) => void] {
 
   const setTheme = (t: Theme) => {
     window.localStorage.setItem(KEYS.theme, t);
-    setThemeState(t);
+    for (const notify of themeSubs) notify(t);
   };
 
   return [theme, setTheme];
