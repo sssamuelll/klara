@@ -163,6 +163,15 @@ Slice chico y autocontenido — **no depende del dominio Course**, puede correr 
 
 ### Fase 2 — Reskin de sesiones (una pantalla por PR)
 
+**Cola de apertura (deuda diferida de F1, triada por el review final del branch `feat/v4-shell`):**
+- Pase a11y de las pantallas v4 (headline: `li onClick` sin teclado en Portada/MapaCurso/NuevoPlaceholder → botones; `aria-current` en TabBar; `role="switch"` en la fila de tema de Perfil; glifos decorativos con `aria-hidden`; Escape en el menú Más). **Pinneado a F2, no a "algún día"** — obligatorio antes de un segundo usuario.
+- Limpieza vex-rune: borrar `Home.tsx` (huérfano), `CourseVM.currentModule` y `loading` de `useCourseData` (cero consumidores), condicionar `data-hot` en la tarjeta de Inicio.
+- Safe-area en pantallas de sesión cuando entren a `.m3-app`: `.m3-sess-top` arriba, `.m3-dock`/`.m3-fb` abajo (patrón ya aplicado al shell en F1).
+- Validar con contenido real: `.m3-fb` min-height vs el feedback más largo; `line-clamp:7` de `.m3-oracion` vs la oración más larga; los dos 9px sobrevivientes (`.m3-cefr .aqui`, `.m3-turno .quien`).
+- Copy: saludo con `{{name}}` (puntuación ja), punto latino tras h1 en ja, spacing "Klara が/Klaraが".
+- Doc reconcile: el diagrama del plan maestro dice "`nuevo` sin TabBar"; F1 lo montó bajo V4Shell (con TabBar) — decidir cuál gobierna cuando `/nuevo` sea real (F4).
+- Al re-cablear `useCourseData` en más pantallas, considerar loader/context (hoy: 3 fetches por mount).
+
 Sin migraciones; shape de API existente (adaptadores client-side donde haga falta).
 
 1. **Estudiar (teleprompter)** reemplaza la vista de Story: `useSentencePractice` (622 líneas, se reusa) + `SentenceView` adelgazado al formato `m3-lect` (frase + gloss + dock). El shape `sentences[{target,native,breakdown}]` del server NO cambia — se adapta a `chunks[{tokens,gloss}]` en cliente (survey: `tokenize()`/`buildBreakdownMap()` ya producen los tokens).
