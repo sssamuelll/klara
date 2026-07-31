@@ -669,5 +669,67 @@
     "session_expired": "Ta session a expiré. Reconnecte-toi.",
     "invalid_credentials": "E-mail ou mot de passe invalide.",
     "email_not_verified": "Vérifie ton e-mail avant de continuer."
+  },
+  "tabbar": {
+    "inicio": "Accueil",
+    "mas": "Plus",
+    "perfil": "Profil",
+    "navAria": "Navigation",
+    "moreAria": "Plus d'options"
+  },
+  "nuevo": {
+    "kicker": "Nouveau sujet",
+    "prontoTitulo": "Bientôt.",
+    "prontoDek": "Un sujet ou tes notes — Klara construira le plan. Cette partie n'est pas encore prête."
+  },
+  "biblioteca": {
+    "titulo": "Ta bibliothèque",
+    "estadoHoy": "● aujourd'hui",
+    "estadoDue_one": "{{count}} à revoir",
+    "estadoDue_other": "{{count}} à revoir",
+    "cursoSub": "Édition Nürnberg · {{level}}",
+    "nuevoTitulo": "Nouveau sujet",
+    "nuevoDek": "Un sujet ou tes notes — Klara construit le plan",
+    "heroTag": "Continuer · {{curso}}"
+  },
+  "curso": {
+    "planTitulo": "Le plan du jour · 4 étapes",
+    "ahora": "● maintenant",
+    "mapaFila": "La carte du cours",
+    "mapaFilaEstado": "Où tu en es",
+    "generoFila": "Genre",
+    "generoFilaEstado": "der · die · das",
+    "paso": {
+      "leer": { "titulo": "Lire", "dek": "L'histoire du jour", "meta": "3 min" },
+      "pronunciar": {
+        "titulo": "Prononcer",
+        "dek": "Des phrases de tes histoires, à voix haute",
+        "meta": "4 min"
+      },
+      "hablar": { "titulo": "Parler", "dek": "Une conversation avec Klara", "meta": "3 min" },
+      "repasar": {
+        "titulo": "Réviser",
+        "dek": "Tes fiches du jour",
+        "meta": "5 min"
+      }
+    }
+  },
+  "mapa": {
+    "kicker": "La carte",
+    "h1pre": "Tu en es à",
+    "aqui": "Tu es ici",
+    "progressAria": "Progression : {{pct}} %",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "Suivant"
+  },
+  "perfil": {
+    "kicker": "Profil",
+    "sub": "Allemand · {{level}}",
+    "tema": "Thème",
+    "temaClaro": "Clair",
+    "temaOscuro": "Sombre",
+    "editar": "Modifier le profil et les invitations",
+    "salir": "Se déconnecter",
+    "pie": "Klara — Édition Nürnberg"
   }
 }

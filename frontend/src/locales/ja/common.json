@@ -669,5 +669,67 @@
     "session_expired": "セッションの期限が切れました。もう一度ログインしてください。",
     "invalid_credentials": "メールアドレスまたはパスワードが正しくありません。",
     "email_not_verified": "続行する前にメールアドレスを確認してください。"
+  },
+  "tabbar": {
+    "inicio": "ホーム",
+    "mas": "その他",
+    "perfil": "プロフィール",
+    "navAria": "ナビゲーション",
+    "moreAria": "その他のオプション"
+  },
+  "nuevo": {
+    "kicker": "新しいテーマ",
+    "prontoTitulo": "近日公開。",
+    "prontoDek": "テーマやノートから、Klaraがプランを作ります。この機能はまだ準備中です。"
+  },
+  "biblioteca": {
+    "titulo": "あなたのライブラリ",
+    "estadoHoy": "● 今日",
+    "estadoDue_one": "期限 {{count}} 件",
+    "estadoDue_other": "期限 {{count}} 件",
+    "cursoSub": "ニュルンベルク版 · {{level}}",
+    "nuevoTitulo": "新しいテーマ",
+    "nuevoDek": "テーマかノートを渡せば、Klara がプランを作ります",
+    "heroTag": "続ける · {{curso}}"
+  },
+  "curso": {
+    "planTitulo": "今日のプラン · 4 ステップ",
+    "ahora": "● いま",
+    "mapaFila": "コースの地図",
+    "mapaFilaEstado": "現在地",
+    "generoFila": "性",
+    "generoFilaEstado": "der · die · das",
+    "paso": {
+      "leer": { "titulo": "読む", "dek": "今日の物語", "meta": "3 分" },
+      "pronunciar": {
+        "titulo": "発音する",
+        "dek": "あなたの物語の文を、声に出して",
+        "meta": "4 分"
+      },
+      "hablar": { "titulo": "話す", "dek": "Klara との会話", "meta": "3 分" },
+      "repasar": {
+        "titulo": "復習する",
+        "dek": "今日のカード",
+        "meta": "5 分"
+      }
+    }
+  },
+  "mapa": {
+    "kicker": "地図",
+    "h1pre": "現在",
+    "aqui": "現在地",
+    "progressAria": "進捗: {{pct}}%",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "次"
+  },
+  "perfil": {
+    "kicker": "プロフィール",
+    "sub": "ドイツ語 · {{level}}",
+    "tema": "テーマ",
+    "temaClaro": "ライト",
+    "temaOscuro": "ダーク",
+    "editar": "プロフィールと招待の編集",
+    "salir": "ログアウト",
+    "pie": "Klara — ニュルンベルク版"
   }
 }

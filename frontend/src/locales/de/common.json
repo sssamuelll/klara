@@ -669,5 +669,67 @@
     "session_expired": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
     "invalid_credentials": "E-Mail oder Passwort ungültig.",
     "email_not_verified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
+  },
+  "tabbar": {
+    "inicio": "Start",
+    "mas": "Mehr",
+    "perfil": "Profil",
+    "navAria": "Navigation",
+    "moreAria": "Weitere Optionen"
+  },
+  "nuevo": {
+    "kicker": "Neues Thema",
+    "prontoTitulo": "Bald.",
+    "prontoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan. Dieser Teil ist noch nicht fertig."
+  },
+  "biblioteca": {
+    "titulo": "Deine Bibliothek",
+    "estadoHoy": "● heute",
+    "estadoDue_one": "{{count}} fällig",
+    "estadoDue_other": "{{count}} fällig",
+    "cursoSub": "Nürnberg-Ausgabe · {{level}}",
+    "nuevoTitulo": "Neues Thema",
+    "nuevoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan",
+    "heroTag": "Weiter · {{curso}}"
+  },
+  "curso": {
+    "planTitulo": "Der Plan für heute · 4 Schritte",
+    "ahora": "● jetzt",
+    "mapaFila": "Die Kursübersicht",
+    "mapaFilaEstado": "Wo du stehst",
+    "generoFila": "Genus",
+    "generoFilaEstado": "der · die · das",
+    "paso": {
+      "leer": { "titulo": "Lesen", "dek": "Die Geschichte von heute", "meta": "3 Min." },
+      "pronunciar": {
+        "titulo": "Aussprechen",
+        "dek": "Sätze aus deinen Geschichten, laut gesprochen",
+        "meta": "4 Min."
+      },
+      "hablar": { "titulo": "Sprechen", "dek": "Ein Gespräch mit Klara", "meta": "3 Min." },
+      "repasar": {
+        "titulo": "Wiederholen",
+        "dek": "Deine Karten für heute",
+        "meta": "5 Min."
+      }
+    }
+  },
+  "mapa": {
+    "kicker": "Die Übersicht",
+    "h1pre": "Du bist bei",
+    "aqui": "Du bist hier",
+    "progressAria": "Fortschritt: {{pct}} %",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "Nächstes"
+  },
+  "perfil": {
+    "kicker": "Profil",
+    "sub": "Deutsch · {{level}}",
+    "tema": "Design",
+    "temaClaro": "Hell",
+    "temaOscuro": "Dunkel",
+    "editar": "Profil und Einladungen bearbeiten",
+    "salir": "Abmelden",
+    "pie": "Klara — Nürnberg-Ausgabe"
   }
 }

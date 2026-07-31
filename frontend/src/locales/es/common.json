@@ -669,5 +669,67 @@
     "session_expired": "Tu sesión expiró. Inicia sesión otra vez.",
     "invalid_credentials": "Correo o contraseña incorrectos.",
     "email_not_verified": "Confirma tu correo antes de continuar."
+  },
+  "tabbar": {
+    "inicio": "Inicio",
+    "mas": "Más",
+    "perfil": "Perfil",
+    "navAria": "Navegación",
+    "moreAria": "Más opciones"
+  },
+  "nuevo": {
+    "kicker": "Nuevo tema",
+    "prontoTitulo": "Pronto.",
+    "prontoDek": "Un tema o tus apuntes — Klara armará el plan. Esta parte todavía no está lista."
+  },
+  "biblioteca": {
+    "titulo": "Tu biblioteca",
+    "estadoHoy": "● hoy",
+    "estadoDue_one": "{{count}} vence",
+    "estadoDue_other": "{{count}} vencen",
+    "cursoSub": "Edición Nürnberg · {{level}}",
+    "nuevoTitulo": "Nuevo tema",
+    "nuevoDek": "Un tema o tus apuntes — Klara arma el plan",
+    "heroTag": "Continuar · {{curso}}"
+  },
+  "curso": {
+    "planTitulo": "El plan de hoy · 4 pasos",
+    "ahora": "● ahora",
+    "mapaFila": "El mapa del curso",
+    "mapaFilaEstado": "Dónde vas",
+    "generoFila": "Género",
+    "generoFilaEstado": "der · die · das",
+    "paso": {
+      "leer": { "titulo": "Leer", "dek": "La historia de hoy", "meta": "3 min" },
+      "pronunciar": {
+        "titulo": "Pronunciar",
+        "dek": "Frases de tus historias, en voz alta",
+        "meta": "4 min"
+      },
+      "hablar": { "titulo": "Hablar", "dek": "Una conversación con Klara", "meta": "3 min" },
+      "repasar": {
+        "titulo": "Repasar",
+        "dek": "Tus fichas de hoy",
+        "meta": "5 min"
+      }
+    }
+  },
+  "mapa": {
+    "kicker": "El mapa",
+    "h1pre": "Vas por",
+    "aqui": "Estás aquí",
+    "progressAria": "Progreso: {{pct}}%",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "Próximo"
+  },
+  "perfil": {
+    "kicker": "Perfil",
+    "sub": "Alemán · {{level}}",
+    "tema": "Tema",
+    "temaClaro": "Claro",
+    "temaOscuro": "Oscuro",
+    "editar": "Editar perfil e invitaciones",
+    "salir": "Cerrar sesión",
+    "pie": "Klara — Edición Nürnberg"
   }
 }
