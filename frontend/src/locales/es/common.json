@@ -709,10 +709,7 @@
       "hablar": { "titulo": "Hablar", "dek": "Una conversación con Klara", "meta": "3 min" },
       "repasar": {
         "titulo": "Repasar",
-        "dek_zero": "Nada vence hoy",
         "dek": "Tus fichas de hoy",
-        "dek_due_one": "{{count}} ficha vence hoy",
-        "dek_due_other": "{{count}} fichas vencen hoy",
         "meta": "5 min"
       }
     }

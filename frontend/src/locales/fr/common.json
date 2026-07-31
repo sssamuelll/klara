@@ -709,10 +709,7 @@
       "hablar": { "titulo": "Parler", "dek": "Une conversation avec Klara", "meta": "3 min" },
       "repasar": {
         "titulo": "Réviser",
-        "dek_zero": "Rien à revoir aujourd'hui",
         "dek": "Tes fiches du jour",
-        "dek_due_one": "{{count}} fiche à revoir aujourd'hui",
-        "dek_due_other": "{{count}} fiches à revoir aujourd'hui",
         "meta": "5 min"
       }
     }

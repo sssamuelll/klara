@@ -709,10 +709,7 @@
       "hablar": { "titulo": "話す", "dek": "Klara との会話", "meta": "3 分" },
       "repasar": {
         "titulo": "復習する",
-        "dek_zero": "今日の復習はありません",
         "dek": "今日のカード",
-        "dek_due_one": "今日復習するカードが {{count}} 件あります",
-        "dek_due_other": "今日復習するカードが {{count}} 件あります",
         "meta": "5 分"
       }
     }

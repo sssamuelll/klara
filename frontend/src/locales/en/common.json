@@ -709,10 +709,7 @@
       "hablar": { "titulo": "Speak", "dek": "A conversation with Klara", "meta": "3 min" },
       "repasar": {
         "titulo": "Review",
-        "dek_zero": "Nothing due today",
         "dek": "Your cards for today",
-        "dek_due_one": "{{count}} card due today",
-        "dek_due_other": "{{count}} cards due today",
         "meta": "5 min"
       }
     }

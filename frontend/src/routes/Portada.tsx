@@ -11,13 +11,6 @@ export default function Portada() {
   const { vm } = useCourseData();
   const titulo = user ? languageLabel(user.target_language) : "…";
 
-  const dekRepasar = (id: string) => {
-    if (id !== "repasar") return t(`curso.paso.${id}.dek`);
-    if (vm.vencen == null) return t("curso.paso.repasar.dek");
-    if (vm.vencen === 0) return t("curso.paso.repasar.dek_zero");
-    return t("curso.paso.repasar.dek_due", { count: vm.vencen });
-  };
-
   return (
     <main className="m3-page">
       <div className="m4-backrow">
@@ -32,13 +25,13 @@ export default function Portada() {
           <li key={p.n} data-e={p.e} onClick={() => navigate(p.to)} style={{ cursor: "pointer" }}>
             <span className="n">{p.n}</span>
             <span className="tit">{t(`curso.paso.${p.id}.titulo`)}</span>
-            {/* ponytail: en Repasar el estado dice cuántas vencen — más útil que
-                los "5 min"; el resto de los pasos sí muestra su meta. */}
+            {/* ponytail: en Repasar el estado dice cuántas vencen — la forma corta
+                de biblioteca, que es la que entra en la columna. */}
             <span className="estado">
               {p.e === "ahora"
                 ? t("curso.ahora")
-                : p.id === "repasar"
-                ? dekRepasar(p.id)
+                : p.id === "repasar" && vm.vencen != null && vm.vencen > 0
+                ? t("biblioteca.estadoDue", { count: vm.vencen })
                 : t(`curso.paso.${p.id}.meta`)}
             </span>
           </li>

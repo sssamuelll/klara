@@ -695,7 +695,7 @@
   "curso": {
     "planTitulo": "Der Plan für heute · 4 Schritte",
     "ahora": "● jetzt",
-    "mapaFila": "Die Kurskarte",
+    "mapaFila": "Die Kursübersicht",
     "mapaFilaEstado": "Wo du stehst",
     "generoFila": "Genus",
     "generoFilaEstado": "der · die · das",
@@ -709,10 +709,7 @@
       "hablar": { "titulo": "Sprechen", "dek": "Ein Gespräch mit Klara", "meta": "3 Min." },
       "repasar": {
         "titulo": "Wiederholen",
-        "dek_zero": "Heute ist nichts fällig",
         "dek": "Deine Karten für heute",
-        "dek_due_one": "{{count}} Karte ist heute fällig",
-        "dek_due_other": "{{count}} Karten sind heute fällig",
         "meta": "5 Min."
       }
     }
