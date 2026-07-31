@@ -9,7 +9,9 @@
 /* ---------- Shell: viewport fijo, nada scrollea ---------- */
 .m3-app{height:100dvh;max-width:430px;margin:0 auto;display:flex;flex-direction:column;background:var(--paper);position:relative;overflow:hidden}
 @media (min-width:520px){.m3-app{border-inline:1px solid var(--rule)}}
-.m3-page{flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 22px 14px;animation:page-in var(--dur-slow) var(--ease-page) both;overflow:hidden}
+/* Instalada/standalone en teléfonos con notch: index.html declara viewport-fit=cover,
+   así que 100dvh incluye las zonas seguras. env() es 0 en todo lo demás. */
+.m3-page{flex:1;min-height:0;display:flex;flex-direction:column;padding:16px 22px 14px;padding-top:calc(16px + env(safe-area-inset-top));animation:page-in var(--dur-slow) var(--ease-page) both;overflow:hidden}
 
 /* ---------- Línea superior (reemplaza al masthead) ---------- */
 .m3-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--font-mono);font-size:10px;letter-spacing:var(--tracking-mark);text-transform:uppercase;color:var(--ink-3);flex:0 0 auto}
@@ -17,7 +19,8 @@
 .m3-top .marca .wordmark{font-family:var(--font-serif);font-style:italic;font-size:17px;font-weight:500;letter-spacing:-0.02em;text-transform:none}
 
 /* ---------- Tab bar: 3 destinos ---------- */
-.m3-tabbar{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);background:var(--paper);height:var(--tb);padding-bottom:4px}
+/* El alto crece con el inset (box-sizing:border-box) o el padding aplastaría los 44px del tab. */
+.m3-tabbar{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);background:var(--paper);height:calc(var(--tb) + env(safe-area-inset-bottom));padding-bottom:calc(4px + env(safe-area-inset-bottom))}
 .m3-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-4);min-height:44px;transition:color var(--dur-fast) var(--ease-out)}
 .m3-tab .ic{height:20px;display:flex;align-items:center;justify-content:center}
 .m3-tab .lbl{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid transparent;padding-bottom:2px}
@@ -25,7 +28,7 @@
 .m3-tab[data-active="true"] .lbl{border-bottom-color:var(--ink)}
 
 /* ---------- Menú „Más" (se despliega hacia arriba) ---------- */
-.m3-menu{position:absolute;right:10px;bottom:calc(var(--tb) + 8px);z-index:22;min-width:196px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-md);box-shadow:var(--shadow-pop);padding:5px;overflow:hidden;transform-origin:100% 100%;animation:m3-menu-in var(--dur-med) var(--ease-page) both}
+.m3-menu{position:absolute;right:10px;bottom:calc(var(--tb) + env(safe-area-inset-bottom) + 8px);z-index:22;min-width:196px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r-md);box-shadow:var(--shadow-pop);padding:5px;overflow:hidden;transform-origin:100% 100%;animation:m3-menu-in var(--dur-med) var(--ease-page) both}
 @keyframes m3-menu-in{from{opacity:0;transform:translateY(8px) scale(0.97)}to{opacity:1;transform:none}}
 .m3-menu-item{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:13px 13px;min-height:46px;border-radius:var(--r-sm);font-family:var(--font-serif);font-size:17px;color:var(--ink);transition:background var(--dur-fast) var(--ease-out)}
 .m3-menu-item + .m3-menu-item{border-top:1px solid var(--rule)}
@@ -80,7 +83,8 @@
 
 /* Viewports cortos: la página se comprime, nada se recorta */
 @media (max-height:720px){
-.m3-page{padding:12px 22px 10px}
+/* El shorthand resetea padding-top — hay que reponer el inset (igual que .k-masthead). */
+.m3-page{padding:12px 22px 10px;padding-top:calc(12px + env(safe-area-inset-top))}
 .m3-saludo{margin:12px 0 4px}
 .m3-plan li{padding:7px 0}
 .m3-hero{padding:12px 16px;margin-top:12px}
