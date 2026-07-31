@@ -713,5 +713,13 @@
         "meta": "5 Min."
       }
     }
+  },
+  "mapa": {
+    "kicker": "Die Übersicht",
+    "h1pre": "Du bist bei",
+    "aqui": "Du bist hier",
+    "progressAria": "Fortschritt: {{pct}} %",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "Nächstes"
   }
 }

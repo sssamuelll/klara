@@ -713,5 +713,13 @@
         "meta": "5 分"
       }
     }
+  },
+  "mapa": {
+    "kicker": "地図",
+    "h1pre": "現在",
+    "aqui": "現在地",
+    "progressAria": "進捗: {{pct}}%",
+    "encurso": "● {{done}}/{{total}}",
+    "proximo": "次"
   }
 }
