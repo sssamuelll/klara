@@ -693,6 +693,12 @@
     "heroTag": "続ける · {{curso}}"
   },
   "curso": {
+    "planTitulo": "今日のプラン · 4 ステップ",
+    "ahora": "● いま",
+    "mapaFila": "コースの地図",
+    "mapaFilaEstado": "現在地",
+    "generoFila": "性",
+    "generoFilaEstado": "der · die · das",
     "paso": {
       "leer": { "titulo": "読む", "dek": "今日の物語", "meta": "3 分" },
       "pronunciar": {

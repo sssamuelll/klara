@@ -693,6 +693,12 @@
     "heroTag": "Continuar · {{curso}}"
   },
   "curso": {
+    "planTitulo": "O plano de hoje · 4 passos",
+    "ahora": "● agora",
+    "mapaFila": "O mapa do curso",
+    "mapaFilaEstado": "Onde você está",
+    "generoFila": "Género",
+    "generoFilaEstado": "der · die · das",
     "paso": {
       "leer": { "titulo": "Ler", "dek": "A história de hoje", "meta": "3 min" },
       "pronunciar": {
