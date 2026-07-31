@@ -1,5 +1,9 @@
 # Klara — Dirección de Diseño
 
+> **Estado (2026-07-31):** superseded en layout por el mockup v4 (`Klara App v4.html` + mobile3/4).
+> De este documento sigue vigente SOLO la identidad: tipografía, paleta papel/tinta, un acento,
+> anti-referencias. Las decisiones por pantalla de abajo describen una iteración anterior.
+
 ## Tesis en una línea
 
 **Klara es una revista que aprende contigo, no un juego que te castiga.**
