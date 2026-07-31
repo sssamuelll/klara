@@ -685,8 +685,8 @@
   "biblioteca": {
     "titulo": "あなたのライブラリ",
     "estadoHoy": "● 今日",
-    "estadoDue_one": "{{count}} 件が今日",
-    "estadoDue_other": "{{count}} 件が今日",
+    "estadoDue_one": "期限 {{count}} 件",
+    "estadoDue_other": "期限 {{count}} 件",
     "cursoSub": "ニュルンベルク版 · {{level}}",
     "nuevoTitulo": "新しいテーマ",
     "nuevoDek": "テーマかノートを渡せば、Klara がプランを作ります",
@@ -705,8 +705,8 @@
         "titulo": "復習する",
         "dek_zero": "今日の復習はありません",
         "dek": "今日のカード",
-        "dek_due_one": "今日は {{count}} 件のカードが復習です",
-        "dek_due_other": "今日は {{count}} 件のカードが復習です",
+        "dek_due_one": "今日復習するカードが {{count}} 件あります",
+        "dek_due_other": "今日復習するカードが {{count}} 件あります",
         "meta": "5 分"
       }
     }
