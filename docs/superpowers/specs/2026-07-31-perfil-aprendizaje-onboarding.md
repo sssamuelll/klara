@@ -120,6 +120,18 @@ CREATE TABLE learner_profile (
 - **Overlay por tema:** al plantear un tema nuevo, NuevoTema pregunta solo lo local (meta, fecha, contexto) — máximo 3 preguntas. Este cuestionario NO se repite por tema.
 - **Capa observada/sintetizada:** fuera de este spec; llegan con F3 (D-K).
 
+## Puntos abiertos del review externo (CodeRabbit, PR #117) — resolver en el gate pre-implementación de F1.5
+
+Antes de implementar, la revisión de Serrano sobre esta spec debe cerrar estos contratos que v1 dejó sueltos:
+
+1. **Defaults sin perfil:** qué valores exactos usa la generación cuando el perfil está `Sin llenar` (y qué responde `GET /profile/learning`: ¿404 o defaults materializados?).
+2. **Esquema canónico de respuestas:** allow-list de `question_id`, cardinalidad por control, semántica de `null` vs `[]` vs clave ausente, `ritmo_abandono_otra` como clave propia, límites de longitud de textos.
+3. **Proyección `ses_lugar` → mic:** regla determinista para multi-selección (propuesta: mic viable por defecto salvo que la ÚNICA selección sea transporte/calle) y el caso `null`.
+4. **Síntesis como job:** estados, retry y qué versión de answers leyó (no regenerar sobre answers más nuevas sin re-leer).
+5. **Privacidad:** las respuestas fluyen al LLM vía LiteLLM — declarar retención, y el borrado de `learner_profile` en el delete de cuenta (CASCADE ya cubre la tabla; declarar el log).
+6. **Auth:** los endpoints van tras la auth de cookie existente como `/me/*` — decirlo explícito en la spec.
+7. **Concurrencia:** `expected_version` en el PUT + 409 en conflicto; `updated_at` actualizado en UPDATE, no solo default de INSERT.
+
 ## Fuera de alcance (v1)
 
 Test adaptativo, tipos de aprendiz con etiqueta ("visual", "auditivo" — sin evidencia, no se usan), pesos numéricos del perfil, edición de la síntesis en línea (v1: se corrige re-respondiendo), notificaciones.

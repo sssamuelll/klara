@@ -1,5 +1,7 @@
 # F1 smoke — iPhone real (PWA instalada) — gate de merge
 
+Prerrequisito: CI verde en el PR (`typecheck` + `i18n:check` + `test` + `build` — los corre GitHub Actions). Este checklist es el gate manual ADICIONAL en device, no un sustituto de los checks.
+
 Build de rama servido al teléfono (dev server con --host o deploy a staging).
 
 - [ ] PWA instalada abre en `/` (Inicio v4) sin barras del navegador.
