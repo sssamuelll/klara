@@ -9,6 +9,8 @@ import "./styles/sentence-view.css";
 import "./styles/finish.css";
 import "./styles/speak.css";
 import "./styles/path.css";
+import "./styles/mobile3.css";
+import "./styles/mobile4.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");
