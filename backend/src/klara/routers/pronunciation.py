@@ -30,6 +30,7 @@ from klara.pronunciation.audio import (
     TranscodeError,
     transcode_to_wav,
 )
+from klara.pronunciation.audio_quality import gate_wav_for_azure
 from klara.pronunciation.azure_client import AzureSpeechError, score_pronunciation
 from klara.pronunciation.azure_stream import AzureStreamingRecognizer
 from klara.pronunciation.schemas import (
@@ -124,6 +125,10 @@ async def score(
         ) from None
 
     try:
+        # Local quality gate: reject silence/clipped/too-short audio before
+        # paying for the Azure call; gain-normalize quiet-but-usable takes.
+        # May raise HTTPException 422 — the finally still unlinks the wav.
+        wav_path = gate_wav_for_azure(wav_path, locale=locale)
         return await run_in_threadpool(
             score_pronunciation,
             wav_path,

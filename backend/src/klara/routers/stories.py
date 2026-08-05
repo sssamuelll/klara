@@ -42,6 +42,7 @@ from klara.models import (
     VocabItem,
 )
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
+from klara.pronunciation.audio_quality import gate_wav_for_azure
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
@@ -634,6 +635,9 @@ async def resolve_mc(
         ) from None
 
     try:
+        # Local quality gate (see pronunciation.py): 422 on unusable audio,
+        # gain-normalize quiet takes. The finally still unlinks the wav.
+        wav_path = gate_wav_for_azure(wav_path, locale=locale)
         transcript = await run_in_threadpool(
             transcribe,
             wav_path,

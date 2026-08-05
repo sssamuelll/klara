@@ -91,6 +91,22 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ja": "音声を検出できませんでした。もう少し大きな声で再録音してください。",
         "pt": "Não detetámos voz. Fala mais alto e grava de novo.",
     },
+    "pron.audio_too_short": {
+        "es": "La grabación es demasiado corta. Mantén la frase un poco más.",
+        "en": "The recording is too short. Hold the phrase a little longer.",
+        "de": "Die Aufnahme ist zu kurz. Halte den Satz etwas länger.",
+        "fr": "L'enregistrement est trop court. Prolonge un peu la phrase.",
+        "ja": "録音が短すぎます。もう少し長く話してください。",
+        "pt": "A gravação é demasiado curta. Prolonga um pouco a frase.",
+    },
+    "pron.audio_clipping": {
+        "es": "El audio suena distorsionado. Aléjate un poco del micrófono y repite.",
+        "en": "The audio sounds distorted. Move a little away from the mic and try again.",
+        "de": "Das Audio klingt verzerrt. Geh etwas vom Mikrofon weg und versuche es erneut.",
+        "fr": "Le son est saturé. Éloigne-toi un peu du micro et réessaie.",
+        "ja": "音声が歪んでいます。マイクから少し離れてもう一度試してください。",
+        "pt": "O áudio está distorcido. Afasta-te um pouco do microfone e tenta de novo.",
+    },
     "pron.upstream_error": {
         "es": "El servicio de pronunciación falló. Inténtalo de nuevo en un momento.",
         "en": "The pronunciation service failed. Try again in a moment.",
