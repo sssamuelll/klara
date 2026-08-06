@@ -80,6 +80,7 @@ Esto reencuadra la pregunta central del rediseño. La semántica de `tipo` (BLOC
 
 ### Dónde pega en el sistema
 
+- **Mecanismo objetivo (directriz de Samuel 2026-07-31): recomendador de herramientas tipo TikTok** — un inventario tipado de formatos de enseñanza (action space; catálogo en `docs/research/2026-07-31-temas-investigacion-aprendizaje.md` §H) del que un bandit contextual elige por usuario, con el onboarding como prior (cold start), la telemetría como señal, y **reward = aprendizaje medido (retención SRS/dominio/transfer), JAMÁS engagement** — optimizar tiempo-en-app es el camino a Duolingo. Reward no-estacionario: las preferencias cambian con la evolución del usuario. Investigación en curso por Samuel (§I del doc de research).
 - **Generación** (F4): el prompt de plan de curso y el de contenido reciben la síntesis del perfil como contexto. Un mismo tema produce herramientas distintas para aprendices distintos — ese es el producto.
 - **Selección de herramientas por paso**: qué pasos lleva el plan del día de un curso (¿mic?, ¿fichas?, ¿Feynman?) sale del perfil + tipo, no de valores a mano por instancia.
 - **Pacing**: chunks por sesión, minutos por paso ("Tres minutos. Sin apuro." es un valor del perfil, no un copy fijo).
