@@ -28,9 +28,8 @@ from klara.i18n.languages import SUPPORTED_LANGUAGES, speech_locale
 from klara.pronunciation.audio import (
     FfmpegMissingError,
     TranscodeError,
-    transcode_to_wav,
 )
-from klara.pronunciation.audio_quality import gate_wav_for_azure
+from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError, score_pronunciation
 from klara.pronunciation.azure_stream import AzureStreamingRecognizer
 from klara.pronunciation.schemas import (
@@ -112,7 +111,11 @@ async def score(
     bcp47 = _resolve_bcp47(language)
 
     try:
-        wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
+        # Transcode + local quality gate in one threadpool hop: unusable audio
+        # (silence, clipping, too short) is rejected with a 422 before paying
+        # for Azure, and quiet-but-usable takes are gain-normalized. Both halves
+        # block, so neither belongs on the event loop.
+        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -125,10 +128,6 @@ async def score(
         ) from None
 
     try:
-        # Local quality gate: reject silence/clipped/too-short audio before
-        # paying for the Azure call; gain-normalize quiet-but-usable takes.
-        # May raise HTTPException 422 — the finally still unlinks the wav.
-        wav_path = gate_wav_for_azure(wav_path, locale=locale)
         return await run_in_threadpool(
             score_pronunciation,
             wav_path,

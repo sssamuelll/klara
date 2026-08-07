@@ -440,6 +440,8 @@
       "mic_denied": "Wir brauchen die Erlaubnis, dein Mikrofon zu nutzen.",
       "mic_unavailable": "Dein Browser unterstützt keine Audioaufnahme.",
       "no_speech": "Wir haben keine Stimme erkannt. Sprich lauter und nimm es noch einmal auf.",
+      "audio_too_short": "Die Aufnahme ist zu kurz. Halte den Satz etwas länger.",
+      "audio_clipping": "Das Audio klingt verzerrt. Geh etwas vom Mikrofon weg und versuche es erneut.",
       "audio_too_large": "Die Aufnahme ist zu lang. Versuche einen kürzeren Satz.",
       "audio_undecodable": "Audio konnte nicht verarbeitet werden. Versuche es noch einmal.",
       "service_unavailable": "Die Aussprachebewertung ist gerade nicht verfügbar.",

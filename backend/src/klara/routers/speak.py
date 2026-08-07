@@ -25,9 +25,8 @@ from klara.i18n.languages import speech_locale
 from klara.pronunciation.audio import (
     FfmpegMissingError,
     TranscodeError,
-    transcode_to_wav,
 )
-from klara.pronunciation.audio_quality import gate_wav_for_azure
+from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError, score_unscripted
 from klara.schemas.speak import (
     SpeakFinishIn,
@@ -122,7 +121,8 @@ async def speak_turn(
 
     t_start = time.monotonic()
     try:
-        wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
+        # Transcode + quality gate in one threadpool hop (see pronunciation.py).
+        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -136,9 +136,6 @@ async def speak_turn(
 
     t_transcoded = time.monotonic()
     try:
-        # Local quality gate (see pronunciation.py): 422 on unusable audio,
-        # gain-normalize quiet takes. The finally still unlinks the wav.
-        wav_path = gate_wav_for_azure(wav_path, locale=locale)
         score, confidence = await run_in_threadpool(
             score_unscripted,
             wav_path,

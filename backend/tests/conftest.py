@@ -1,3 +1,4 @@
+import itertools
 import os
 import subprocess
 import sys
@@ -295,3 +296,44 @@ async def seed_oauth_account(db_session):
         return row.id
 
     return _seed
+
+
+def _voiced_wav_bytes(seconds: float = 1.2, level_dbfs: float = -20.0, rate: int = 16_000) -> bytes:
+    """PCM 16-bit mono frames shaped like speech: a harmonic stack under a
+    syllabic envelope. The gate measures voiced energy, so a flat tone or a
+    stub like b"RIFFfake" gets rejected (or fails to parse) before the endpoint
+    under test ever runs."""
+    import numpy as np
+
+    t = np.arange(round(seconds * rate)) / rate
+    sig = sum(np.sin(2 * np.pi * 150.0 * k * t) / k for k in range(1, 12))
+    sig = sig * (1.0 + 0.35 * np.sin(2 * np.pi * 4.0 * t))
+    sig = sig / np.max(np.abs(sig))
+    sig = sig * (10.0 ** (level_dbfs / 20.0) / float(np.sqrt(np.mean(sig**2))))
+    return np.clip(sig * 32768.0, -32768, 32767).astype("<i2").tobytes()
+
+
+@pytest.fixture
+def gate_passing_transcode(tmp_path):
+    """Drop-in for transcode_to_wav that emits real, gate-passing audio.
+
+    Patch it at `klara.pronunciation.audio_quality.transcode_to_wav` — that is
+    the name transcode_and_gate resolves, so the real quality gate still runs
+    over the audio and the router path stays honest.
+    """
+    import wave
+
+    counter = itertools.count()
+
+    def _fake(src_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
+        # A fresh file per call: the gate may rewrite it in place, and the
+        # caller unlinks it when the request finishes.
+        out = tmp_path / f"take{next(counter)}.wav"
+        with wave.open(str(out), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(sample_rate)
+            handle.writeframes(_voiced_wav_bytes(rate=sample_rate))
+        return out
+
+    return _fake

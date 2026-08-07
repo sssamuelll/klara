@@ -29,6 +29,7 @@ import structlog
 from fastapi import HTTPException, status
 
 from klara.i18n import t
+from klara.pronunciation.audio import transcode_to_wav
 
 log = structlog.get_logger(__name__)
 
@@ -69,7 +70,16 @@ class AudioQualityReport:
     effective_voice_ms: int
     input_rms_dbfs: float
     processed_rms_dbfs: float
+    #: RMS of the detected speech only. This — not processed_rms_dbfs — is
+    #: what "is this take loud enough" means: a whole-clip RMS is diluted by
+    #: however much silence the recorder happened to capture, so gating or
+    #: gain-staging on it makes the answer depend on how slowly the user
+    #: tapped stop. None when no speech was detected at all.
+    speech_rms_dbfs: float | None
     peak_dbfs: float
+    #: Fraction of SPEECH samples at full scale (whole clip when no speech was
+    #: found). Whole-clip would let a badly clipped word hide inside a long
+    #: quiet take, and would reject a short all-voice take for mild clipping.
     clipping_ratio: float
     noise_floor_dbfs: float | None
     snr_db: float | None
@@ -84,6 +94,13 @@ class AudioQualityReport:
             raise ValueError("effective_voice_ms must fit inside duration_ms")
         if not 0.0 <= self.clipping_ratio <= 1.0:
             raise ValueError("clipping_ratio must be between 0 and 1")
+
+    @property
+    def level_dbfs(self) -> float:
+        """The level both the gate and the gain staging judge the take by.
+        Speech when we found any, whole clip otherwise — one definition so the
+        two can never drift apart."""
+        return self.speech_rms_dbfs if self.speech_rms_dbfs is not None else self.processed_rms_dbfs
 
 
 def _dbfs(samples: np.ndarray) -> float:
@@ -123,98 +140,23 @@ def _non_speech_samples(
 
 
 def _frame_levels_dbfs(samples: np.ndarray, sample_rate: int) -> np.ndarray:
+    """Per-frame RMS in dBFS. Vectorized deliberately: this runs three times
+    per gate call, and the per-frame Python loop it replaces cost ~4.7x more
+    on a 15s clip (750 frames of pure call overhead)."""
     frame_size = max(1, round(sample_rate * VAD_FRAME_MS / 1000))
     complete = len(samples) // frame_size
     if complete == 0:
         return np.asarray([_dbfs(samples)], dtype=np.float64)
     frames = samples[: complete * frame_size].reshape(complete, frame_size)
-    return np.asarray([_dbfs(frame) for frame in frames], dtype=np.float64)
+    rms = np.sqrt(np.mean(np.square(frames, dtype=np.float64), axis=1))
+    # Same floor semantics as _dbfs: silence pins to DBFS_FLOOR instead of -inf.
+    levels = 20.0 * np.log10(np.maximum(rms, 1e-12))
+    return np.maximum(np.where(rms <= 1e-6, DBFS_FLOOR, levels), DBFS_FLOOR)
 
 
 def _noise_floor(samples: np.ndarray, sample_rate: int) -> float:
     levels = _frame_levels_dbfs(samples, sample_rate)
     return float(np.percentile(levels, 20.0))
-
-
-def detect_speech_regions(samples: np.ndarray, sample_rate: int) -> tuple[SpeechRegion, ...]:
-    """Energy VAD for short clips — speechtotext got its regions from a
-    human-labeled corpus manifest; Klara has no such thing, so we derive them
-    from frame energy relative to the clip's own noise floor.
-
-    Fallback: a steady signal (a held vowel, a constant tone) has no quiet
-    frames, so the relative threshold finds nothing. If the whole clip is
-    loud enough to be voice, treat it as one region instead of crying
-    silence.
-    """
-    source = np.asarray(samples, dtype=np.float32)
-    if source.size == 0:
-        return ()
-    levels = _frame_levels_dbfs(source, sample_rate)
-    threshold = max(
-        float(np.percentile(levels, 20.0)) + VAD_THRESHOLD_OFFSET_DB,
-        VAD_ABSOLUTE_FLOOR_DBFS,
-    )
-    frame_s = VAD_FRAME_MS / 1000
-    regions: list[SpeechRegion] = []
-    start: int | None = None
-    for idx, level in enumerate(levels):
-        if level >= threshold and start is None:
-            start = idx
-        elif level < threshold and start is not None:
-            regions.append(SpeechRegion(start * frame_s, idx * frame_s))
-            start = None
-    if start is not None:
-        regions.append(SpeechRegion(start * frame_s, len(levels) * frame_s))
-    if not regions and _dbfs(source) >= DEFAULT_THRESHOLDS.min_processed_rms_dbfs:
-        regions = [SpeechRegion(0.0, len(source) / sample_rate)]
-    return tuple(regions)
-
-
-def compute_audio_quality(
-    capture: np.ndarray,
-    processed: np.ndarray,
-    sample_rate: int,
-    speech_regions: Sequence[SpeechRegion],
-    *,
-    requested_gain_db: float,
-    applied_gain_db: float,
-) -> AudioQualityReport:
-    raw = np.asarray(capture, dtype=np.float32)
-    cooked = np.asarray(processed, dtype=np.float32)
-    if raw.ndim != 1 or cooked.ndim != 1 or len(raw) != len(cooked):
-        raise ValueError("capture and processed must be mono and equal-length")
-    duration_s = len(raw) / sample_rate
-    regions = tuple(sorted(speech_regions))
-    speech = _region_samples(cooked, sample_rate, regions)
-    noise = _non_speech_samples(cooked, sample_rate, regions)
-    noise_floor = _noise_floor(noise, sample_rate) if noise.size else None
-    speech_level = _dbfs(speech) if speech.size else None
-    snr = (
-        speech_level - noise_floor
-        if speech_level is not None and noise_floor is not None
-        else None
-    )
-    peak = float(np.max(np.abs(cooked))) if cooked.size else 0.0
-    warnings: list[str] = []
-    if not regions:
-        warnings.append("no_speech_regions")
-    if applied_gain_db < requested_gain_db - 1e-9:
-        warnings.append("gain_limited")
-    return AudioQualityReport(
-        duration_ms=round(duration_s * 1000),
-        effective_voice_ms=round(
-            sum(region.end_s - region.start_s for region in regions) * 1000
-        ),
-        input_rms_dbfs=_dbfs(raw),
-        processed_rms_dbfs=_dbfs(cooked),
-        peak_dbfs=DBFS_FLOOR if peak <= 1e-6 else 20.0 * math.log10(peak),
-        clipping_ratio=float(np.mean(np.abs(cooked) >= CLIP_LEVEL)) if cooked.size else 0.0,
-        noise_floor_dbfs=noise_floor,
-        snr_db=snr,
-        requested_gain_db=requested_gain_db,
-        applied_gain_db=applied_gain_db,
-        warnings=tuple(warnings),
-    )
 
 
 @dataclass(frozen=True)
@@ -243,6 +185,94 @@ DEFAULT_THRESHOLDS = QualityThresholds(
 )
 
 
+def detect_speech_regions(
+    samples: np.ndarray,
+    sample_rate: int,
+    *,
+    thresholds: QualityThresholds = DEFAULT_THRESHOLDS,
+) -> tuple[SpeechRegion, ...]:
+    """Energy VAD for short clips — speechtotext got its regions from a
+    human-labeled corpus manifest; Klara has no such thing, so we derive them
+    from frame energy relative to the clip's own noise floor.
+
+    Fallback: a steady signal (a held vowel, a constant tone) has no quiet
+    frames, so the relative threshold finds nothing. If the whole clip is
+    loud enough to be voice, treat it as one region instead of crying
+    silence. That "loud enough" is the caller's own level floor — reading the
+    module default here would silently ignore a widened threshold.
+    """
+    source = np.asarray(samples, dtype=np.float32)
+    if source.size == 0:
+        return ()
+    levels = _frame_levels_dbfs(source, sample_rate)
+    threshold = max(
+        float(np.percentile(levels, 20.0)) + VAD_THRESHOLD_OFFSET_DB,
+        VAD_ABSOLUTE_FLOOR_DBFS,
+    )
+    frame_s = VAD_FRAME_MS / 1000
+    regions: list[SpeechRegion] = []
+    start: int | None = None
+    for idx, level in enumerate(levels):
+        if level >= threshold and start is None:
+            start = idx
+        elif level < threshold and start is not None:
+            regions.append(SpeechRegion(start * frame_s, idx * frame_s))
+            start = None
+    if start is not None:
+        regions.append(SpeechRegion(start * frame_s, len(levels) * frame_s))
+    if not regions and _dbfs(source) >= thresholds.min_processed_rms_dbfs:
+        regions = [SpeechRegion(0.0, len(source) / sample_rate)]
+    return tuple(regions)
+
+
+def compute_audio_quality(
+    capture: np.ndarray,
+    processed: np.ndarray,
+    sample_rate: int,
+    speech_regions: Sequence[SpeechRegion],
+    *,
+    requested_gain_db: float,
+    applied_gain_db: float,
+) -> AudioQualityReport:
+    raw = np.asarray(capture, dtype=np.float32)
+    cooked = np.asarray(processed, dtype=np.float32)
+    if raw.ndim != 1 or cooked.ndim != 1 or len(raw) != len(cooked):
+        raise ValueError("capture and processed must be mono and equal-length")
+    duration_s = len(raw) / sample_rate
+    regions = tuple(sorted(speech_regions))
+    speech = _region_samples(cooked, sample_rate, regions)
+    noise = _non_speech_samples(cooked, sample_rate, regions)
+    noise_floor = _noise_floor(noise, sample_rate) if noise.size else None
+    speech_level = _dbfs(speech) if speech.size else None
+    snr = (
+        speech_level - noise_floor if speech_level is not None and noise_floor is not None else None
+    )
+    peak = float(np.max(np.abs(cooked))) if cooked.size else 0.0
+    # Clipping is a property of the voice, not of the silence around it.
+    clip_source = speech if speech.size else cooked
+    warnings: list[str] = []
+    if not regions:
+        warnings.append("no_speech_regions")
+    # ponytail: "gain was limited" lives on GainResult.limited, which is what
+    # the log line reads. One predicate, one owner.
+    return AudioQualityReport(
+        duration_ms=round(duration_s * 1000),
+        effective_voice_ms=round(sum(region.end_s - region.start_s for region in regions) * 1000),
+        input_rms_dbfs=_dbfs(raw),
+        processed_rms_dbfs=_dbfs(cooked),
+        speech_rms_dbfs=speech_level,
+        peak_dbfs=DBFS_FLOOR if peak <= 1e-6 else 20.0 * math.log10(peak),
+        clipping_ratio=(
+            float(np.mean(np.abs(clip_source) >= CLIP_LEVEL)) if clip_source.size else 0.0
+        ),
+        noise_floor_dbfs=noise_floor,
+        snr_db=snr,
+        requested_gain_db=requested_gain_db,
+        applied_gain_db=applied_gain_db,
+        warnings=tuple(warnings),
+    )
+
+
 @dataclass(frozen=True)
 class GateDecision:
     eligible: bool
@@ -258,14 +288,18 @@ def evaluate_gate(
         reasons.append("silence")
     elif report.effective_voice_ms < thresholds.min_effective_voice_ms:
         reasons.append("too_short")
-    if report.processed_rms_dbfs < thresholds.min_processed_rms_dbfs:
+    if report.level_dbfs < thresholds.min_processed_rms_dbfs:
         reasons.append("level_too_low")
     if report.clipping_ratio > thresholds.max_clipping_ratio:
         reasons.append("clipping")
     return GateDecision(eligible=not reasons, reason_codes=tuple(reasons))
 
 
-@dataclass(frozen=True)
+#: eq=False on purpose: the generated __eq__ would compare an ndarray field
+#: and raise "truth value of an array is ambiguous", and frozen+eq would also
+#: generate an __hash__ over that unhashable array. Identity comparison is all
+#: any caller needs.
+@dataclass(frozen=True, eq=False)
 class GainResult:
     samples: np.ndarray
     requested_gain_db: float
@@ -335,6 +369,10 @@ _REASON_MESSAGE_KEY: dict[QualityReason, str] = {
 }
 
 
+def _round_opt(value: float | None) -> float | None:
+    return None if value is None else round(value, 1)
+
+
 def _reject(reasons: tuple[QualityReason, ...], locale: str) -> HTTPException:
     primary = reasons[0]
     return HTTPException(
@@ -359,12 +397,30 @@ def gate_wav_for_azure(
     Returns the (possibly gain-normalized, rewritten in place) wav path.
     Raises HTTPException 422 with a machine-readable reason when the audio
     is not worth an Azure round-trip.
+
+    Fails OPEN: a WAV this module cannot parse is handed to Azure untouched,
+    exactly as it was before the gate existed. The gate is an optimization,
+    so a parse failure must never turn a request that used to work into an
+    error — and `wave` is stricter than ffmpeg's muxer (WAVE_FORMAT_EXTENSIBLE,
+    an odd-length data chunk, a stereo file if the transcode args ever change).
     """
-    samples, sample_rate = load_wav_samples(wav_path)
-    regions = detect_speech_regions(samples, sample_rate)
+    try:
+        samples, sample_rate = load_wav_samples(wav_path)
+    except (wave.Error, EOFError, ValueError) as e:
+        log.warning("pronunciation.audio_quality_unreadable", error=str(e))
+        return wav_path
+    if sample_rate <= 0 or samples.size == 0:
+        log.warning("pronunciation.audio_quality_unreadable", error="empty or rateless wav")
+        return wav_path
+
+    regions = detect_speech_regions(samples, sample_rate, thresholds=thresholds)
     report = compute_audio_quality(
-        samples, samples, sample_rate, regions,
-        requested_gain_db=0.0, applied_gain_db=0.0,
+        samples,
+        samples,
+        sample_rate,
+        regions,
+        requested_gain_db=0.0,
+        applied_gain_db=0.0,
     )
     decision = evaluate_gate(report, thresholds)
 
@@ -377,18 +433,28 @@ def gate_wav_for_azure(
             reasons=list(hard),
             duration_ms=report.duration_ms,
             voice_ms=report.effective_voice_ms,
-            rms_dbfs=round(report.processed_rms_dbfs, 1),
+            speech_rms_dbfs=round(report.level_dbfs, 1),
+            clip_rms_dbfs=round(report.processed_rms_dbfs, 1),
+            noise_floor_dbfs=_round_opt(report.noise_floor_dbfs),
+            snr_db=_round_opt(report.snr_db),
             clipping_ratio=round(report.clipping_ratio, 4),
         )
         raise _reject(hard, locale)
 
-    gain_db = TARGET_RMS_DBFS - report.processed_rms_dbfs
+    # Gain staging targets the SPEECH level. Driving it from the whole-clip RMS
+    # would make the boost a function of how much silence the recorder caught:
+    # the same word at the same level asked for +1dB with a short tail and +8dB
+    # with a long one, dragging the noise floor up with it.
+    gain_db = TARGET_RMS_DBFS - report.level_dbfs
     if gain_db <= 0.0:
         return wav_path  # eligible and loud enough as-is
 
     gain = apply_fixed_gain(samples, min(gain_db, MAX_GAIN_DB))
     boosted = compute_audio_quality(
-        samples, gain.samples, sample_rate, regions,
+        samples,
+        gain.samples,
+        sample_rate,
+        regions,
         requested_gain_db=gain.requested_gain_db,
         applied_gain_db=gain.applied_gain_db,
     )
@@ -399,7 +465,9 @@ def gate_wav_for_azure(
             reasons=list(boosted_decision.reason_codes),
             duration_ms=boosted.duration_ms,
             voice_ms=boosted.effective_voice_ms,
-            rms_dbfs=round(boosted.processed_rms_dbfs, 1),
+            speech_rms_dbfs=round(boosted.level_dbfs, 1),
+            noise_floor_dbfs=_round_opt(boosted.noise_floor_dbfs),
+            snr_db=_round_opt(boosted.snr_db),
             applied_gain_db=round(gain.applied_gain_db, 1),
         )
         raise _reject(boosted_decision.reason_codes, locale)
@@ -407,8 +475,36 @@ def gate_wav_for_azure(
     _write_wav_samples(wav_path, gain.samples, sample_rate)
     log.info(
         "pronunciation.audio_gain_applied",
-        input_rms_dbfs=round(report.input_rms_dbfs, 1),
+        speech_rms_dbfs=round(report.level_dbfs, 1),
+        noise_floor_dbfs=_round_opt(report.noise_floor_dbfs),
+        snr_db=_round_opt(report.snr_db),
         applied_gain_db=round(gain.applied_gain_db, 1),
         limited=gain.limited,
     )
     return wav_path
+
+
+def transcode_and_gate(
+    src_bytes: bytes,
+    *,
+    locale: str,
+    sample_rate: int = 16_000,
+    thresholds: QualityThresholds = DEFAULT_THRESHOLDS,
+) -> Path:
+    """Transcode an upload and run the quality gate on it, as one step.
+
+    The single entry point every audio endpoint should use. Both halves are
+    blocking (ffmpeg subprocess, then WAV decode + analysis), so callers run
+    this in a threadpool rather than on the event loop.
+
+    Raises TranscodeError / FfmpegMissingError like transcode_to_wav, and
+    HTTPException 422 from the gate. The caller owns the returned path; on any
+    failure here the temp WAV is unlinked before the exception leaves, so a
+    rejected take can't leak a file.
+    """
+    wav_path = transcode_to_wav(src_bytes, sample_rate=sample_rate)
+    try:
+        return gate_wav_for_azure(wav_path, locale=locale, thresholds=thresholds)
+    except BaseException:
+        wav_path.unlink(missing_ok=True)
+        raise

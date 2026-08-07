@@ -38,10 +38,41 @@ const API_BASE = "/api/v1";
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /**
+   * Machine-readable cause, when the backend sent a structured `detail`
+   * (currently the audio quality gate: {error, reason, reasons, message}).
+   * Classifiers should branch on this, never on the human message.
+   */
+  reason?: string;
+  constructor(status: number, message: string, reason?: string) {
     super(message);
     this.status = status;
+    this.reason = reason;
   }
+}
+
+/**
+ * Turn a failed audio response into an ApiError. `detail` is a plain string on
+ * most endpoints, but the audio quality gate sends an object — reading that
+ * with `body.detail ?? …` stringified it to "[object Object]" and threw the
+ * reason away, which is why every gate rejection looked like "speak louder".
+ */
+async function audioApiError(resp: Response): Promise<ApiError> {
+  let message = "";
+  let reason: string | undefined;
+  try {
+    const body = await resp.json();
+    const detail = body?.detail;
+    if (detail !== null && typeof detail === "object") {
+      message = typeof detail.message === "string" ? detail.message : "";
+      reason = typeof detail.reason === "string" ? detail.reason : undefined;
+    } else {
+      message = typeof detail === "string" ? detail : JSON.stringify(body);
+    }
+  } catch {
+    message = await resp.text();
+  }
+  return new ApiError(resp.status, message || `${resp.status} ${resp.statusText}`, reason);
 }
 
 export class AuthRequiredError extends ApiError {
@@ -272,16 +303,7 @@ export const api = {
       for (const fn of unauthorizedListeners) fn();
       throw new AuthRequiredError();
     }
-    if (!resp.ok) {
-      let detail: string;
-      try {
-        const body = await resp.json();
-        detail = body.detail ?? JSON.stringify(body);
-      } catch {
-        detail = await resp.text();
-      }
-      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
-    }
+    if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<PronunciationScoreResponse>;
   },
 
@@ -375,16 +397,7 @@ export const api = {
       for (const fn of unauthorizedListeners) fn();
       throw new AuthRequiredError();
     }
-    if (!resp.ok) {
-      let detail: string;
-      try {
-        const body = await resp.json();
-        detail = body.detail ?? JSON.stringify(body);
-      } catch {
-        detail = await resp.text();
-      }
-      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
-    }
+    if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<MCResolveResponse>;
   },
 
@@ -428,16 +441,7 @@ export const api = {
       for (const fn of unauthorizedListeners) fn();
       throw new AuthRequiredError();
     }
-    if (!resp.ok) {
-      let detail: string;
-      try {
-        const body = await resp.json();
-        detail = body.detail ?? JSON.stringify(body);
-      } catch {
-        detail = await resp.text();
-      }
-      throw new ApiError(resp.status, detail || `${resp.status} ${resp.statusText}`);
-    }
+    if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<SpeakTurnResponse>;
   },
 

@@ -440,6 +440,8 @@
       "mic_denied": "Necesitamos permiso para usar el micrófono.",
       "mic_unavailable": "Tu navegador no soporta grabación de audio.",
       "no_speech": "No detectamos voz. Habla más fuerte y vuelve a grabar.",
+      "audio_too_short": "La grabación es muy corta. Mantén la frase un poco más.",
+      "audio_clipping": "El audio suena distorsionado. Aléjate un poco del micrófono y repite.",
       "audio_too_large": "El audio es demasiado largo. Intenta una frase más corta.",
       "audio_undecodable": "No pudimos procesar el audio. Intenta de nuevo.",
       "service_unavailable": "La evaluación de pronunciación no está disponible ahora.",
