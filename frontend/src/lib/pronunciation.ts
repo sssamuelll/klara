@@ -128,6 +128,8 @@ export type PronunciationErrorKind =
   | "mic_denied"
   | "mic_unavailable"
   | "no_speech"
+  | "audio_too_short"
+  | "audio_clipping"
   | "audio_too_large"
   | "audio_undecodable"
   | "service_unavailable"
@@ -139,6 +141,14 @@ export interface PronunciationError {
   kind: PronunciationErrorKind;
   detail?: string;
 }
+
+/** Backend gate reason (audio_quality.QualityReason) → UI error kind. */
+const GATE_REASON_KINDS: Record<string, PronunciationErrorKind> = {
+  too_short: "audio_too_short",
+  clipping: "audio_clipping",
+  silence: "no_speech",
+  level_too_low: "no_speech",
+};
 
 export interface MicRecorder {
   stop: () => Promise<Blob>;
@@ -279,8 +289,12 @@ export function classifyScoreError(e: unknown): PronunciationError {
   if (e instanceof ApiError) {
     const detail = e.message;
     switch (e.status) {
+      // The local audio gate sends a machine-readable reason with its 422.
+      // Collapsing them all to "no_speech" told a user who was clipping to
+      // speak LOUDER — the exact opposite of the fix. Unknown/absent reason
+      // keeps the old copy, which is right for silence and level_too_low.
       case 422:
-        return { kind: "no_speech", detail };
+        return { kind: GATE_REASON_KINDS[e.reason ?? ""] ?? "no_speech", detail };
       case 413:
         return { kind: "audio_too_large", detail };
       case 400:

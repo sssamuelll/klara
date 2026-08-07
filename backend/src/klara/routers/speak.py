@@ -25,8 +25,8 @@ from klara.i18n.languages import speech_locale
 from klara.pronunciation.audio import (
     FfmpegMissingError,
     TranscodeError,
-    transcode_to_wav,
 )
+from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError, score_unscripted
 from klara.schemas.speak import (
     SpeakFinishIn,
@@ -121,7 +121,8 @@ async def speak_turn(
 
     t_start = time.monotonic()
     try:
-        wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
+        # Transcode + quality gate in one threadpool hop (see pronunciation.py).
+        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

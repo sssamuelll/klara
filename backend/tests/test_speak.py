@@ -8,8 +8,6 @@ the reason Speak exists in the MVP.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 import pytest_asyncio
 from sqlalchemy import delete, func, select
@@ -78,15 +76,16 @@ def _score_response(words: list[WordScore] | None = None, text: str | None = Non
 
 
 @pytest.fixture
-def patched_turn(monkeypatch, tmp_path: Path):
-    """Stub transcode + Azure unscripted + LLM. Tests override pieces."""
+def patched_turn(monkeypatch, gate_passing_transcode):
+    """Stub transcode + Azure unscripted + LLM. Tests override pieces.
 
-    def fake_transcode(audio_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
-        out = tmp_path / "fake.wav"
-        out.write_bytes(b"RIFFfake")
-        return out
+    Real speech-shaped audio, patched inside audio_quality, so the quality
+    gate runs for real on this path (see test_pronunciation.py).
+    """
 
-    monkeypatch.setattr("klara.routers.speak.transcode_to_wav", fake_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     def fake_score(wav_path, language, *, azure_key, azure_region):
         return _score_response(), 0.92

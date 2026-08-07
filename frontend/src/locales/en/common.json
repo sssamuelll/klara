@@ -440,6 +440,8 @@
       "mic_denied": "We need permission to use your microphone.",
       "mic_unavailable": "Your browser doesn't support audio recording.",
       "no_speech": "We didn't catch any speech. Speak louder and record again.",
+      "audio_too_short": "The recording is too short. Hold the phrase a little longer.",
+      "audio_clipping": "The audio sounds distorted. Move a little away from the mic and try again.",
       "audio_too_large": "The recording is too long. Try a shorter sentence.",
       "audio_undecodable": "We couldn't process the audio. Try again.",
       "service_unavailable": "Pronunciation scoring isn't available right now.",

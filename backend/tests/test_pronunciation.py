@@ -8,7 +8,6 @@ authenticated successful path returns the schema as designed.
 from __future__ import annotations
 
 import json as _json
-from pathlib import Path
 
 import pytest
 
@@ -67,21 +66,22 @@ def _fake_score_response(reference: str = "Hello world", lang: str = "en-US"):
 
 
 @pytest.fixture
-def patched_pronunciation(monkeypatch, tmp_path: Path):
-    """Stubs transcode + Azure so no ffmpeg/Azure is touched."""
+def patched_pronunciation(monkeypatch, gate_passing_transcode):
+    """Stubs transcode + Azure so no ffmpeg/Azure is touched.
 
-    def fake_transcode(audio_bytes: bytes, *, sample_rate: int = 16_000) -> Path:
-        out = tmp_path / "fake.wav"
-        out.write_bytes(b"RIFFfake")
-        return out
+    The stub emits real speech-shaped audio and is patched *inside*
+    audio_quality, so the quality gate still runs for real on this path.
+    """
 
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", fake_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     def fake_score(wav_path, reference_text, language, *, azure_key, azure_region):
         return _fake_score_response(reference_text, language)
 
     monkeypatch.setattr("klara.routers.pronunciation.score_pronunciation", fake_score)
-    return {"transcode": fake_transcode, "score": fake_score}
+    return {"transcode": gate_passing_transcode, "score": fake_score}
 
 
 @pytest.mark.asyncio
@@ -169,17 +169,14 @@ async def test_score_happy_path(client, app_settings, seed_invite, patched_pronu
 
 @pytest.mark.asyncio
 async def test_score_422_when_no_speech_detected(
-    client, app_settings, seed_invite, monkeypatch, tmp_path: Path
+    client, app_settings, seed_invite, monkeypatch, gate_passing_transcode
 ):
     cookie = await _register_and_login(client, app_settings, seed_invite)
     from klara.pronunciation.azure_client import AzureSpeechError
 
-    def stub_transcode(b, *, sample_rate=16_000):
-        out = tmp_path / "x.wav"
-        out.write_bytes(b"x")
-        return out
-
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", stub_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     def raise_no_match(*a, **k):
         raise AzureSpeechError("No speech", recoverable=True)
@@ -197,17 +194,14 @@ async def test_score_422_when_no_speech_detected(
 
 @pytest.mark.asyncio
 async def test_score_502_when_azure_fails(
-    client, app_settings, seed_invite, monkeypatch, tmp_path: Path
+    client, app_settings, seed_invite, monkeypatch, gate_passing_transcode
 ):
     cookie = await _register_and_login(client, app_settings, seed_invite)
     from klara.pronunciation.azure_client import AzureSpeechError
 
-    def stub_transcode(b, *, sample_rate=16_000):
-        out = tmp_path / "x.wav"
-        out.write_bytes(b"x")
-        return out
-
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", stub_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     def raise_fatal(*a, **k):
         raise AzureSpeechError("Quota exceeded", recoverable=False)
@@ -225,7 +219,7 @@ async def test_score_502_when_azure_fails(
 
 @pytest.mark.asyncio
 async def test_score_502_logs_azure_details(
-    client, app_settings, seed_invite, monkeypatch, tmp_path: Path
+    client, app_settings, seed_invite, monkeypatch, gate_passing_transcode
 ):
     """A non-recoverable Azure failure must log the CancellationDetails.
 
@@ -238,12 +232,9 @@ async def test_score_502_logs_azure_details(
 
     from klara.pronunciation.azure_client import AzureSpeechError
 
-    def stub_transcode(b, *, sample_rate=16_000):
-        out = tmp_path / "x.wav"
-        out.write_bytes(b"x")
-        return out
-
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", stub_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     azure_msg = "Azure cancelled the request: CancellationReason.Error - WebSocket upgrade failed: Authentication error (401)"
 
@@ -274,7 +265,7 @@ async def test_score_400_when_audio_undecodable(client, app_settings, seed_invit
     def raise_transcode(b, *, sample_rate=16_000):
         raise TranscodeError("ffmpeg: invalid container")
 
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", raise_transcode)
+    monkeypatch.setattr("klara.pronunciation.audio_quality.transcode_to_wav", raise_transcode)
 
     r = await client.post(
         "/api/v1/pronunciation/score",
@@ -287,19 +278,16 @@ async def test_score_400_when_audio_undecodable(client, app_settings, seed_invit
 
 @pytest.mark.asyncio
 async def test_short_language_code_resolves_to_bcp47(
-    client, app_settings, seed_invite, monkeypatch, tmp_path: Path
+    client, app_settings, seed_invite, monkeypatch, gate_passing_transcode
 ):
     """The endpoint should accept short codes ('en', 'de') as a convenience."""
     cookie = await _register_and_login(client, app_settings, seed_invite)
 
     captured = {}
 
-    def stub_transcode(b, *, sample_rate=16_000):
-        out = tmp_path / "x.wav"
-        out.write_bytes(b"x")
-        return out
-
-    monkeypatch.setattr("klara.routers.pronunciation.transcode_to_wav", stub_transcode)
+    monkeypatch.setattr(
+        "klara.pronunciation.audio_quality.transcode_to_wav", gate_passing_transcode
+    )
 
     def fake_score(wav_path, reference_text, language, *, azure_key, azure_region):
         captured["language"] = language

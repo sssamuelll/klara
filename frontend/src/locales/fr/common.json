@@ -440,6 +440,8 @@
       "mic_denied": "Nous avons besoin de l'autorisation pour utiliser le microphone.",
       "mic_unavailable": "Ton navigateur ne prend pas en charge l'enregistrement audio.",
       "no_speech": "Aucune voix détectée. Parle plus fort et réessaye.",
+      "audio_too_short": "L'enregistrement est trop court. Prolonge un peu la phrase.",
+      "audio_clipping": "Le son est saturé. Éloigne-toi un peu du micro et réessaie.",
       "audio_too_large": "L'enregistrement est trop long. Essaie une phrase plus courte.",
       "audio_undecodable": "Impossible de traiter l'audio. Réessaye.",
       "service_unavailable": "L'évaluation de la prononciation n'est pas disponible pour le moment.",

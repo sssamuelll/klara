@@ -41,7 +41,8 @@ from klara.models import (
     UserCard,
     VocabItem,
 )
-from klara.pronunciation.audio import FfmpegMissingError, TranscodeError, transcode_to_wav
+from klara.pronunciation.audio import FfmpegMissingError, TranscodeError
+from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
@@ -621,7 +622,8 @@ async def resolve_mc(
     bcp47 = _resolve_bcp47(language)
 
     try:
-        wav_path: Path = await run_in_threadpool(transcode_to_wav, audio_bytes)
+        # Transcode + quality gate in one threadpool hop (see pronunciation.py).
+        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

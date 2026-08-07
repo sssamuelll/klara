@@ -20,6 +20,7 @@ dependencies = [
     "argon2-cffi>=23",
     "httpx-oauth>=0.15",
     "azure-cognitiveservices-speech>=1.40",
+    "numpy>=2.0",
     "simplemma>=1.1",
     "json-repair>=0.61.0",
 ]
