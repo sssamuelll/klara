@@ -39,3 +39,9 @@ Thumbs.db
 
 # Superpowers scratch (SDD ledger, brainstorm mockups)
 .superpowers/
+
+# Material de investigación: PDFs y exports de papers. Fuera del repo por dos
+# razones — pesa (11 MB sólo el primer PDF) y trae nombres de archivo que
+# Windows no soporta, que ya reventaron un `git add -A` y un `git worktree
+# remove` con "Filename too long".
+docs/research/
