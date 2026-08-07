@@ -44,7 +44,7 @@ import {
   mainResults,
   quizSessionReducer,
 } from "../lib/quizSession";
-import { startSilenceDetector } from "../lib/silenceDetector";
+import { micLevelKey, startSilenceDetector, type MicLevel } from "../lib/silenceDetector";
 import { speak, stop as stopTTS } from "../lib/tts";
 import { useMicScorer } from "../lib/useMicScorer";
 
@@ -307,6 +307,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   const [picked, setPicked] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [micPhase, setMicPhase] = useState<MCMicPhase>("idle");
+  const [micLevel, setMicLevel] = useState<MicLevel>("silent");
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const recorderRef = useRef<MicRecorder | null>(null);
   const recAnalyserRef = useRef<AnalyserNode | null>(null);
@@ -401,9 +402,14 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   // silence detector misbehaves (e.g. flaky mic feeding garbage samples).
   useEffect(() => {
     if (micPhase !== "recording" || !recAnalyserRef.current) return;
-    const cleanupSilence = startSilenceDetector(recAnalyserRef.current, () => {
-      void stopMic();
-    });
+    setMicLevel("silent");
+    const cleanupSilence = startSilenceDetector(
+      recAnalyserRef.current,
+      () => {
+        void stopMic();
+      },
+      { onLevel: setMicLevel },
+    );
     const safety = window.setTimeout(() => void stopMic(), 20_000);
     return () => {
       cleanupSilence();
@@ -476,7 +482,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
         )}
 
         {micPhase === "recording" && (
-          <div className="qcard__rec" role="status" aria-live="polite" onClick={() => void stopMic()} style={{ cursor: "pointer" }}>
+          <div className="qcard__rec" role="status" aria-live="polite" data-level={micLevel} onClick={() => void stopMic()} style={{ cursor: "pointer" }}>
             <span className="qcard__rec-dot" />
             <span className="qcard__rec-bars" aria-hidden="true">
               {Array.from({ length: 16 }).map((_, i) => (
@@ -490,7 +496,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
                 />
               ))}
             </span>
-            <span className="qcard__rec-lbl">{t("story.sentence.listening")}</span>
+            <span className="qcard__rec-lbl">{t(micLevelKey(micLevel))}</span>
           </div>
         )}
 
@@ -656,7 +662,7 @@ function ClozeQuestion({
           </>
         )}
         {scorer.phase === "recording" && (
-          <div className="qcard__rec" role="status" aria-live="polite">
+          <div className="qcard__rec" role="status" aria-live="polite" data-level={scorer.level}>
             <span className="qcard__rec-dot" />
             <span className="qcard__rec-bars" aria-hidden="true">
               {Array.from({ length: 16 }).map((_, i) => (
@@ -670,7 +676,7 @@ function ClozeQuestion({
                 />
               ))}
             </span>
-            <span className="qcard__rec-lbl">{t("story.sentence.listening")}</span>
+            <span className="qcard__rec-lbl">{t(micLevelKey(scorer.level))}</span>
           </div>
         )}
         {scorer.phase === "scoring" && (
@@ -852,7 +858,7 @@ function ShadowQuestion({
           </div>
         )}
         {scorer.phase === "recording" && (
-          <div className="qcard__rec" role="status" aria-live="polite">
+          <div className="qcard__rec" role="status" aria-live="polite" data-level={scorer.level}>
             <span className="qcard__rec-dot" />
             <span className="qcard__rec-bars" aria-hidden="true">
               {Array.from({ length: 16 }).map((_, i) => (
@@ -866,7 +872,7 @@ function ShadowQuestion({
                 />
               ))}
             </span>
-            <span className="qcard__rec-lbl">{t("story.sentence.listening")}</span>
+            <span className="qcard__rec-lbl">{t(micLevelKey(scorer.level))}</span>
           </div>
         )}
         {scorer.phase === "scoring" && (

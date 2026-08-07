@@ -231,6 +231,7 @@ export default function StoryView() {
           duration={practice.duration}
           recording={practice.recording}
           micAnalyser={practice.micAnalyser}
+          micLevel={practice.micLevel}
           evaluating={practice.evaluating}
           feedback={practice.feedback}
           liveBands={practice.liveBands}

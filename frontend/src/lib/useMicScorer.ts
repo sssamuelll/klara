@@ -17,7 +17,7 @@ import {
   type PronunciationError,
   type ScoreBand,
 } from "./pronunciation";
-import { startSilenceDetector } from "./silenceDetector";
+import { startSilenceDetector, type MicLevel } from "./silenceDetector";
 
 export type MicScorerPhase = "idle" | "recording" | "scoring" | "scored" | "error";
 
@@ -32,6 +32,8 @@ export interface MicScorerResult {
 export interface UseMicScorer {
   phase: MicScorerPhase;
   analyser: AnalyserNode | null;
+  /** Live capture-quality verdict while recording (issue #120, point 1). */
+  level: MicLevel;
   result: MicScorerResult | null;
   error: PronunciationError | null;
   /** Start recording. No-op if already recording or scoring. */
@@ -56,6 +58,7 @@ export function useMicScorer(
 ): UseMicScorer {
   const [phase, setPhase] = useState<MicScorerPhase>("idle");
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [level, setLevel] = useState<MicLevel>("silent");
   const [result, setResult] = useState<MicScorerResult | null>(null);
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
@@ -129,10 +132,15 @@ export function useMicScorer(
       // Primary stop trigger: 1.5s of silence after the user has had at
       // least 800ms to start speaking. Wrapped as a ref so cancel() /
       // stop() can tear it down without depending on this closure.
-      silenceCleanupRef.current = startSilenceDetector(rec.analyser, () => {
-        silenceCleanupRef.current = null;
-        void stop();
-      });
+      setLevel("silent");
+      silenceCleanupRef.current = startSilenceDetector(
+        rec.analyser,
+        () => {
+          silenceCleanupRef.current = null;
+          void stop();
+        },
+        { onLevel: setLevel },
+      );
       // Safety net in case the detector misbehaves on a flaky mic.
       autoStopRef.current = window.setTimeout(() => {
         void stop();
@@ -158,5 +166,15 @@ export function useMicScorer(
     };
   }, [clearTimers]);
 
-  return { phase, analyser, result, error, start, stop, cancel, reset };
+  return {
+    phase,
+    analyser,
+    level: phase === "recording" ? level : "silent",
+    result,
+    error,
+    start,
+    stop,
+    cancel,
+    reset,
+  };
 }

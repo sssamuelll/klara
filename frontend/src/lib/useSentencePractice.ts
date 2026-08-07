@@ -46,7 +46,7 @@ import {
 import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
 import { createAligner } from "./streamAlign";
 import { openScoreStream, type ScoreStream } from "./streamClient";
-import { startSilenceDetector } from "./silenceDetector";
+import { startSilenceDetector, type MicLevel } from "./silenceDetector";
 import { speak, stop, useTTS } from "./tts";
 
 export type PronScores = Record<number, ScoreBand>;
@@ -147,6 +147,8 @@ export interface UseSentencePractice {
   /** True while the /diagnose request for the current sentence is in-flight. */
   diagnosing: boolean;
   micAnalyser: AnalyserNode | null;
+  /** Live capture-quality verdict while recording (issue #120, point 1). */
+  micLevel: MicLevel;
   /** True when the *current* sentence is the one Klara is reading aloud. */
   sentencePlaying: boolean;
   /** TTS progress 0..1 for the current sentence (0 when not playing it). */
@@ -204,6 +206,7 @@ export function useSentencePractice({
   const [pronError, setPronError] = useState<PronunciationError | null>(null);
   const [rate, setRate] = useState<Rate>(1);
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
+  const [micLevel, setMicLevel] = useState<MicLevel>("silent");
 
   // While set, recorder is live; calling stop() returns the captured Blob.
   const recorderRef = useRef<MicRecorder | null>(null);
@@ -478,9 +481,14 @@ export function useSentencePractice({
   // stopRecording is idempotent so a race between manual + auto is fine.
   useEffect(() => {
     if (recordingIndex === null || !micAnalyser) return;
-    return startSilenceDetector(micAnalyser, () => {
-      void stopRecording();
-    });
+    setMicLevel("silent");
+    return startSilenceDetector(
+      micAnalyser,
+      () => {
+        void stopRecording();
+      },
+      { onLevel: setMicLevel },
+    );
   }, [recordingIndex, micAnalyser, stopRecording]);
 
   const goNext = useCallback(() => {
@@ -601,6 +609,7 @@ export function useSentencePractice({
     diagnosis,
     diagnosing: diagnosingIndex === currentIndex,
     micAnalyser: recording ? micAnalyser : null,
+    micLevel: recording ? micLevel : "silent",
     sentencePlaying,
     progress: sentencePlaying ? tts.progress : 0,
     duration: tts.duration,

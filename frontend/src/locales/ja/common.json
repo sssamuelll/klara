@@ -178,6 +178,10 @@
         }
       },
       "listening": "聞き取り中",
+      "micLevel": {
+        "quiet": "近づいて",
+        "loud": "離れて"
+      },
       "stop": "停止",
       "stopAria": "録音を停止",
       "playAria": "Klaraを聞く",

@@ -178,6 +178,10 @@
         }
       },
       "listening": "À l'écoute",
+      "micLevel": {
+        "quiet": "Plus près",
+        "loud": "Plus loin"
+      },
       "stop": "Arrêter",
       "stopAria": "Arrêter l'enregistrement",
       "playAria": "Écouter Klara",
