@@ -33,5 +33,9 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
 # acá a propósito — si se instalara, cualquier cambio de código invalidaría
 # esta capa y volveríamos a reinstalar numpy y el SDK de Azure en cada deploy,
 # que es exactamente el problema que este split resuelve.
+#
+# --frozen: instala exactamente lo que dice uv.lock, sin re-resolver. Es lo que
+# hace que el hash del tag signifique algo y que producción corra las mismas
+# versiones que pasaron los tests.
 COPY pyproject.toml uv.lock ./
-RUN uv sync --no-install-project --no-dev
+RUN uv sync --frozen --no-install-project --no-dev

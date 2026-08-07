@@ -11,4 +11,8 @@ dist
 .git
 .gitignore
 README.md
-uv.lock
+# uv.lock SÍ entra a propósito (antes estaba excluido). Sin él, `uv sync`
+# resuelve de cero en cada build y producción puede terminar con versiones
+# distintas de las que pasaron los tests — sin CI, nadie lo notaría. Además
+# Dockerfile.base tagea la imagen con el hash de pyproject+uv.lock: si el lock
+# no viaja, ese hash miente.
