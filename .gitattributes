@@ -1,0 +1,10 @@
+# Los shell scripts SIEMPRE con LF, aunque se editen desde Windows.
+# Con CRLF, bash falla con `$'\r': command not found` — y como scripts/ sólo se
+# usa desde Git Bash o desde la caja, el error aparecería en el peor momento:
+# desplegando.
+*.sh text eol=lf
+
+# Lo mismo para lo que ejecuta un contenedor Linux.
+Dockerfile* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

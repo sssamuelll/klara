@@ -4,7 +4,13 @@ services:
     restart: unless-stopped
 
   backend:
+    # El nombre ghcr.io/... es heredado: las imágenes ya NO se suben a un
+    # registry. scripts/deploy-prod.sh las ensambla en la caja con este mismo
+    # tag, así que compose las encuentra locales. pull_policy: never lo hace
+    # explícito — sin él, un tag ausente manda a compose a GHCR, que en repo
+    # privado se cobra y encima fallaría sin credencial.
     image: ghcr.io/sssamuelll/klara-backend:${IMAGE_TAG:-latest}
+    pull_policy: never
     build: !reset {}
     environment:
       APP_ENV: production
@@ -20,6 +26,7 @@ services:
 
   frontend:
     image: ghcr.io/sssamuelll/klara-frontend:${IMAGE_TAG:-latest}
+    pull_policy: never
     build: !reset {}
     environment: !reset {}
     ports: !override
