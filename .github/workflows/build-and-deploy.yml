@@ -1,3 +1,14 @@
+# APAGADO el 2026-08-07 y reemplazado por scripts/deploy-prod.sh.
+#
+# Los repos pasaron a privados y cada corrida de Actions se cobra, así que el
+# deploy es manual. Este workflow está deshabilitado en dos capas (el propio
+# workflow y `enabled=false` a nivel de repo) y no puede dispararse.
+#
+# No se borra porque es el ÚNICO registro de qué variables lleva el .env de
+# producción: el script lo escribía desde los secrets de GitHub en cada deploy,
+# y ahora la única copia viva es ~/klara/.env en la caja. Si algún día hay que
+# reconstruir ese archivo, la lista está más abajo. No lo sobreescribas sin
+# tenerla delante.
 name: Build & Deploy
 
 on:

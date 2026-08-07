@@ -1,0 +1,15 @@
+# Ensamblado del frontend en la caja: nginx + el dist que se compiló en local.
+#
+# Dockerfile.prod hace `npm ci && npm run build` adentro — eso es OOM garantizado
+# en una caja de 1,9 GB, así que allá no se usa. scripts/deploy-prod.sh compila
+# el dist en local (son ~1 MB) y manda sólo eso; acá arriba es un COPY.
+#
+# Dockerfile.prod se mantiene porque es lo que construye la imagen en un entorno
+# con RAM de sobra y es la referencia de qué lleva la imagen final.
+
+FROM nginx:1.27-alpine
+
+COPY dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

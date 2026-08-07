@@ -1,0 +1,37 @@
+# Base del backend: sistema + dependencias, SIN código de la aplicación.
+#
+# Existe para que un deploy normal no tenga que mover 1,5 GB. Esta imagen sólo
+# cambia cuando cambian `pyproject.toml` o `uv.lock`; scripts/deploy-prod.sh la
+# tagea con el hash de esos dos archivos y la manda a la caja únicamente cuando
+# ese hash no está allá. El código viaja aparte y se ensambla encima con un COPY
+# (Dockerfile.app), que sí cabe en 1,9 GB de RAM.
+#
+# Se construye SIEMPRE en local. La caja no compila nada: ver la skill
+# `servidores`.
+
+FROM python:3.12-slim
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
+WORKDIR /app
+
+# ffmpeg: lo necesita klara.pronunciation.audio para transcodificar webm/ogg/mp3
+# a WAV 16kHz mono (el formato que exige Azure Pronunciation Assessment).
+# libasound2: dependencia de runtime de azure-cognitiveservices-speech en linux.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg libasound2 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# --no-install-project: sólo las dependencias. El proyecto en sí no se instala
+# acá a propósito — si se instalara, cualquier cambio de código invalidaría
+# esta capa y volveríamos a reinstalar numpy y el SDK de Azure en cada deploy,
+# que es exactamente el problema que este split resuelve.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-install-project --no-dev
