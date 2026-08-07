@@ -1,5 +1,6 @@
 from klara.models.attempts import PronunciationAttempt, QuizAttempt
 from klara.models.audio import AudioCache
+from klara.models.audio_quality_measurement import AudioQualityMeasurement
 from klara.models.base import Base
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating, SessionType
 from klara.models.gender import GenderAttempt
@@ -18,6 +19,7 @@ from klara.models.vocab import VocabItem
 
 __all__ = [
     "AudioCache",
+    "AudioQualityMeasurement",
     "Base",
     "CEFRLevel",
     "CardState",

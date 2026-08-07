@@ -1,7 +1,28 @@
+# Los logs van a journald y no al json-file por defecto, por dos razones que
+# se notaron juntas: el json-file vive dentro del contenedor, así que
+# `docker compose up -d` con imagen nueva lo BORRA en cada despliegue; y sin
+# `max-size` crecía sin tope hasta llenar el disco. journald es del host —
+# sobrevive la recreación, systemd ya se encarga de rotar y retener, y
+# `docker compose logs` sigue funcionando igual (journald es de los drivers
+# que soportan lectura hacia atrás).
+#
+# VERIFICAR UNA VEZ en la caja: `ls -d /var/log/journal` tiene que existir. Si
+# no, journald guarda en /run (RAM) y se pierde en cada reboot; se arregla con
+# `sudo mkdir -p /var/log/journal && sudo systemd-tmpfiles --create --prefix
+# /var/log/journal && sudo systemctl restart systemd-journald`.
+#
+# ponytail: sin retención explícita — la del host manda. Poner
+# SystemMaxUse= en journald.conf si el disco aprieta.
+x-journald-logging: &journald-logging
+  driver: journald
+  options:
+    tag: "klara/{{.Name}}"
+
 services:
   postgres:
     ports: !reset []
     restart: unless-stopped
+    logging: *journald-logging
 
   backend:
     # El nombre ghcr.io/... es heredado: las imágenes ya NO se suben a un
@@ -20,6 +41,7 @@ services:
     ports: !override
       - "127.0.0.1:8210:8000"
     volumes: !reset []
+    logging: *journald-logging
     # --ws-ping-*: keepalive for /pronunciation/stream (dead clients dropped
     # by uvicorn -> session receiver raises -> teardown -> client falls to batch).
     command: ["sh", "-c", "alembic upgrade head && uvicorn klara.main:app --host 0.0.0.0 --port 8000 --ws-ping-interval 10 --ws-ping-timeout 10"]
@@ -32,3 +54,4 @@ services:
     ports: !override
       - "127.0.0.1:8211:80"
     volumes: !reset []
+    logging: *journald-logging

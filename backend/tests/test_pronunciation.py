@@ -316,3 +316,84 @@ def test_read_along_config_is_ipa():
     # reference text is sanitized (trailing period stripped) but words survive
     assert "Autobus" in cfg["referenceText"]
     assert not cfg["referenceText"].endswith(".")
+
+
+# --- La medición sobrevive al despliegue (#120 punto 4) -------------------
+#
+# El log del contenedor se borra en cada `docker compose up -d`, así que la
+# muestra vive en audio_quality_measurements. Lo que se comprueba aquí es lo
+# único que puede romperse en silencio: que la fila se escriba en LAS DOS
+# salidas del gate. Una muestra con sólo aceptadas no calibra un umbral.
+
+
+async def _mediciones(db_session, user_email: str = "pron@example.com"):
+    from sqlalchemy import select
+
+    from klara.models import AudioQualityMeasurement, User
+
+    user = (await db_session.execute(select(User).where(User.email == user_email))).scalar_one()
+    rows = await db_session.execute(
+        select(AudioQualityMeasurement).where(AudioQualityMeasurement.user_id == user.id)
+    )
+    return rows.scalars().all()
+
+
+@pytest.mark.asyncio
+async def test_toma_aceptada_deja_su_medicion(
+    client, app_settings, seed_invite, patched_pronunciation, db_session
+):
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    r = await client.post(
+        "/api/v1/pronunciation/score",
+        headers={"Cookie": cookie},
+        data={"reference_text": "Hello world", "language": "en-US"},
+        files={"audio": ("a.webm", b"\x00\x01\x02\x03", "audio/webm")},
+    )
+    assert r.status_code == 200, r.text
+
+    filas = await _mediciones(db_session)
+    assert len(filas) == 1, "una toma aceptada no dejó fila"
+    fila = filas[0]
+    assert fila.verdict == "ok"
+    assert fila.reasons == []
+    assert fila.source == "score"
+    assert fila.duration_ms > 0
+    assert fila.speech_rms_dbfs < 0.0  # dBFS: siempre negativo bajo full scale
+
+
+@pytest.mark.asyncio
+async def test_toma_rechazada_tambien_deja_su_medicion(
+    client, app_settings, seed_invite, monkeypatch, tmp_path, db_session
+):
+    """El 422 no puede llevarse la medición: la cola de rechazos es la mitad
+    de la distribución que hace falta para mover un umbral."""
+    import wave
+
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+
+    def silencio(src_bytes: bytes, *, sample_rate: int = 16_000):
+        from pathlib import Path
+
+        out: Path = tmp_path / "silencio.wav"
+        with wave.open(str(out), "wb") as handle:
+            handle.setnchannels(1)
+            handle.setsampwidth(2)
+            handle.setframerate(sample_rate)
+            handle.writeframes(b"\x00\x00" * sample_rate * 2)
+        return out
+
+    monkeypatch.setattr("klara.pronunciation.audio_quality.transcode_to_wav", silencio)
+
+    r = await client.post(
+        "/api/v1/pronunciation/score",
+        headers={"Cookie": cookie},
+        data={"reference_text": "Hello world", "language": "en-US"},
+        files={"audio": ("a.webm", b"\x00\x01\x02\x03", "audio/webm")},
+    )
+    assert r.status_code == 422, r.text
+    assert r.json()["detail"]["error"] == "audio_quality"
+
+    filas = await _mediciones(db_session)
+    assert len(filas) == 1, "un rechazo no dejó fila"
+    assert filas[0].verdict == "rejected"
+    assert filas[0].reasons, "el rechazo se guardó sin razones"

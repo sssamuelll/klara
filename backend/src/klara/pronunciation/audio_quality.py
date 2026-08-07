@@ -401,16 +401,30 @@ def _round_opt(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
 
-def _medicion(report: AudioQualityReport) -> dict[str, object]:
+def _medicion(
+    report: AudioQualityReport,
+    *,
+    verdict: Literal["ok", "rejected"],
+    reasons: Sequence[QualityReason] = (),
+    applied_gain_db: float = 0.0,
+    gain_limited: bool = False,
+    input_speech_rms_dbfs: float | None = None,
+) -> dict[str, object]:
     """Los números sobre los que se tomó la decisión, para TODA toma.
 
-    Se emite también cuando la toma pasa, y eso es el punto: un umbral sólo se
-    puede calibrar contra la distribución sana, no contra la cola de rechazos.
-    Estos valores vienen de speechtotext y nunca se validaron con grabaciones
-    reales de aprendices — sin este log, la próxima calibración volvería a
-    hacerse con señales sintéticas. Ver issue #120, punto 4.
+    Se construye también cuando la toma pasa, y eso es el punto: un umbral
+    sólo se puede calibrar contra la distribución sana, no contra la cola de
+    rechazos. Estos valores vienen de speechtotext y nunca se validaron con
+    grabaciones reales de aprendices. Ver issue #120, punto 4.
+
+    Un solo constructor para el log y para la fila de
+    audio_quality_measurements: las claves son los nombres de las columnas, así
+    que persistir es `AudioQualityMeasurement(**measurement, ...)` y las dos
+    vistas no se pueden desincronizar.
     """
     return {
+        "verdict": verdict,
+        "reasons": list(reasons),
         "duration_ms": report.duration_ms,
         "voice_ms": report.effective_voice_ms,
         "speech_rms_dbfs": round(report.level_dbfs, 1),
@@ -419,20 +433,51 @@ def _medicion(report: AudioQualityReport) -> dict[str, object]:
         "noise_floor_dbfs": _round_opt(report.noise_floor_dbfs),
         "snr_db": _round_opt(report.snr_db),
         "clipping_ratio": round(report.clipping_ratio, 4),
+        "applied_gain_db": round(applied_gain_db, 1),
+        "gain_limited": gain_limited,
+        "input_speech_rms_dbfs": _round_opt(input_speech_rms_dbfs),
     }
 
 
-def _reject(reasons: tuple[QualityReason, ...], locale: str) -> HTTPException:
-    primary = reasons[0]
-    return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        detail={
-            "error": "audio_quality",
-            "reason": primary,
-            "reasons": list(reasons),
-            "message": t(_REASON_MESSAGE_KEY[primary], locale),
-        },
-    )
+class AudioQualityRejected(HTTPException):
+    """422 del gate, cargando la medición que motivó el rechazo.
+
+    Subclase de HTTPException a propósito: los routers que no persisten nada
+    siguen dejándola propagar tal cual, y sólo quien quiera la muestra
+    (pronunciation.intake) necesita conocer este tipo.
+    """
+
+    def __init__(
+        self,
+        reasons: tuple[QualityReason, ...],
+        locale: str,
+        measurement: dict[str, object],
+    ) -> None:
+        primary = reasons[0]
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "error": "audio_quality",
+                "reason": primary,
+                "reasons": list(reasons),
+                "message": t(_REASON_MESSAGE_KEY[primary], locale),
+            },
+        )
+        self.reasons = reasons
+        self.measurement = measurement
+
+
+@dataclass(frozen=True)
+class GateResult:
+    """WAV listo para Azure + la medición con la que se decidió aceptarlo.
+
+    La medición sale por el valor de retorno (y por la excepción, al
+    rechazar) en vez de quedarse sólo en el log porque calibrar los umbrales
+    exige acumularla, y el log de un contenedor no sobrevive un despliegue.
+    """
+
+    wav_path: Path
+    measurement: dict[str, object]
 
 
 def gate_wav_for_azure(
@@ -440,12 +485,13 @@ def gate_wav_for_azure(
     *,
     locale: str,
     thresholds: QualityThresholds = DEFAULT_THRESHOLDS,
-) -> Path:
+) -> GateResult:
     """Run the quality gate on a transcoded WAV before the Azure call.
 
-    Returns the (possibly gain-normalized, rewritten in place) wav path.
-    Raises HTTPException 422 with a machine-readable reason when the audio
-    is not worth an Azure round-trip.
+    Returns the (possibly gain-normalized, rewritten in place) wav path plus
+    the measurement it was judged on. Raises AudioQualityRejected (an
+    HTTPException 422 carrying that same measurement) when the audio is not
+    worth an Azure round-trip.
 
     Fails OPEN: a WAV this module cannot parse is handed to Azure untouched,
     exactly as it was before the gate existed. The gate is an optimization,
@@ -453,14 +499,16 @@ def gate_wav_for_azure(
     error — and `wave` is stricter than ffmpeg's muxer (WAVE_FORMAT_EXTENSIBLE,
     an odd-length data chunk, a stereo file if the transcode args ever change).
     """
+    # Sin medición no hay fila: un WAV ilegible no produce números, y una fila
+    # a medias contaminaría la distribución que la tabla existe para describir.
     try:
         samples, sample_rate = load_wav_samples(wav_path)
     except (wave.Error, EOFError, ValueError) as e:
         log.warning("pronunciation.audio_quality_unreadable", error=str(e))
-        return wav_path
+        return GateResult(wav_path, {})
     if sample_rate <= 0 or samples.size == 0:
         log.warning("pronunciation.audio_quality_unreadable", error="empty or rateless wav")
-        return wav_path
+        return GateResult(wav_path, {})
 
     regions = detect_speech_regions(samples, sample_rate, thresholds=thresholds)
     report = compute_audio_quality(
@@ -477,8 +525,9 @@ def gate_wav_for_azure(
     # outright. level_too_low is the one reason gain might fix.
     hard = tuple(reason for reason in decision.reason_codes if reason != "level_too_low")
     if hard:
-        log.info("pronunciation.audio_quality_rejected", reasons=list(hard), **_medicion(report))
-        raise _reject(hard, locale)
+        medicion = _medicion(report, verdict="rejected", reasons=hard)
+        log.info("pronunciation.audio_quality_rejected", **medicion)
+        raise AudioQualityRejected(hard, locale, medicion)
 
     # Gain staging targets the SPEECH level. Driving it from the whole-clip RMS
     # would make the boost a function of how much silence the recorder caught:
@@ -488,8 +537,9 @@ def gate_wav_for_azure(
     if gain_db <= 0.0:
         # Pasó y venía bien fuerte: se registra igual. Este es el caso común, y
         # sin él la muestra estaría sesgada hacia lo malo.
-        log.info("pronunciation.audio_quality_ok", applied_gain_db=0.0, **_medicion(report))
-        return wav_path
+        medicion = _medicion(report, verdict="ok")
+        log.info("pronunciation.audio_quality_ok", **medicion)
+        return GateResult(wav_path, medicion)
 
     gain = apply_fixed_gain(samples, min(gain_db, MAX_GAIN_DB))
     boosted = compute_audio_quality(
@@ -502,26 +552,30 @@ def gate_wav_for_azure(
     )
     boosted_decision = evaluate_gate(boosted, thresholds)
     if not boosted_decision.eligible:
-        log.info(
-            "pronunciation.audio_quality_rejected",
-            reasons=list(boosted_decision.reason_codes),
-            applied_gain_db=round(gain.applied_gain_db, 1),
-            **_medicion(boosted),
+        medicion = _medicion(
+            boosted,
+            verdict="rejected",
+            reasons=boosted_decision.reason_codes,
+            applied_gain_db=gain.applied_gain_db,
+            gain_limited=gain.limited,
+            input_speech_rms_dbfs=report.level_dbfs,
         )
-        raise _reject(boosted_decision.reason_codes, locale)
+        log.info("pronunciation.audio_quality_rejected", **medicion)
+        raise AudioQualityRejected(boosted_decision.reason_codes, locale, medicion)
 
     _write_wav_samples(wav_path, gain.samples, sample_rate)
     # Mismo evento que el paso sin ganancia: una sola consulta trae la
     # distribución completa de lo aceptado. La medición es la de DESPUÉS del
     # boost, que es el audio que Azure realmente recibe.
-    log.info(
-        "pronunciation.audio_quality_ok",
-        applied_gain_db=round(gain.applied_gain_db, 1),
+    medicion = _medicion(
+        boosted,
+        verdict="ok",
+        applied_gain_db=gain.applied_gain_db,
         gain_limited=gain.limited,
-        input_speech_rms_dbfs=round(report.level_dbfs, 1),
-        **_medicion(boosted),
+        input_speech_rms_dbfs=report.level_dbfs,
     )
-    return wav_path
+    log.info("pronunciation.audio_quality_ok", **medicion)
+    return GateResult(wav_path, medicion)
 
 
 def transcode_and_gate(
@@ -530,17 +584,18 @@ def transcode_and_gate(
     locale: str,
     sample_rate: int = 16_000,
     thresholds: QualityThresholds = DEFAULT_THRESHOLDS,
-) -> Path:
+) -> GateResult:
     """Transcode an upload and run the quality gate on it, as one step.
 
-    The single entry point every audio endpoint should use. Both halves are
-    blocking (ffmpeg subprocess, then WAV decode + analysis), so callers run
-    this in a threadpool rather than on the event loop.
+    Both halves are blocking (ffmpeg subprocess, then WAV decode + analysis),
+    so callers run this in a threadpool rather than on the event loop —
+    `pronunciation.intake.gate_upload` is the async wrapper the endpoints
+    actually use, and it also persists the measurement.
 
     Raises TranscodeError / FfmpegMissingError like transcode_to_wav, and
-    HTTPException 422 from the gate. The caller owns the returned path; on any
-    failure here the temp WAV is unlinked before the exception leaves, so a
-    rejected take can't leak a file.
+    AudioQualityRejected (422) from the gate. The caller owns the returned
+    path; on any failure here the temp WAV is unlinked before the exception
+    leaves, so a rejected take can't leak a file.
     """
     wav_path = transcode_to_wav(src_bytes, sample_rate=sample_rate)
     try:
