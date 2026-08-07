@@ -111,6 +111,13 @@ fi
 #
 # Todo el pg_dump ocurre EN la caja: el usuario y la base salen de ~/klara/.env,
 # que es la única copia viva de esos valores y no debe salir de allá.
+#
+# Ese .env NO se sourcea. Lo escribía un heredoc de GitHub Actions sin comillas,
+# así que hay valores con metacaracteres de shell —EMAIL_FROM es
+# `Klara <noreply@...>`, y ese `<` bash lo lee como redirección—. Sourcear un
+# archivo de configuración es ejecutarlo: se extraen sólo las dos claves que
+# hacen falta, con sed, y la contraseña ni se toca (pg_dump la toma de dentro
+# del contenedor).
 paso "2. Copia de la base"
 
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -118,7 +125,9 @@ ssh "$HOST" bash -s -- "$REMOTE_BACKUPS" "$TS" "$RETENCION" <<'REMOTO' || fallo 
 set -euo pipefail
 DIR="$1"; TS="$2"; RET="$3"
 cd ~/klara
-set -a; . ./.env; set +a
+POSTGRES_USER="$(sed -n 's/^POSTGRES_USER=//p' .env | head -1)"
+POSTGRES_DB="$(sed -n 's/^POSTGRES_DB=//p' .env | head -1)"
+[ -n "$POSTGRES_USER" ] && [ -n "$POSTGRES_DB" ] || { echo "no pude leer POSTGRES_USER/POSTGRES_DB de ~/klara/.env" >&2; exit 1; }
 mkdir -p ~/"$DIR"
 OUT=~/"$DIR"/klara-"$TS".dump
 docker exec klara_postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc > "$OUT".parcial
