@@ -178,6 +178,10 @@
         }
       },
       "listening": "Escuchando",
+      "micLevel": {
+        "quiet": "Acércate",
+        "loud": "Aléjate"
+      },
       "stop": "Detener",
       "stopAria": "Detener grabación",
       "playAria": "Escuchar a Klara",

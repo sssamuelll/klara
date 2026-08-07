@@ -178,6 +178,10 @@
         }
       },
       "listening": "Höre zu",
+      "micLevel": {
+        "quiet": "Näher ran",
+        "loud": "Weiter weg"
+      },
       "stop": "Stopp",
       "stopAria": "Aufnahme beenden",
       "playAria": "Klara anhören",

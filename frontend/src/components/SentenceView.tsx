@@ -20,6 +20,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useTranslation } from "react-i18next";
 import type { StorySentence, StoryWord, WordBreakdown } from "../api/types";
 import { startAudioBars } from "../lib/audioBars";
+import { micLevelKey, type MicLevel } from "../lib/silenceDetector";
 import type { ScoreBand } from "../lib/pronunciation";
 import { getWaveform } from "../lib/waveform";
 
@@ -57,6 +58,7 @@ interface Props {
   // Recording state
   recording: boolean;
   micAnalyser: AnalyserNode | null;
+  micLevel: MicLevel;
 
   // Evaluating state — between mic release and feedback arrival. Shows a
   // spinner pill in the same slot as the recording pill so the user has a
@@ -197,6 +199,7 @@ export default function SentenceView({
   duration,
   recording,
   micAnalyser,
+  micLevel,
   evaluating,
   feedback,
   liveBands,
@@ -494,7 +497,7 @@ export default function SentenceView({
         </div>
 
         {/* Recording pill */}
-        <div className="k-rec" data-show="recording">
+        <div className="k-rec" data-show="recording" data-level={micLevel}>
           <span className="k-rec__dot" />
           <span className="k-rec__bars" aria-hidden="true">
             {Array.from({ length: 16 }).map((_, i) => (
@@ -508,7 +511,9 @@ export default function SentenceView({
               />
             ))}
           </span>
-          <span className="k-rec__lbl">{t("story.sentence.listening")}</span>
+          <span className="k-rec__lbl" role="status" aria-live="polite">
+            {t(micLevelKey(micLevel))}
+          </span>
           <button
             type="button"
             className="k-rec__stop"

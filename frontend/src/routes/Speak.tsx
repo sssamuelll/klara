@@ -40,7 +40,7 @@ import {
   type PronunciationError,
 } from "../lib/pronunciation";
 import { classifyScoreError } from "../lib/pronunciation";
-import { startSilenceDetector } from "../lib/silenceDetector";
+import { micLevelKey, startSilenceDetector, type MicLevel } from "../lib/silenceDetector";
 import { speak, stop as stopTTS, unlockAudio } from "../lib/tts";
 import { getSpeakFocus, type SpeakFocus } from "../lib/speakFocus";
 
@@ -192,6 +192,7 @@ export default function Speak() {
   const [muted, setMuted] = useState(false);
   const [turns, setTurns] = useState<SpokenTurn[]>([]);
   const [hint, setHint] = useState<string | null>(null);
+  const [micLevel, setMicLevel] = useState<MicLevel>("silent");
   const [finish, setFinish] = useState<
     { status: "saved"; added: number; skipped: number } | { status: "failed" } | null
   >(null);
@@ -435,6 +436,7 @@ export default function Speak() {
     unlockAudio(); // the gesture that authorizes every later auto-play
     stopTTS(); // never record over Klara's voice
     setHint(null);
+    setMicLevel("silent");
     setState("listening");
     try {
       const rec = await startMicRecording();
@@ -445,7 +447,11 @@ export default function Speak() {
         return;
       }
       recorderRef.current = rec;
-      vadCleanupRef.current = startSilenceDetector(rec.analyser, () => void stopTurn());
+      vadCleanupRef.current = startSilenceDetector(
+        rec.analyser,
+        () => void stopTurn(),
+        { onLevel: setMicLevel },
+      );
       capTimerRef.current = window.setTimeout(() => void stopTurn(), HARD_CAP_MS);
     } catch (e) {
       // Same ownership rule as the success branch: if the user pressed ✕
@@ -643,7 +649,12 @@ export default function Speak() {
   // (a second "FOCO DE HOY" under the medallion would just be an echo).
   const stageCap =
     state === "listening"
-      ? t("speak.stage.listeningCap")
+      ? // The mic verdict replaces the caption only once it has something to
+        // say; "silent" keeps the neutral copy so the medallion doesn't nag
+        // before the user has spoken.
+        micLevel === "silent"
+        ? t("speak.stage.listeningCap")
+        : t(micLevelKey(micLevel))
       : state === "thinking"
         ? t("speak.stage.thinkingCap")
         : state === "speaking"
