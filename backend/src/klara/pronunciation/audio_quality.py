@@ -401,6 +401,27 @@ def _round_opt(value: float | None) -> float | None:
     return None if value is None else round(value, 1)
 
 
+def _medicion(report: AudioQualityReport) -> dict[str, object]:
+    """Los números sobre los que se tomó la decisión, para TODA toma.
+
+    Se emite también cuando la toma pasa, y eso es el punto: un umbral sólo se
+    puede calibrar contra la distribución sana, no contra la cola de rechazos.
+    Estos valores vienen de speechtotext y nunca se validaron con grabaciones
+    reales de aprendices — sin este log, la próxima calibración volvería a
+    hacerse con señales sintéticas. Ver issue #120, punto 4.
+    """
+    return {
+        "duration_ms": report.duration_ms,
+        "voice_ms": report.effective_voice_ms,
+        "speech_rms_dbfs": round(report.level_dbfs, 1),
+        "clip_rms_dbfs": round(report.processed_rms_dbfs, 1),
+        "peak_dbfs": round(report.peak_dbfs, 1),
+        "noise_floor_dbfs": _round_opt(report.noise_floor_dbfs),
+        "snr_db": _round_opt(report.snr_db),
+        "clipping_ratio": round(report.clipping_ratio, 4),
+    }
+
+
 def _reject(reasons: tuple[QualityReason, ...], locale: str) -> HTTPException:
     primary = reasons[0]
     return HTTPException(
@@ -456,17 +477,7 @@ def gate_wav_for_azure(
     # outright. level_too_low is the one reason gain might fix.
     hard = tuple(reason for reason in decision.reason_codes if reason != "level_too_low")
     if hard:
-        log.info(
-            "pronunciation.audio_quality_rejected",
-            reasons=list(hard),
-            duration_ms=report.duration_ms,
-            voice_ms=report.effective_voice_ms,
-            speech_rms_dbfs=round(report.level_dbfs, 1),
-            clip_rms_dbfs=round(report.processed_rms_dbfs, 1),
-            noise_floor_dbfs=_round_opt(report.noise_floor_dbfs),
-            snr_db=_round_opt(report.snr_db),
-            clipping_ratio=round(report.clipping_ratio, 4),
-        )
+        log.info("pronunciation.audio_quality_rejected", reasons=list(hard), **_medicion(report))
         raise _reject(hard, locale)
 
     # Gain staging targets the SPEECH level. Driving it from the whole-clip RMS
@@ -475,7 +486,10 @@ def gate_wav_for_azure(
     # with a long one, dragging the noise floor up with it.
     gain_db = TARGET_RMS_DBFS - report.level_dbfs
     if gain_db <= 0.0:
-        return wav_path  # eligible and loud enough as-is
+        # Pasó y venía bien fuerte: se registra igual. Este es el caso común, y
+        # sin él la muestra estaría sesgada hacia lo malo.
+        log.info("pronunciation.audio_quality_ok", applied_gain_db=0.0, **_medicion(report))
+        return wav_path
 
     gain = apply_fixed_gain(samples, min(gain_db, MAX_GAIN_DB))
     boosted = compute_audio_quality(
@@ -491,23 +505,21 @@ def gate_wav_for_azure(
         log.info(
             "pronunciation.audio_quality_rejected",
             reasons=list(boosted_decision.reason_codes),
-            duration_ms=boosted.duration_ms,
-            voice_ms=boosted.effective_voice_ms,
-            speech_rms_dbfs=round(boosted.level_dbfs, 1),
-            noise_floor_dbfs=_round_opt(boosted.noise_floor_dbfs),
-            snr_db=_round_opt(boosted.snr_db),
             applied_gain_db=round(gain.applied_gain_db, 1),
+            **_medicion(boosted),
         )
         raise _reject(boosted_decision.reason_codes, locale)
 
     _write_wav_samples(wav_path, gain.samples, sample_rate)
+    # Mismo evento que el paso sin ganancia: una sola consulta trae la
+    # distribución completa de lo aceptado. La medición es la de DESPUÉS del
+    # boost, que es el audio que Azure realmente recibe.
     log.info(
-        "pronunciation.audio_gain_applied",
-        speech_rms_dbfs=round(report.level_dbfs, 1),
-        noise_floor_dbfs=_round_opt(report.noise_floor_dbfs),
-        snr_db=_round_opt(report.snr_db),
+        "pronunciation.audio_quality_ok",
         applied_gain_db=round(gain.applied_gain_db, 1),
-        limited=gain.limited,
+        gain_limited=gain.limited,
+        input_speech_rms_dbfs=round(report.level_dbfs, 1),
+        **_medicion(boosted),
     )
     return wav_path
 
