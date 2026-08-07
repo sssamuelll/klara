@@ -13,6 +13,34 @@ The gate runs AFTER ffmpeg transcode (WAV PCM 16kHz mono 16-bit) and BEFORE
 the Azure call, so pathological audio is rejected locally instead of paying
 for a recognition that was doomed from the start. Quiet-but-recoverable
 audio gets a fixed gain boost (capped, peak-limited) rather than a rejection.
+
+SCOPE — read before trusting this to cover an endpoint
+------------------------------------------------------
+This gate needs a transcoded WAV on disk, so it only covers the three batch
+endpoints that call transcode_and_gate: /pronunciation/score, /speak/turn and
+/stories/{id}/quiz/resolve-mc.
+
+It does NOT cover the live path. WS /pronunciation/stream pushes raw PCM
+straight to Azure and never produces a file. That matters more than it
+sounds: useSentencePractice prefers the stream wherever the browser supports
+PCM capture, and only calls /pronunciation/score when the stream returned no
+`final`. So for sentence practice this gate runs on the FALLBACK, and:
+
+  - the Azure saving does not materialize there — the session is already open
+    and streaming by the time enough audio exists to judge;
+  - the gain boost reaches only the users whose stream failed, which is why
+    a learner's score can depend on whether the WebSocket worked.
+
+/speak/turn and /quiz/resolve-mc have no streaming path and are fully covered.
+
+Gating the stream server-side would harden the wrong layer. Audio quality
+belongs at CAPTURE time — a live level meter on the AnalyserNode the client
+already runs (pronunciation.ts, silenceDetector.ts), with the level corrected
+before the stream/batch fork so both paths get identical audio. Then this
+module is the safety net it should have been, not the mechanism. Thresholds
+here are inherited from speechtotext and have never been calibrated against
+real learner recordings or against device variance (a phone at the lips and a
+laptop at arm's length differ by 20+ dB). See issue #120.
 """
 
 from __future__ import annotations
