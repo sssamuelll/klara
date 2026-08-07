@@ -71,7 +71,11 @@ class KlaraNoteOut(BaseModel):
 class PronunciationAttemptIn(BaseModel):
     """Recorded after Azure scoring lands client-side. Best-effort."""
 
-    sentence_index: int = Field(..., ge=0, le=100)
+    # -1 is the sentinel for a Finish-quiz shadow/cloze attempt (not a story
+    # sentence); story-sentence attempts pass their real 0-based index. Readers
+    # that map back to a sentence (practice_queue) already range-guard, so the
+    # sentinel rows are ignored there and only feed raw attempt analytics.
+    sentence_index: int = Field(..., ge=-1, le=100)
     reference_text: str = Field(..., min_length=1, max_length=2000)
     recognized_text: str | None = Field(default=None, max_length=2000)
     overall_score: float = Field(..., ge=0, le=100)
