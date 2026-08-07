@@ -284,3 +284,58 @@ def test_rejection_detail_carries_the_shape_the_frontend_parses(tmp_path):
     assert err.detail["reason"] in {"silence", "too_short", "clipping", "level_too_low"}
     assert isinstance(err.detail["reasons"], list)
     assert isinstance(err.detail["message"], str) and err.detail["message"]
+
+
+CAMPOS_MEDICION = (
+    "duration_ms",
+    "voice_ms",
+    "speech_rms_dbfs",
+    "clip_rms_dbfs",
+    "peak_dbfs",
+    "noise_floor_dbfs",
+    "snr_db",
+    "clipping_ratio",
+)
+
+
+def test_toda_toma_aceptada_deja_su_medicion(tmp_path):
+    """El gate mide para decidir; esas mediciones son el único material con el
+    que se pueden calibrar sus umbrales contra audio real (issue #120, punto 4).
+    Si sólo se registran los rechazos, la muestra queda sesgada hacia lo malo y
+    la próxima calibración vuelve a hacerse con señales sintéticas.
+
+    caplog no sirve acá: structlog escribe por su cuenta, no por el logging de
+    la stdlib. capture_logs además deja assertar los campos estructurados en
+    vez del texto renderizado.
+    """
+    from structlog.testing import capture_logs
+
+    clip = np.concatenate([_room_tone(0.25), _voiced(0.8), _room_tone(0.3)])
+    wav = tmp_path / "buena.wav"
+    _write_wav(wav, clip)
+
+    with capture_logs() as logs:
+        gate_wav_for_azure(wav, locale="en")
+
+    medidas = [ln for ln in logs if ln.get("event") == "pronunciation.audio_quality_ok"]
+    assert medidas, f"una toma aceptada no dejó medición: {[ln.get('event') for ln in logs]}"
+    for campo in CAMPOS_MEDICION:
+        assert campo in medidas[0], f"falta {campo} en la medición"
+
+
+def test_la_toma_rechazada_tambien_deja_su_medicion(tmp_path):
+    """El otro lado de la muestra: sin los mismos campos en el rechazo, no se
+    puede comparar la cola contra la distribución sana."""
+    from structlog.testing import capture_logs
+
+    wav = tmp_path / "silencio.wav"
+    _write_wav(wav, _silence(1.5))
+
+    with capture_logs() as logs:
+        with pytest.raises(HTTPException):
+            gate_wav_for_azure(wav, locale="en")
+
+    medidas = [ln for ln in logs if ln.get("event") == "pronunciation.audio_quality_rejected"]
+    assert medidas
+    for campo in CAMPOS_MEDICION:
+        assert campo in medidas[0], f"falta {campo} en la medición del rechazo"
