@@ -75,7 +75,7 @@ def test_clean_tone_passes_untouched(tmp_path):
 
     out = gate_wav_for_azure(wav, locale="en")
 
-    assert out == wav
+    assert out.wav_path == wav
     assert wav.read_bytes() == before  # loud enough as-is: no gain rewrite
 
 
@@ -87,7 +87,7 @@ def test_steady_tone_without_pauses_passes(tmp_path):
 
     out = gate_wav_for_azure(wav, locale="en")
 
-    assert out == wav
+    assert out.wav_path == wav
 
 
 def test_quiet_but_recoverable_tone_gets_gain(tmp_path):
@@ -98,7 +98,7 @@ def test_quiet_but_recoverable_tone_gets_gain(tmp_path):
 
     out = gate_wav_for_azure(wav, locale="en")
 
-    assert out == wav
+    assert out.wav_path == wav
     gained_rms = _rms(load_wav_samples(wav)[0])
     assert gained_rms > original_rms * 2  # ~16dB boost toward the target level
 
@@ -240,7 +240,7 @@ def test_unparseable_wav_fails_open_instead_of_erroring(tmp_path):
     wav = tmp_path / "broken.wav"
     wav.write_bytes(b"RIFFnope")
 
-    assert gate_wav_for_azure(wav, locale="en") == wav
+    assert gate_wav_for_azure(wav, locale="en").wav_path == wav
     assert wav.read_bytes() == b"RIFFnope"
 
 
@@ -254,7 +254,7 @@ def test_stereo_wav_fails_open(tmp_path):
         handle.setframerate(RATE)
         handle.writeframes(pcm.tobytes())
 
-    assert gate_wav_for_azure(wav, locale="en") == wav
+    assert gate_wav_for_azure(wav, locale="en").wav_path == wav
 
 
 def test_clipping_is_judged_on_the_speech_not_the_silence(tmp_path):

@@ -13,7 +13,6 @@ import contextlib
 import functools
 import time
 from collections import defaultdict
-from pathlib import Path
 from typing import Annotated
 
 import structlog
@@ -29,9 +28,9 @@ from klara.pronunciation.audio import (
     FfmpegMissingError,
     TranscodeError,
 )
-from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError, score_pronunciation
 from klara.pronunciation.azure_stream import AzureStreamingRecognizer
+from klara.pronunciation.intake import gate_upload
 from klara.pronunciation.schemas import (
     DiagnoseRequest,
     DiagnoseResponse,
@@ -78,6 +77,7 @@ LanguageForm = Annotated[
 @router.post("/score", response_model=ScoreResponse)
 async def score(
     user: CurrentUser,
+    db: DBSession,
     settings: SettingsDep,
     locale: LocaleDep,
     audio: AudioUpload,
@@ -115,7 +115,9 @@ async def score(
         # (silence, clipping, too short) is rejected with a 422 before paying
         # for Azure, and quiet-but-usable takes are gain-normalized. Both halves
         # block, so neither belongs on the event loop.
-        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
+        wav_path = await gate_upload(
+            audio_bytes, locale=locale, db=db, user_id=user.id, source="score"
+        )
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

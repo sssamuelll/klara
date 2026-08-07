@@ -1,6 +1,5 @@
 import json
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
@@ -42,8 +41,8 @@ from klara.models import (
     VocabItem,
 )
 from klara.pronunciation.audio import FfmpegMissingError, TranscodeError
-from klara.pronunciation.audio_quality import transcode_and_gate
 from klara.pronunciation.azure_client import AzureSpeechError
+from klara.pronunciation.intake import gate_upload
 from klara.pronunciation.stt_client import transcribe
 from klara.schemas.finish import (
     GenderL1NoteItem,
@@ -622,8 +621,9 @@ async def resolve_mc(
     bcp47 = _resolve_bcp47(language)
 
     try:
-        # Transcode + quality gate in one threadpool hop (see pronunciation.py).
-        wav_path: Path = await run_in_threadpool(transcode_and_gate, audio_bytes, locale=locale)
+        wav_path = await gate_upload(
+            audio_bytes, locale=locale, db=db, user_id=user.id, source="quiz_mc"
+        )
     except TranscodeError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
