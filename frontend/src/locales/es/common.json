@@ -218,7 +218,10 @@
       "quiz": {
         "title": "Antes de cerrar, cuatro preguntas.",
         "sub": "Una para fijar la comprensión, otra para producirla. Si no la tienes a mano, puedes ver la respuesta.",
-        "retry": { "cap": "Repaso rápido", "sub": "Las que se te escaparon, una vez más." },
+        "retry": {
+          "cap": "Repaso rápido",
+          "sub": "Las que se te escaparon, una vez más."
+        },
         "mc": {
           "readAloud": "Léela en voz alta o tócala",
           "heardButNoMatch": "Te oí decir «{{transcript}}», pero no coincide con ninguna opción.",
@@ -369,7 +372,10 @@
     },
     "segment": {
       "title": "¿Qué repasas?",
-      "cards": { "title": "Fichas", "dek": "Las palabras que guardaste, una a una." },
+      "cards": {
+        "title": "Fichas",
+        "dek": "Las palabras que guardaste, una a una."
+      },
       "pron": {
         "title": "Pronunciar",
         "dek": "Las frases que se te traban, otra vez en voz alta."
@@ -394,7 +400,12 @@
     "flip": "Voltear",
     "flipHint": "ESPACIO voltear",
     "rateHint": "1–4 calificar · esto agenda el próximo repaso",
-    "rate": { "again": "Otra vez", "hard": "Difícil", "good": "Bien", "easy": "Fácil" },
+    "rate": {
+      "again": "Otra vez",
+      "hard": "Difícil",
+      "good": "Bien",
+      "easy": "Fácil"
+    },
     "interval": {
       "minutes": "~{{count}} min",
       "hours": "~{{count}} h",
@@ -706,13 +717,21 @@
     "generoFila": "Género",
     "generoFilaEstado": "der · die · das",
     "paso": {
-      "leer": { "titulo": "Leer", "dek": "La historia de hoy", "meta": "3 min" },
+      "leer": {
+        "titulo": "Leer",
+        "dek": "La historia de hoy",
+        "meta": "3 min"
+      },
       "pronunciar": {
         "titulo": "Pronunciar",
         "dek": "Frases de tus historias, en voz alta",
         "meta": "4 min"
       },
-      "hablar": { "titulo": "Hablar", "dek": "Una conversación con Klara", "meta": "3 min" },
+      "hablar": {
+        "titulo": "Hablar",
+        "dek": "Una conversación con Klara",
+        "meta": "3 min"
+      },
       "repasar": {
         "titulo": "Repasar",
         "dek": "Tus fichas de hoy",
@@ -736,6 +755,292 @@
     "temaOscuro": "Oscuro",
     "editar": "Editar perfil e invitaciones",
     "salir": "Cerrar sesión",
-    "pie": "Klara — Edición Nürnberg"
+    "pie": "Klara — Edición Nürnberg",
+    "aprendizaje": {
+      "kicker": "Perfil de aprendizaje",
+      "entrada": {
+        "antes": "Antes del primer tema",
+        "h1pre": "Cómo",
+        "h1em": "aprendes",
+        "h1post": "tú.",
+        "lede": "Klara arma cada tema a tu medida. Para eso necesita conocerte: veintitrés preguntas, todas de un toque, sin respuestas correctas y sin nada que escribir. Puedes cambiar cualquier respuesta cuando quieras, desde Perfil.",
+        "metaPreguntas": "preguntas",
+        "metaMinutos": "minutos",
+        "metaObligatorias": "obligatorias",
+        "empezar": "Empezar",
+        "masTarde": "Más tarde"
+      },
+      "bloque": {
+        "hist": "Historial",
+        "ses": "La sesión",
+        "entrada": "Un tema nuevo",
+        "fija": "Cómo se queda",
+        "error": "Error y ritmo",
+        "cierre": "Cierre"
+      },
+      "nav": {
+        "saltar": "Saltar esta",
+        "siguiente": "Siguiente",
+        "guardar": "Guardar mi perfil",
+        "tocaParaSeguir": "Toca para seguir"
+      },
+      "triage": {
+        "sirve": "Sirve",
+        "no": "No"
+      },
+      "chips": {
+        "escribir": "+ Escribir algo",
+        "placeholder": "Lo que sea: manías, horarios, cosas que odias de otras apps…"
+      },
+      "otra": {
+        "placeholder": "¿Qué fue?"
+      },
+      "sintesis": {
+        "guardado": "Guardado",
+        "tuPerfil": "Tu perfil",
+        "h1pre": "Así aprendes tú,",
+        "h1em": "según tú",
+        "h1post": ".",
+        "esperando": "Klara está leyendo tus respuestas…",
+        "leyenda": "Arriba, lo que hiciste. Al margen, lo que dices de ti: Klara lo va a contrastar con el uso.",
+        "anotado": "Lo que Klara anotó",
+        "pie": "Klara va a afinar esto con el uso. Puedes leerlo y corregirlo cuando quieras, desde Perfil.",
+        "entendido": "Entendido",
+        "corregir": "Corregir una respuesta"
+      },
+      "fila": {
+        "titulo": "Cómo aprendes",
+        "sinLlenar": "Sin llenar",
+        "aMedias": "A medias · {{fecha}}",
+        "completo": "Completo · {{fecha}}",
+        "pendiente": "Respuestas guardadas · síntesis pendiente"
+      },
+      "facts": {
+        "aprendio_bien_como": "Aprendes así",
+        "abandono_por": "Te saca",
+        "metodo_sirve": "Te sirve",
+        "metodo_no_sirve": "No te sirve",
+        "dominio_previo": "Ya dominas",
+        "restriccion": "Tu contexto",
+        "motivacion": "Tu motivo",
+        "evitar": "Evitar"
+      },
+      "q": {
+        "hist_exito": {
+          "label": "Lo último que aprendiste bien de verdad, ¿cómo lo aprendiste?",
+          "whisper": "Lo que ya te funcionó una vez es la mejor pista que Klara tiene.",
+          "op": {
+            "0": "Rompiendo algo hasta que funcionó",
+            "1": "Copiando a alguien que ya sabía",
+            "2": "Un curso con fechas y entregas",
+            "3": "Leyendo primero, probando después",
+            "4": "Explicándoselo a otro",
+            "5": "Un rato corto, todos los días",
+            "6": "Otra cosa"
+          }
+        },
+        "hist_abandono": {
+          "label": "Algo que intentaste aprender y dejaste. ¿Qué te sacó?",
+          "op": {
+            "0": "Se puso aburrido",
+            "1": "Perdí el hilo tras faltar unos días",
+            "2": "Era demasiado largo",
+            "3": "No veía para qué me servía",
+            "4": "Se puso difícil de golpe",
+            "5": "Me quedé sin tiempo",
+            "6": "Otra cosa"
+          }
+        },
+        "hist_metodos": {
+          "label": "De lo que ya has usado para estudiar, ¿qué te sirvió?",
+          "whisper": "Toca solo lo que tengas claro. Lo demás, déjalo en blanco.",
+          "op": {
+            "0": "Fichas de repaso",
+            "1": "Videos largos",
+            "2": "Cursos con fechas",
+            "3": "Apps de idiomas",
+            "4": "Leer libros o manuales",
+            "5": "Practicar con alguien"
+          }
+        },
+        "ses_duracion": {
+          "label": "¿Cuánto tiempo real sostienes al día, sin forzarte?",
+          "whisper": "Sin épica. El número que aguantas un martes cualquiera.",
+          "op": {
+            "0": "3 minutos",
+            "1": "10 minutos",
+            "2": "20 minutos o más",
+            "3": "Depende del tema"
+          }
+        },
+        "ses_lugar": {
+          "label": "¿Dónde?",
+          "whisper": "Define si Klara puede contar con tu voz o no.",
+          "op": {
+            "0": "En casa",
+            "1": "En transporte o en la calle",
+            "2": "En pausas del trabajo"
+          }
+        },
+        "ses_propuesta": {
+          "label": "Al abrir el app, ¿qué prefieres?",
+          "op": {
+            "0": "Que Klara proponga una sola cosa",
+            "1": "Un menú corto para elegir",
+            "2": "Según el día"
+          }
+        },
+        "entrada_arranque": {
+          "label": "Frente a un tema nuevo, ¿por dónde arrancas mejor?",
+          "op": {
+            "0": "Un ejemplo concreto, la teoría después",
+            "1": "La teoría mínima primero",
+            "2": "Una historia que lo use",
+            "3": "Haciéndolo directamente"
+          }
+        },
+        "entrada_interes": {
+          "label": "¿Qué te engancha de un tema nuevo?",
+          "op": {
+            "0": "Que me sirva ya para algo",
+            "1": "Que me dé curiosidad por sí mismo",
+            "2": "Que me rete",
+            "3": "Depende del tema"
+          }
+        },
+        "entrada_reto": {
+          "label": "¿Cómo arrancamos de dificultad?",
+          "op": {
+            "0": "Fácil, y que suba",
+            "1": "Rétame de una vez",
+            "2": "Que Klara calibre sola"
+          }
+        },
+        "entrada_audio": {
+          "label": "Escuchar la lección en voz alta:",
+          "op": {
+            "0": "Me fija las cosas",
+            "1": "Acompaña, pero no es lo central",
+            "2": "Me dispersa"
+          }
+        },
+        "entrada_hablar": {
+          "label": "Decir las cosas en voz alta:",
+          "op": {
+            "0": "Me fija las cosas",
+            "1": "A veces",
+            "2": "No me aporta"
+          }
+        },
+        "fija_fichas": {
+          "label": "Fichas de repaso: ¿cuáles te funcionan?",
+          "op": {
+            "0": "Término y significado",
+            "1": "Un ejemplo y su concepto",
+            "2": "Completar la frase que falta",
+            "3": "Las fichas no me funcionan"
+          }
+        },
+        "fija_feynman": {
+          "label": "Explicar algo con tus palabras, sin apuntes:",
+          "op": {
+            "0": "Es mi mejor prueba",
+            "1": "Me sirve a veces",
+            "2": "Me incomoda, pero quiero intentarlo",
+            "3": "No es para mí"
+          }
+        },
+        "fija_repeticion": {
+          "label": "Repetir lo mismo varios días:",
+          "op": {
+            "0": "Me lo fija",
+            "1": "Me aburre y abandono",
+            "2": "Depende: repetir poco, variar el resto"
+          }
+        },
+        "fija_prueba": {
+          "label": "¿Qué te convence de que ya lo sabes?",
+          "op": {
+            "0": "Explicarlo sin apuntes",
+            "1": "Usarlo en algo real",
+            "2": "Aprobar un quiz",
+            "3": "Que no se me caiga en el repaso"
+          }
+        },
+        "error_correccion": {
+          "label": "Cuando te equivocas, ¿cómo quieres la corrección?",
+          "op": {
+            "0": "Directa y al momento",
+            "1": "Al final de la sesión",
+            "2": "Suave y con contexto"
+          }
+        },
+        "error_atasco": {
+          "label": "Cuando algo no te entra a la primera:",
+          "op": {
+            "0": "Explícamelo distinto",
+            "1": "Dame un ejemplo concreto",
+            "2": "Sigue, y vuelve después"
+          }
+        },
+        "error_pista": {
+          "label": "Atascado en un ejercicio:",
+          "op": {
+            "0": "Déjame pelear un rato antes de la pista",
+            "1": "Pista temprana, no me dejes trancado",
+            "2": "Depende del día"
+          }
+        },
+        "error_memoria": {
+          "label": "Que Klara recuerde tus errores de días pasados («igual que ayer»):",
+          "op": {
+            "0": "Me sirve",
+            "1": "Me da igual",
+            "2": "No lo quiero"
+          }
+        },
+        "ritmo_deadline": {
+          "label": "Una fecha real en el calendario (una entrevista, un examen):",
+          "op": {
+            "0": "Me activa",
+            "1": "Me paraliza",
+            "2": "Depende del tema"
+          }
+        },
+        "ritmo_abandono": {
+          "label": "¿Qué te hace abandonar un tema?",
+          "op": {
+            "0": "Sesiones largas",
+            "1": "Mucha teoría seguida",
+            "2": "No ver para qué sirve",
+            "3": "Perder el hilo tras faltar unos días",
+            "4": "Otra cosa"
+          }
+        },
+        "ritmo_regreso": {
+          "label": "Cuando vuelves tras varios días sin entrar:",
+          "op": {
+            "0": "Muéstrame dónde iba",
+            "1": "Un repaso corto antes de seguir",
+            "2": "Sigue como si nada"
+          }
+        },
+        "libre": {
+          "label": "¿Algo que Klara deba tener en cuenta?",
+          "whisper": "Toca lo que aplique. Si falta algo, escríbelo.",
+          "op": {
+            "0": "Estudio de noche",
+            "1": "Poco tiempo entre semana",
+            "2": "Casi siempre sin audio",
+            "3": "Me distraigo fácil",
+            "4": "Odio los videos largos",
+            "5": "Prefiero leer que escuchar",
+            "6": "Trabajo mejor con presión",
+            "7": "Aprendo en un idioma que no es el mío",
+            "8": "Nada especial"
+          }
+        }
+      }
+    }
   }
 }

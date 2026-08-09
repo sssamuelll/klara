@@ -431,3 +431,22 @@ export interface ModulePathItem {
   unlocked: boolean;
   library_available: number;
 }
+
+/** Perfil de Aprendizaje (F1.5). `stale` = hay respuestas más nuevas que la
+ *  síntesis mostrada; `status` se ata a las 8 preguntas de consumo, no a 23/23. */
+export interface LearnerProfileOut {
+  answers: Record<string, unknown>;
+  timings: Record<string, number>;
+  facts: Record<string, unknown> | null;
+  synthesis: string | null;
+  version: number;
+  derived_for_version: number | null;
+  updated_at: string;
+  status: "completo" | "a_medias";
+  stale: boolean;
+}
+
+export interface LearnerProfileIn {
+  answers: Record<string, unknown>;
+  timings: Record<string, number>;
+}

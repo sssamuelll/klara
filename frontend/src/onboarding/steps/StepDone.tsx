@@ -34,7 +34,9 @@ export default function StepDone({ data, onCompleted }: Props) {
       const updated = await api.completeOnboarding();
       applyUserResponse(updated);
       onCompleted?.();
-      navigate("/", { replace: true });
+      // Primer arranque = cuestionario de Perfil de Aprendizaje (F1.5, D-J).
+      // No atrapa: todas sus preguntas se saltan y «Más tarde» entra a la app.
+      navigate("/perfil/aprendizaje", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Algo no salió bien.");
     } finally {
