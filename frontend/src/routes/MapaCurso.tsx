@@ -41,18 +41,20 @@ export default function MapaCurso() {
       {/* ponytail: sin sort — GET /modules ya ordena por sequence_order asc. */}
       <ul className="m3-rows">
         {vm.modules?.map((m) => (
-          <li key={m.id} data-e={moduleRowEstado(m)} onClick={() => navigate(`/module/${m.id}`)} style={{ cursor: "pointer" }}>
-            <span className="n">{String(m.sequence_order).padStart(2, "0")}</span>
-            <span className="tit">{m.title}</span>
-            <span className="estado">
-              {m.completed
-                ? "✓"
-                : m.is_current
-                ? t("mapa.encurso", { done: m.stories_finished, total: m.stories_to_complete })
-                : m.unlocked
-                ? t("mapa.proximo")
-                : "—"}
-            </span>
+          <li key={m.id} data-e={moduleRowEstado(m)}>
+            <button type="button" className="m3-rowbtn" onClick={() => navigate(`/module/${m.id}`)}>
+              <span className="n">{String(m.sequence_order).padStart(2, "0")}</span>
+              <span className="tit">{m.title}</span>
+              <span className="estado">
+                {m.completed
+                  ? "✓"
+                  : m.is_current
+                  ? t("mapa.encurso", { done: m.stories_finished, total: m.stories_to_complete })
+                  : m.unlocked
+                  ? t("mapa.proximo")
+                  : "—"}
+              </span>
+            </button>
           </li>
         ))}
       </ul>

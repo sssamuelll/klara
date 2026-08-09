@@ -13,7 +13,6 @@ export interface CourseVM {
   id: "aleman";
   progreso: number;
   vencen: number | null;
-  currentModule: ModulePathItem | null;
   modules: ModulePathItem[] | null;
   pasos: PasoVM[];
 }
@@ -41,7 +40,6 @@ export function buildCourseVM(args: {
     id: "aleman",
     progreso: total ? done / total : 0,
     vencen: due ? due.length : null,
-    currentModule: modules?.find((m) => m.is_current) ?? null,
     modules,
     pasos,
   };

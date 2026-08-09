@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -25,6 +25,15 @@ export default function TabBar() {
   const [menu, setMenu] = useState(false);
   const enPerfil = pathname.startsWith("/perfil");
 
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menu]);
+
   return (
     <>
       {menu && <div className="m3-scrim" onClick={() => setMenu(false)} />}
@@ -34,10 +43,11 @@ export default function TabBar() {
             className="m3-menu-item"
             role="menuitem"
             data-active={enPerfil ? "true" : "false"}
+            aria-current={enPerfil ? "page" : undefined}
             onClick={() => { setMenu(false); navigate("/perfil"); }}
           >
             <span>{t("tabbar.perfil")}</span>
-            <span className="ch">›</span>
+            <span className="ch" aria-hidden="true">›</span>
           </button>
         </div>
       )}
@@ -45,6 +55,7 @@ export default function TabBar() {
         <button
           className="m3-tab"
           data-active={pathname === "/" ? "true" : "false"}
+          aria-current={pathname === "/" ? "page" : undefined}
           onClick={() => { setMenu(false); navigate("/"); }}
         >
           <span className="ic"><IcLib /></span>
