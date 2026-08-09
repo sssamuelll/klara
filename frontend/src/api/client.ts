@@ -417,6 +417,7 @@ export const api = {
       focusExamples: string[];
       history: SpeakHistoryTurn[];
       retryWord?: string;
+      sessionId?: string;
       signal?: AbortSignal;
     },
   ): Promise<SpeakTurnResponse> => {
@@ -427,6 +428,7 @@ export const api = {
     fd.append("focus_examples", opts.focusExamples.join(","));
     fd.append("history", JSON.stringify(opts.history));
     if (opts.retryWord) fd.append("retry_word", opts.retryWord);
+    if (opts.sessionId) fd.append("session_id", opts.sessionId);
 
     const signals = [AbortSignal.timeout(60_000)];
     if (opts.signal) signals.push(opts.signal);

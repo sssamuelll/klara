@@ -79,6 +79,8 @@ class SpeakFinishIn(BaseModel):
     total_count: int = Field(ge=0, le=500, validation_alias="totalCount")
     duration_seconds: int = Field(ge=0, le=7200, validation_alias="durationSeconds")
     words: list[SpeakFinishWordIn] = Field(default_factory=list, max_length=8)
+    # #127: client session UUID linking this summary to its speak_turns rows.
+    session_id: str | None = Field(default=None, max_length=64, validation_alias="sessionId")
 
     @model_validator(mode="after")
     def clear_within_total(self) -> SpeakFinishIn:

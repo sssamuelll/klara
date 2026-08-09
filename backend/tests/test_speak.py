@@ -12,7 +12,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import delete, func, select
 
-from klara.models import StudySession, UserCard, VocabItem
+from klara.models import SpeakTurn, StudySession, UserCard, VocabItem
 from klara.pronunciation.schemas import (
     PhonemeScore,
     PronunciationScores,
@@ -270,6 +270,139 @@ async def test_turn_502_when_azure_fatal(
     assert r.status_code == 502
 
 
+# ---- /speak/turn persistence (#127) ----------------------------------------
+
+# Client-generated session identity: Speak sessions have no server-side row
+# until /finish, so turns group under a client UUID (D-K clause, 2026-08-09).
+_SESSION_A = "0b6f8f74-2d9a-4a56-9a1c-2f4f0d9e1b11"
+_SESSION_B = "5f1c2f10-7c3b-4d0f-8f7e-aa11bb22cc33"
+
+
+@pytest.mark.asyncio
+async def test_turn_persists_speak_turn_row(
+    client, app_settings, seed_invite, patched_turn, db_session
+):
+    """#127: the per-turn assessment must survive the request — it was
+    computed in memory and thrown away before this feature."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_A))
+    assert r.status_code == 200, r.text
+
+    turn = (await db_session.execute(select(SpeakTurn))).scalar_one()
+    assert str(turn.client_session_id) == _SESSION_A
+    assert turn.turn_index == 0
+    assert turn.language == "de"
+    assert turn.focus_sound == "ü"
+    assert turn.recognized_text == "fünf Minuten"
+    assert turn.tokens == [
+        {"t": "fünf", "s": "ok", "focus": True},
+        {"t": "Minuten", "s": "good", "focus": False},
+    ]
+    assert turn.target["word"] == "fünf"
+    assert turn.target["focus_accuracy"] == 40.0
+    assert turn.target["should_ipa"] == "/fʏnf/"
+    assert turn.focus_hit is True
+    assert turn.focus_clear is False
+    assert turn.scores == {"accuracy": 80.0, "fluency": 75.0, "pronunciation": 78.0}
+
+
+@pytest.mark.asyncio
+async def test_turn_index_increments_within_session(
+    client, app_settings, seed_invite, patched_turn, db_session
+):
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    for _ in range(2):
+        r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_A))
+        assert r.status_code == 200
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_B))
+    assert r.status_code == 200
+
+    rows = (await db_session.execute(select(SpeakTurn))).scalars().all()
+    got = sorted((str(t.client_session_id), t.turn_index) for t in rows)
+    assert got == [(_SESSION_A, 0), (_SESSION_A, 1), (_SESSION_B, 0)]
+
+
+@pytest.mark.asyncio
+async def test_turn_without_session_id_still_persists(
+    client, app_settings, seed_invite, patched_turn, db_session
+):
+    """Old clients don't send session_id: the signal still lands, grouped
+    under a fresh server-side UUID instead of being dropped."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie))
+    assert r.status_code == 200
+
+    turn = (await db_session.execute(select(SpeakTurn))).scalar_one()
+    assert turn.client_session_id is not None
+    assert turn.turn_index == 0
+
+
+@pytest.mark.asyncio
+async def test_turn_garbage_session_id_falls_back(
+    client, app_settings, seed_invite, patched_turn, db_session
+):
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id="not-a-uuid"))
+    assert r.status_code == 200
+
+    turn = (await db_session.execute(select(SpeakTurn))).scalar_one()
+    assert turn.client_session_id is not None
+    assert str(turn.client_session_id) != "not-a-uuid"
+
+
+@pytest.mark.asyncio
+async def test_no_speech_turn_not_persisted(
+    client, app_settings, seed_invite, patched_turn, monkeypatch, db_session
+):
+    from klara.pronunciation.azure_client import AzureSpeechError
+
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+
+    def raise_no_match(wav_path, language, *, azure_key, azure_region):
+        raise AzureSpeechError("No speech", recoverable=True)
+
+    monkeypatch.setattr("klara.routers.speak.score_unscripted", raise_no_match)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_A))
+    assert r.status_code == 200
+    rows = (await db_session.execute(select(SpeakTurn))).scalars().all()
+    assert rows == []
+
+
+@pytest.mark.asyncio
+async def test_low_confidence_turn_not_persisted(
+    client, app_settings, seed_invite, patched_turn, monkeypatch, db_session
+):
+    """A probably-fabricated transcript is garbage signal — keeping it would
+    poison the longitudinal error memory."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+
+    def shaky_score(wav_path, language, *, azure_key, azure_region):
+        return _score_response(), 0.31
+
+    monkeypatch.setattr("klara.routers.speak.score_unscripted", shaky_score)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_A))
+    assert r.status_code == 200
+    rows = (await db_session.execute(select(SpeakTurn))).scalars().all()
+    assert rows == []
+
+
+@pytest.mark.asyncio
+async def test_turn_llm_failure_still_persists(
+    client, app_settings, seed_invite, patched_turn, monkeypatch, db_session
+):
+    """The learner's scored signal must not depend on the LLM being up (F14)."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+
+    async def no_reply(llm, **kwargs):
+        return None
+
+    monkeypatch.setattr("klara.routers.speak.generate_reply", no_reply)
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_A))
+    assert r.status_code == 200
+    turn = (await db_session.execute(select(SpeakTurn))).scalar_one()
+    assert turn.target["word"] == "fünf"
+
+
 def test_result_to_response_missing_assessment_is_recoverable():
     """RecognizedSpeech with no PronunciationAssessment/Words block in the
     result JSON (a breath) must surface as a recoverable no-speech, not as an
@@ -444,3 +577,20 @@ async def test_finish_requires_auth(client, app_settings):
     app_settings(AZURE_SPEECH_KEY="dummy-key")
     r = await client.post("/api/v1/speak/finish", json=_finish_payload())
     assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_finish_stores_session_id_in_wins(
+    client, app_settings, seed_invite, db_session, clean_vocab
+):
+    """#127: /finish records the client session UUID in wins so the turn rows
+    (speak_turns.client_session_id) stay linkable to their StudySession."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    r = await client.post(
+        "/api/v1/speak/finish",
+        headers={"Cookie": cookie},
+        json=_finish_payload(sessionId=_SESSION_A),
+    )
+    assert r.status_code == 200, r.text
+    session = (await db_session.execute(select(StudySession))).scalar_one()
+    assert session.wins["session_id"] == _SESSION_A

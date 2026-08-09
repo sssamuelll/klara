@@ -401,6 +401,8 @@ export interface SpeakFinishRequest {
   totalCount: number;
   durationSeconds: number;
   words: SpeakFinishWord[];
+  /** #127: links this summary to its per-turn speak_turns rows. */
+  sessionId?: string;
 }
 
 export interface SpeakFinishResponse {

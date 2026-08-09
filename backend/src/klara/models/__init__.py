@@ -12,6 +12,7 @@ from klara.models.module import Module, module_vocab
 from klara.models.oauth import OAuthAccount
 from klara.models.pronunciation_diagnosis import PronunciationDiagnosis
 from klara.models.session import StudySession
+from klara.models.speak_turn import SpeakTurn
 from klara.models.srs import Review, UserCard
 from klara.models.story import Story, StoryView
 from klara.models.user import User
@@ -36,6 +37,7 @@ __all__ = [
     "Review",
     "ReviewRating",
     "SessionType",
+    "SpeakTurn",
     "Story",
     "StoryLibrary",
     "StoryView",
