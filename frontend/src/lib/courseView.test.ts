@@ -35,7 +35,7 @@ describe("buildCourseVM", () => {
   it("con historia: leer apunta a la historia y es el paso 'ahora'", () => {
     const vm = buildCourseVM({ modules: [], due: [], latestStoryId: "abc" });
     expect(vm.pasos.map((p) => [p.id, p.to])).toEqual([
-      ["leer", "/story/abc"],
+      ["leer", "/estudiar/abc"],
       ["pronunciar", "/review"],
       ["hablar", "/chat"],
       ["repasar", "/review"],
