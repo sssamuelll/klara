@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { ReviewRating } from "../api/types";
 import { speak } from "../lib/tts";
-import { formatInterval, projectIntervals } from "../lib/srsProjection";
+import { formatInterval } from "../lib/srsProjection";
 import { initialRecallState, recallReducer, restedCount } from "../lib/recallSession";
 
 const RATINGS: ReviewRating[] = ["again", "hard", "good", "easy"];
@@ -115,7 +115,7 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
   }
 
   // phase === "prompt" | "revealed"
-  const intervals = projectIntervals(card);
+  const intervals = card.next_intervals;
   return (
     <main className="rr" data-state={state.phase}>
       <header className="rr-head">

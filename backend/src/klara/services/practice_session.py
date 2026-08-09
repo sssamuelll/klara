@@ -98,6 +98,7 @@ async def apply_pronunciation_reviews(
                 rating=_BAND_TO_RATING[band],
                 prev_interval_days=prev_interval,
                 new_interval_days=interval,
+                channel="pronunciation",
             )
         )
         out.append(

@@ -6,6 +6,7 @@ const card = (id: string): CardOut => ({
   id, vocab_item_id: `v-${id}`, lemma: "Wort", pos: "noun", translation: "palabra",
   example_target: "Ein Wort.", gender: "das", state: "new", interval_days: 0,
   next_review_at: null, repetitions: 0, ease: 2.5,
+  next_intervals: { again: 0.0069, hard: 0.04, good: 1, easy: 4 },
 });
 
 describe("recallReducer", () => {
