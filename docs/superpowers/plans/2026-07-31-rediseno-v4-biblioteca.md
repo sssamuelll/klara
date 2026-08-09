@@ -62,7 +62,7 @@ flowchart TD
     inicio -.TabBar Más.-> perfil
 ```
 
-*(Estado `suscripcion` eliminado del scope. `plan` y `nuevo` sin TabBar; sesiones sin TabBar.)*
+*(Estado `suscripcion` eliminado del scope. `plan` sin TabBar; `nuevo` CON TabBar — resuelto en F2.0, ver cola de F2; sesiones sin TabBar.)*
 
 ---
 
@@ -170,7 +170,7 @@ Slice chico y autocontenido — **no depende del dominio Course**, puede correr 
 - Safe-area en pantallas de sesión cuando entren a `.m3-app`: `.m3-sess-top` arriba, `.m3-dock`/`.m3-fb` abajo (patrón ya aplicado al shell en F1).
 - Validar con contenido real: `.m3-fb` min-height vs el feedback más largo; `line-clamp:7` de `.m3-oracion` vs la oración más larga; los dos 9px sobrevivientes (`.m3-cefr .aqui`, `.m3-turno .quien`).
 - Copy: saludo con `{{name}}` (puntuación ja), punto latino tras h1 en ja, spacing "Klara が/Klaraが".
-- Doc reconcile: el diagrama del plan maestro dice "`nuevo` sin TabBar"; F1 lo montó bajo V4Shell (con TabBar) — decidir cuál gobierna cuando `/nuevo` sea real (F4).
+- ~~Doc reconcile~~ **RESUELTO (F2.0, 2026-08-09): gobierna la implementación de F1 — `/nuevo` CON TabBar.** `/nuevo` es un destino de biblioteca (se llega desde la tarjeta "+ Nuevo tema" de Inicio), no una sesión: quitarle la TabBar rompería la vuelta atrás sin aportar foco. El diagrama queda anotado; si F4 convierte el flujo de creación en un wizard inmersivo, se re-decide ahí con esa evidencia.
 - Al re-cablear `useCourseData` en más pantallas, considerar loader/context (hoy: 3 fetches por mount).
 
 Sin migraciones; shape de API existente (adaptadores client-side donde haga falta).
