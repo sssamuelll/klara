@@ -1043,5 +1043,13 @@
         }
       }
     }
+  },
+  "estudiar": {
+    "estadoK": {
+      "lee": "K lê",
+      "leeDespacio": "K lê · devagar",
+      "teEscucho": "Estou te ouvindo…",
+      "evaluando": "Avaliando…"
+    }
   }
 }

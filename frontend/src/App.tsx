@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -53,6 +53,14 @@ function V4Shell() {
       <TabBar />
     </div>
   );
+}
+
+// /story/:id → /estudiar/:id conservando el state del navigate original.
+// Los deep-links y bookmarks legacy no se rompen (Global Constraint de URLs).
+function LegacyStoryRedirect() {
+  const { id } = useParams();
+  const location = useLocation();
+  return <Navigate to={`/estudiar/${id}`} replace state={location.state} />;
 }
 
 function AppShell() {
@@ -143,14 +151,6 @@ function AppShell() {
           }
         />
         <Route
-          path="/story/:id"
-          element={
-            <ProtectedRoute>
-              <StoryView />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/module/:id"
           element={
             <ProtectedRoute>
@@ -191,6 +191,18 @@ function AppShell() {
           }
         />
       </Route>
+
+      {/* Sesión v4: sin TabBar (mockup) y sin LegacyShell (sin Masthead).
+          Story renderiza su propio .m3-app; StoryFinish interino trae su kframe. */}
+      <Route
+        path="/estudiar/:id"
+        element={
+          <ProtectedRoute>
+            <StoryView />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/story/:id" element={<LegacyStoryRedirect />} />
 
       {/* ponytail: sin pantalla 404 — con el Masthead dentro de LegacyShell una URL
           suelta pinta en blanco; redirigir a Inicio es la respuesta correcta y barata. */}

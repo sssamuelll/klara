@@ -32,7 +32,7 @@ export default function NewStory() {
         moduleId,
         topicOrigin: text.trim() ? origin : "none",
       });
-      navigate(`/story/${story.id}`);
+      navigate(`/estudiar/${story.id}`);
     } catch (e) {
       // Bidirectional fallback (spec §10): live generation failing must
       // offer the instant library story when one exists, instead of
@@ -40,7 +40,7 @@ export default function NewStory() {
       if (e instanceof ApiError && e.status === 502 && moduleId) {
         try {
           const ready = await api.claimModuleStory(moduleId);
-          navigate(`/story/${ready.id}`);
+          navigate(`/estudiar/${ready.id}`);
           return;
         } catch {
           /* fall through to the normal error */

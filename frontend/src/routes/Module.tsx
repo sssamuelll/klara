@@ -45,7 +45,7 @@ export default function Module() {
     setError(null);
     try {
       const story = await api.claimModuleStory(id);
-      navigate(`/story/${story.id}`);
+      navigate(`/estudiar/${story.id}`, { state: { from: `/module/${id}` } });
     } catch (e) {
       // ApiError.message is `${status} ${statusText}: ${detail}` (see
       // client.ts) — the backend's "library.empty" detail code is a
@@ -136,7 +136,7 @@ export default function Module() {
         <section className="mod__stories">
           <span className="k-mono path__kicker">{t("module.yourStories")}</span>
           {stories.map((s) => (
-            <button key={s.id} className="mod__story" onClick={() => navigate(`/story/${s.id}`)}>
+            <button key={s.id} className="mod__story" onClick={() => navigate(`/estudiar/${s.id}`, { state: { from: `/module/${id}` } })}>
               <span>{s.title}</span>
               <span className="k-mono">→</span>
             </button>

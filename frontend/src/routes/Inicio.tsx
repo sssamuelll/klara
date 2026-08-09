@@ -81,7 +81,7 @@ export default function Inicio() {
           </span>
         </button>
       </div>
-      <button className="m3-hero" style={{ marginTop: "auto" }} onClick={() => navigate(paso.to)}>
+      <button className="m3-hero" style={{ marginTop: "auto" }} onClick={() => navigate(paso.to, { state: { from: "/" } })}>
         <span className="tag">
           <span>{t("biblioteca.heroTag", { curso: titulo })}</span>
           <span>{t(`curso.paso.${paso.id}.meta`)}</span>
