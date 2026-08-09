@@ -8,6 +8,8 @@ the reason Speak exists in the MVP.
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
 import pytest_asyncio
 from sqlalchemy import delete, func, select
@@ -594,3 +596,136 @@ async def test_finish_stores_session_id_in_wins(
     assert r.status_code == 200, r.text
     session = (await db_session.execute(select(StudySession))).scalar_one()
     assert session.wins["session_id"] == _SESSION_A
+
+
+# ---- errores recurrentes (#127 v2) ------------------------------------------
+
+_SESSION_C = "9d3e1a22-4b8c-4f6d-9e0a-77dd88ee99ff"
+
+
+async def _seed_turn(
+    db_session, user_id, session_id: str, word: str, accuracy: float, language: str = "de"
+) -> None:
+    db_session.add(
+        SpeakTurn(
+            user_id=user_id,
+            client_session_id=uuid.UUID(session_id),
+            turn_index=0,
+            language=language,
+            focus_sound="ü",
+            recognized_text=f"... {word} ...",
+            tokens=[{"t": word, "s": "bad" if accuracy < 45 else "ok", "focus": True}],
+            target={"word": word, "focus_accuracy": accuracy, "should_ipa": "/x/"},
+            scores={"accuracy": 70.0, "fluency": 70.0, "pronunciation": 70.0},
+            focus_hit=True,
+            focus_clear=accuracy >= 70.0,
+        )
+    )
+    await db_session.commit()
+
+
+async def _user_id(db_session):
+    from klara.models import User
+
+    return (
+        await db_session.execute(select(User.id).where(User.email == "speak@example.com"))
+    ).scalar_one()
+
+
+@pytest.mark.asyncio
+async def test_recurrent_struggles_needs_two_distinct_sessions(
+    client, app_settings, seed_invite, db_session
+):
+    """Struggle in >=2 sessions -> recurrent; one session or clear -> not."""
+    from klara.services.speak_turns import recurrent_struggles
+
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    assert cookie
+    uid = await _user_id(db_session)
+    await _seed_turn(db_session, uid, _SESSION_A, "fünf", 40.0)
+    await _seed_turn(db_session, uid, _SESSION_B, "fünf", 52.0)
+    await _seed_turn(db_session, uid, _SESSION_A, "Tür", 30.0)  # una sola sesión
+    await _seed_turn(db_session, uid, _SESSION_A, "Minuten", 90.0)  # clara
+    await _seed_turn(db_session, uid, _SESSION_B, "Minuten", 92.0)
+
+    got = await recurrent_struggles(
+        db_session, uid, language="de", exclude_session_id=uuid.UUID(_SESSION_C)
+    )
+    assert [(s.word, s.sessions) for s in got] == [("fünf", 2)]
+
+
+@pytest.mark.asyncio
+async def test_recurrent_struggles_excludes_current_session(
+    client, app_settings, seed_invite, db_session
+):
+    """The session in progress must not vouch for itself as 'previous'."""
+    from klara.services.speak_turns import recurrent_struggles
+
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    assert cookie
+    uid = await _user_id(db_session)
+    await _seed_turn(db_session, uid, _SESSION_A, "fünf", 40.0)
+    await _seed_turn(db_session, uid, _SESSION_C, "fünf", 41.0)  # sesión actual
+
+    got = await recurrent_struggles(
+        db_session, uid, language="de", exclude_session_id=uuid.UUID(_SESSION_C)
+    )
+    assert got == []
+
+
+@pytest.mark.asyncio
+async def test_recurrent_struggles_groups_case_insensitive(
+    client, app_settings, seed_invite, db_session
+):
+    from klara.services.speak_turns import recurrent_struggles
+
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    assert cookie
+    uid = await _user_id(db_session)
+    await _seed_turn(db_session, uid, _SESSION_A, "Tür", 30.0)
+    await _seed_turn(db_session, uid, _SESSION_B, "tür", 35.0)
+
+    got = await recurrent_struggles(
+        db_session, uid, language="de", exclude_session_id=uuid.UUID(_SESSION_C)
+    )
+    assert len(got) == 1 and got[0].sessions == 2
+
+
+@pytest.mark.asyncio
+async def test_turn_injects_recurrent_struggles_into_llm(
+    client, app_settings, seed_invite, patched_turn, db_session
+):
+    """#127 v2: the prompt can cite an error from a previous session."""
+    cookie = await _register_and_login(client, app_settings, seed_invite)
+    uid = await _user_id(db_session)
+    await _seed_turn(db_session, uid, _SESSION_A, "fünf", 40.0)
+    await _seed_turn(db_session, uid, _SESSION_B, "fünf", 45.0)
+
+    r = await client.post("/api/v1/speak/turn", **_turn_request(cookie, session_id=_SESSION_C))
+    assert r.status_code == 200, r.text
+    struggles = patched_turn["recurrent_struggles"]
+    assert [(s.word, s.sessions) for s in struggles] == [("fünf", 2)]
+
+
+def test_speak_memory_block_renders_and_empties():
+    from klara.llm.prompts import build_speak_memory_block
+    from klara.services.speak_turns import RecurrentStruggle
+
+    assert build_speak_memory_block([]) == ""
+    block = build_speak_memory_block(
+        [RecurrentStruggle(word="fünf", sessions=3), RecurrentStruggle(word="Tür", sessions=2)]
+    )
+    assert "fünf" in block and "3" in block
+    assert "Tür" in block
+    # El system prompt debe aceptar el bloque sin reventar el format
+    from klara.llm.prompts import SPEAK_SYSTEM_PROMPT
+
+    system = SPEAK_SYSTEM_PROMPT.format(
+        target_label="alemán",
+        native_label="español",
+        level="A2",
+        focus_sound="ü",
+        focus_examples="fünf, Tür",
+        memory_block=block,
+    )
+    assert "fünf" in system
