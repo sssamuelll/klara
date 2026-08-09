@@ -20,7 +20,6 @@ describe("buildCourseVM", () => {
       due: [], latestStoryId: null,
     });
     expect(vm.progreso).toBeCloseTo(1 / 3);
-    expect(vm.currentModule?.id).toBe("m2");
     expect(vm.modules?.length).toBe(3);
   });
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { CardOut, ModulePathItem, StoryListItem } from "../api/types";
 import { buildCourseVM, type CourseVM } from "../lib/courseView";
@@ -9,11 +9,10 @@ import { languageLabel } from "../lib/languages";
 import { useUser } from "../lib/user";
 import KlaraMark from "../components/KlaraMark";
 
-export function useCourseData(): { vm: CourseVM; loading: boolean } {
+export function useCourseData(): { vm: CourseVM } {
   const [vm, setVm] = useState<CourseVM>(() =>
     buildCourseVM({ modules: null, due: null, latestStoryId: null })
   );
-  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -31,11 +30,10 @@ export function useCourseData(): { vm: CourseVM; loading: boolean } {
           latestStoryId: stories[0]?.id ?? null,
         })
       );
-      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, []);
-  return { vm, loading };
+  return { vm };
 }
 
 export default function Inicio() {
@@ -54,13 +52,19 @@ export default function Inicio() {
         <span className="marca"><KlaraMark size={14} /><span className="wordmark">Klara</span></span>
         <span>{fecha}</span>
       </div>
-      <h1 className="m4-saludo">{hola}, <em>{user?.display_name ?? "…"}</em>.</h1>
+      <h1 className="m4-saludo">
+        <Trans
+          i18nKey="home.greeting.conNombre"
+          values={{ hola, name: user?.display_name ?? "…" }}
+          components={{ 1: <em /> }}
+        />
+      </h1>
       <div className="m4-sec">{t("biblioteca.titulo")}</div>
       <div className="m4-lib">
         <button className="m4-tema" onClick={() => navigate("/curso/aleman")}>
           <span className="f1">
             <span className="tit">{titulo}</span>
-            <span className="estado" data-hot="true">
+            <span className="estado" data-hot={vm.vencen != null && vm.vencen > 0 ? "true" : "false"}>
               {vm.vencen != null && vm.vencen > 0
                 ? t("biblioteca.estadoDue", { count: vm.vencen })
                 : t("biblioteca.estadoHoy")}
@@ -70,7 +74,7 @@ export default function Inicio() {
           <span className="m4-bar"><i style={{ width: `${vm.progreso * 100}%` }} /></span>
         </button>
         <button className="m4-add" onClick={() => navigate("/nuevo")}>
-          <span className="tile">+</span>
+          <span className="tile" aria-hidden="true">+</span>
           <span>
             <span className="tit">{t("biblioteca.nuevoTitulo")}</span>
             <span className="sub">{t("biblioteca.nuevoDek")}</span>
@@ -87,7 +91,7 @@ export default function Inicio() {
             <h2>{t(`curso.paso.${paso.id}.titulo`)}</h2>
             <p className="dek">{t(`curso.paso.${paso.id}.dek`)}</p>
           </span>
-          <span className="arrow">→</span>
+          <span className="arrow" aria-hidden="true">→</span>
         </span>
       </button>
     </main>

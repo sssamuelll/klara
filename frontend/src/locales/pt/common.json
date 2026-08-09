@@ -33,7 +33,8 @@
     "greeting": {
       "morning": "Bom dia",
       "afternoon": "Boa tarde",
-      "evening": "Boa noite"
+      "evening": "Boa noite",
+      "conNombre": "{{hola}}, <1>{{name}}</1>."
     },
     "firstFeature": {
       "kicker": "Primeiro pedido à Klara",

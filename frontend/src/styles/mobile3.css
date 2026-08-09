@@ -41,8 +41,9 @@
 .m3-saludo em{font-style:italic;font-weight:400}
 .m3-linea{font-family:var(--font-serif);font-style:italic;font-size:16px;color:var(--ink-3);margin:0}
 .m3-plan{list-style:none;margin:auto 0 0;padding:0}
-.m3-plan li{display:flex;align-items:baseline;gap:12px;padding:11px 0;border-top:1px solid var(--rule)}
+.m3-plan li{border-top:1px solid var(--rule)}
 .m3-plan li:first-child{border-top:0}
+.m3-plan .m3-rowbtn{padding:11px 0}
 .m3-plan .n{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);flex:0 0 18px}
 .m3-plan .tit{font-family:var(--font-serif);font-size:17px;font-weight:500;letter-spacing:-0.01em;flex:1}
 .m3-plan .estado{font-family:var(--font-mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-4)}
@@ -73,7 +74,8 @@
 .m3-cefr .stop[data-past="true"]{color:var(--ink-2)}
 .m3-cefr .aqui{position:absolute;top:-22px;transform:translateX(-50%);font-family:var(--font-mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
 .m3-rows{flex:0 0 auto;list-style:none;margin:14px 0 0;padding:0}
-.m3-rows li{display:flex;align-items:baseline;gap:12px;padding:12px 0;border-top:1px solid var(--rule)}
+.m3-rows li{border-top:1px solid var(--rule)}
+.m3-rowbtn{font:inherit;color:inherit;text-align:inherit;background:none;border:0;width:100%;display:flex;align-items:baseline;gap:12px;padding:12px 0;cursor:pointer}
 .m3-rows .n{font-family:var(--font-mono);font-size:10px;color:var(--ink-4);flex:0 0 22px}
 .m3-rows .tit{font-family:var(--font-serif);font-size:16px;flex:1;letter-spacing:-0.01em;color:var(--ink-2)}
 .m3-rows .estado{font-family:var(--font-mono);font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-4)}
@@ -86,13 +88,13 @@
 /* El shorthand resetea padding-top — hay que reponer el inset (igual que .k-masthead). */
 .m3-page{padding:12px 22px 10px;padding-top:calc(12px + env(safe-area-inset-top))}
 .m3-saludo{margin:12px 0 4px}
-.m3-plan li{padding:7px 0}
+.m3-plan .m3-rowbtn{padding:7px 0}
 .m3-hero{padding:12px 16px;margin-top:12px}
 .m3-hero h2{font-size:22px}
 .m3-mapa-h1{margin:10px 0 5px}
 .m3-cefr{margin-top:18px;padding-bottom:24px}
 .m3-rows{margin-top:10px}
-.m3-rows li{padding:7px 0}
+.m3-rowbtn{padding:7px 0}
 .m3-statline{padding-top:8px}
 }
 

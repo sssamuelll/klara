@@ -25,7 +25,7 @@
     "backHome": "← ホームへ戻る",
     "exit": "← 退出",
     "loading": "読み込み中…",
-    "klaraWriting": "Klara が書いています…",
+    "klaraWriting": "Klaraが書いています…",
     "unknownError": "不明なエラー"
   },
   "home": {
@@ -33,12 +33,13 @@
     "greeting": {
       "morning": "おはよう",
       "afternoon": "こんにちは",
-      "evening": "こんばんは"
+      "evening": "こんばんは",
+      "conNombre": "{{hola}}、<1>{{name}}</1>。"
     },
     "firstFeature": {
-      "kicker": "Klara への最初のリクエスト",
+      "kicker": "Klaraへの最初のリクエスト",
       "title": "まだ何も読んでいません。",
-      "dek": "Klara に小さな物語を頼んでみよう。5分、急がずに。",
+      "dek": "Klaraに小さな物語を頼んでみよう。5分、急がずに。",
       "cta": "はじめる"
     },
     "latest": {
@@ -54,7 +55,7 @@
     "sec": {
       "newStory": {
         "title": "別の物語",
-        "dek": "Klara に違うテーマをお願いしてみよう。"
+        "dek": "Klaraに違うテーマをお願いしてみよう。"
       },
       "review": {
         "title": "単語の復習",
@@ -66,7 +67,7 @@
         }
       },
       "chat": {
-        "title": "Klara と話す",
+        "title": "Klaraと話す",
         "dek": "自由な会話、今あなたが考えていることを。"
       },
       "genderReview": {
@@ -103,9 +104,9 @@
     "claimError": "ストーリーを開けませんでした。もう一度お試しください。"
   },
   "newstory": {
-    "kicker": "Klara へのリクエスト",
+    "kicker": "Klaraへのリクエスト",
     "title": "今日は何について話そう?",
-    "sub": "一言でいい。Klara に任せても。",
+    "sub": "一言でいい。Klaraに任せても。",
     "input": {
       "placeholder": "土曜日朝8時のパン屋…"
     },
@@ -121,9 +122,9 @@
       "officeErrand": "役所での手続き"
     },
     "generate": "物語を生成",
-    "generating": "Klara が書いています…",
+    "generating": "Klaraが書いています…",
     "surprise": "おまかせ",
-    "klaraAdapts": "Klara はあなたのレベルで書きます"
+    "klaraAdapts": "Klaraはあなたのレベルで書きます"
   },
   "story": {
     "step": {
@@ -133,7 +134,7 @@
         "play": "聞く",
         "pause": "一時停止"
       },
-      "klaraReads": "Klara が読む",
+      "klaraReads": "Klaraが読む",
       "listenSlow": "ゆっくり",
       "listenSlowAria": "ゆっくり再生",
       "pronounce": "発音する",
@@ -196,7 +197,7 @@
       "dek": {
         "practiced_one": "よくできました。{{count}} 文で発音を練習しました。",
         "practiced_other": "よくできました。{{count}} 文で発音を練習しました。",
-        "read": "よくできました。Klara が物語を読んでくれました。"
+        "read": "よくできました。Klaraが物語を読んでくれました。"
       },
       "stat": {
         "clear": "明瞭",
@@ -328,7 +329,7 @@
       "kicker": "発音",
       "title_one": "もう一度言う価値のある一文。",
       "title_other": "もう一度言う価値のある{{count}}文。",
-      "dek": "テストではありません。すでに読んだものから Klara が選びました — つまずいたものもあれば、復習で戻ってくるものもあります。自分のペースで、声に出して言ってみましょう。",
+      "dek": "テストではありません。すでに読んだものから Klaraが選びました — つまずいたものもあれば、復習で戻ってくるものもあります。自分のペースで、声に出して言ってみましょう。",
       "struggled": "<em>つまずいた</em>単語が含まれています",
       "review": "<em>間隔をあけた復習</em>で戻ってきます",
       "startBy": "ここから始める",
@@ -554,7 +555,7 @@
       "title": "今のレベルは?"
     },
     "context": {
-      "title": "あなたの学び方を Klara に教えてください",
+      "title": "あなたの学び方を Klaraに教えてください",
       "label": "あなたの背景(任意)",
       "placeholder": "ポッドキャストやニュースで学んでいます…"
     },
@@ -570,8 +571,8 @@
   },
   "settings": {
     "kicker": "設定",
-    "title": "Klara でのプロフィール",
-    "sub": "Klara はこれらの情報に合わせて物語を作ります。",
+    "title": "Klaraでのプロフィール",
+    "sub": "Klaraはこれらの情報に合わせて物語を作ります。",
     "field": {
       "name": "名前",
       "level": "CEFR レベル",
@@ -630,7 +631,7 @@
   },
   "auth": {
     "login": {
-      "title": "Klara にログイン",
+      "title": "Klaraにログイン",
       "emailLabel": "メールアドレス",
       "passwordLabel": "パスワード",
       "submit": "ログイン",
@@ -652,7 +653,7 @@
       "loginLink": "すでにアカウントを持っています",
       "inviteOnly": {
         "title": "招待制の登録",
-        "body": "Klara への登録は招待制です。管理者にリンクをリクエストし、ここで開いてください。"
+        "body": "Klaraへの登録は招待制です。管理者にリンクをリクエストし、ここで開いてください。"
       },
       "error": {
         "passwordMismatch": "パスワードが一致しません。",
@@ -706,7 +707,7 @@
     "estadoDue_other": "期限 {{count}} 件",
     "cursoSub": "ニュルンベルク版 · {{level}}",
     "nuevoTitulo": "新しいテーマ",
-    "nuevoDek": "テーマかノートを渡せば、Klara がプランを作ります",
+    "nuevoDek": "テーマかノートを渡せば、Klaraがプランを作ります",
     "heroTag": "続ける · {{curso}}"
   },
   "curso": {
@@ -729,7 +730,7 @@
       },
       "hablar": {
         "titulo": "話す",
-        "dek": "Klara との会話",
+        "dek": "Klaraとの会話",
         "meta": "3 分"
       },
       "repasar": {

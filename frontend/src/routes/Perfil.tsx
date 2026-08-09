@@ -52,28 +52,43 @@ export default function Perfil() {
       <h1 className="m4-h1" style={{ marginTop: 14 }}>{user?.display_name ?? "…"}</h1>
       <p className="m3-mapa-frase">{t("perfil.sub", { level: user?.level ?? "" })}</p>
       <ul className="m3-rows">
-        <li onClick={() => navigate("/perfil/aprendizaje")} style={{ cursor: "pointer" }}>
-          <span className="n">01</span>
-          <span className="tit">{t("perfil.aprendizaje.fila.titulo")}</span>
-          <span className="estado">{estadoAprendizaje} ›</span>
+        <li>
+          <button type="button" className="m3-rowbtn" onClick={() => navigate("/perfil/aprendizaje")}>
+            <span className="n">01</span>
+            <span className="tit">{t("perfil.aprendizaje.fila.titulo")}</span>
+            <span className="estado">{estadoAprendizaje} <span aria-hidden="true">›</span></span>
+          </button>
         </li>
-        <li onClick={() => setTheme(theme === "light" ? "dark" : "light")} style={{ cursor: "pointer" }}>
-          <span className="n">02</span>
-          <span className="tit">{t("perfil.tema")}</span>
-          <span className="estado">{theme === "light" ? t("perfil.temaClaro") : t("perfil.temaOscuro")} ›</span>
+        <li>
+          <button
+            type="button"
+            className="m3-rowbtn"
+            role="switch"
+            aria-checked={theme === "dark"}
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          >
+            <span className="n">02</span>
+            <span className="tit">{t("perfil.tema")}</span>
+            <span className="estado">{theme === "light" ? t("perfil.temaClaro") : t("perfil.temaOscuro")} <span aria-hidden="true">›</span></span>
+          </button>
         </li>
-        <li onClick={() => navigate("/settings")} style={{ cursor: "pointer" }}>
-          <span className="n">03</span>
-          <span className="tit">{t("perfil.editar")}</span>
-          <span className="estado">›</span>
+        <li>
+          <button type="button" className="m3-rowbtn" onClick={() => navigate("/settings")}>
+            <span className="n">03</span>
+            <span className="tit">{t("perfil.editar")}</span>
+            <span className="estado"><span aria-hidden="true">›</span></span>
+          </button>
         </li>
-        <li
-          onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
-          style={{ cursor: "pointer" }}
-        >
-          <span className="n">04</span>
-          <span className="tit">{t("perfil.salir")}</span>
-          <span className="estado">›</span>
+        <li>
+          <button
+            type="button"
+            className="m3-rowbtn"
+            onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
+          >
+            <span className="n">04</span>
+            <span className="tit">{t("perfil.salir")}</span>
+            <span className="estado"><span aria-hidden="true">›</span></span>
+          </button>
         </li>
       </ul>
       <div className="m3-statline">{t("perfil.pie")}</div>
