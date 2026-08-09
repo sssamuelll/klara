@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { Story, StoryWord, WordBreakdown } from "../api/types";
 import BreakdownPopover from "../components/BreakdownPopover";
-import SentenceView from "../components/SentenceView";
+import EstudiarView from "../components/EstudiarView";
+import SessTop from "../components/SessTop";
 import StoryFinish from "../components/StoryFinish";
 import WordPopover from "../components/WordPopover";
+import { autoFscaleStep } from "../lib/autoFscale";
 import { useFontScale } from "../lib/preferences";
 import { useSentencePractice } from "../lib/useSentencePractice";
 
@@ -20,6 +22,7 @@ type ActivePopover =
 export default function StoryView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const [story, setStory] = useState<Story | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +31,11 @@ export default function StoryView() {
   const [reviewIds, setReviewIds] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
+
+  // Entries pass { state: { from: <pathname> } }; exits go back there.
+  // Fallback "/" preserves the old behaviour exactly where no state is passed.
+  const exitTo = (location.state as { from?: string } | null)?.from ?? "/";
+  const salir = useCallback(() => navigate(exitTo), [navigate, exitTo]);
 
   const sentences = useMemo(() => story?.content.sentences ?? [], [story]);
 
@@ -88,6 +96,13 @@ export default function StoryView() {
   const total = sentences.length;
   const current = sentences[practice.currentIndex];
 
+  // Font scale: user preference × automatic step decided by the sentence's
+  // effective length (spec F2 §5.1). Feeds the --fscale custom property.
+  const fscale = useMemo(
+    () => (current ? fontScale * autoFscaleStep(current.target, fontScale) : fontScale),
+    [current, fontScale],
+  );
+
   const wordsById = useMemo<Record<string, StoryWord>>(() => {
     if (!story) return {};
     return Object.fromEntries(story.target_words.map((w) => [w.id, w]));
@@ -147,76 +162,78 @@ export default function StoryView() {
 
   if (error) {
     return (
-      <main className="k-page story">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("common.back")}
-        </button>
-        <div className="k-error" role="alert">
-          {error}
+      <div className="m3-app">
+        <SessTop titulo="" right="" onExit={salir} />
+        <div className="m3-lect" />
+        <div className="m3-fb">
+          <p className="nota" role="alert">{error}</p>
+          <div className="acciones">
+            <button className="k-btn k-btn--ghost" onClick={salir}>{t("common.exit")}</button>
+          </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   if (!story) {
     return (
-      <main className="k-page story">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("common.back")}
-        </button>
-        <div className="story-loading">
-          <span className="k-mono">{t("common.klaraWriting")}</span>
-          <span className="k-spinner" />
+      <div className="m3-app">
+        <SessTop titulo="" right="" onExit={salir} />
+        <div className="m3-lect">
+          <div className="m3-cargando"><span className="k-spinner" /></div>
         </div>
-      </main>
+      </div>
     );
   }
 
+  // Interim until F2.4: StoryFinish keeps its legacy skin inside a plain
+  // kapp/kframe (no Masthead) — .m3-app's overflow:hidden would break the
+  // quiz scroll.
   if (finished) {
     return (
-      <StoryFinish
-        story={story}
-        reviewIds={reviewIds}
-        adding={adding}
-        scoresBySentence={practice.scoresBySentence}
-        onRestart={() => {
-          practice.reset();
-          setFinished(false);
-        }}
-        onNew={() => navigate("/story/new")}
-        onHome={() => navigate("/")}
-        onToggleReview={toggleReview}
-        onSummaryShown={() => {
-          api.finishStory(story.id).catch(() => {});
-        }}
-        onNextInModule={
-          story.module_id
-            ? async () => {
-                try {
-                  const next = await api.claimModuleStory(story.module_id!);
-                  navigate(`/story/${next.id}`);
-                  setFinished(false);
-                  practice.reset();
-                } catch {
-                  navigate(`/story/new?module=${story.module_id}`);
-                }
-              }
-            : undefined
-        }
-      />
+      <div className="kapp">
+        <div className="kframe">
+          <StoryFinish
+            story={story}
+            reviewIds={reviewIds}
+            adding={adding}
+            scoresBySentence={practice.scoresBySentence}
+            onRestart={() => {
+              practice.reset();
+              setFinished(false);
+            }}
+            onNew={() => navigate("/story/new")}
+            onHome={() => navigate("/")}
+            onToggleReview={toggleReview}
+            onSummaryShown={() => {
+              api.finishStory(story.id).catch(() => {});
+            }}
+            onNextInModule={
+              story.module_id
+                ? async () => {
+                    try {
+                      const next = await api.claimModuleStory(story.module_id!);
+                      navigate(`/estudiar/${next.id}`, { state: { from: exitTo } });
+                      setFinished(false);
+                      practice.reset();
+                    } catch {
+                      navigate(`/story/new?module=${story.module_id}`);
+                    }
+                  }
+                : undefined
+            }
+          />
+        </div>
+      </div>
     );
   }
 
   return (
-    <main
-      className="k-page story story--audio"
-      style={{ "--font-scale": fontScale } as React.CSSProperties}
-    >
+    <div className="m3-app">
       {current && (
-        <SentenceView
+        <EstudiarView
           storyTitle={story.title}
-          storyLevel={story.level}
-          onExit={() => navigate("/")}
+          onExit={salir}
           sentence={current}
           index={practice.currentIndex}
           total={total}
@@ -227,35 +244,26 @@ export default function StoryView() {
           onWordTap={handleWordTap}
           onBreakdownTap={handleBreakdownTap}
           playing={practice.sentencePlaying}
-          progress={practice.progress}
-          duration={practice.duration}
           recording={practice.recording}
-          micAnalyser={practice.micAnalyser}
-          micLevel={practice.micLevel}
           evaluating={practice.evaluating}
+          micLevel={practice.micLevel}
           feedback={practice.feedback}
           liveBands={practice.liveBands}
           phoneticHints={practice.phoneticHints}
           diagnosis={practice.diagnosis}
           diagnosing={practice.diagnosing}
           rate={practice.rate}
+          pronError={practice.pronError}
+          fscale={fscale}
           onPlayPause={practice.handlePlayPause}
           onCycleSpeed={practice.cycleSpeed}
           onRecordStart={practice.startRecording}
           onRecordStop={practice.stopRecording}
           onRetry={practice.onRetry}
-          onListenFromFeedback={practice.handleListenFromFeedback}
+          onErrorDismiss={practice.cancelRecording}
           onPrev={goPrev}
           onNext={goNext}
-          canPrev={practice.currentIndex > 0}
-          canNext={practice.currentIndex < total - 1}
         />
-      )}
-
-      {practice.pronError && (
-        <div className="k-error story__pron-error" role="alert">
-          {t(`pron.error.${practice.pronError.kind}`)}
-        </div>
       )}
 
       {active?.kind === "target" && (
@@ -282,6 +290,6 @@ export default function StoryView() {
           onClose={closePopover}
         />
       )}
-    </main>
+    </div>
   );
 }
