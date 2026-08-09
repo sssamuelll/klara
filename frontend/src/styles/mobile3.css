@@ -127,7 +127,7 @@
 .m3-rbtn.step:disabled{opacity:0.3}
 
 /* Feedback de pronunciación — una nota, dos salidas */
-.m3-fb{flex:0 0 auto;padding:16px 22px 20px;min-height:132px;border-top:1px solid var(--rule)}
+.m3-fb{flex:0 0 auto;padding:16px 22px 20px;min-height:124px;border-top:1px solid var(--rule)}
 .m3-fb .nota{font-family:var(--font-serif);font-size:17px;line-height:1.45;color:var(--ink-2);margin:0 0 16px;text-wrap:pretty}
 .m3-fb .nota em{color:var(--accent-ink);font-weight:600}
 .m3-fb .acciones{display:flex;gap:10px}
@@ -139,12 +139,13 @@
 .m3-fb{padding-bottom:calc(20px + env(safe-area-inset-bottom))}
 .m3-cargando{display:flex;justify-content:center}
 .m3-dock .estadoK .rec{color:var(--accent)}
-.m3-dock .estadoK button{font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;background:none;border:0;padding:0;cursor:pointer}
-button.m3-w{font:inherit;color:inherit;background:none;border:0}
+/* Área táctil del control de velocidad sin mover el layout (gate Iris F2.1) */
+.m3-dock .estadoK button{padding:8px 14px;margin:-8px -14px}
 .m3-w[data-active="true"]{background:var(--paper-3)}
-.m3-w[data-score="good"]{box-shadow:inset 0 -3px 0 oklch(0.62 0.13 145)}
-.m3-w[data-score="ok"]{box-shadow:inset 0 -3px 0 oklch(0.74 0.13 80)}
-.m3-w[data-score="bad"]{box-shadow:inset 0 -3px 0 var(--accent);background:var(--accent-wash)}
+/* Anclado al contenedor, no a .m3-w: los tokens sin match (spans) conservan la señal */
+.m3-oracion [data-score="good"]{box-shadow:inset 0 -3px 0 oklch(0.62 0.13 145)}
+.m3-oracion [data-score="ok"]{box-shadow:inset 0 -3px 0 oklch(0.74 0.13 80)}
+.m3-oracion [data-score="bad"]{box-shadow:inset 0 -3px 0 var(--accent);background:var(--accent-wash)}
 
 /* Sheet de palabra */
 .m3-scrim{position:absolute;inset:0;background:rgba(26,24,20,0.35);z-index:20;animation:m3-fade var(--dur-med) var(--ease-out) both}
