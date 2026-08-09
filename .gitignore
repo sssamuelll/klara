@@ -45,3 +45,4 @@ Thumbs.db
 # Windows no soporta, que ya reventaron un `git add -A` y un `git worktree
 # remove` con "Filename too long".
 docs/research/
+.reasonix/

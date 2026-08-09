@@ -133,6 +133,19 @@ def test_project_intervals_shape_order_determinism():
     assert card.state == CardState.REVIEWING
 
 
+def test_project_intervals_cold_start_reviewing():
+    # Rama cold-start vía preview (hueco cazado por el refutador): carta
+    # REVIEWING legacy sin estado FSRS — exactamente lo que /cards/due sirve
+    # para seeds pre-backfill. No debe mutar la carta ni inventarle estado.
+    card = _card(state=CardState.REVIEWING, interval_days=20.0, repetitions=3)
+    p = project_intervals(card)
+    assert set(p) == {"again", "hard", "good", "easy"}
+    assert all(v > 0 for v in p.values())
+    assert p["again"] < p["good"] < p["easy"]
+    assert card.stability is None  # el preview no siembra estado
+    assert card.state == CardState.REVIEWING
+
+
 def test_project_intervals_new_card_untouched():
     card = _card()
     p = project_intervals(card)
@@ -227,6 +240,31 @@ async def test_due_payload_includes_next_intervals(client, seed_invite, db_sessi
     assert set(ni) == {"again", "hard", "good", "easy"}
     assert all(isinstance(v, (int, float)) and v > 0 for v in ni.values())
     assert ni["again"] < ni["good"]
+
+
+@pytest.mark.asyncio
+async def test_preview_matches_persisted_interval(client, seed_invite, db_session):
+    # D-D end-to-end (hueco cazado por el refutador): el intervalo que el GET
+    # muestra en el botón debe ser EXACTAMENTE el que el POST persiste. Para
+    # una carta NEW el step es un timedelta fijo → igualdad exacta tras round4.
+    cookie = await _register_and_login(client, seed_invite, "fsrs3@example.com")
+    user = (
+        await db_session.execute(select(User).where(User.email == "fsrs3@example.com"))
+    ).scalar_one()
+    card = await _add_due_card(db_session, user.id, lemma="Brille")
+
+    r = await client.get("/api/v1/srs/cards/due", headers={"Cookie": cookie})
+    assert r.status_code == 200, r.text
+    (card_json,) = [c for c in r.json() if c["id"] == str(card.id)]
+    previewed_good = card_json["next_intervals"]["good"]
+
+    r2 = await client.post(
+        f"/api/v1/srs/cards/{card.id}/review",
+        json={"rating": "good"},
+        headers={"Cookie": cookie},
+    )
+    assert r2.status_code == 200, r2.text
+    assert r2.json()["new_interval_days"] == previewed_good
 
 
 @pytest.mark.asyncio

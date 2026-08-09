@@ -24,6 +24,7 @@ class CardOut(BaseModel):
     next_review_at: datetime | None
     repetitions: int
     ease: float
+    next_intervals: dict[str, float]
 
 
 class ReviewSubmitRequest(BaseModel):

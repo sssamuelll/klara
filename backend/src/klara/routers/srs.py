@@ -19,7 +19,7 @@ from klara.schemas.srs import (
     ReviewSubmitRequest,
 )
 from klara.services.practice_session import apply_pronunciation_reviews
-from klara.services.srs_engine import schedule_next_review
+from klara.services.srs_engine import project_intervals, schedule_next_review
 
 router = APIRouter(prefix="/srs", tags=["srs"])
 
@@ -43,6 +43,7 @@ def _card_to_out(card: UserCard, vocab: VocabItem, native_language: str) -> Card
         next_review_at=card.next_review_at,
         repetitions=card.repetitions,
         ease=card.ease,
+        next_intervals=project_intervals(card),
     )
 
 
@@ -126,6 +127,7 @@ async def submit_review(
         elapsed_seconds=payload.elapsed_seconds,
         prev_interval_days=prev_interval,
         new_interval_days=new_interval,
+        channel="recall",
     )
     db.add(review)
     await advance_module_if_mastered(db, user=user, reviewed_vocab_item_id=card.vocab_item_id)

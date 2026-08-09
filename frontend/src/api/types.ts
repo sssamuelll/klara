@@ -96,6 +96,7 @@ export interface CardOut {
   next_review_at: string | null;
   repetitions: number;
   ease: number;
+  next_intervals: Record<"again" | "hard" | "good" | "easy", number>;
 }
 
 export type AuthMethod = "password" | "google";

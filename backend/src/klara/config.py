@@ -173,6 +173,11 @@ class Settings(BaseSettings):
     pron_stream_global_cap: int = 8
     pron_stream_per_user_cap: int = 2
 
+    # --- #125 FSRS (SRS engine, canal recall) ---
+    # Probabilidad objetivo de que una carta due siga en memoria; gobierna la
+    # longitud de los intervalos FSRS. Default upstream de fsrs.
+    srs_desired_retention: float = 0.9
+
     @property
     def azure_speech_configured(self) -> bool:
         return bool(self.azure_speech_key)
