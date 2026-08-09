@@ -39,6 +39,7 @@ from klara.schemas.speak import (
 from klara.services.speak_analysis import FOCUS_PHONEME_SETS, analyze_turn
 from klara.services.speak_chat import generate_reply
 from klara.services.speak_finish import FinishWord, record_speak_session
+from klara.services.speak_turns import parse_session_id, record_turn
 
 router = APIRouter(prefix="/speak", tags=["speak"])
 
@@ -91,6 +92,7 @@ async def speak_turn(
     focus_examples: Annotated[str, Form(max_length=200)] = "",
     history: Annotated[str, Form(max_length=8000)] = "[]",
     retry_word: Annotated[str | None, Form(max_length=40)] = None,
+    session_id: Annotated[str | None, Form(max_length=64)] = None,
 ) -> SpeakTurnOut:
     if not settings.azure_speech_configured:
         raise HTTPException(
@@ -200,6 +202,20 @@ async def speak_turn(
         retry_word=retry_word,
     )
 
+    # #127: the assessment is the learner's longitudinal signal — persist it
+    # per turn (no_speech/low_confidence returned earlier: garbage stays out).
+    await record_turn(
+        db,
+        user,
+        client_session_id=parse_session_id(session_id),
+        language=short_lang,
+        focus_sound=focus_sound,
+        recognized_text=score.recognized_text,
+        analysis=analysis,
+        scores=score.scores,
+        retry_word=retry_word,
+    )
+
     target = None
     if analysis.target is not None:
         target = SpeakTargetOut(
@@ -262,5 +278,6 @@ async def speak_finish(
             FinishWord(word=w.word, gloss=w.gloss, model_sentence=w.model_sentence)
             for w in payload.words
         ],
+        session_id=payload.session_id,
     )
     return SpeakFinishOut(added=added, skipped=skipped)

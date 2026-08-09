@@ -51,6 +51,7 @@ async def record_speak_session(
     total_count: int,
     duration_seconds: int,
     words: list[FinishWord],
+    session_id: str | None = None,
 ) -> tuple[int, int]:
     """Returns (added, skipped). Commits once."""
     added = 0
@@ -87,6 +88,9 @@ async def record_speak_session(
                 "total_count": total_count,
                 "duration_seconds": duration_seconds,
                 "words": [w.word for w in words],
+                # #127: link to speak_turns.client_session_id (key absent for
+                # old clients — wins shape stays stable).
+                **({"session_id": session_id} if session_id else {}),
             },
         )
     )

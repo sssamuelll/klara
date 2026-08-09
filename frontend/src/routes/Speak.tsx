@@ -219,6 +219,9 @@ export default function Speak() {
   const statsRef = useRef({ clear: 0, total: 0 });
   const struggledRef = useRef<Map<string, StruggledWord>>(new Map());
   const sessionStartRef = useRef(Date.now());
+  // #127: groups this session's speak_turns rows server-side (no session row
+  // exists until /finish, so identity is client-generated).
+  const sessionIdRef = useRef(crypto.randomUUID());
   const finishFiredRef = useRef(false);
 
   // The opener is Klara's first line IN the column (text only — her voice
@@ -294,6 +297,7 @@ export default function Speak() {
             .slice(-MAX_HISTORY_TURNS)
             .map((turn) => ({ who: turn.who, text: turn.target })),
           retryWord,
+          sessionId: sessionIdRef.current,
           signal: abort.signal,
         });
       } catch (e) {
@@ -498,6 +502,7 @@ export default function Speak() {
         totalCount: statsRef.current.total,
         durationSeconds: Math.round((Date.now() - sessionStartRef.current) / 1000),
         words,
+        sessionId: sessionIdRef.current,
       })
       .then((r) => setFinish({ status: "saved", added: r.added, skipped: r.skipped }))
       .catch(() => setFinish({ status: "failed" }));
@@ -523,6 +528,7 @@ export default function Speak() {
     retryWordRef.current = undefined;
     legendShownRef.current = false;
     sessionStartRef.current = Date.now();
+    sessionIdRef.current = crypto.randomUUID();
     finishFiredRef.current = false;
     setState("idle");
   }, [focus, setState, t]);
