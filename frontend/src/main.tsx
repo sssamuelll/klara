@@ -11,6 +11,7 @@ import "./styles/speak.css";
 import "./styles/path.css";
 import "./styles/mobile3.css";
 import "./styles/mobile4.css";
+import "./styles/perfil-aprendizaje.css";
 
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("Root element not found");

@@ -218,7 +218,10 @@
       "quiz": {
         "title": "Before we close, four questions.",
         "sub": "One to lock in comprehension, another to produce it. If you don’t have it on hand, you can reveal the answer.",
-        "retry": { "cap": "Quick review", "sub": "The ones that got away — one more try." },
+        "retry": {
+          "cap": "Quick review",
+          "sub": "The ones that got away — one more try."
+        },
         "mc": {
           "readAloud": "Read it aloud or tap",
           "heardButNoMatch": "I heard «{{transcript}}», but it doesn’t match any option.",
@@ -369,7 +372,10 @@
     },
     "segment": {
       "title": "What do you review?",
-      "cards": { "title": "Flashcards", "dek": "The words you saved, one by one." },
+      "cards": {
+        "title": "Flashcards",
+        "dek": "The words you saved, one by one."
+      },
       "pron": {
         "title": "Speaking",
         "dek": "The sentences that trip you up, out loud again."
@@ -394,7 +400,12 @@
     "flip": "Flip",
     "flipHint": "SPACE to flip",
     "rateHint": "1–4 to rate · this schedules the next review",
-    "rate": { "again": "Again", "hard": "Hard", "good": "Good", "easy": "Easy" },
+    "rate": {
+      "again": "Again",
+      "hard": "Hard",
+      "good": "Good",
+      "easy": "Easy"
+    },
     "interval": {
       "minutes": "~{{count}} min",
       "hours": "~{{count}} hr",
@@ -706,13 +717,21 @@
     "generoFila": "Gender",
     "generoFilaEstado": "der · die · das",
     "paso": {
-      "leer": { "titulo": "Read", "dek": "Today's story", "meta": "3 min" },
+      "leer": {
+        "titulo": "Read",
+        "dek": "Today's story",
+        "meta": "3 min"
+      },
       "pronunciar": {
         "titulo": "Pronounce",
         "dek": "Lines from your stories, out loud",
         "meta": "4 min"
       },
-      "hablar": { "titulo": "Speak", "dek": "A conversation with Klara", "meta": "3 min" },
+      "hablar": {
+        "titulo": "Speak",
+        "dek": "A conversation with Klara",
+        "meta": "3 min"
+      },
       "repasar": {
         "titulo": "Review",
         "dek": "Your cards for today",
@@ -736,6 +755,292 @@
     "temaOscuro": "Dark",
     "editar": "Edit profile and invitations",
     "salir": "Log out",
-    "pie": "Klara — Nürnberg edition"
+    "pie": "Klara — Nürnberg edition",
+    "aprendizaje": {
+      "kicker": "Learning profile",
+      "entrada": {
+        "antes": "Before the first topic",
+        "h1pre": "How",
+        "h1em": "you learn",
+        "h1post": ".",
+        "lede": "Klara builds each topic around you. To do that it needs to get to know you: twenty-three questions, all one tap, no right answers, and nothing to write. You can change any answer whenever you want, from Profile.",
+        "metaPreguntas": "questions",
+        "metaMinutos": "minutes",
+        "metaObligatorias": "required",
+        "empezar": "Start",
+        "masTarde": "Later"
+      },
+      "bloque": {
+        "hist": "History",
+        "ses": "The session",
+        "entrada": "A new topic",
+        "fija": "How it sticks",
+        "error": "Errors and pace",
+        "cierre": "Wrap-up"
+      },
+      "nav": {
+        "saltar": "Skip this one",
+        "siguiente": "Next",
+        "guardar": "Save my profile",
+        "tocaParaSeguir": "Tap to continue"
+      },
+      "triage": {
+        "sirve": "Works",
+        "no": "Doesn't"
+      },
+      "chips": {
+        "escribir": "+ Write something",
+        "placeholder": "Anything at all: quirks, schedules, things you hate about other apps…"
+      },
+      "otra": {
+        "placeholder": "What was it?"
+      },
+      "sintesis": {
+        "guardado": "Saved",
+        "tuPerfil": "Your profile",
+        "h1pre": "This is how you learn,",
+        "h1em": "according to you",
+        "h1post": ".",
+        "esperando": "Klara is reading your answers…",
+        "leyenda": "Up top, what you did. In the margin, what you say about yourself: Klara will cross-check it against your usage.",
+        "anotado": "What Klara noted",
+        "pie": "Klara will refine this with usage. You can read it and correct it whenever you want, from Profile.",
+        "entendido": "Got it",
+        "corregir": "Correct an answer"
+      },
+      "fila": {
+        "titulo": "How you learn",
+        "sinLlenar": "Not filled in",
+        "aMedias": "Partial · {{fecha}}",
+        "completo": "Complete · {{fecha}}",
+        "pendiente": "Answers saved · synthesis pending"
+      },
+      "facts": {
+        "aprendio_bien_como": "You learn like this",
+        "abandono_por": "What puts you off",
+        "metodo_sirve": "Works for you",
+        "metodo_no_sirve": "Doesn't work for you",
+        "dominio_previo": "You already know",
+        "restriccion": "Your context",
+        "motivacion": "Your motivation",
+        "evitar": "Avoid"
+      },
+      "q": {
+        "hist_exito": {
+          "label": "The last thing you really learned well — how did you learn it?",
+          "whisper": "What already worked for you once is the best clue Klara has.",
+          "op": {
+            "0": "By breaking something until it worked",
+            "1": "By copying someone who already knew",
+            "2": "A course with dates and deadlines",
+            "3": "Reading first, trying after",
+            "4": "Explaining it to someone else",
+            "5": "A short stretch, every day",
+            "6": "Something else"
+          }
+        },
+        "hist_abandono": {
+          "label": "Something you tried to learn and gave up. What threw you off?",
+          "op": {
+            "0": "It got boring",
+            "1": "I lost the thread after missing a few days",
+            "2": "It was too long",
+            "3": "I couldn't see what it was for",
+            "4": "It suddenly got hard",
+            "5": "I ran out of time",
+            "6": "Something else"
+          }
+        },
+        "hist_metodos": {
+          "label": "Of what you've already used to study, what worked?",
+          "whisper": "Tap only what you're sure about. Leave the rest blank.",
+          "op": {
+            "0": "Flashcards",
+            "1": "Long videos",
+            "2": "Courses with dates",
+            "3": "Language apps",
+            "4": "Reading books or manuals",
+            "5": "Practicing with someone"
+          }
+        },
+        "ses_duracion": {
+          "label": "How much real time can you keep up per day, without forcing it?",
+          "whisper": "No heroics. The number you can manage on any ordinary Tuesday.",
+          "op": {
+            "0": "3 minutes",
+            "1": "10 minutes",
+            "2": "20 minutes or more",
+            "3": "Depends on the topic"
+          }
+        },
+        "ses_lugar": {
+          "label": "Where?",
+          "whisper": "Decides whether Klara can count on your voice or not.",
+          "op": {
+            "0": "At home",
+            "1": "On transit or the street",
+            "2": "During breaks at work"
+          }
+        },
+        "ses_propuesta": {
+          "label": "When you open the app, what do you prefer?",
+          "op": {
+            "0": "Klara proposes just one thing",
+            "1": "A short menu to choose from",
+            "2": "Depends on the day"
+          }
+        },
+        "entrada_arranque": {
+          "label": "Facing a new topic, where do you start best?",
+          "op": {
+            "0": "A concrete example, theory after",
+            "1": "Minimal theory first",
+            "2": "A story that uses it",
+            "3": "By doing it directly"
+          }
+        },
+        "entrada_interes": {
+          "label": "What hooks you about a new topic?",
+          "op": {
+            "0": "That it's useful right away",
+            "1": "That it sparks my curiosity on its own",
+            "2": "That it challenges me",
+            "3": "Depends on the topic"
+          }
+        },
+        "entrada_reto": {
+          "label": "Where do we start on difficulty?",
+          "op": {
+            "0": "Easy, then ramp up",
+            "1": "Challenge me right away",
+            "2": "Let Klara calibrate on its own"
+          }
+        },
+        "entrada_audio": {
+          "label": "Listening to the lesson out loud:",
+          "op": {
+            "0": "It makes things stick",
+            "1": "Helps, but isn't central",
+            "2": "It distracts me"
+          }
+        },
+        "entrada_hablar": {
+          "label": "Saying things out loud:",
+          "op": {
+            "0": "It makes things stick",
+            "1": "Sometimes",
+            "2": "Doesn't do much for me"
+          }
+        },
+        "fija_fichas": {
+          "label": "Flashcards: which ones work for you?",
+          "op": {
+            "0": "Term and meaning",
+            "1": "An example and its concept",
+            "2": "Filling in the missing phrase",
+            "3": "Flashcards don't work for me"
+          }
+        },
+        "fija_feynman": {
+          "label": "Explaining something in your own words, without notes:",
+          "op": {
+            "0": "It's my best test",
+            "1": "Works for me sometimes",
+            "2": "It makes me uncomfortable, but I want to try",
+            "3": "Not for me"
+          }
+        },
+        "fija_repeticion": {
+          "label": "Repeating the same thing over several days:",
+          "op": {
+            "0": "It makes it stick",
+            "1": "It bores me and I quit",
+            "2": "Depends: repeat a little, vary the rest"
+          }
+        },
+        "fija_prueba": {
+          "label": "What convinces you that you already know it?",
+          "op": {
+            "0": "Explaining it without notes",
+            "1": "Using it in something real",
+            "2": "Passing a quiz",
+            "3": "Not dropping it in review"
+          }
+        },
+        "error_correccion": {
+          "label": "When you make a mistake, how do you want the correction?",
+          "op": {
+            "0": "Direct and immediate",
+            "1": "At the end of the session",
+            "2": "Gentle and with context"
+          }
+        },
+        "error_atasco": {
+          "label": "When something doesn't click the first time:",
+          "op": {
+            "0": "Explain it differently",
+            "1": "Give me a concrete example",
+            "2": "Move on, come back later"
+          }
+        },
+        "error_pista": {
+          "label": "Stuck on an exercise:",
+          "op": {
+            "0": "Let me fight a bit before the hint",
+            "1": "Hint early, don't leave me stuck",
+            "2": "Depends on the day"
+          }
+        },
+        "error_memoria": {
+          "label": "Klara remembering your mistakes from past days (“just like yesterday”):",
+          "op": {
+            "0": "It helps me",
+            "1": "I don't care",
+            "2": "I don't want it"
+          }
+        },
+        "ritmo_deadline": {
+          "label": "A real date on the calendar (an interview, an exam):",
+          "op": {
+            "0": "It energizes me",
+            "1": "It paralyzes me",
+            "2": "Depends on the topic"
+          }
+        },
+        "ritmo_abandono": {
+          "label": "What makes you abandon a topic?",
+          "op": {
+            "0": "Long sessions",
+            "1": "Too much theory in a row",
+            "2": "Not seeing what it's for",
+            "3": "Losing the thread after missing a few days",
+            "4": "Something else"
+          }
+        },
+        "ritmo_regreso": {
+          "label": "When you come back after several days away:",
+          "op": {
+            "0": "Show me where I left off",
+            "1": "A short review before continuing",
+            "2": "Just continue as if nothing happened"
+          }
+        },
+        "libre": {
+          "label": "Anything Klara should keep in mind?",
+          "whisper": "Tap what applies. If something's missing, write it.",
+          "op": {
+            "0": "I study at night",
+            "1": "Little time on weekdays",
+            "2": "Almost always no audio",
+            "3": "I get distracted easily",
+            "4": "I hate long videos",
+            "5": "I prefer reading to listening",
+            "6": "I work better under pressure",
+            "7": "I learn in a language that isn't mine",
+            "8": "Nothing special"
+          }
+        }
+      }
+    }
   }
 }

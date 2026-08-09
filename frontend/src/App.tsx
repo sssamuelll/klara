@@ -8,6 +8,7 @@ import Inicio from "./routes/Inicio";
 import Portada from "./routes/Portada";
 import MapaCurso from "./routes/MapaCurso";
 import Perfil from "./routes/Perfil";
+import PerfilAprendizaje from "./perfil/PerfilAprendizaje";
 import NuevoPlaceholder from "./routes/NuevoPlaceholder";
 import Module from "./routes/Module";
 import NewStory from "./routes/NewStory";
@@ -98,6 +99,14 @@ function AppShell() {
           element={
             <ProtectedRoute>
               <Perfil />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/perfil/aprendizaje"
+          element={
+            <ProtectedRoute>
+              <PerfilAprendizaje />
             </ProtectedRoute>
           }
         />

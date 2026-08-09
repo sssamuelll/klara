@@ -1,16 +1,18 @@
 from datetime import UTC, datetime
 
 import structlog
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 from fastapi_users import exceptions as fa_exceptions
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from klara.dependencies import CurrentUser, DBSession, LocaleDep, UserManagerDep
+from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, UserManagerDep
 from klara.i18n import SUPPORTED_LANGUAGES, t
-from klara.models import OAuthAccount, User
+from klara.models import LearnerProfile, OAuthAccount, User
+from klara.schemas.learner_profile import LearnerProfileIn, LearnerProfileOut
 from klara.schemas.user import SetPasswordIn, UserOut, UserUpdate
+from klara.services.learner_synthesis import refresh_derived
 
 log = structlog.get_logger(__name__)
 
@@ -107,6 +109,60 @@ async def complete_onboarding(db: DBSession, user: CurrentUser) -> UserOut:
         await db.refresh(user)
         log.info("auth.onboarding_completed", user_id=str(user.id))
     return await _to_out(db, user)
+
+
+@router.get("/learning-profile", response_model=LearnerProfileOut)
+async def get_learning_profile(db: DBSession, user: CurrentUser) -> LearnerProfileOut:
+    row = await db.get(LearnerProfile, user.id)
+    if row is None:
+        # «No existe» no se disfraza de «existe vacío»: los defaults viven en la
+        # generación, no en el read path.
+        raise HTTPException(status_code=404, detail="learning profile not found")
+    return LearnerProfileOut.from_row(row)
+
+
+@router.put("/learning-profile", response_model=LearnerProfileOut)
+async def put_learning_profile(
+    payload: LearnerProfileIn,
+    db: DBSession,
+    user: CurrentUser,
+    llm: ChatLLM,
+    background: BackgroundTasks,
+    locale: LocaleDep,
+    expected_version: int | None = Query(None),
+) -> LearnerProfileOut:
+    row = await db.get(LearnerProfile, user.id)
+    if row is None:
+        # expected_version es opcional solo en la creación.
+        row = LearnerProfile(
+            user_id=user.id,
+            answers=payload.answers,
+            timings=payload.timings,
+            version=1,
+        )
+        db.add(row)
+    else:
+        if expected_version is None or expected_version != row.version:
+            raise HTTPException(status_code=409, detail="version conflict")
+        # PUT es reemplazo completo: lo que no viene, desaparece.
+        row.answers = payload.answers
+        row.timings = payload.timings
+        row.version += 1
+    await db.commit()
+    await db.refresh(row)
+
+    # Los derivados se regeneran aparte: guardar nunca falla por culpa de la
+    # síntesis. Se estampa la versión que se sintetizó, no la vigente al
+    # terminar — dos guardados seguidos no pueden declarar fresca a una vieja.
+    background.add_task(
+        refresh_derived,
+        user_id=user.id,
+        version=row.version,
+        answers=row.answers,
+        llm=llm,
+        locale=locale,
+    )
+    return LearnerProfileOut.from_row(row)
 
 
 @router.post("/password", response_model=UserOut)

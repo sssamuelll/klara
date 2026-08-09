@@ -11,6 +11,8 @@ import type {
   InvitationCreate,
   KlaraNoteResponse,
   L1GenderNotesResponse,
+  LearnerProfileIn,
+  LearnerProfileOut,
   MCResolveResponse,
   ModulePathItem,
   PhonemeScore,
@@ -234,6 +236,25 @@ export const api = {
     }),
 
   dueCards: (limit = 20) => request<CardOut[]>(`/srs/cards/due?limit=${limit}`),
+
+  /** 404 = nunca llenado. Devuelve null en vez de tirar: «sin llenar» es un
+   *  estado legítimo del perfil, no un error que haya que reportar. */
+  getLearningProfile: async (): Promise<LearnerProfileOut | null> => {
+    try {
+      return await request<LearnerProfileOut>("/me/learning-profile");
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) return null;
+      throw e;
+    }
+  },
+
+  /** `expectedVersion` va solo cuando el perfil ya existe; sin él, un perfil
+   *  existente responde 409 en vez de dejar que dos pestañas se pisen. */
+  putLearningProfile: (body: LearnerProfileIn, expectedVersion?: number) =>
+    request<LearnerProfileOut>(
+      `/me/learning-profile${expectedVersion === undefined ? "" : `?expected_version=${expectedVersion}`}`,
+      { method: "PUT", body: JSON.stringify(body) }
+    ),
 
   listModules: () => request<ModulePathItem[]>("/modules"),
 
