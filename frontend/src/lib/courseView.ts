@@ -27,7 +27,7 @@ export function buildCourseVM(args: {
   const { modules, due, latestStoryId } = args;
   const total = modules?.length ?? 0;
   const done = modules?.filter((m) => m.completed).length ?? 0;
-  const leerTo = latestStoryId ? `/story/${latestStoryId}` : "/story/new";
+  const leerTo = latestStoryId ? `/estudiar/${latestStoryId}` : "/story/new";
   // ponytail: 02 y 04 apuntan ambos a /review — hoy la cola de Practice mezcla
   // pronunciación y repaso SRS; F2 separa Repaso en su propia pantalla.
   const pasos: PasoVM[] = [
