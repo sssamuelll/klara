@@ -21,6 +21,7 @@ from klara.llm.prompts import (
     SPEAK_SYSTEM_PROMPT,
     SPEAK_TURN_PROMPT,
     build_speak_history_block,
+    build_speak_memory_block,
 )
 
 log = structlog.get_logger(__name__)
@@ -64,6 +65,7 @@ async def generate_reply(
     focus_clear: bool,
     target_word: str | None,
     retry_word: str | None,
+    recurrent_struggles: list = (),  # #127 v2: memoria longitudinal
 ) -> SpeakReply | None:
     system = SPEAK_SYSTEM_PROMPT.format(
         target_label=language_label(target_language),
@@ -71,6 +73,7 @@ async def generate_reply(
         level=level,
         focus_sound=focus_sound,
         focus_examples=", ".join(focus_examples) or "—",
+        memory_block=build_speak_memory_block(recurrent_struggles),
     )
 
     if target_word:

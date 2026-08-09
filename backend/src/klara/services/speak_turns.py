@@ -10,17 +10,65 @@ spec review F14).
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import Float, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.models import SpeakTurn
 from klara.models.user import User
 from klara.pronunciation.schemas import PronunciationScores
-from klara.services.speak_analysis import TurnAnalysis
+from klara.services.speak_analysis import GOOD_THRESHOLD, TurnAnalysis
 
 log = structlog.get_logger(__name__)
+
+# ponytail: ventana fija y tope chico — el bloque de memoria del prompt es
+# para 2-3 palabras con historia, no un reporte; subir si el uso real lo pide.
+STRUGGLE_WINDOW_DAYS = 60
+MAX_MEMORY_WORDS = 3
+
+
+@dataclass(frozen=True)
+class RecurrentStruggle:
+    word: str
+    sessions: int
+
+
+async def recurrent_struggles(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    *,
+    language: str,
+    exclude_session_id: uuid.UUID,
+    limit: int = MAX_MEMORY_WORDS,
+) -> list[RecurrentStruggle]:
+    """Words whose focus phoneme stayed under GOOD_THRESHOLD in >= 2 distinct
+    PREVIOUS sessions (the one in progress must not vouch for itself)."""
+    word_key = func.lower(SpeakTurn.target["word"].astext)
+    accuracy = SpeakTurn.target["focus_accuracy"].astext.cast(Float)
+    since = datetime.now(UTC) - timedelta(days=STRUGGLE_WINDOW_DAYS)
+    stmt = (
+        select(
+            func.min(SpeakTurn.target["word"].astext).label("word"),
+            func.count(func.distinct(SpeakTurn.client_session_id)).label("sessions"),
+        )
+        .where(
+            SpeakTurn.user_id == user_id,
+            SpeakTurn.language == language,
+            SpeakTurn.client_session_id != exclude_session_id,
+            SpeakTurn.created_at >= since,
+            SpeakTurn.target.isnot(None),
+            accuracy < GOOD_THRESHOLD,
+        )
+        .group_by(word_key)
+        .having(func.count(func.distinct(SpeakTurn.client_session_id)) >= 2)
+        .order_by(func.max(SpeakTurn.created_at).desc())
+        .limit(limit)
+    )
+    rows = (await db.execute(stmt)).all()
+    return [RecurrentStruggle(word=r.word, sessions=r.sessions) for r in rows]
 
 
 def parse_session_id(raw: str | None) -> uuid.UUID:

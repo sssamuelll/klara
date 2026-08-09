@@ -39,7 +39,7 @@ from klara.schemas.speak import (
 from klara.services.speak_analysis import FOCUS_PHONEME_SETS, analyze_turn
 from klara.services.speak_chat import generate_reply
 from klara.services.speak_finish import FinishWord, record_speak_session
-from klara.services.speak_turns import parse_session_id, record_turn
+from klara.services.speak_turns import parse_session_id, record_turn, recurrent_struggles
 
 router = APIRouter(prefix="/speak", tags=["speak"])
 
@@ -188,6 +188,18 @@ async def speak_turn(
 
     t_scored = time.monotonic()
     examples = [w.strip() for w in focus_examples.split(",") if w.strip()][:6]
+
+    # #127 v2: memoria longitudinal — errores de sesiones ANTERIORES al prompt.
+    # Best-effort: si el read falla, la charla sigue sin memoria.
+    client_session = parse_session_id(session_id)
+    try:
+        struggles = await recurrent_struggles(
+            db, user.id, language=short_lang, exclude_session_id=client_session
+        )
+    except Exception:
+        log.warning("speak.recurrent_struggles_failed", user_id=str(user.id))
+        struggles = []
+
     reply = await generate_reply(
         llm,
         target_language=short_lang,
@@ -200,6 +212,7 @@ async def speak_turn(
         focus_clear=analysis.focus_clear,
         target_word=analysis.target.word if analysis.target else None,
         retry_word=retry_word,
+        recurrent_struggles=struggles,
     )
 
     # #127: the assessment is the learner's longitudinal signal — persist it
@@ -207,7 +220,7 @@ async def speak_turn(
     await record_turn(
         db,
         user,
-        client_session_id=parse_session_id(session_id),
+        client_session_id=client_session,
         language=short_lang,
         focus_sound=focus_sound,
         recognized_text=score.recognized_text,

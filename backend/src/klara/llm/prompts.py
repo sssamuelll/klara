@@ -151,7 +151,7 @@ Reglas:
 - NO corrijas la pronunciación tú; el sistema de evaluación lo hace aparte. Si se te indica que el sonido salió turbio, reconócelo con UNA palabra de ánimo tejida en la charla (sin sermonear); si salió claro, continúa sin más.
 - El historial puede contener turnos consecutivos del estudiante (fallos técnicos); respóndele al último.
 - Sé cálida, paciente, concreta. Nada de listas ni de meta-comentarios.
-
+{memory_block}
 Devuelve SOLO un objeto JSON:
 {{
   "reply_target": "tu respuesta hablada en {target_label}",
@@ -169,6 +169,22 @@ El estudiante acaba de decir: «{recognized_text}»
 {focus_block}
 {retry_block}
 Genera el JSON ahora."""
+
+
+def build_speak_memory_block(struggles) -> str:
+    """Memoria longitudinal (#127 v2): palabras con foco flojo en sesiones
+    anteriores. Vacío -> sin bloque; el prompt no debe inventar memoria."""
+    if not struggles:
+        return ""
+    listado = ", ".join(f"«{s.word}» ({s.sessions} sesiones)" for s in struggles)
+    return (
+        "\nMemoria de sesiones anteriores — palabras que le han costado: "
+        f"{listado}.\n"
+        "- Si una aparece en este turno y vuelve a sonar turbia, reconoce con "
+        "naturalidad que ya la han trabajado (p. ej. «ayer también nos costó»), sin regañar.\n"
+        "- Si sale clara, celébralo en una frase corta (p. ej. «va quedando»).\n"
+        "- Si no aparecen, no las menciones.\n"
+    )
 
 
 def build_speak_history_block(history: list[dict]) -> str:
