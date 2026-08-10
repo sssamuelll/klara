@@ -120,6 +120,24 @@ def test_rate_limit_window_resets():
     assert waitlist_router._rate_limited("1.2.3.4", now=1000.0 + 3601) is False
 
 
+def test_hits_evicts_expired_entries_past_threshold():
+    # Rotación de IPs (p.ej. IPv6): _hits no debe crecer para siempre. Pasado
+    # el umbral, una llamada nueva purga las entradas con ventana ya expirada.
+    waitlist_router._hits.clear()
+    now = 10_000.0
+    for i in range(waitlist_router._MAX_HITS_ENTRIES + 1):
+        waitlist_router._hits[f"stale-{i}"] = (1, now - waitlist_router._WINDOW_S - 1)
+    assert len(waitlist_router._hits) > waitlist_router._MAX_HITS_ENTRIES
+
+    assert waitlist_router._rate_limited("1.2.3.4", now=now) is False
+    assert len(waitlist_router._hits) == 1  # todas las stale purgadas, solo queda la nueva
+
+    # El 429 se conserva tras la purga.
+    for _ in range(9):
+        assert waitlist_router._rate_limited("1.2.3.4", now=now) is False
+    assert waitlist_router._rate_limited("1.2.3.4", now=now) is True
+
+
 @pytest.mark.asyncio
 async def test_admin_waitlist_requires_admin(client):
     r = await client.get("/api/v1/admin/waitlist")

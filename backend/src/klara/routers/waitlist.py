@@ -40,10 +40,13 @@ class WaitlistRowOut(BaseModel):
 
 # ponytail: rate limit in-memory por proceso (un worker en prod; se resetea al
 # reiniciar) y single-hop XFF (confía en el último hop si el peer inmediato es
-# el proxy del host). Si hay N workers, cadena de proxies, o abuso real:
-# slowapi con forwarded-allow-ips, ver TODO de main.py:147.
+# el proxy del host). _hits se purga de entradas con ventana expirada al pasar
+# de 1024 IPs distintas, así que la rotación de IPv6 no crece sin límite. Si
+# hay N workers, cadena de proxies, o abuso real: slowapi con
+# forwarded-allow-ips, ver TODO de main.py:147.
 _WINDOW_S = 3600
 _MAX_PER_WINDOW = 10
+_MAX_HITS_ENTRIES = 1024
 _hits: dict[str, tuple[int, float]] = {}
 
 
@@ -68,6 +71,10 @@ def _client_ip(request: Request) -> str:
 
 def _rate_limited(ip: str, now: float | None = None) -> bool:
     t = now if now is not None else time.monotonic()
+    if len(_hits) > _MAX_HITS_ENTRIES:
+        expired = [k for k, (_, start) in _hits.items() if t - start > _WINDOW_S]
+        for k in expired:
+            del _hits[k]
     count, start = _hits.get(ip, (0, t))
     if t - start > _WINDOW_S:
         count, start = 0, t
