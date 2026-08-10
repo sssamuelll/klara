@@ -6,6 +6,46 @@ from klara.models.waitlist import WaitlistSignup
 from klara.routers import waitlist as waitlist_router
 
 
+async def _login_cookie(client, email: str, password: str) -> str:
+    r = await client.post(
+        "/api/v1/auth/jwt/login",
+        data={"username": email, "password": password},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+    )
+    assert r.status_code == 204, r.text
+    return r.headers["set-cookie"].split(";")[0]
+
+
+async def _register_owner(client, app_settings, db_session):
+    """Bootstrap the owner via the legacy-row adoption path; returns the cookie."""
+    from klara.models import User
+    from klara.models.enums import CEFRLevel
+
+    db_session.add(
+        User(
+            email=None,
+            hashed_password=None,
+            is_active=True,
+            is_verified=False,
+            is_superuser=False,
+            display_name="Samuel",
+            level=CEFRLevel.A0,
+            native_language="es",
+            target_language="de",
+        )
+    )
+    await db_session.commit()
+
+    app_settings(INITIAL_OWNER_EMAIL="owner@klara.app")
+    r = await client.post(
+        "/api/v1/auth/register",
+        json={"email": "owner@klara.app", "password": "hunter2hunter2"},
+    )
+    assert r.status_code == 201, r.text
+    assert r.json()["is_superuser"] is True
+    return await _login_cookie(client, "owner@klara.app", "hunter2hunter2")
+
+
 @pytest.fixture(autouse=True)
 def _reset_rate_limit():
     waitlist_router._hits.clear()
@@ -78,3 +118,27 @@ def test_rate_limit_window_resets():
         assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is False
     assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is True
     assert waitlist_router._rate_limited("1.2.3.4", now=1000.0 + 3601) is False
+
+
+@pytest.mark.asyncio
+async def test_admin_waitlist_requires_admin(client):
+    r = await client.get("/api/v1/admin/waitlist")
+    assert r.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_admin_lists_and_marks_invited(client, app_settings, db_session):
+    cookie = await _register_owner(client, app_settings, db_session)
+    await client.post("/api/v1/waitlist", json={"email": "fan@example.com", "locale": "de"})
+
+    r = await client.get("/api/v1/admin/waitlist", headers={"Cookie": cookie})
+    assert r.status_code == 200
+    rows = r.json()
+    assert len(rows) == 1 and rows[0]["email"] == "fan@example.com"
+    assert rows[0]["invited_at"] is None
+
+    r2 = await client.post(
+        f"/api/v1/admin/waitlist/{rows[0]['id']}/invited", headers={"Cookie": cookie}
+    )
+    assert r2.status_code == 200
+    assert r2.json()["invited_at"] is not None

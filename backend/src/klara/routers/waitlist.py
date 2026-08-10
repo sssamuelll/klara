@@ -1,6 +1,8 @@
 import ipaddress
 import time
+from datetime import UTC, datetime
 from typing import Annotated
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr, Field
@@ -24,6 +26,16 @@ class WaitlistIn(BaseModel):
 
 class WaitlistOut(BaseModel):
     ok: bool = True
+
+
+class WaitlistRowOut(BaseModel):
+    id: UUID
+    email: EmailStr
+    locale: str | None
+    created_at: datetime
+    invited_at: datetime | None
+
+    model_config = {"from_attributes": True}
 
 
 # ponytail: rate limit in-memory por proceso (un worker en prod; se resetea al
@@ -82,3 +94,22 @@ async def join_waitlist(
             await session.rollback()
     # Respuesta idéntica exista o no: sin enumeración de correos.
     return WaitlistOut()
+
+
+@router.get("/admin/waitlist", response_model=list[WaitlistRowOut])
+async def list_waitlist(session: AuthSessionDep, admin: AdminUser) -> list[WaitlistRowOut]:
+    rows = await session.scalars(select(WaitlistSignup).order_by(WaitlistSignup.created_at.desc()))
+    return [WaitlistRowOut.model_validate(r) for r in rows]
+
+
+@router.post("/admin/waitlist/{signup_id}/invited", response_model=WaitlistRowOut)
+async def mark_invited(
+    signup_id: UUID, session: AuthSessionDep, admin: AdminUser
+) -> WaitlistRowOut:
+    row = await session.get(WaitlistSignup, signup_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    row.invited_at = datetime.now(UTC)
+    await session.commit()
+    await session.refresh(row)
+    return WaitlistRowOut.model_validate(row)
