@@ -53,12 +53,13 @@ export default function Landing() {
         ) : (
           <form className="auth-form" onSubmit={onJoin}>
             <div>
-              <label className="auth-label" htmlFor="wl-email">{t("waitlist.placeholder")}</label>
+              <label className="auth-label" htmlFor="wl-email">{t("auth.login.emailLabel")}</label>
               <input
                 id="wl-email"
                 className="auth-input"
                 type="email"
                 autoComplete="email"
+                placeholder={t("waitlist.placeholder")}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
