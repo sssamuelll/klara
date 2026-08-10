@@ -631,7 +631,7 @@
   },
   "auth": {
     "login": {
-      "title": "Bei Klara anmelden",
+      "title": "Anmelden.",
       "emailLabel": "E-Mail",
       "passwordLabel": "Passwort",
       "submit": "Anmelden",

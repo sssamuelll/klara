@@ -52,41 +52,45 @@ export default function Login() {
   }
 
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <h1 className="snew__title">{t("auth.login.title")}</h1>
-      </div>
+    <main>
+      <h1 className="auth-title">{t("auth.login.title")}</h1>
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form onSubmit={onSubmit}>
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.login.emailLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={submitting}
-        />
+      <form className="auth-form" onSubmit={onSubmit}>
+        <div>
+          <label className="auth-label" htmlFor="login-email">
+            {t("auth.login.emailLabel")}
+          </label>
+          <input
+            id="login-email"
+            className="auth-input"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.login.passwordLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={submitting}
-        />
+        <div>
+          <label className="auth-label" htmlFor="login-password">
+            {t("auth.login.passwordLabel")}
+          </label>
+          <input
+            id="login-password"
+            className="auth-input"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
 
-        <div className="snew__actions" style={{ marginTop: "1.5rem" }}>
+        <div className="auth-actions">
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.login.submit")}
           </button>
@@ -101,11 +105,11 @@ export default function Login() {
             </button>
           )}
         </div>
-
-        <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>
-          <Link to="/forgot">{t("auth.login.forgotLink")}</Link>
-        </p>
       </form>
+
+      <p className="auth-links">
+        <Link to="/forgot">{t("auth.login.forgotLink")}</Link>
+      </p>
     </main>
   );
 }

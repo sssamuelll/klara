@@ -631,7 +631,7 @@
   },
   "auth": {
     "login": {
-      "title": "Klaraにログイン",
+      "title": "ログイン。",
       "emailLabel": "メールアドレス",
       "passwordLabel": "パスワード",
       "submit": "ログイン",

@@ -631,7 +631,7 @@
   },
   "auth": {
     "login": {
-      "title": "Entrar a Klara",
+      "title": "Entrar.",
       "emailLabel": "Correo electrónico",
       "passwordLabel": "Contraseña",
       "submit": "Entrar",
