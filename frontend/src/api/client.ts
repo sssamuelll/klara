@@ -34,6 +34,7 @@ import type {
   StoryListItem,
   User,
   UserUpdate,
+  WaitlistRow,
 } from "./types";
 
 const API_BASE = "/api/v1";
@@ -302,6 +303,20 @@ export const api = {
   revokeInvitation: (id: string) =>
     request<Invitation>(`/admin/invitations/${id}/revoke`, {
       method: "POST",
+    }),
+
+  // --- waitlist ---
+  listWaitlist: () => request<WaitlistRow[]>("/admin/waitlist"),
+
+  markWaitlistInvited: (id: string) =>
+    request<WaitlistRow>(`/admin/waitlist/${id}/invited`, {
+      method: "POST",
+    }),
+
+  joinWaitlist: (email: string, locale: string) =>
+    request<{ ok: boolean }>("/waitlist", {
+      method: "POST",
+      body: JSON.stringify({ email, locale }),
     }),
 
   // --- pronunciation ---

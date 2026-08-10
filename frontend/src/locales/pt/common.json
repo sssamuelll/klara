@@ -621,6 +621,12 @@
         "revoked": "Revogado"
       }
     },
+    "waitlist": {
+      "title": "Lista de espera",
+      "empty": "Ainda ninguém à espera.",
+      "invite": "Convidar",
+      "invited": "Convidado"
+    },
     "security": {
       "kicker": "Segurança",
       "title": "Definir palavra-passe",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import type { Invitation } from "../api/types";
+import type { Invitation, WaitlistRow } from "../api/types";
 
 export default function InvitationsPanel() {
   const { t } = useTranslation();
@@ -13,6 +13,10 @@ export default function InvitationsPanel() {
   const [newNote, setNewNote] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(true);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -27,8 +31,25 @@ export default function InvitationsPanel() {
     }
   }
 
+  async function reloadWaitlist() {
+    setWaitlistLoading(true);
+    try {
+      const list = await api.listWaitlist();
+      setWaitlist(list);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setWaitlistLoading(false);
+    }
+  }
+
+  async function reloadAll() {
+    await Promise.all([reload(), reloadWaitlist()]);
+  }
+
   useEffect(() => {
-    reload();
+    reloadAll();
   }, []);
 
   async function onCreate(e: React.FormEvent) {
@@ -67,6 +88,19 @@ export default function InvitationsPanel() {
       setTimeout(() => setCopiedId((c) => (c === inv.id ? null : c)), 1500);
     } catch {
       window.prompt(t("settings.invitations.copyFallback"), inv.share_url);
+    }
+  }
+
+  async function onInviteFromWaitlist(row: WaitlistRow) {
+    setInvitingId(row.id);
+    try {
+      await api.createInvitation({ email: row.email, note: "waitlist" });
+      await api.markWaitlistInvited(row.id);
+      await reloadAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setInvitingId(null);
     }
   }
 
@@ -182,6 +216,59 @@ export default function InvitationsPanel() {
           </ul>
         )}
       </div>
+
+      <section style={{ marginTop: "2rem" }}>
+        <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
+          {t("settings.waitlist.title")}
+        </h2>
+
+        <div style={{ marginTop: "1rem" }}>
+          {waitlistLoading ? (
+            <p className="k-mono">{t("common.loading")}</p>
+          ) : waitlist.length === 0 ? (
+            <p className="k-mono" style={{ color: "var(--ink-3)" }}>
+              {t("settings.waitlist.empty")}
+            </p>
+          ) : (
+            <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: ".75rem" }}>
+              {waitlist.map((row) => (
+                <li
+                  key={row.id}
+                  style={{
+                    border: "1px solid var(--ink-3)",
+                    borderRadius: 4,
+                    padding: ".75rem",
+                    opacity: row.invited_at ? 0.6 : 1,
+                  }}
+                >
+                  <div className="k-mono" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem" }}>
+                    <span>{row.email}</span>
+                    <span style={{ color: "var(--ink-3)" }}>
+                      {new Date(row.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="snew__actions" style={{ marginTop: ".5rem" }}>
+                    {row.invited_at ? (
+                      <span className="k-mono" style={{ color: "var(--ink-3)" }}>
+                        {t("settings.waitlist.invited")}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="k-btn k-btn--ghost"
+                        disabled={invitingId === row.id}
+                        onClick={() => onInviteFromWaitlist(row)}
+                      >
+                        {t("settings.waitlist.invite")}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </section>
   );
 }

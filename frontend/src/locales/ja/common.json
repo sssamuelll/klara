@@ -621,6 +621,12 @@
         "revoked": "取り消し済み"
       }
     },
+    "waitlist": {
+      "title": "順番待ちリスト",
+      "empty": "まだ誰も待っていません。",
+      "invite": "招待",
+      "invited": "招待済み"
+    },
     "security": {
       "kicker": "セキュリティ",
       "title": "パスワードを設定",
