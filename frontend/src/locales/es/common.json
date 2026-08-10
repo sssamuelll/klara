@@ -650,7 +650,6 @@
       }
     },
     "signup": {
-      "title": "Crear cuenta",
       "invitedTitle": "Te invitaron a Klara.",
       "invitedSub": "Crea tu cuenta y entra a la biblioteca.",
       "emailLabel": "Correo electrónico",

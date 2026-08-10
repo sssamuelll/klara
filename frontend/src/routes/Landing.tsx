@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api } from "../api/client";
+import { api, ApiError } from "../api/client";
 
 type WlState = "idle" | "sending" | "ok" | "error";
 
@@ -9,6 +9,7 @@ export default function Landing() {
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [state, setState] = useState<WlState>("idle");
+  const [errorKey, setErrorKey] = useState<"invalid" | "network">("network");
 
   async function onJoin(e: React.FormEvent) {
     e.preventDefault();
@@ -16,7 +17,8 @@ export default function Landing() {
     try {
       await api.joinWaitlist(email.trim().toLowerCase(), i18n.language);
       setState("ok");
-    } catch {
+    } catch (err) {
+      setErrorKey(err instanceof ApiError && err.status === 422 ? "invalid" : "network");
       setState("error");
     }
   }
@@ -36,7 +38,7 @@ export default function Landing() {
         <a className="k-btn" href="#waitlist">{t("landing.hero.ctaPrimary")}</a>
       </section>
 
-      <section aria-label={t("landing.que.leer.title")}>
+      <section>
         {(["leer", "hablar", "repasar"] as const).map((k) => (
           <div className="landing__bloque" key={k}>
             <h2>{t(`landing.que.${k}.title`)}</h2>
@@ -67,7 +69,7 @@ export default function Landing() {
               />
             </div>
             {state === "error" && (
-              <div className="k-error" role="alert">{t("waitlist.error.network")}</div>
+              <div className="k-error" role="alert">{t(`waitlist.error.${errorKey}`)}</div>
             )}
             <div className="auth-actions">
               <button type="submit" className="k-btn" disabled={state === "sending"}>

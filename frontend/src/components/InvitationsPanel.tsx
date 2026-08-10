@@ -17,6 +17,7 @@ export default function InvitationsPanel() {
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [waitlistLoading, setWaitlistLoading] = useState(true);
   const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [wlError, setWlError] = useState<string | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -36,9 +37,9 @@ export default function InvitationsPanel() {
     try {
       const list = await api.listWaitlist();
       setWaitlist(list);
-      setError(null);
+      setWlError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setWlError(e instanceof Error ? e.message : String(e));
     } finally {
       setWaitlistLoading(false);
     }
@@ -96,14 +97,21 @@ export default function InvitationsPanel() {
     try {
       // Si un intento anterior creó la invitación pero se cayó antes de marcar
       // la fila, un retry no debe crear una segunda invitación para el mismo
-      // correo — reusa la activa ya cargada.
-      const existing = items.find((i) => i.email === row.email && i.state === "active");
+      // correo — reusa la activa, pero decide sobre datos frescos: `items` del
+      // state puede estar vacío (aún no cargó) o stale (una activa cacheada ya
+      // revocada), y en ambos casos duplicaríamos o nos saltaríamos el create.
+      // ponytail: check-then-act client-side; ventana de carrera solo con dos admins simultáneos — endpoint atómico si algún día importa
+      const fresh = await api.listInvitations();
+      const rowEmail = row.email.toLowerCase();
+      const existing = fresh.find(
+        (i) => i.email?.toLowerCase() === rowEmail && i.state === "active",
+      );
       if (!existing) {
         await api.createInvitation({ email: row.email, note: "waitlist" });
       }
       await api.markWaitlistInvited(row.id);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setWlError(e instanceof Error ? e.message : String(e));
     } finally {
       await reloadAll();
       setInvitingId(null);
@@ -227,6 +235,12 @@ export default function InvitationsPanel() {
         <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
           {t("settings.waitlist.title")}
         </h2>
+
+        {wlError && (
+          <div className="k-error" role="alert" style={{ marginTop: ".5rem" }}>
+            {wlError}
+          </div>
+        )}
 
         <div style={{ marginTop: "1rem" }}>
           {waitlistLoading ? (

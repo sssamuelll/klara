@@ -650,7 +650,6 @@
       }
     },
     "signup": {
-      "title": "Create account",
       "invitedTitle": "You're invited to Klara.",
       "invitedSub": "Create your account and step into the library.",
       "emailLabel": "Email",
