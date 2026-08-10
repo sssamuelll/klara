@@ -535,7 +535,8 @@
 .ob-level__card[data-active="true"]::before { opacity: 1; }
 .ob-level__code {
   color: var(--ink-3);
-  font-size: 11px; /* sin token: no es contexto mono (font-family: inherit), --t-* no baja de 13px */
+  font-size: 10px; /* corte de Iris: mono chico = etiqueta 10px (era 11px). StepLevel.tsx:48 pone k-mono
+                       directo en el mismo span — mismo criterio que .ob-welcome__triad li .k-mono */
   letter-spacing: var(--tracking-mark);
 }
 .ob-level__card[data-active="true"] .ob-level__code { color: var(--accent); }
