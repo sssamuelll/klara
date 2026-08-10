@@ -61,3 +61,20 @@ def test_client_ip_uses_last_xff_hop_from_trusted_peer():
     # última IP del XFF que el propio proxy anexó; las anteriores son spoofeables.
     req = _make_request("127.0.0.1", {"x-forwarded-for": "1.2.3.4, 5.6.7.8"})
     assert waitlist_router._client_ip(req) == "5.6.7.8"
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_429_after_10(client):
+    for i in range(10):
+        r = await client.post("/api/v1/waitlist", json={"email": f"p{i}@example.com"})
+        assert r.status_code == 200
+    r11 = await client.post("/api/v1/waitlist", json={"email": "p11@example.com"})
+    assert r11.status_code == 429
+
+
+def test_rate_limit_window_resets():
+    waitlist_router._hits.clear()
+    for _ in range(10):
+        assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is False
+    assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is True
+    assert waitlist_router._rate_limited("1.2.3.4", now=1000.0 + 3601) is False
