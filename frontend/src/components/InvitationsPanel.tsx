@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
-import type { Invitation } from "../api/types";
+import type { Invitation, WaitlistRow } from "../api/types";
 
 export default function InvitationsPanel() {
   const { t } = useTranslation();
@@ -13,6 +13,11 @@ export default function InvitationsPanel() {
   const [newNote, setNewNote] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(true);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [wlError, setWlError] = useState<string | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -27,8 +32,25 @@ export default function InvitationsPanel() {
     }
   }
 
+  async function reloadWaitlist() {
+    setWaitlistLoading(true);
+    try {
+      const list = await api.listWaitlist();
+      setWaitlist(list);
+      setWlError(null);
+    } catch (e) {
+      setWlError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setWaitlistLoading(false);
+    }
+  }
+
+  async function reloadAll() {
+    await Promise.all([reload(), reloadWaitlist()]);
+  }
+
   useEffect(() => {
-    reload();
+    reloadAll();
   }, []);
 
   async function onCreate(e: React.FormEvent) {
@@ -67,6 +89,32 @@ export default function InvitationsPanel() {
       setTimeout(() => setCopiedId((c) => (c === inv.id ? null : c)), 1500);
     } catch {
       window.prompt(t("settings.invitations.copyFallback"), inv.share_url);
+    }
+  }
+
+  async function onInviteFromWaitlist(row: WaitlistRow) {
+    setInvitingId(row.id);
+    try {
+      // Si un intento anterior creó la invitación pero se cayó antes de marcar
+      // la fila, un retry no debe crear una segunda invitación para el mismo
+      // correo — reusa la activa, pero decide sobre datos frescos: `items` del
+      // state puede estar vacío (aún no cargó) o stale (una activa cacheada ya
+      // revocada), y en ambos casos duplicaríamos o nos saltaríamos el create.
+      // ponytail: check-then-act client-side; ventana de carrera solo con dos admins simultáneos — endpoint atómico si algún día importa
+      const fresh = await api.listInvitations();
+      const rowEmail = row.email.toLowerCase();
+      const existing = fresh.find(
+        (i) => i.email?.toLowerCase() === rowEmail && i.state === "active",
+      );
+      if (!existing) {
+        await api.createInvitation({ email: row.email, note: "waitlist" });
+      }
+      await api.markWaitlistInvited(row.id);
+    } catch (e) {
+      setWlError(e instanceof Error ? e.message : String(e));
+    } finally {
+      await reloadAll();
+      setInvitingId(null);
     }
   }
 
@@ -182,6 +230,65 @@ export default function InvitationsPanel() {
           </ul>
         )}
       </div>
+
+      <section style={{ marginTop: "2rem" }}>
+        <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
+          {t("settings.waitlist.title")}
+        </h2>
+
+        {wlError && (
+          <div className="k-error" role="alert" style={{ marginTop: ".5rem" }}>
+            {wlError}
+          </div>
+        )}
+
+        <div style={{ marginTop: "1rem" }}>
+          {waitlistLoading ? (
+            <p className="k-mono">{t("common.loading")}</p>
+          ) : waitlist.length === 0 ? (
+            <p className="k-mono" style={{ color: "var(--ink-3)" }}>
+              {t("settings.waitlist.empty")}
+            </p>
+          ) : (
+            <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: ".75rem" }}>
+              {waitlist.map((row) => (
+                <li
+                  key={row.id}
+                  style={{
+                    border: "1px solid var(--ink-3)",
+                    borderRadius: 4,
+                    padding: ".75rem",
+                    opacity: row.invited_at ? 0.6 : 1,
+                  }}
+                >
+                  <div className="k-mono" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem" }}>
+                    <span>{row.email}</span>
+                    <span style={{ color: "var(--ink-3)" }}>
+                      {new Date(row.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="snew__actions" style={{ marginTop: ".5rem" }}>
+                    {row.invited_at ? (
+                      <span className="k-mono" style={{ color: "var(--ink-3)" }}>
+                        {t("settings.waitlist.invited")}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="k-btn k-btn--ghost"
+                        disabled={invitingId === row.id}
+                        onClick={() => onInviteFromWaitlist(row)}
+                      >
+                        {t("settings.waitlist.invite")}
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
     </section>
   );
 }

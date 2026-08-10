@@ -621,6 +621,12 @@
         "revoked": "Revoked"
       }
     },
+    "waitlist": {
+      "title": "Waitlist",
+      "empty": "No one waiting yet.",
+      "invite": "Invite",
+      "invited": "Invited"
+    },
     "security": {
       "kicker": "Security",
       "title": "Set a password",
@@ -644,7 +650,8 @@
       }
     },
     "signup": {
-      "title": "Create account",
+      "invitedTitle": "You're invited to Klara.",
+      "invitedSub": "Create your account and step into the library.",
       "emailLabel": "Email",
       "passwordLabel": "Password",
       "confirmLabel": "Confirm password",
@@ -671,7 +678,8 @@
       "resendBtn": "Resend email"
     },
     "reset": {
-      "forgotTitle": "Reset password",
+      "forgotTitle": "Forgot your password?",
+      "forgotBody": "Enter your email and we'll send you a link to create a new one.",
       "forgotSubmit": "Send link",
       "forgotSent": "If you have an account with that email, we sent a reset link to your inbox.",
       "forgotSentHint": "Didn't arrive? Check spam, try another email, or go back and sign in with Google.",
@@ -679,7 +687,9 @@
       "newPasswordLabel": "New password",
       "confirmLabel": "Confirm password",
       "submit": "Update password",
-      "success": "Done. You can sign in with your new password."
+      "success": "New password saved. Sign in with it.",
+      "goLogin": "Go to sign in",
+      "error": { "missingToken": "This link is incomplete. Open the link from your email again." }
     }
   },
   "errors": {
@@ -1050,6 +1060,33 @@
       "leeDespacio": "K reads · slowly",
       "teEscucho": "I'm listening…",
       "evaluando": "Evaluating…"
+    }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Your study library.",
+      "support": "Read, speak, review. Every course is shaped to the way you learn.",
+      "ctaPrimary": "Notify me when it opens",
+      "ctaLoginQuestion": "Already have an account?",
+      "ctaLoginAction": "Sign in"
+    },
+    "que": {
+      "leer": { "title": "Read", "body": "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context." },
+      "hablar": { "title": "Speak", "body": "You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today." },
+      "repasar": { "title": "Review", "body": "Flashcards that come back right before you'd forget. No streaks, no hearts, no guilt." }
+    },
+    "footer": { "contact": "Email me", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "For now, invitation only.",
+    "body": "Klara is in testing with a small group. Leave your email and I'll write when it opens.",
+    "placeholder": "you@email.com",
+    "submit": "Notify me when it opens",
+    "privacyNote": "Your email is only used to notify you at launch. Ask to have it deleted anytime.",
+    "success": "Noted. I'll write when Klara opens.",
+    "error": {
+      "invalid": "That email doesn't look complete. Check it.",
+      "network": "Couldn't save it. Try again in a moment."
     }
   }
 }

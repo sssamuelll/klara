@@ -136,6 +136,14 @@ export interface InvitationCreate {
   ttl_days?: number;
 }
 
+export interface WaitlistRow {
+  id: string;
+  email: string;
+  locale: string | null;
+  created_at: string;
+  invited_at: string | null;
+}
+
 export interface PhonemeScore {
   phoneme: string;
   accuracy_score: number;

@@ -30,6 +30,7 @@ from klara.routers import (
     stories,
     tts,
     users,
+    waitlist,
 )
 
 log = structlog.get_logger(__name__)
@@ -229,6 +230,7 @@ def create_app() -> FastAPI:
     app.include_router(practice.router, prefix="/api/v1")
     app.include_router(speak.router, prefix="/api/v1")
     app.include_router(modules.router, prefix="/api/v1")
+    app.include_router(waitlist.router, prefix="/api/v1", tags=["waitlist"])
 
     return app
 

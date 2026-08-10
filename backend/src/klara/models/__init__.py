@@ -18,6 +18,7 @@ from klara.models.srs import Review, UserCard
 from klara.models.story import Story, StoryView
 from klara.models.user import User
 from klara.models.vocab import VocabItem
+from klara.models.waitlist import WaitlistSignup
 
 __all__ = [
     "AudioCache",
@@ -47,5 +48,6 @@ __all__ = [
     "User",
     "UserCard",
     "VocabItem",
+    "WaitlistSignup",
     "module_vocab",
 ]

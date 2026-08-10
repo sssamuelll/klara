@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 
 export default function ResetPassword() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const [password, setPassword] = useState("");
@@ -25,7 +24,6 @@ export default function ResetPassword() {
     try {
       await api.resetPassword(token, password);
       setDone(true);
-      setTimeout(() => navigate("/login", { replace: true }), 1500);
     } catch (e2) {
       setError(e2 instanceof Error ? e2.message : String(e2));
     } finally {
@@ -35,64 +33,71 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <main className="k-page snew">
-        <div className="snew__head">
-          <h1 className="snew__title">{t("auth.reset.resetTitle")}</h1>
+      <main>
+        <h1 className="auth-title">{t("auth.reset.resetTitle")}</h1>
+        <p className="auth-sub">{t("auth.reset.success")}</p>
+        <div className="auth-actions">
+          <Link className="k-btn" to="/login">{t("auth.reset.goLogin")}</Link>
         </div>
-        <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-          {t("auth.reset.success")}
-        </p>
       </main>
     );
   }
 
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <h1 className="snew__title">{t("auth.reset.resetTitle")}</h1>
-      </div>
+    <main>
+      <h1 className="auth-title">{t("auth.reset.resetTitle")}</h1>
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form onSubmit={onSubmit}>
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.reset.newPasswordLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={submitting || !token}
-        />
+      {!token && (
+        <div className="k-error" role="alert">{t("auth.reset.error.missingToken")}</div>
+      )}
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.reset.confirmLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          disabled={submitting || !token}
-        />
+      <form className="auth-form" onSubmit={onSubmit}>
+        <div>
+          <label className="auth-label" htmlFor="reset-password">
+            {t("auth.reset.newPasswordLabel")}
+          </label>
+          <input
+            id="reset-password"
+            className="auth-input"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting || !token}
+          />
+        </div>
 
-        <div className="snew__actions" style={{ marginTop: "1.5rem" }}>
+        <div>
+          <label className="auth-label" htmlFor="reset-confirm">
+            {t("auth.reset.confirmLabel")}
+          </label>
+          <input
+            id="reset-confirm"
+            className="auth-input"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            disabled={submitting || !token}
+          />
+        </div>
+
+        <div className="auth-actions">
           <button type="submit" className="k-btn" disabled={submitting || !token}>
             {t("auth.reset.submit")}
           </button>
         </div>
-
-        <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>
-          <Link to="/login">{t("common.back")}</Link>
-        </p>
       </form>
+
+      <p className="auth-links">
+        <Link to="/login">{t("common.back")}</Link>
+      </p>
     </main>
   );
 }

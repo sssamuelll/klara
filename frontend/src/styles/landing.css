@@ -1,0 +1,124 @@
+/* Puerta de entrada v4 — landing pública. Scrollea (no vive en .m3-app). */
+
+.landing {
+  min-height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 16px 22px 40px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+}
+
+@media (min-width: 520px) {
+  .landing { border-inline: 1px solid var(--rule); }
+}
+
+.landing__tagline {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--t-h1);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-display);
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+.landing__support {
+  font-family: var(--font-serif);
+  font-size: var(--t-read);
+  line-height: var(--lh-read);
+  color: var(--ink-2);
+  margin: 0 0 var(--space-4);
+}
+
+.landing__login {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.landing__login-q,
+.landing__login-a {
+  font-size: 12px;
+}
+
+.landing__login-q {
+  color: var(--ink-3);
+}
+
+.landing__login-a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.landing__bloque {
+  border-top: 1px solid var(--rule);
+  padding: 12px 0 16px;
+}
+
+.landing__bloque h2 {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: var(--t-h3);
+  margin: 0 0 var(--space-2);
+}
+
+.landing__bloque p {
+  font-family: var(--font-serif);
+  font-size: var(--t-body);
+  line-height: var(--lh-read);
+  color: var(--ink-2);
+  margin: 0;
+}
+
+.landing__wl { border-top: 1px solid var(--rule); padding-top: 12px; }
+
+.landing__wl-title {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: var(--t-h3);
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--space-2);
+}
+
+.landing__wl-body {
+  font-family: var(--font-serif);
+  font-size: var(--t-body);
+  line-height: var(--lh-read);
+  color: var(--ink-2);
+  margin: 0 0 var(--space-3);
+}
+
+.landing__wl-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  margin-top: var(--space-2);
+}
+
+.landing__footer {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--ink-4);
+  display: flex;
+  justify-content: space-between;
+}
+
+.landing__footer a { color: var(--ink-3); }
+.landing__footer a:hover { color: var(--ink); }

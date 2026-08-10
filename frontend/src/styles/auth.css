@@ -72,5 +72,5 @@
   margin-top: var(--space-4);
 }
 
-.auth-links a { color: var(--ink-3); }
-.auth-links a:hover { color: var(--ink); }
+.auth-links a { color: var(--ink-3); border-bottom: 1px solid var(--rule); }
+.auth-links a:hover { color: var(--ink); border-bottom-color: var(--ink); }
