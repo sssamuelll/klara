@@ -621,6 +621,12 @@
         "revoked": "Widerrufen"
       }
     },
+    "waitlist": {
+      "title": "Warteliste",
+      "empty": "Noch niemand wartet.",
+      "invite": "Einladen",
+      "invited": "Eingeladen"
+    },
     "security": {
       "kicker": "Sicherheit",
       "title": "Passwort festlegen",
@@ -644,7 +650,8 @@
       }
     },
     "signup": {
-      "title": "Konto erstellen",
+      "invitedTitle": "Du bist zu Klara eingeladen.",
+      "invitedSub": "Erstelle dein Konto und betritt die Bibliothek.",
       "emailLabel": "E-Mail",
       "passwordLabel": "Passwort",
       "confirmLabel": "Passwort bestätigen",
@@ -671,7 +678,8 @@
       "resendBtn": "E-Mail erneut senden"
     },
     "reset": {
-      "forgotTitle": "Passwort zurücksetzen",
+      "forgotTitle": "Passwort vergessen?",
+      "forgotBody": "Gib deine E-Mail-Adresse ein, dann schicken wir dir einen Link zum Erstellen eines neuen Passworts.",
       "forgotSubmit": "Link senden",
       "forgotSent": "Falls das Konto existiert, haben wir dir einen Link zum Zurücksetzen geschickt.",
       "forgotSentHint": "Nichts angekommen? Sieh im Spam-Ordner nach, versuche eine andere E-Mail, oder geh zurück und melde dich mit Google an.",
@@ -679,7 +687,9 @@
       "newPasswordLabel": "Neues Passwort",
       "confirmLabel": "Passwort bestätigen",
       "submit": "Passwort aktualisieren",
-      "success": "Fertig. Du kannst dich jetzt mit dem neuen Passwort anmelden."
+      "success": "Neues Passwort gespeichert. Melde dich damit an.",
+      "goLogin": "Zur Anmeldung",
+      "error": { "missingToken": "Der Link ist unvollständig. Öffne den Link aus der E-Mail noch einmal." }
     }
   },
   "errors": {
@@ -1050,6 +1060,33 @@
       "leeDespacio": "K liest · langsam",
       "teEscucho": "Ich höre zu…",
       "evaluando": "Wird bewertet…"
+    }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Deine Lernbibliothek.",
+      "support": "Du liest, sprichst, wiederholst. Jeder Kurs passt sich deiner Art zu lernen an.",
+      "ctaPrimary": "Benachrichtige mich beim Start",
+      "ctaLoginQuestion": "Schon ein Konto?",
+      "ctaLoginAction": "Anmelden"
+    },
+    "que": {
+      "leer": { "title": "Lesen", "body": "Kurze Geschichten in der Sprache, die du lernst. Jedes Wort öffnet sich mit einem Antippen: Bedeutung, Genus, Kontext." },
+      "hablar": { "title": "Sprechen", "body": "Du sprichst, und Klara korrigiert genau den Laut, der nicht saß. Was du gestern gesagt hast, erinnert sie heute." },
+      "repasar": { "title": "Wiederholen", "body": "Karteikarten, die kurz vor dem Vergessen zurückkommen. Keine Serien, keine Herzen, kein schlechtes Gewissen." }
+    },
+    "footer": { "contact": "Schreib mir", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "Vorerst nur auf Einladung.",
+    "body": "Klara ist gerade mit einer kleinen Gruppe im Test. Hinterlass deine E-Mail, ich schreibe dir, wenn es öffnet.",
+    "placeholder": "du@email.de",
+    "submit": "Benachrichtige mich beim Start",
+    "privacyNote": "Deine E-Mail dient nur dazu, dich zum Start zu benachrichtigen. Bitte jederzeit um Löschung.",
+    "success": "Notiert. Ich schreibe dir, wenn Klara öffnet.",
+    "error": {
+      "invalid": "Diese E-Mail sieht unvollständig aus. Prüfe sie.",
+      "network": "Konnte nicht gespeichert werden. Versuche es gleich noch einmal."
     }
   }
 }

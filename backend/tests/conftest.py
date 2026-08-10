@@ -76,7 +76,8 @@ async def _clean_tables():
             text(
                 "TRUNCATE audio_cache, invitations, oauth_accounts, reviews, user_cards, "
                 "story_views, study_sessions, stories, module_vocab, modules, "
-                "gender_attempts, gender_lexicon, gender_l1_notes, pronunciation_diagnoses, users "
+                "gender_attempts, gender_lexicon, gender_l1_notes, pronunciation_diagnoses, "
+                "waitlist_signups, users "
                 "RESTART IDENTITY CASCADE"
             )
         )

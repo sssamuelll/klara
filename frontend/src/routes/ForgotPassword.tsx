@@ -26,17 +26,11 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <main className="k-page snew">
-        <div className="snew__head">
-          <h1 className="snew__title">{t("auth.reset.forgotTitle")}</h1>
-        </div>
-        <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-          {t("auth.reset.forgotSent")}
-        </p>
-        <p className="k-mono" style={{ marginTop: "0.75rem", color: "var(--ink-3)" }}>
-          {t("auth.reset.forgotSentHint")}
-        </p>
-        <p className="k-mono" style={{ marginTop: "1rem" }}>
+      <main>
+        <h1 className="auth-title">{t("auth.reset.forgotTitle")}</h1>
+        <p className="auth-sub">{t("auth.reset.forgotSent")}</p>
+        <p className="auth-sub">{t("auth.reset.forgotSentHint")}</p>
+        <p className="auth-links">
           <Link to="/login">{t("common.back")}</Link>
         </p>
       </main>
@@ -44,37 +38,39 @@ export default function ForgotPassword() {
   }
 
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <h1 className="snew__title">{t("auth.reset.forgotTitle")}</h1>
-      </div>
+    <main>
+      <h1 className="auth-title">{t("auth.reset.forgotTitle")}</h1>
+      <p className="auth-sub">{t("auth.reset.forgotBody")}</p>
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form onSubmit={onSubmit}>
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.login.emailLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={submitting}
-        />
+      <form className="auth-form" onSubmit={onSubmit}>
+        <div>
+          <label className="auth-label" htmlFor="forgot-email">
+            {t("auth.login.emailLabel")}
+          </label>
+          <input
+            id="forgot-email"
+            className="auth-input"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
 
-        <div className="snew__actions" style={{ marginTop: "1.5rem" }}>
+        <div className="auth-actions">
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.reset.forgotSubmit")}
           </button>
         </div>
-
-        <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>
-          <Link to="/login">{t("common.back")}</Link>
-        </p>
       </form>
+
+      <p className="auth-links">
+        <Link to="/login">{t("common.back")}</Link>
+      </p>
     </main>
   );
 }

@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TabBar from "./components/TabBar";
+import Landing from "./routes/Landing";
 import Inicio from "./routes/Inicio";
 import Portada from "./routes/Portada";
 import MapaCurso from "./routes/MapaCurso";
@@ -46,12 +47,33 @@ function LegacyShell({ theme, setTheme, edition }: {
   );
 }
 
-function V4Shell() {
+function V4Frame({ children }: { children: ReactNode }) {
   return (
     <div className="m3-app">
-      <Outlet />
+      {children}
       <TabBar />
     </div>
+  );
+}
+
+function V4Shell() {
+  return (
+    <V4Frame>
+      <Outlet />
+    </V4Frame>
+  );
+}
+
+function RootGate() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="landing" />;
+  if (!user) return <Landing />;
+  return (
+    <V4Frame>
+      <ProtectedRoute>
+        <Inicio />
+      </ProtectedRoute>
+    </V4Frame>
   );
 }
 
@@ -92,15 +114,9 @@ function AppShell() {
 
   return (
     <Routes>
+      <Route path="/" element={<RootGate />} />
+
       <Route element={<V4Shell />}>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Inicio />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/curso/:id"
           element={

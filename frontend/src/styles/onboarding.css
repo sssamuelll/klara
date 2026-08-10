@@ -16,8 +16,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 22px 32px;
-  gap: 16px;
+  padding: 22px var(--space-6);
+  gap: var(--space-4);
 }
 .ob__exit {
   background: none;
@@ -25,14 +25,14 @@
   cursor: pointer;
   color: var(--ink-3);
   text-decoration: none;
-  padding: 4px 0;
+  padding: var(--space-1) 0;
   transition: color var(--dur-fast);
 }
 .ob__exit:hover { color: var(--ink); }
 .ob__chrome-mark {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ob__chrome-label {
   font-style: italic;
@@ -40,31 +40,31 @@
   font-family: var(--font-serif);
   text-transform: none;
   letter-spacing: 0;
-  font-size: 14px;
+  font-size: var(--t-mark);
 }
-.ob__chrome-spacer { width: 60px; }
+.ob__chrome-spacer { width: 60px; } /* sin token: ancho fijo de balance visual del header, no espaciado de ritmo */
 
 /* ---------- Main grid ---------- */
 .ob__main {
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr) 280px;
-  gap: 48px;
-  max-width: 1200px;
+  gap: var(--space-7);
+  max-width: 1200px; /* sin token: --maxw-page es 1180px, valor distinto — paridad visual manda */
   width: 100%;
   margin: 0 auto;
-  padding: 48px 32px 24px;
+  padding: var(--space-7) var(--space-6) var(--space-5);
   align-items: start;
 }
 @media (max-width: 1080px) {
   .ob__main {
     grid-template-columns: 110px minmax(0, 1fr) 220px;
-    gap: 32px;
+    gap: var(--space-6);
   }
 }
 @media (max-width: 860px) {
   .ob__main {
     grid-template-columns: minmax(0, 1fr);
-    padding: 32px 24px;
+    padding: var(--space-6) var(--space-5);
   }
   .ob__rail, .ob__margin { display: none; }
 }
@@ -72,23 +72,23 @@
 /* Left rail — roman numeral */
 .ob__rail {
   position: sticky;
-  top: 96px;
+  top: var(--space-9);
   align-self: start;
 }
 .ob__rail-inner {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   align-items: flex-start;
 }
 .ob__rail-label, .ob__rail-of {
   color: var(--ink-3);
-  font-size: 10px;
+  font-size: 10px; /* sin token: escala --t-* no baja de 13px; 10px es la etiqueta mono chica (corte de Iris) */
 }
 .ob__rail-numeral {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 88px;
+  font-size: var(--t-display);
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -99,13 +99,13 @@
 /* Right margin — Klara's whisper */
 .ob__margin {
   position: sticky;
-  top: 96px;
+  top: var(--space-9);
   align-self: start;
 }
 .ob__whisper {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   padding-left: 16px;
   border-left: 1px solid var(--rule);
   animation: whisper-in 600ms var(--ease-out) 200ms both;
@@ -118,7 +118,7 @@
   margin: 0;
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 15px;
+  font-size: 15px; /* sin token: entre --t-mark(14) y --t-body(17), ninguno exacto */
   line-height: 1.5;
   color: var(--ink-3);
   text-wrap: pretty;
@@ -157,9 +157,9 @@
 }
 .ob-prompt__title {
   font-family: var(--font-serif);
-  font-size: 48px;
+  font-size: 48px; /* sin token: entre --t-h3(28) y --t-h2(40), ninguno exacto */
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   font-weight: 400;
   color: var(--ink);
   margin: 0;
@@ -171,7 +171,7 @@
 }
 .ob-prompt__sub {
   font-style: italic;
-  font-size: 17px;
+  font-size: var(--t-body);
   line-height: 1.5;
   color: var(--ink-3);
   margin: 0;
@@ -204,14 +204,14 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 22px;
+  padding: var(--space-3) 22px;
   background: var(--ink);
   color: var(--paper);
   border-radius: var(--r-sm);
   border: 0;
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 15px; /* sin token: entre --t-mark(14) y --t-body(17), ninguno exacto */
   font-weight: 500;
   letter-spacing: -0.005em;
   text-decoration: none;
@@ -221,14 +221,14 @@
 .ob-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .ob-btn__arrow {
   font-style: italic;
-  font-size: 16px;
+  font-size: 16px; /* sin token */
   transition: transform var(--dur-fast);
 }
 .ob-btn:hover:not(:disabled) .ob-btn__arrow { transform: translateX(3px); }
 
 .ob-btn--lg {
-  padding: 16px 28px;
-  font-size: 17px;
+  padding: var(--space-4) 28px;
+  font-size: var(--t-body);
 }
 
 .ob-link {
@@ -241,7 +241,7 @@
   cursor: pointer;
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 15px; /* sin token: entre --t-mark(14) y --t-body(17), ninguno exacto */
   border-bottom: 1px solid var(--ink);
   transition: color var(--dur-fast), border-color var(--dur-fast);
 }
@@ -272,7 +272,7 @@
 .ob-welcome__hello {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 112px;
+  font-size: 112px; /* sin token: mayor que --t-display(88), tamaño hero deliberado */
   font-weight: 400;
   letter-spacing: -0.04em;
   line-height: 0.95;
@@ -289,7 +289,7 @@
 }
 .ob-welcome__lede {
   font-family: var(--font-serif);
-  font-size: 22px;
+  font-size: var(--t-read);
   line-height: 1.45;
   color: var(--ink);
   margin: 0;
@@ -318,12 +318,12 @@
 }
 .ob-welcome__triad li .k-mono {
   color: var(--ink-3);
-  font-size: 11px;
+  font-size: 10px; /* corte de Iris: mono chico = etiqueta 10px (era 11px, sin token en tokens.css) */
 }
 
 .ob-welcome__sub {
   font-style: italic;
-  font-size: 16px;
+  font-size: 16px; /* sin token */
   color: var(--ink-3);
   margin: 0;
   animation: welcome-text-in 900ms var(--ease-out) 600ms both;
@@ -345,17 +345,17 @@
 .ob-name__input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   position: relative;
 }
 .ob-name__input {
   background: transparent;
   border: 0;
-  padding: 8px 0 14px;
+  padding: var(--space-2) 0 14px;
   font-family: var(--font-serif);
-  font-size: 56px;
+  font-size: var(--t-h1);
   font-weight: 400;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--tracking-tight);
   line-height: 1.1;
   color: var(--ink);
   width: 100%;
@@ -380,7 +380,7 @@
   text-transform: none;
   letter-spacing: 0;
   font-family: var(--font-serif);
-  font-size: 14px;
+  font-size: var(--t-mark);
   min-height: 1.4em;
 }
 @media (max-width: 860px) {
@@ -399,12 +399,12 @@
   text-wrap: balance;
 }
 @media (max-width: 860px) {
-  .ob-lang__sentence { font-size: 26px; }
+  .ob-lang__sentence { font-size: var(--t-read-lg); }
 }
 .ob-lang__sub {
   font-style: italic;
   color: var(--ink-3);
-  font-size: 17px;
+  font-size: var(--t-body);
   line-height: 1.5;
   max-width: 50ch;
   min-height: 1.5em;
@@ -464,9 +464,9 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   background: transparent;
   border: 0;
   border-radius: var(--r-sm);
@@ -535,8 +535,9 @@
 .ob-level__card[data-active="true"]::before { opacity: 1; }
 .ob-level__code {
   color: var(--ink-3);
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px; /* corte de Iris: mono chico = etiqueta 10px (era 11px). StepLevel.tsx:48 pone k-mono
+                       directo en el mismo span — mismo criterio que .ob-welcome__triad li .k-mono */
+  letter-spacing: var(--tracking-mark);
 }
 .ob-level__card[data-active="true"] .ob-level__code { color: var(--accent); }
 .ob-level__title {
@@ -549,7 +550,7 @@
 }
 .ob-level__phrase {
   font-style: italic;
-  font-size: 14px;
+  font-size: var(--t-mark);
   color: var(--ink-3);
   line-height: 1.45;
   margin-top: 2px;
@@ -559,7 +560,7 @@
 .ob-context__field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ob-context__textarea {
   background: var(--paper);
@@ -604,16 +605,16 @@
 .ob-field__hint {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 13px;
+  font-size: var(--t-meta);
   color: var(--accent);
 }
 .ob-input {
   background: var(--paper);
   border: 1px solid var(--rule);
   border-radius: var(--r-sm);
-  padding: 12px 14px;
+  padding: var(--space-3) 14px;
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 16px; /* sin token: 16px deliberado — evita el auto-zoom de iOS al enfocar inputs */
   color: var(--ink);
   outline: none;
   transition: border-color var(--dur-fast);
@@ -663,7 +664,7 @@
 .ob-done__summary {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   padding: 22px 0;
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
@@ -686,7 +687,7 @@
 
 /* ---------- Footer progress ---------- */
 .ob__progress {
-  padding: 18px 32px 28px;
+  padding: 18px var(--space-6) 28px;
   display: flex;
   justify-content: center;
 }
@@ -694,7 +695,7 @@
   display: flex;
   gap: 6px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1200px; /* sin token: --maxw-page es 1180px, valor distinto — paridad visual manda */
 }
 .ob__pip {
   flex: 1;
@@ -708,10 +709,10 @@
 /* ---------- Inline error ---------- */
 .ob-error {
   display: block;
-  padding: 10px 12px;
+  padding: 10px var(--space-3);
   border-left: 2px solid var(--accent);
   background: var(--accent-wash);
   color: var(--accent-ink);
-  font-size: 12px;
+  font-size: 12px; /* sin token: ya coincide con el corte de Iris (12px = contenido) */
   letter-spacing: 0.02em;
 }

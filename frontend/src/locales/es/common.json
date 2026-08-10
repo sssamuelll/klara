@@ -621,6 +621,12 @@
         "revoked": "Revocada"
       }
     },
+    "waitlist": {
+      "title": "Lista de espera",
+      "empty": "Nadie esperando todavía.",
+      "invite": "Invitar",
+      "invited": "Invitado"
+    },
     "security": {
       "kicker": "Seguridad",
       "title": "Establecer contraseña",
@@ -644,7 +650,8 @@
       }
     },
     "signup": {
-      "title": "Crear cuenta",
+      "invitedTitle": "Te invitaron a Klara.",
+      "invitedSub": "Crea tu cuenta y entra a la biblioteca.",
       "emailLabel": "Correo electrónico",
       "passwordLabel": "Contraseña",
       "confirmLabel": "Repite la contraseña",
@@ -671,7 +678,8 @@
       "resendBtn": "Reenviar correo"
     },
     "reset": {
-      "forgotTitle": "Restablecer contraseña",
+      "forgotTitle": "¿Olvidaste tu contraseña?",
+      "forgotBody": "Escribe tu correo y te mando un enlace para crear una nueva.",
       "forgotSubmit": "Enviar enlace",
       "forgotSent": "Si tienes una cuenta con ese correo, te enviamos un enlace para restablecerla.",
       "forgotSentHint": "¿No llega? Revisa el spam, prueba con otro correo o vuelve e inicia sesión con Google.",
@@ -679,7 +687,9 @@
       "newPasswordLabel": "Nueva contraseña",
       "confirmLabel": "Repite la contraseña",
       "submit": "Cambiar contraseña",
-      "success": "Listo. Ya puedes entrar con la nueva contraseña."
+      "success": "Contraseña nueva guardada. Entra con ella.",
+      "goLogin": "Ir a entrar",
+      "error": { "missingToken": "El enlace está incompleto. Abre otra vez el enlace del correo." }
     }
   },
   "errors": {
@@ -1050,6 +1060,33 @@
       "leeDespacio": "K lee · despacio",
       "teEscucho": "Te escucho…",
       "evaluando": "Evaluando…"
+    }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Tu biblioteca de estudio.",
+      "support": "Lees, hablas, repasas. Cada curso se arma a la forma en que aprendes tú.",
+      "ctaPrimary": "Avísame cuando abra",
+      "ctaLoginQuestion": "¿Ya tienes cuenta?",
+      "ctaLoginAction": "Entrar"
+    },
+    "que": {
+      "leer": { "title": "Leer", "body": "Historias cortas en el idioma que estudias. Cada palabra se abre con un toque: significado, género, contexto." },
+      "hablar": { "title": "Hablar", "body": "Conversas y Klara te corrige el sonido exacto que falló. Lo que dijiste ayer lo recuerda hoy." },
+      "repasar": { "title": "Repasar", "body": "Fichas que vuelven justo antes del olvido. Sin rachas, sin corazones, sin culpa." }
+    },
+    "footer": { "contact": "Escríbeme", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "Por ahora, por invitación.",
+    "body": "Klara está en pruebas con un grupo pequeño. Deja tu correo y te escribo cuando abra.",
+    "placeholder": "tu@correo.com",
+    "submit": "Avísame cuando abra",
+    "privacyNote": "Tu correo sirve para avisarte del lanzamiento y nada más. Pide borrarlo cuando quieras.",
+    "success": "Anotado. Te escribo cuando Klara abra.",
+    "error": {
+      "invalid": "Ese correo no parece completo. Revísalo.",
+      "network": "No se pudo guardar. Intenta otra vez en un momento."
     }
   }
 }
