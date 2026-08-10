@@ -55,6 +55,21 @@ function V4Shell() {
   );
 }
 
+function AuthShell() {
+  return (
+    <div className="m3-app">
+      <div className="m3-page auth-page">
+        <header className="m3-top">
+          <span className="marca">
+            <span className="wordmark">Klara</span>
+          </span>
+        </header>
+        <Outlet />
+      </div>
+    </div>
+  );
+}
+
 // /story/:id → /estudiar/:id conservando el state del navigate original.
 // Los deep-links y bookmarks legacy no se rompen (Global Constraint de URLs).
 function LegacyStoryRedirect() {
@@ -128,12 +143,15 @@ function AppShell() {
         />
       </Route>
 
-      <Route element={<LegacyShell theme={theme} setTheme={setTheme} edition={edition} />}>
+      <Route element={<AuthShell />}>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
         <Route path="/verify" element={<VerifyEmail />} />
+      </Route>
+
+      <Route element={<LegacyShell theme={theme} setTheme={setTheme} edition={edition} />}>
         <Route
           path="/onboarding"
           element={

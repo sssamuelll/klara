@@ -22,6 +22,8 @@ frontend/src/**/*.d.ts
 frontend/tsconfig*.tsbuildinfo
 frontend/vite.config.js
 frontend/vite.config.d.ts
+frontend/vitest.config.js
+frontend/vitest.config.d.ts
 
 # Root-level artifacts from local Playwright e2e runs and Claude session state.
 node_modules/
