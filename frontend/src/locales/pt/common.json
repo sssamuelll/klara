@@ -673,7 +673,8 @@
       "resendBtn": "Reenviar email"
     },
     "reset": {
-      "forgotTitle": "Repor palavra-passe",
+      "forgotTitle": "Esqueceste-te da palavra-passe?",
+      "forgotBody": "Escreve o teu e-mail e enviamos-te um link para criares uma nova.",
       "forgotSubmit": "Enviar link",
       "forgotSent": "Se a conta existir, enviámos-te um link para repor a palavra-passe.",
       "forgotSentHint": "Não chegou? Vê o spam, tenta outro e-mail, ou volta e inicia sessão com Google.",
@@ -681,7 +682,9 @@
       "newPasswordLabel": "Nova palavra-passe",
       "confirmLabel": "Confirmar palavra-passe",
       "submit": "Atualizar palavra-passe",
-      "success": "Pronto. Já podes entrar com a nova palavra-passe."
+      "success": "Nova palavra-passe guardada. Entra com ela.",
+      "goLogin": "Ir para entrar",
+      "error": { "missingToken": "O link está incompleto. Abre novamente o link do e-mail." }
     }
   },
   "errors": {

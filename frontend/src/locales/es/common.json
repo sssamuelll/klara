@@ -673,7 +673,8 @@
       "resendBtn": "Reenviar correo"
     },
     "reset": {
-      "forgotTitle": "Restablecer contraseña",
+      "forgotTitle": "¿Olvidaste tu contraseña?",
+      "forgotBody": "Escribe tu correo y te mando un enlace para crear una nueva.",
       "forgotSubmit": "Enviar enlace",
       "forgotSent": "Si tienes una cuenta con ese correo, te enviamos un enlace para restablecerla.",
       "forgotSentHint": "¿No llega? Revisa el spam, prueba con otro correo o vuelve e inicia sesión con Google.",
@@ -681,7 +682,9 @@
       "newPasswordLabel": "Nueva contraseña",
       "confirmLabel": "Repite la contraseña",
       "submit": "Cambiar contraseña",
-      "success": "Listo. Ya puedes entrar con la nueva contraseña."
+      "success": "Contraseña nueva guardada. Entra con ella.",
+      "goLogin": "Ir a entrar",
+      "error": { "missingToken": "El enlace está incompleto. Abre otra vez el enlace del correo." }
     }
   },
   "errors": {

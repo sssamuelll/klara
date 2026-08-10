@@ -673,7 +673,8 @@
       "resendBtn": "Resend email"
     },
     "reset": {
-      "forgotTitle": "Reset password",
+      "forgotTitle": "Forgot your password?",
+      "forgotBody": "Enter your email and we'll send you a link to create a new one.",
       "forgotSubmit": "Send link",
       "forgotSent": "If you have an account with that email, we sent a reset link to your inbox.",
       "forgotSentHint": "Didn't arrive? Check spam, try another email, or go back and sign in with Google.",
@@ -681,7 +682,9 @@
       "newPasswordLabel": "New password",
       "confirmLabel": "Confirm password",
       "submit": "Update password",
-      "success": "Done. You can sign in with your new password."
+      "success": "New password saved. Sign in with it.",
+      "goLogin": "Go to sign in",
+      "error": { "missingToken": "This link is incomplete. Open the link from your email again." }
     }
   },
   "errors": {

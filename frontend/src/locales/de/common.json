@@ -673,7 +673,8 @@
       "resendBtn": "E-Mail erneut senden"
     },
     "reset": {
-      "forgotTitle": "Passwort zurücksetzen",
+      "forgotTitle": "Passwort vergessen?",
+      "forgotBody": "Gib deine E-Mail-Adresse ein, dann schicken wir dir einen Link zum Erstellen eines neuen Passworts.",
       "forgotSubmit": "Link senden",
       "forgotSent": "Falls das Konto existiert, haben wir dir einen Link zum Zurücksetzen geschickt.",
       "forgotSentHint": "Nichts angekommen? Sieh im Spam-Ordner nach, versuche eine andere E-Mail, oder geh zurück und melde dich mit Google an.",
@@ -681,7 +682,9 @@
       "newPasswordLabel": "Neues Passwort",
       "confirmLabel": "Passwort bestätigen",
       "submit": "Passwort aktualisieren",
-      "success": "Fertig. Du kannst dich jetzt mit dem neuen Passwort anmelden."
+      "success": "Neues Passwort gespeichert. Melde dich damit an.",
+      "goLogin": "Zur Anmeldung",
+      "error": { "missingToken": "Der Link ist unvollständig. Öffne den Link aus der E-Mail noch einmal." }
     }
   },
   "errors": {
