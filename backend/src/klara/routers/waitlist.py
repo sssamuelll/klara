@@ -1,3 +1,4 @@
+import ipaddress
 import time
 from typing import Annotated
 
@@ -26,10 +27,31 @@ class WaitlistOut(BaseModel):
 
 
 # ponytail: rate limit in-memory por proceso (un worker en prod; se resetea al
-# reiniciar). Si hay N workers o abuso real: slowapi, ver TODO de main.py:147.
+# reiniciar) y single-hop XFF (confía en el último hop si el peer inmediato es
+# el proxy del host). Si hay N workers, cadena de proxies, o abuso real:
+# slowapi con forwarded-allow-ips, ver TODO de main.py:147.
 _WINDOW_S = 3600
 _MAX_PER_WINDOW = 10
 _hits: dict[str, tuple[int, float]] = {}
+
+
+def _client_ip(request: Request) -> str:
+    peer = request.client.host if request.client else "unknown"
+    xff = request.headers.get("x-forwarded-for")
+    if not xff:
+        return peer
+    try:
+        peer_addr = ipaddress.ip_address(peer)
+    except ValueError:
+        return peer
+    if not (peer_addr.is_loopback or peer_addr.is_private):
+        return peer
+    candidate = xff.split(",")[-1].strip()
+    try:
+        ipaddress.ip_address(candidate)
+    except ValueError:
+        return peer
+    return candidate
 
 
 def _rate_limited(ip: str, now: float | None = None) -> bool:
@@ -46,7 +68,7 @@ def _rate_limited(ip: str, now: float | None = None) -> bool:
 async def join_waitlist(
     payload: WaitlistIn, request: Request, session: AuthSessionDep
 ) -> WaitlistOut:
-    ip = request.client.host if request.client else "unknown"
+    ip = _client_ip(request)
     if _rate_limited(ip):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
     email = payload.email.strip().lower()
