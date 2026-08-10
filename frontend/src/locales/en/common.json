@@ -1067,7 +1067,8 @@
       "tagline": "Your study library.",
       "support": "Read, speak, review. Every course is shaped to the way you learn.",
       "ctaPrimary": "Notify me when it opens",
-      "ctaLogin": "Already have an account? Sign in"
+      "ctaLoginQuestion": "Already have an account?",
+      "ctaLoginAction": "Sign in"
     },
     "que": {
       "leer": { "title": "Read", "body": "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context." },

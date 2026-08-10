@@ -1067,7 +1067,8 @@
       "tagline": "Tu biblioteca de estudio.",
       "support": "Lees, hablas, repasas. Cada curso se arma a la forma en que aprendes tú.",
       "ctaPrimary": "Avísame cuando abra",
-      "ctaLogin": "¿Ya tienes cuenta? Entrar"
+      "ctaLoginQuestion": "¿Ya tienes cuenta?",
+      "ctaLoginAction": "Entrar"
     },
     "que": {
       "leer": { "title": "Leer", "body": "Historias cortas en el idioma que estudias. Cada palabra se abre con un toque: significado, género, contexto." },

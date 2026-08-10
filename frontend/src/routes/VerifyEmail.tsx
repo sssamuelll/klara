@@ -36,15 +36,24 @@ export default function VerifyEmail() {
       {state === "idle" && (
         <p className="auth-sub">{t("auth.signup.verifyEmailSent")}</p>
       )}
-      {state === "ok" && <p className="auth-sub">{t("auth.verify.success")}</p>}
+      {state === "ok" && (
+        <>
+          <p className="auth-sub">{t("auth.verify.success")}</p>
+          <div className="auth-actions">
+            <Link className="k-btn" to="/login">{t("auth.reset.goLogin")}</Link>
+          </div>
+        </>
+      )}
       {state === "fail" && (
         <div className="k-error" role="alert">
           {t("auth.verify.error")}
         </div>
       )}
-      <p className="auth-links">
-        <Link to="/login">{t("common.back")}</Link>
-      </p>
+      {state !== "ok" && (
+        <p className="auth-links">
+          <Link to="/login">{t("common.back")}</Link>
+        </p>
+      )}
     </main>
   );
 }

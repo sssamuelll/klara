@@ -29,7 +29,8 @@ export default function Landing() {
         <span className="marca">
           <span className="wordmark">Klara</span>
         </span>
-        <Link to="/login">{t("landing.hero.ctaLogin")}</Link>
+        <span className="landing__login-q">{t("landing.hero.ctaLoginQuestion")}</span>{" "}
+        <Link className="landing__login-a" to="/login">{t("landing.hero.ctaLoginAction")}</Link>
       </header>
 
       <section>
@@ -48,8 +49,8 @@ export default function Landing() {
       </section>
 
       <section id="waitlist" className="landing__wl">
-        <h2 className="auth-title">{t("waitlist.title")}</h2>
-        <p className="landing__support">{t("waitlist.body")}</p>
+        <h2 className="landing__wl-title">{t("waitlist.title")}</h2>
+        <p className="landing__wl-body">{t("waitlist.body")}</p>
         {state === "ok" ? (
           <p className="auth-sub" role="status">{t("waitlist.success")}</p>
         ) : (

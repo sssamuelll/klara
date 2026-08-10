@@ -1067,7 +1067,8 @@
       "tagline": "Deine Lernbibliothek.",
       "support": "Du liest, sprichst, wiederholst. Jeder Kurs passt sich deiner Art zu lernen an.",
       "ctaPrimary": "Benachrichtige mich beim Start",
-      "ctaLogin": "Schon ein Konto? Anmelden"
+      "ctaLoginQuestion": "Schon ein Konto?",
+      "ctaLoginAction": "Anmelden"
     },
     "que": {
       "leer": { "title": "Lesen", "body": "Kurze Geschichten in der Sprache, die du lernst. Jedes Wort öffnet sich mit einem Antippen: Bedeutung, Genus, Kontext." },

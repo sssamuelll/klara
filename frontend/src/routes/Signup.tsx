@@ -95,9 +95,9 @@ export default function Signup() {
       <main>
         <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
         <p className="auth-sub">{t("auth.signup.inviteOnly.body")}</p>
-        <p className="auth-links">
-          <Link to="/login">{t("auth.signup.loginLink")}</Link>
-        </p>
+        <div className="auth-actions">
+          <Link className="k-btn" to="/login">{t("auth.signup.loginLink")}</Link>
+        </div>
       </main>
     );
   }
@@ -115,9 +115,9 @@ export default function Signup() {
       <main>
         <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
         <div className="k-error" role="alert">{inviteError}</div>
-        <p className="auth-links">
-          <Link to="/login">{t("auth.signup.loginLink")}</Link>
-        </p>
+        <div className="auth-actions">
+          <Link className="k-btn" to="/login">{t("auth.signup.loginLink")}</Link>
+        </div>
       </main>
     );
   }
