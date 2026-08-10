@@ -645,6 +645,8 @@
     },
     "signup": {
       "title": "アカウントを作成",
+      "invitedTitle": "Klaraに招待されました。",
+      "invitedSub": "アカウントを作成して、ライブラリに入りましょう。",
       "emailLabel": "メールアドレス",
       "passwordLabel": "パスワード",
       "confirmLabel": "パスワードを再入力",

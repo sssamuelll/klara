@@ -645,6 +645,8 @@
     },
     "signup": {
       "title": "Konto erstellen",
+      "invitedTitle": "Du bist zu Klara eingeladen.",
+      "invitedSub": "Erstelle dein Konto und betritt die Bibliothek.",
       "emailLabel": "E-Mail",
       "passwordLabel": "Passwort",
       "confirmLabel": "Passwort bestätigen",

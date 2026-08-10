@@ -92,14 +92,10 @@ export default function Signup() {
   // No token → invitation-only gate.
   if (!inviteToken) {
     return (
-      <main className="k-page snew">
-        <div className="snew__head">
-          <h1 className="snew__title">{t("auth.signup.inviteOnly.title")}</h1>
-        </div>
-        <p className="k-mono" style={{ marginTop: "1rem", color: "var(--ink-3)" }}>
-          {t("auth.signup.inviteOnly.body")}
-        </p>
-        <p className="k-mono" style={{ marginTop: "1rem" }}>
+      <main>
+        <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
+        <p className="auth-sub">{t("auth.signup.inviteOnly.body")}</p>
+        <p className="auth-links">
           <Link to="/login">{t("auth.signup.loginLink")}</Link>
         </p>
       </main>
@@ -108,20 +104,18 @@ export default function Signup() {
 
   if (inviteLoading) {
     return (
-      <main className="k-page snew">
-        <p className="k-mono">{t("common.loading")}</p>
+      <main>
+        <p className="auth-sub">{t("common.loading")}</p>
       </main>
     );
   }
 
   if (inviteError) {
     return (
-      <main className="k-page snew">
-        <div className="snew__head">
-          <h1 className="snew__title">{t("auth.signup.inviteOnly.title")}</h1>
-        </div>
+      <main>
+        <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
         <div className="k-error" role="alert">{inviteError}</div>
-        <p className="k-mono" style={{ marginTop: "1rem" }}>
+        <p className="auth-links">
           <Link to="/login">{t("auth.signup.loginLink")}</Link>
         </p>
       </main>
@@ -129,65 +123,73 @@ export default function Signup() {
   }
 
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <h1 className="snew__title">{t("auth.signup.title")}</h1>
-      </div>
+    <main>
+      <h1 className="auth-title">{t("auth.signup.invitedTitle")}</h1>
+      <p className="auth-sub">{t("auth.signup.invitedSub")}</p>
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form onSubmit={onSubmit}>
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.signup.emailLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={submitting || Boolean(invite?.email)}
-        />
+      <form className="auth-form" onSubmit={onSubmit}>
+        <div>
+          <label className="auth-label" htmlFor="signup-email">
+            {t("auth.signup.emailLabel")}
+          </label>
+          <input
+            id="signup-email"
+            className="auth-input"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={submitting || Boolean(invite?.email)}
+          />
+        </div>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.signup.passwordLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={submitting}
-        />
+        <div>
+          <label className="auth-label" htmlFor="signup-password">
+            {t("auth.signup.passwordLabel")}
+          </label>
+          <input
+            id="signup-password"
+            className="auth-input"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("auth.signup.confirmLabel")}
-        </label>
-        <input
-          className="snew__input"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          disabled={submitting}
-        />
+        <div>
+          <label className="auth-label" htmlFor="signup-confirm">
+            {t("auth.signup.confirmLabel")}
+          </label>
+          <input
+            id="signup-confirm"
+            className="auth-input"
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={8}
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            disabled={submitting}
+          />
+        </div>
 
-        <div className="snew__actions" style={{ marginTop: "1.5rem" }}>
+        <div className="auth-actions">
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.signup.submit")}
           </button>
         </div>
-
-        <p className="k-mono" style={{ marginTop: "1.5rem", color: "var(--ink-3)" }}>
-          <Link to="/login">{t("auth.signup.loginLink")}</Link>
-        </p>
       </form>
+
+      <p className="auth-links">
+        <Link to="/login">{t("auth.signup.loginLink")}</Link>
+      </p>
     </main>
   );
 }

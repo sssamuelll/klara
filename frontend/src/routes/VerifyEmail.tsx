@@ -28,29 +28,21 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <h1 className="snew__title">{t("auth.verify.title")}</h1>
-      </div>
+    <main>
+      <h1 className="auth-title">{t("auth.verify.title")}</h1>
       {state === "verifying" && (
-        <p className="k-mono">{t("common.loading")}</p>
+        <p className="auth-sub">{t("common.loading")}</p>
       )}
       {state === "idle" && (
-        <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-          {t("auth.signup.verifyEmailSent")}
-        </p>
+        <p className="auth-sub">{t("auth.signup.verifyEmailSent")}</p>
       )}
-      {state === "ok" && (
-        <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-          {t("auth.verify.success")}
-        </p>
-      )}
+      {state === "ok" && <p className="auth-sub">{t("auth.verify.success")}</p>}
       {state === "fail" && (
         <div className="k-error" role="alert">
           {t("auth.verify.error")}
         </div>
       )}
-      <p className="k-mono" style={{ marginTop: "1.5rem" }}>
+      <p className="auth-links">
         <Link to="/login">{t("common.back")}</Link>
       </p>
     </main>
