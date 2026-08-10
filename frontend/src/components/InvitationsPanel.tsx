@@ -94,12 +94,18 @@ export default function InvitationsPanel() {
   async function onInviteFromWaitlist(row: WaitlistRow) {
     setInvitingId(row.id);
     try {
-      await api.createInvitation({ email: row.email, note: "waitlist" });
+      // Si un intento anterior creó la invitación pero se cayó antes de marcar
+      // la fila, un retry no debe crear una segunda invitación para el mismo
+      // correo — reusa la activa ya cargada.
+      const existing = items.find((i) => i.email === row.email && i.state === "active");
+      if (!existing) {
+        await api.createInvitation({ email: row.email, note: "waitlist" });
+      }
       await api.markWaitlistInvited(row.id);
-      await reloadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
+      await reloadAll();
       setInvitingId(null);
     }
   }
