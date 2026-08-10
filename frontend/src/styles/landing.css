@@ -35,6 +35,12 @@
   margin: 0 0 var(--space-4);
 }
 
+.landing__login {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .landing__login-q,
 .landing__login-a {
   font-size: 12px;
@@ -49,7 +55,9 @@
   align-items: center;
   min-height: 44px;
   color: var(--ink);
-  border-bottom: 1px solid var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
 }
 
 .landing__bloque {

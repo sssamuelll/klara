@@ -29,8 +29,10 @@ export default function Landing() {
         <span className="marca">
           <span className="wordmark">Klara</span>
         </span>
-        <span className="landing__login-q">{t("landing.hero.ctaLoginQuestion")}</span>{" "}
-        <Link className="landing__login-a" to="/login">{t("landing.hero.ctaLoginAction")}</Link>
+        <span className="landing__login">
+          <span className="landing__login-q">{t("landing.hero.ctaLoginQuestion")}</span>
+          <Link className="landing__login-a" to="/login">{t("landing.hero.ctaLoginAction")}</Link>
+        </span>
       </header>
 
       <section>
