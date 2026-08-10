@@ -1062,5 +1062,31 @@
       "teEscucho": "Estou te ouvindo…",
       "evaluando": "Avaliando…"
     }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "A tua biblioteca de estudo.",
+      "support": "Lês, falas, revês. Cada curso molda-se à tua forma de aprender.",
+      "ctaPrimary": "Avisa-me quando abrir",
+      "ctaLogin": "Já tens conta? Entrar"
+    },
+    "que": {
+      "leer": { "title": "Ler", "body": "Histórias curtas na língua que estudas. Cada palavra abre-se com um toque: significado, género, contexto." },
+      "hablar": { "title": "Falar", "body": "Falas e a Klara corrige o som exato que falhou. O que disseste ontem, ela lembra-se hoje." },
+      "repasar": { "title": "Rever", "body": "Fichas que voltam mesmo antes do esquecimento. Sem sequências, sem corações, sem culpa." }
+    },
+    "footer": { "contact": "Escreve-me", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "Por agora, só por convite.",
+    "body": "A Klara está em testes com um grupo pequeno. Deixa o teu email e escrevo-te quando abrir.",
+    "placeholder": "tu@exemplo.com",
+    "submit": "Avisa-me quando abrir",
+    "privacyNote": "O teu email serve só para te avisar do lançamento. Pede para o apagar quando quiseres.",
+    "success": "Anotado. Escrevo-te quando a Klara abrir.",
+    "error": {
+      "invalid": "Esse email não parece completo. Confirma-o.",
+      "network": "Não foi possível guardar. Tenta de novo daqui a pouco."
+    }
   }
 }

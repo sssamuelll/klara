@@ -1062,5 +1062,31 @@
       "teEscucho": "Ich höre zu…",
       "evaluando": "Wird bewertet…"
     }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Deine Lernbibliothek.",
+      "support": "Du liest, sprichst, wiederholst. Jeder Kurs passt sich deiner Art zu lernen an.",
+      "ctaPrimary": "Benachrichtige mich beim Start",
+      "ctaLogin": "Schon ein Konto? Anmelden"
+    },
+    "que": {
+      "leer": { "title": "Lesen", "body": "Kurze Geschichten in der Sprache, die du lernst. Jedes Wort öffnet sich mit einem Antippen: Bedeutung, Genus, Kontext." },
+      "hablar": { "title": "Sprechen", "body": "Du sprichst, und Klara korrigiert genau den Laut, der nicht saß. Was du gestern gesagt hast, erinnert sie heute." },
+      "repasar": { "title": "Wiederholen", "body": "Karteikarten, die kurz vor dem Vergessen zurückkommen. Keine Serien, keine Herzen, kein schlechtes Gewissen." }
+    },
+    "footer": { "contact": "Schreib mir", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "Vorerst nur auf Einladung.",
+    "body": "Klara ist gerade mit einer kleinen Gruppe im Test. Hinterlass deine E-Mail, ich schreibe dir, wenn es öffnet.",
+    "placeholder": "du@email.de",
+    "submit": "Benachrichtige mich beim Start",
+    "privacyNote": "Deine E-Mail dient nur dazu, dich zum Start zu benachrichtigen. Bitte jederzeit um Löschung.",
+    "success": "Notiert. Ich schreibe dir, wenn Klara öffnet.",
+    "error": {
+      "invalid": "Diese E-Mail sieht unvollständig aus. Prüfe sie.",
+      "network": "Konnte nicht gespeichert werden. Versuche es gleich noch einmal."
+    }
   }
 }

@@ -1062,5 +1062,31 @@
       "teEscucho": "I'm listening…",
       "evaluando": "Evaluating…"
     }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Your study library.",
+      "support": "Read, speak, review. Every course is shaped to the way you learn.",
+      "ctaPrimary": "Notify me when it opens",
+      "ctaLogin": "Already have an account? Sign in"
+    },
+    "que": {
+      "leer": { "title": "Read", "body": "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context." },
+      "hablar": { "title": "Speak", "body": "You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today." },
+      "repasar": { "title": "Review", "body": "Flashcards that come back right before you'd forget. No streaks, no hearts, no guilt." }
+    },
+    "footer": { "contact": "Email me", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "For now, invitation only.",
+    "body": "Klara is in testing with a small group. Leave your email and I'll write when it opens.",
+    "placeholder": "you@email.com",
+    "submit": "Notify me when it opens",
+    "privacyNote": "Your email is only used to notify you at launch. Ask to have it deleted anytime.",
+    "success": "Noted. I'll write when Klara opens.",
+    "error": {
+      "invalid": "That email doesn't look complete. Check it.",
+      "network": "Couldn't save it. Try again in a moment."
+    }
   }
 }

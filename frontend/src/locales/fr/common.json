@@ -1062,5 +1062,31 @@
       "teEscucho": "Je t'écoute…",
       "evaluando": "Évaluation…"
     }
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Ta bibliothèque d'étude.",
+      "support": "Tu lis, tu parles, tu révises. Chaque cours s'adapte à ta façon d'apprendre.",
+      "ctaPrimary": "Préviens-moi à l'ouverture",
+      "ctaLogin": "Tu as déjà un compte ? Se connecter"
+    },
+    "que": {
+      "leer": { "title": "Lire", "body": "De courtes histoires dans la langue que tu apprends. Chaque mot s'ouvre d'un geste : sens, genre, contexte." },
+      "hablar": { "title": "Parler", "body": "Tu discutes, et Klara corrige exactement le son qui a raté. Ce que tu as dit hier, elle s'en souvient aujourd'hui." },
+      "repasar": { "title": "Réviser", "body": "Des fiches qui reviennent juste avant l'oubli. Pas de séries, pas de cœurs, pas de culpabilité." }
+    },
+    "footer": { "contact": "Écris-moi", "copyright": "Klara" }
+  },
+  "waitlist": {
+    "title": "Pour l'instant, sur invitation.",
+    "body": "Klara est en test avec un petit groupe. Laisse ton e-mail, je t'écris à l'ouverture.",
+    "placeholder": "toi@exemple.com",
+    "submit": "Préviens-moi à l'ouverture",
+    "privacyNote": "Ton e-mail sert uniquement à te prévenir du lancement. Demande à le supprimer quand tu veux.",
+    "success": "C'est noté. Je t'écris à l'ouverture de Klara.",
+    "error": {
+      "invalid": "Cet e-mail n'a pas l'air complet. Vérifie-le.",
+      "network": "Impossible d'enregistrer. Réessaie dans un instant."
+    }
   }
 }
