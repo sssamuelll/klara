@@ -1,106 +1,115 @@
-# Kickoff v2 — El escritorio de Klara (app + landing)
+# Kickoff v3 — El escritorio de Klara: el taller
 
-**Fecha:** 2026-08-10 · **Para:** el agente de diseño que escribirá la spec del escritorio
-**Estado de partida:** main `c5a0faf` (Puerta de entrada v4 en prod) — la spec se escribe contra este estado CONGELADO; si F2.x aterriza antes de la ejecución, se reconcilia en la fase de plan, no en la spec.
-**Este documento sustituye íntegramente la v1** (PR #160). Fue endurecido por sesión adversarial del roster + investigación de mercado + evidencia del corpus propio: `ACTA-2026-08-10-sesion-adversarial.md` y `research/anexo-1..5`. Las resoluciones del acta son vinculantes.
+**Fecha:** 2026-08-11 · **Estado de partida:** `main` en `f190a11`
+**Sustituye íntegramente a la v2.** Endurecido por la sesión adversarial de la ronda 3 (Lyra · Voronov · Richter · Serrano · Cassian) + ingeniería inversa de mnemo + inventario real del código. Documentos vinculantes: `ACTA-2026-08-11-ronda3-mnemo-multitema.md` y `research/anexo-1..8`.
 
 ---
 
-## 0. Misión
+## 0. El encargo y su traducción
 
-Diseñar el escritorio de Klara y llevar el diseño al siguiente nivel. Hoy, a 1440px, toda la app v4 es una columna de 430px flotando con un borde (`mobile3.css:10-11`). No hay diseño de escritorio que mejorar: se parte de cero, con identidad ganada y producto funcionando.
+Samuel (2026-08-11): escritorio *entre lo que tenemos y mnemo*, más cerca de mnemo en limpieza; **funcionalidad distinta del móvil — otra aplicación complementaria, usadas en conjunto**; y **Klara aprende cualquier cosa, no solo idiomas**.
 
-Dos audiencias, dos superficies, dos varas — no se mezclan:
-- **La app** sirve al **estudiante**: que quien estudia una hora en escritorio termine convencido de que estudiar aquí es mejor que en el teléfono. Su vara es conductual (§9.1).
-- **La landing** sirve al **evaluador** (invitado que decide si entra; curioso que deja su correo): que piense "producto serio hecho por gente con criterio". Su vara es el gate de Iris + conversión del waitlist.
+Traducción tras el fuego adversarial:
 
-## 1. El caso — por qué este proyecto existe (anexos 1, 2, 4)
+> **El escritorio es el taller: donde el material entra al sistema. El móvil es la práctica: donde el material se ejercita.** El escritorio hace algo que el móvil no hace — *autoría* — y por eso el multi-tema nace ahí: escribir tarjetas de cualquier tema no necesita el motor de alemán.
 
-- **Ningún competidor mainstream diseña para desktop.** Duolingo/Babbel/Busuu/Mango son el mismo layout móvil ensanchado; los atajos de teclado de Duolingo y Busuu existen solo vía extensiones de terceros. La IA conversacional se lanza móvil-first; el escritorio es ciudadano de segunda en toda la categoría (anexo 1).
-- **Las herramientas que sí sirven a la sesión larga cobran peaje**: LingQ/Migaku/Clozemaster = "anticuada", "abrumadora", "confuso al inicio". **El hueco exacto: nadie fusionó motor de repaso serio (grado Anki: FSRS, colas, teclado, densidad) con producto que no da miedo abrir.** Los AI tutors 2026 son chat con piel: ninguno tiene sesión larga con memoria estructurada visible (anexo 2).
-- **Cuando alguien resuelve el escritorio del estudiante para un dominio, se vuelve el estándar de su comunidad** (medicina: Anki+AMBOSS; japonés: Migaku/Yomitan) — y todo ese ecosistema serio ya reparte los roles así: desktop para el trabajo profundo, móvil para el repaso en movimiento (anexos 2, 4).
-- **El usuario expulsado existe y paga**: pasó A2/B1, Duolingo lo castiga con energía/anuncios, Anki le exige paciencia técnica que no tiene; hoy vive en un Frankenstein de 3 apps y paga $10-15/mes sin culpa cuando le respetan el tiempo (anexo 4).
-- **El único dato duro de rendimiento favorece al desktop**: Lingvist midió 25% más tarjetas por sesión y 30% más aprendizaje en web que en móvil (anexo 1).
-- **Deudas de evidencia declaradas** (no se esconden): la demanda multi-tema está inferida del comportamiento, no articulada como pedido; y el corpus propio no tiene papers desktop-vs-móvil — el caso se sostiene en CLT + accesibilidad + mercado, y se falsará con telemetría propia (§2, §9).
+Y la limpieza pedida se consigue sin tocar la identidad, porque —
 
-Klara puede reclamar lo que nadie: motor serio + producto editorial + herramientas en función de (tema × perfil) + anti-gamification constitucional. El escritorio es donde ese reclamo se vuelve visible.
+> **La limpieza de mnemo no es su paleta: es su conteo de sustantivos.** Papel/tinta cálido, serif editorial y un bermellón se sienten tan limpios como mnemo si la pantalla tiene tres cosas. El taller tiene tres: **tarjeta, etiqueta, cola.**
 
-## 2. La tesis, enmendada por la evidencia
+## 1. Lo que la sesión adversarial cerró (no se re-litiga)
 
-**Decisión original de Samuel (2026-08-10):** el escritorio es el modo de estudio profundo, no la app móvil ensanchada. **Esa decisión queda en pie.** Lo que la sesión adversarial y el corpus propio enmendaron es el *mecanismo* (acta, resoluciones 1-2):
+- **Multi-tema SIN entidad `Course`.** Lección de mnemo: la generalidad viene de *no cablear la taxonomía* — carpetas y tags, cero `Subject`. En Klara: **etiquetas libres**, sin jerarquía, sin campo `tipo`. (Voronov: `tipo` no es un atributo, es el nombre del motor que sabe leer ese contenido; "curso" sin institución certificadora es teatro curricular.)
+- **Aislamiento total del alemán.** Tablas nuevas. Nada entra a `vocab_items`, que es un catálogo **global entre usuarios** y contaminaría a terceros.
+- **La identidad se conserva.** Papel/tinta, serif, un bermellón, hairlines. No hay conflicto real entre el encargo y la constitución: el conflicto era de scope.
+- **Anti-gamification sigue siendo constitucional.** Mnemo trae `streak.svg`, `xp.svg`, "Day Streak", "Minutes studied 0/30". Nada de eso cruza; el dashboard de widgets es su vehículo y se descarta.
+- **F3 (dominio `Course`) queda diferida como proyecto aparte**, no como precondición. Su decisión es de Lyra, con datos.
+- **La calma de mnemo está pagada por la ausencia del LLM** (Richter): sin latencia, sin costo por acción, sin fallo del modelo. El taller v1 no genera nada — es texto que escribe el usuario. Por eso puede ser igual de calmo.
 
-> **El escritorio estructura la sesión larga como un protocolo — un foco dominante, profundidad a demanda, teclado de primera clase, tiempo externalizado — no como un lienzo con más cosas a la vez.**
+## 2. Constitución vigente (heredada de la v2)
 
-- **La simultaneidad por defecto está contraindicada por la evidencia propia**: expertise reversal (la misma ayuda estorba al experto), monotropismo (la sesión larga es posible POR el foco en túnel), gloss redundante = carga extraña, texto+texto = el caso más débil del multimedia (anexo 5 §1). El segundo panel existe como **opción colapsable/on-demand con fading gobernado por el perfil** — jamás layout por defecto. La invocación (tap/atajo) es además señal para el perfil: un panel persistente mataría ese canal probatorio.
-- **La sesión es un protocolo** (anexo 5 §3): pretest al abrir, organizer (mapa antes del territorio), bloques con testing embebido e interleaving, descansos, temporizador visible (TDAH/time blindness). El valor del escritorio es ESTRUCTURAR la hora, no llenarla.
-- **Ontología resuelta** (acta, res. 2): el dispositivo es un **renderer** — el perfil es dueño de la forma (densidad, chunk, guía). Para que la promoción a `f(tema × perfil × dispositivo)` sea una decisión empírica y no un eslogan, **v1 instrumenta `device` en la evidencia** (columna aditiva en `study_sessions`; único cambio backend permitido en todo el proyecto).
-- **Identidad: se profundiza, no se reemplaza** (segunda decisión de Samuel, intacta): papel/tinta, serif, UN bermellón, hairlines — llevados a su versión adulta.
+Identidad de `DESIGN.md` (serif `Source Serif 4` lectura / `Inter Tight` UI / mono metadata; papel-tinta nunca puros; un acento; hairlines; sin mascota, sin gradientes ni glow). Anti-Duolingo. i18n total (6 locales, `check-i18n` gate). **Precedencia: evidencia de aprendizaje > identidad visual > preferencia estética.** Jurisprudencia de Iris intacta (micro-mono 10/12, gutters, nada se recorta en silencio, una portada por página, lo interactivo no viste de metadata). Progreso honesto = open learner model + calibración; **jamás** streaks ni tiempo-en-app (Goodhart, anexo 5).
 
-## 3. Constitución, precedencia y barra
+## 3. Estado del terreno, corregido
 
-- **Identidad constitucional** (`docs/design/klara-v4/DESIGN.md` L3-5, L26, L30-51, L115, L147-151): serif `Source Serif 4` para lectura, sans `Inter Tight` para UI, mono para metadata; papel/tinta nunca puros; un acento; hairlines; sin mascota; sin gradientes/glow/glassmorphism.
-- **Anti-Duolingo constitucional** (plan maestro L19-20) + anexo 5 §4: sin streaks, sin tiempo-en-app, sin nivel global de vanidad. El progreso honesto es **open learner model + calibración** (dominio por skill editable, confianza vs acierto).
-- **i18n total** (plan maestro L24): 6 locales, mismo PR, `check-i18n.mjs`.
-- **Regla de precedencia** (acta, res. 12): evidencia de aprendizaje > identidad visual > preferencia estética. Iris arbitra la EXPRESIÓN de la identidad, nunca contra la evidencia pedagógica.
-- **Superseded** (acta, res. 13): la línea del plan maestro "Desktop hereda el frame centrado. El foco del rediseño es la app móvil" queda superseded por este documento.
-- **Jurisprudencia de Iris** (v1 §3, vigente): micro-mono 10/12, gutters 22px (80px como suelo desktop per DESIGN.md L110), `--art-die` separado del acento, nada se recorta en silencio, una portada por página, lo interactivo no viste uniforme de metadata.
-- **Barra 2026** (anexo 3, vinculante como referencia): jerarquía por color+espaciado antes que negrita (Perplexity); split de roles del serif (Anthropic); ancho de línea como parámetro (iA, `--maxw-read`); chrome contextual (Arc); estructura que se siente sin verse (Linear). Las 3 trampas — serif totalizante, vacío de museo, densidad fija para leer Y operar — son fallos de gate.
+Lo que la v2 decía sigue vigente (todo lo v4 es una columna de 430px a 1440px; gramática de teclado oculta en touch; tokens de escala sin estrenar). **Correcciones de la ronda 3:**
 
-## 4. Estado medido del terreno (post-`c5a0faf`)
+- **El motor de repaso genérico YA EXISTE en prod**: FSRS desde la migración `0018`; `srs_engine.schedule_next_review()` y `project_intervals()` son funciones puras que solo leen atributos. Los robos #4 y #5 de mnemo (scheduler puro, preview de intervalo en el botón) están hechos. `RecallReviewSession.tsx` ya es Espacio-para-voltear + `1-4` con intervalos pintados.
+- **Lo que NO existe es autoría**: `POST /srs/cards` exige un `vocab_item_id` preexistente, y `user_cards.vocab_item_id` es **FK NOT NULL** a la tabla del léxico alemán. *Klara no puede agendar nada que no sea un lexema.*
+- **`study_sessions` tiene un solo escritor**: `speak_finish.py:80`. El criterio conductual de la v2 medía la superficie excluida.
+- **El perfil está construido, sin consumo y con la aridad equivocada** (`user_id` PK ⇒ f(perfil), no f(tema × perfil)).
+- **Cero offline**: el service worker solo cachea Google Fonts.
 
-| Superficie | Hoy a 1440px | Fuente |
+## 4. Fase F0 — El taller (la única fase autorizada hoy)
+
+**Core:** una ruta standalone a ≥1024px `pointer:fine` donde el usuario **pega o escribe texto plano, se vuelve tarjetas con etiquetas libres, y las repasa ahí mismo con el FSRS que ya corre en prod** — sin `Course`, sin editor de bloques, sin command palette, sin import de Anki, sin dashboard, y sin tocar una línea del alemán.
+
+*(El nombre real de la ruta lo decide `solace-wren`; "el taller" es etiqueta de trabajo.)*
+
+### Modelo de datos (migración `0021`, aditiva)
+
+- **`study_cards`** — `id, user_id, front, back, tags text[], source, created_at, updated_at` + las columnas de agenda que ya tiene `user_cards` (`state, stability, difficulty, fsrs_step, fsrs_last_review, interval_days, next_review_at, last_reviewed_at, repetitions`). Índice `(user_id, next_review_at)`. **Sin unique sobre el contenido** — los duplicados son asunto del usuario.
+- **`study_card_reviews`** — `id, user_id, study_card_id, rating, elapsed_seconds, prev/new_interval_days, **device**, reviewed_at`. El ledger no es opcional: reviews que no se registran son datos de entrenamiento que no existen nunca más.
+- **Un solo scheduler**: `srs_engine` se parametriza con un `Protocol` de ~6 líneas con los atributos FSRS. **Dos implementaciones de FSRS que derivan es el peor resultado posible de esta fase.**
+
+### Bloqueos duros de F0
+
+1. Anti-gamification (constitucional).
+2. Aislamiento del alemán: tabla nueva, jamás `vocab_items`.
+3. Validación en frontera: largo de front/back, tope de etiquetas, tope del pegado, scoping por `user_id`.
+4. Columna `device` en el ledger — es el criterio falsable y **no se puede backfillear**.
+5. Funcionalidad divergente (autoría): sin esto el escritorio es un teléfono ancho y el encargo no se cumplió.
+
+### Cortado explícitamente
+
+Editor de bloques · notas como entidad · mapa mental · dashboard de widgets · `IModule`/plugins · paquetes `.mnemo` · import de Anki · command palette · consumo móvil de la cola nueva (fase siguiente) · paleta y tipografía de mnemo (no es estética: es cambio de identidad). **Concesión de costo cero:** los atajos de la pantalla nueva viven en **un array**, para que la palette futura sea leer ese array.
+
+### Calendario y regla de decisión
+
+| # | Trabajo | h |
 |---|---|---|
-| Todo lo v4 (Inicio, Portada, Mapa, Perfil, auth, `/estudiar`) | 430px fijos + borde | `mobile3.css:10-11` |
-| Landing pública | 430px fijos + borde | `landing.css:5,16` |
-| LegacyShell (Module, NewStory, Settings, Practice, Speak) | crece a 1180px | `global.css:108-114` |
-| Onboarding | único layout desktop real: grid `200px/1fr/280px` | `onboarding.css:48-67` |
+| 1 | Migración `0021` + modelos + `Protocol` en `srs_engine` + tests del scheduler sobre la tabla nueva | 3 |
+| 2 | 5 endpoints (crear single + bulk desde pegado TSV, listar por etiqueta, cola due, review, export) + validación + tests | 4 |
+| 3 | Mockup de una pantalla, dos temas → **gate visual de Iris** | 4 |
+| 4 | Pantalla: pegar/escribir → previsualizar → guardar; lista con filtro por etiqueta | 6 |
+| 5 | Repaso: **parametrizar** `RecallReviewSession` (no forkearlo) | 3 |
+| 6 | CSS ≥1024px `pointer:fine`, densidad de tres sustantivos, auditoría dark | 4 |
+| 7 | i18n 6 locales + `check-i18n` | 2 |
+| **—** | **Build de dogfood en la máquina de Samuel** | **26h** |
+| 8 | **Samuel usa el taller un fin de semana con un tema real que no sea alemán. Cero código.** | 0 |
+| 9 | Arreglar solo lo que el uso rompió + gates + smoke matrix (1024/1280/1440/1920/720 + 1180 legacy) + diff-cero móvil + PR | 5 |
+| 10 | Deploy a prod | 1 |
 
-**Activos a explotar:** gramática de teclado completa oculta en touch (`useSentencePractice.ts:544-577`: `→`/`Enter`, `←`, `Espacio`, `M`, `Esc`; `RecallReviewSession.tsx:57-66`: `1-4`; hint `.k-hint` oculto por `hover:none` en `sentence-view.css:569-576`) — en escritorio asciende a interfaz de primera clase, PERO exige un **modelo de propiedad de foco**: los listeners globales de un carácter asumen una superficie dueña de la pantalla; con paneles vivos, "¿quién es dueño de Espacio?" es arquitectura, no estilo. Tokens de escala casi vírgenes: `--t-display` 88px (1 uso real + 1 redefinición), `--maxw-read` 640px (1 uso), `--maxw-page` (2), `--shadow-*`; `tokens.css` no tiene ni una media query — listo para crecer sin romper. Pieles de sesión compartidas (`sentence-view/finish/recall-review/gender-review.css`) sirven al v4 Y al legacy. `pages.css`+`path.css` (~180 selectores) solo sostienen Module/NewStory/Settings. PWA sin nada de desktop (`vite.config.ts:8-33`).
+> **Regla de decisión, comprometida por adelantado:** **≥20 tarjetas creadas en el fin de semana → continúa** (fase siguiente: el móvil consume la cola nueva, que es el pago real de "se usan en conjunto"). **<20 → el taller se congela donde esté y la pregunta multi-tema vuelve a Lyra con datos**, no con otra ronda de council.
 
-## 5. Fronteras (resueltas en el acta — el agente no las re-decide)
+### Permission slip
 
-- **Núcleo v1:** `/estudiar/:id` (standalone, `App.tsx:229-238`) + Repaso (fichas) — las pieles de sesión compartidas.
-- **Speak: FUERA del v1** (una sola categoría — acta res. 3): su reskin F2.5 sigue pendiente sobre la misma piel; su escritorio se especifica después.
-- **Semántica de "fuera" con CSS compartido** (res. 4): las pieles compartidas PUEDEN ganar breakpoints ≥1024px; las pantallas legacy que las consumen aceptan esos cambios de composición — y el smoke a 1180px entra al perímetro de verificación. "Fuera" = no se rediseñan su flujo ni su piel propia.
-- **Module/NewStory/Settings: fuera del v1.** Absorberlas es decisión de scope futura (con Cassian), no del agente de diseño.
-- **Onboarding + cuestionario F1.5: fuera, con veredicto** (res. 14): conservan su grid; se auditan en dark y anchos, no se rediseñan.
-- **EL gate móvil** (formulación única — res. 5): la spec enumera la lista de archivos móviles; `git diff` sobre esa lista = **cero**, salvo excepciones registradas en la spec con justificación línea a línea. + smoke en iPhone. (Sin lenguaje píxel/byte.)
-- **Frontera de viewport** (res. 7): desktop nace en **≥1024px con `pointer:fine`**; 431-1023 = el móvil centrado actual, explícito; tablet táctil ≥1024 = layout desktop con hints ocultos por la regla touch existente (que NO se toca); un resize que cruza el breakpoint cierra los paneles on-demand sin perder el estado de la sesión.
-- **Dark: se audita, no se difiere** (res. 6): ya está vivo (toggle `Perfil.tsx:68` + `prefers-color-scheme` en `preferences.ts:69`); toda composición nueva se revisa en ambos temas desde el día uno.
-- **Manifest PWA = perímetro móvil** (res. 15): es un artefacto único que muta lo que instala el iPhone; cualquier cambio es excepción registrada.
-- **Backend: cero cambios**, con UNA excepción declarada: la columna `device` en `study_sessions` (§2). Dominio Course/F3, suscripción, racha, SEO/legal de la landing: fuera (deudas heredadas explícitas).
+> Se autoriza shippear un escritorio cuya única superficie propia es un taller de tarjetas de texto plano con etiquetas libres — sin `Course`, sin editor de bloques, sin palette, sin import, sin dashboard — conviviendo con el dominio de alemán en tablas separadas y con la identidad papel/tinta intacta, mientras el resto de la app sigue siendo una columna de 430px. **Rechazarlo tiene que ser explícito; el default no puede ser "primero resolvemos el multi-tema".**
 
-## 6. Lo que la spec debe contener (en este orden)
+## 5. Carril paralelo — el perfil consumido (decisión de Samuel, 2026-08-11)
 
-1. **La hora narrada.** El modelo de sesión ANTES del de composición: una sesión de estudio de escritorio contada minuto a minuto, implementando el protocolo del anexo 5 §3 (pretest, organizer, bloques, testing embebido, interleaving, descansos, temporizador). Sin esta narrativa, cualquier catálogo de layouts carece de criterio de selección.
-2. **La composición.** Un foco dominante (columna de lectura, `--maxw-read` como parámetro à la iA); profundidad a demanda (gloss/ficha colapsables con fading gobernado por perfil — expertise reversal); qué evidencia produce cada invocación (el canal del tap no se pierde). Qué pasa a 1024, 1280, 1440 y en ventana a media pantalla.
-3. **El modelo de propiedad de foco.** Zonas, dueño de cada tecla, la gramática existente como base. Palette de comandos: diferida salvo evidencia (Cassian). Territorio de Petra Haft — su review es obligatoria antes de cerrar la spec.
-4. **El progreso honesto.** Open learner model en pantalla grande: dominio por skill editable, calibración confianza-vs-acierto, el porqué de la siguiente acción. Jamás streaks/tiempo-en-app (Goodhart).
-5. **La landing desktop** (fase D2): audiencia y trabajo definidos (§0); mostrar el objeto real (la sesión, no un mockup genérico); nombrar para quién NO es; tipografía como hero; estreno de `--t-display` en UNA superficie.
-6. **La navegación del shell** (fase D2+, con evidencia de D1): qué reemplaza a la TabBar en desktop. No bloquea D1 — `/estudiar` es standalone.
+Los tres agentes de juicio coinciden en que **este es el foso**: la tesis "herramientas = f(tema × perfil)" está construida al 90% y rinde 0. Corre en paralelo al taller porque no comparten archivos (el taller: tablas, rutas y CSS nuevos; el perfil: `llm/prompts.py`, `story_gen.py`, `learner_synthesis.py`).
 
-## 7. Fases y permission slip (Cassian, acta res. 11)
+**El test de Richter, que nadie ha corrido:** *una materia, dos aprendices.* Alemán para alguien que respondió "el audio me dispersa" contra alguien que respondió "me fija las cosas" — ambos valores ya existen en `schemas/learner_catalog.py`. Un prompt lee `synthesis`. La sesión generada difiere de forma visible. **Si f(perfil) no produce diferencia dentro de una sola materia, f(tema × perfil) entre materias es fantasía con más superficie.**
 
-- **D1 (una semana):** `/estudiar` + Repaso a ≥1024px — columna de lectura, panel on-demand, teclado visible, temporizador. CSS nuevo detrás de breakpoint; lista móvil con diff cero. Ship viernes.
-- **D2 (una semana):** landing desktop + pase de Repaso/Finish + decisión de navegación con la evidencia de D1.
-- **D3+:** shell completo, absorciones legacy (con Cassian), Speak post-F2.5.
+Deuda conocida a declarar en su spec: la aridad. `learner_profile.user_id` es PK ⇒ hoy es f(perfil) global; el `course_learner_overlay` prometido nunca se construyó.
 
-> **Permission slip:** se autoriza shippear un escritorio donde solo `/estudiar` tiene composición de escritorio real mientras landing, shell y legacy siguen en columna móvil una semana más — un evaluador verá esa mezcla — porque la tesis en manos de usuarios el viernes vale más que la coherencia total en octubre. Rechazarlo debe ser explícito; el default no puede ser "más spec".
+## 6. Fases siguientes (no autorizadas todavía)
 
-## 8. Proceso y gates
+- **F1** (si ≥20 tarjetas): el móvil consume la cola nueva — el objeto compartido que hace real la palabra "complementarias" (Voronov: sin sustantivo que cruce, no hay complementariedad, hay dos apps).
+- **F2**: `/estudiar` a ≥1024px (la D1 del kickoff v2) — aquí **Petra Haft vuelve a ser obligatoria** (paneles simultáneos ⇒ modelo de propiedad de foco).
+- **F3+**: dominio genérico real, convergencia de los dos sistemas de tarjetas. **Revisión a 4 semanas, dueño: Lyra.**
 
-1. Spec de la fase D1 solamente (el resto del territorio: direcciones, no specs).
-2. Review de spec: **Serrano** (gaps/estados de fallo) + **Petra Haft** (gramática de interacción — obligatoria).
-3. **Gate visual antes del plan** (res. 10): mockup/artefacto de la composición aprobado por Iris ANTES de escribir el plan de implementación — la lección del v4: el mockup dictaba el diseño.
-4. Plan (`writing-plans`) → ejecución subagent-driven con Iris por pantalla.
-5. Gates mecánicos por PR: diff-cero sobre la lista móvil, `check-i18n` (6 locales), a11y de foco/teclado real, auditoría dark, smoke matrix (1024 / 1280 / 1440 / 1920 / ventana ~720px + 1180px legacy + iPhone).
+## 7. Gates
 
-## 9. Criterios de éxito (falsables)
+Serrano sobre la spec del taller (tiene estados de fallo reales: parseo del pegado, duplicados, vacío, tarjetas huérfanas) · **Iris antes del plan** (gate visual, lección del v4) · Petra Haft **diferida con rastro** hasta F2 · gates mecánicos por PR: diff-cero sobre la lista móvil (se cumple por construcción), `check-i18n` 6 locales, a11y de foco y teclado, auditoría dark, smoke matrix.
 
-1. **EL criterio (conductual):** a 4 semanas del ship de D1, la mayoría de los minutos de sesión larga (>20 min) de los usuarios activos ocurre en escritorio — medible con la columna `device` de §2. Si no migran, la tesis se revisa con esos datos.
-2. **Piso de teclado:** una sesión completa de `/estudiar` operable sin tocar el mouse (entrar→leer→audio→revelar→calificar→salir), verificada por checklist.
-3. **Móvil intacto:** diff cero sobre la lista enumerada + smoke iPhone verde.
-4. **Dark auditado** en cada composición nueva (checklist de Iris cubre ambos temas).
-5. **i18n:** 6 locales, cero strings duros.
+## 8. Criterios de éxito (falsables)
 
-*(La calidad estética no es criterio: es el gate de Iris. Un criterio que un gate cumple por construcción no mide nada — Serrano F9.)*
+1. **≥20 tarjetas creadas en el fin de semana de dogfood** sobre un tema que no sea alemán. Es la tesis entera, falsable en 48 horas y por $0.
+2. **Sesión de taller completa sin tocar el mouse** (pegar → guardar → repasar → salir), verificada por checklist.
+3. **Alemán intacto**: diff-cero sobre la lista móvil + smoke iPhone verde + suite backend en verde.
+4. **`device` poblado en el 100% de los reviews del taller** desde el primer día (no backfilleable).
+5. i18n 6 locales, cero strings duros; auditoría dark en cada pantalla nueva.
+
+*(La calidad estética no es criterio: es el gate de Iris. Un criterio que un gate cumple por construcción no mide nada.)*
