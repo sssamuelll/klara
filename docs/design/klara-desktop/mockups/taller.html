@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>El taller — mockup F0 v2 (claro y oscuro)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* v2 tras el gate de Iris. Cambios: los tres cortes (ancho de 720 del teléfono,
+   recorte del reverso, dos rótulos de 13px), botón a `.k-btn` real en tinta,
+   escala 40/22/17/13 toda en token, marginalia en mono, --ink-4 fuera de datos
+   y controles, y el vocabulario de máquina fuera de la pantalla.
+   Tokens copiados verbatim de frontend/src/styles/tokens.css. */
+.frame {
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter Tight", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --t-mark: 14px; --t-meta: 13px; --t-body: 17px; --t-read: 22px;
+  --t-h3: 28px; --t-h2: 40px;
+  --lh-tight: 1.08; --lh-snug: 1.25; --lh-read: 1.5; --lh-loose: 1.7;
+  --tracking-mark: 0.08em; --tracking-tight: -0.02em;
+
+  --paper: #F4EFE6; --paper-2: #EFE9DD; --paper-3: #E7E0D0;
+  --ink: #1A1814; --ink-2: #423E36; --ink-3: #6E6859; --ink-4: #9A9382;
+  --rule: #D9D2C0;
+  --accent: oklch(0.58 0.17 25);
+  --accent-ink: oklch(0.36 0.13 25);
+  --accent-wash: oklch(0.94 0.04 25);
+  --focus: oklch(0.58 0.17 25);
+
+  --r-sm: 4px; --r-pill: 999px;
+  --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+  --maxw-page: 1180px;
+}
+.frame[data-theme="dark"] {
+  --paper: #16181C; --paper-2: #1C1F24; --paper-3: #242830;
+  --ink: #ECE6D6; --ink-2: #B8B2A4; --ink-3: #807B70; --ink-4: #5A564E;
+  --rule: #2A2E36;
+  --accent: oklch(0.72 0.15 28);
+  --accent-ink: oklch(0.85 0.1 30);
+  --accent-wash: oklch(0.28 0.07 25);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; padding: 40px 24px 80px; background: #8b8578; font-family: "Inter Tight", sans-serif; }
+.label {
+  max-width: 1180px; margin: 0 auto 12px;
+  font-family: "JetBrains Mono", monospace; font-size: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #F4EFE6; opacity: 0.75;
+}
+.frame {
+  max-width: 1180px; margin: 0 auto 56px;
+  background: var(--paper); color: var(--ink);
+  min-height: 700px; padding: var(--space-8);
+  font-family: var(--font-sans);
+}
+.frame--short { min-height: 480px; }
+
+/* ---------- Marginalia: mono con tracking, como el resto de Klara ---------- */
+.mono {
+  font-family: var(--font-mono); font-size: var(--t-meta);
+  letter-spacing: var(--tracking-mark); font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: var(--space-4); border-bottom: 1px solid var(--rule);
+}
+.masthead h1 {
+  margin: 0; font-family: var(--font-serif); font-weight: 400;
+  font-size: var(--t-h2); line-height: var(--lh-tight); letter-spacing: var(--tracking-tight);
+}
+.tally { margin: 0; color: var(--ink-3); }
+.tally a {
+  color: var(--accent-ink); text-decoration: none;
+  border-bottom: 1px solid var(--accent); padding-bottom: 1px;
+}
+
+/* ---------- Dos columnas separadas por regla, no por vacío ---------- */
+.body { display: grid; grid-template-columns: 200px 1fr; gap: var(--space-7); padding-top: var(--space-6); }
+/* La lista tope a la altura de la columna, no a una constante. */
+.rail { border-right: 1px solid var(--rule); padding-right: var(--space-5); display: flex; flex-direction: column; min-height: 0; }
+.rail h2 {
+  margin: 0 0 var(--space-4); font-family: var(--font-mono); font-weight: 500;
+  font-size: var(--t-meta); letter-spacing: var(--tracking-mark);
+  text-transform: uppercase; color: var(--ink-3);
+}
+.rail ul { list-style: none; margin: 0; padding: 0; flex: 1; min-height: 0; overflow-y: auto; }
+.rail button {
+  display: flex; width: 100%; justify-content: space-between; align-items: baseline;
+  gap: var(--space-3); padding: 6px 0;
+  background: none; border: none; cursor: pointer; text-align: left;
+  font-family: var(--font-sans); font-size: var(--t-body); color: var(--ink-2);
+}
+.rail button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.rail .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rail .n { font-family: var(--font-mono); font-size: var(--t-meta); color: var(--ink-3); font-variant-numeric: tabular-nums; flex: none; }
+.rail li.on button { color: var(--ink); }
+.rail li.on { box-shadow: inset 2px 0 0 var(--ink); padding-left: var(--space-2); margin-left: calc(var(--space-2) * -1); }
+
+/* ---------- Textura cruda: cuelga 17px para que su texto alinee con la tabla ---------- */
+textarea {
+  display: block; width: calc(100% + 17px); margin-left: -17px;
+  /* Crece con el contenido; nunca se recorta a sí mismo. A 1024 el mismo
+     pegado envuelve a 9 líneas y con altura fija escondía la última tarjeta
+     mientras la previsualización sí la listaba. */
+  field-sizing: content; min-height: 190px; resize: vertical;
+  background: var(--paper-2); color: var(--ink);
+  border: 1px solid var(--rule); border-radius: var(--r-sm);
+  padding: var(--space-4);
+  font-family: var(--font-mono); font-size: var(--t-body); line-height: var(--lh-read);
+}
+textarea:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+textarea::placeholder { color: var(--ink-4); }
+
+.chips { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4); }
+.chip {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 4px 12px; border-radius: var(--r-pill);
+  background: var(--paper-3); color: var(--ink-2);
+  font-family: var(--font-mono); font-size: var(--t-meta); letter-spacing: var(--tracking-mark);
+  border: none; cursor: pointer;
+}
+.chip .x { color: var(--ink-3); }
+.chip.add { background: none; border: 1px dashed var(--rule); color: var(--ink-3); }
+.chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+/* ---------- Previsualización ---------- */
+.preview { margin-top: var(--space-7); }
+.preview-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: var(--space-3); border-bottom: 1px solid var(--rule);
+  color: var(--ink-3);
+}
+.preview-head .flag { color: var(--accent-ink); }
+
+.rows { margin: 0; padding: 0; list-style: none; }
+.rows li {
+  /* Piso en el anverso: es la cara de la tarjeta y partido en dos lee como
+     daño. El reverso paga en vertical, que es gratis. */
+  display: grid; grid-template-columns: minmax(220px, 0.4fr) 1fr;
+  gap: var(--space-6); align-items: baseline;
+  padding: var(--space-3) 0; border-bottom: 1px solid var(--rule);
+}
+.rows .front {
+  font-family: var(--font-serif); font-size: var(--t-read);
+  line-height: var(--lh-snug); color: var(--ink);
+}
+.rows .back { font-size: var(--t-body); line-height: var(--lh-read); color: var(--ink-2); }
+/* Una sola señal para el estado que falla, y conserva el cuerpo de sus vecinas. */
+.rows li.bad .back { color: var(--accent-ink); font-style: italic; }
+
+/* ---------- Estado vacío: aquí el repaso es el sujeto, no la marginalia ---------- */
+.rest { margin-top: var(--space-7); padding-top: var(--space-5); border-top: 1px solid var(--rule); }
+.rest__saved { margin: 0; color: var(--ink-3); }
+.rest__call {
+  margin: var(--space-6) 0 var(--space-5);
+  font-family: var(--font-serif); font-size: var(--t-read);
+  line-height: var(--lh-snug); color: var(--ink);
+}
+
+/* ---------- Acción: el primario de Klara es tinta, no acento ---------- */
+.action { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-4); margin-top: var(--space-6); }
+.kbd { font-family: var(--font-mono); font-size: var(--t-meta); color: var(--ink-3); }
+.k-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 22px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  font-family: var(--font-sans); font-weight: 500; font-size: 15px;
+  background: var(--ink); color: var(--paper);
+}
+.k-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ TEMA CLARO ============ -->
+<div class="label">Claro — papel · 1180px</div>
+<div class="frame" data-theme="light">
+  <div class="masthead">
+    <h1>El taller</h1>
+    <p class="tally mono">34 tarjetas · <a href="#">12 por repasar</a></p>
+  </div>
+
+  <div class="body">
+    <aside class="rail">
+      <h2>Etiquetas</h2>
+      <ul>
+        <li class="on"><button><span class="name">todas</span></button></li>
+        <li><button><span class="name">fisiología</span><span class="n">22</span></button></li>
+        <li><button><span class="name">mitocondria</span><span class="n">14</span></button></li>
+        <li><button><span class="name">anatomía</span><span class="n">11</span></button></li>
+        <li><button><span class="name">neurofisiología del dolor</span><span class="n">7</span></button></li>
+        <li><button><span class="name">farmacología</span><span class="n">5</span></button></li>
+        <li><button><span class="name">ciclo celular</span><span class="n">3</span></button></li>
+      </ul>
+    </aside>
+
+    <div class="col">
+      <textarea spellcheck="false">ATP	adenosín trifosfato — la moneda energética de la célula
+glucólisis	vía citoplasmática que parte la glucosa en dos piruvatos
+ciclo de Krebs	oxida el acetil-CoA en la matriz mitocondrial y libera NADH
+cadena respiratoria	crestas mitocondriales; produce la mayor parte del ATP
+fosforilación oxidativa
+gradiente de protones	lo que la ATP sintasa convierte en trabajo</textarea>
+
+      <div class="chips">
+        <button class="chip">fisiología <span class="x">×</span></button>
+        <button class="chip">mitocondria <span class="x">×</span></button>
+        <button class="chip add">añadir</button>
+      </div>
+
+      <div class="preview">
+        <div class="preview-head mono">
+          <span>5 tarjetas</span>
+          <span class="flag">1 incompleta</span>
+        </div>
+        <ul class="rows">
+          <li><span class="front">ATP</span><span class="back">adenosín trifosfato — la moneda energética de la célula</span></li>
+          <li><span class="front">glucólisis</span><span class="back">vía citoplasmática que parte la glucosa en dos piruvatos</span></li>
+          <li><span class="front">ciclo de Krebs</span><span class="back">oxida el acetil-CoA en la matriz mitocondrial y libera NADH</span></li>
+          <li><span class="front">cadena respiratoria</span><span class="back">crestas mitocondriales; produce la mayor parte del ATP</span></li>
+          <li class="bad"><span class="front">fosforilación oxidativa</span><span class="back">sin reverso — no se guarda</span></li>
+          <li><span class="front">gradiente de protones</span><span class="back">lo que la ATP sintasa convierte en trabajo</span></li>
+        </ul>
+      </div>
+
+      <div class="action">
+        <span class="kbd">⌘↵</span>
+        <button class="k-btn">Guardar 5 tarjetas</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TEMA OSCURO ============ -->
+<div class="label">Oscuro — U-Bahn de noche · 1180px</div>
+<div class="frame" data-theme="dark">
+  <div class="masthead">
+    <h1>El taller</h1>
+    <p class="tally mono">34 tarjetas · <a href="#">12 por repasar</a></p>
+  </div>
+
+  <div class="body">
+    <aside class="rail">
+      <h2>Etiquetas</h2>
+      <ul>
+        <li class="on"><button><span class="name">todas</span></button></li>
+        <li><button><span class="name">fisiología</span><span class="n">22</span></button></li>
+        <li><button><span class="name">mitocondria</span><span class="n">14</span></button></li>
+        <li><button><span class="name">anatomía</span><span class="n">11</span></button></li>
+        <li><button><span class="name">neurofisiología del dolor</span><span class="n">7</span></button></li>
+        <li><button><span class="name">farmacología</span><span class="n">5</span></button></li>
+        <li><button><span class="name">ciclo celular</span><span class="n">3</span></button></li>
+      </ul>
+    </aside>
+
+    <div class="col">
+      <textarea spellcheck="false">ATP	adenosín trifosfato — la moneda energética de la célula
+glucólisis	vía citoplasmática que parte la glucosa en dos piruvatos
+ciclo de Krebs	oxida el acetil-CoA en la matriz mitocondrial y libera NADH
+cadena respiratoria	crestas mitocondriales; produce la mayor parte del ATP
+fosforilación oxidativa
+gradiente de protones	lo que la ATP sintasa convierte en trabajo</textarea>
+
+      <div class="chips">
+        <button class="chip">fisiología <span class="x">×</span></button>
+        <button class="chip">mitocondria <span class="x">×</span></button>
+        <button class="chip add">añadir</button>
+      </div>
+
+      <div class="preview">
+        <div class="preview-head mono">
+          <span>5 tarjetas</span>
+          <span class="flag">1 incompleta</span>
+        </div>
+        <ul class="rows">
+          <li><span class="front">ATP</span><span class="back">adenosín trifosfato — la moneda energética de la célula</span></li>
+          <li><span class="front">glucólisis</span><span class="back">vía citoplasmática que parte la glucosa en dos piruvatos</span></li>
+          <li><span class="front">ciclo de Krebs</span><span class="back">oxida el acetil-CoA en la matriz mitocondrial y libera NADH</span></li>
+          <li><span class="front">cadena respiratoria</span><span class="back">crestas mitocondriales; produce la mayor parte del ATP</span></li>
+          <li class="bad"><span class="front">fosforilación oxidativa</span><span class="back">sin reverso — no se guarda</span></li>
+          <li><span class="front">gradiente de protones</span><span class="back">lo que la ATP sintasa convierte en trabajo</span></li>
+        </ul>
+      </div>
+
+      <div class="action">
+        <span class="kbd">⌘↵</span>
+        <button class="k-btn">Guardar 5 tarjetas</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ESTADO VACÍO — el banco limpio, justo después de guardar ============ -->
+<div class="label">Estado vacío · claro — el repaso es el sujeto, y el enlace del masthead desaparece</div>
+<div class="frame frame--short" data-theme="light">
+  <div class="masthead">
+    <h1>El taller</h1>
+    <p class="tally mono">39 tarjetas</p>
+  </div>
+  <div class="body">
+    <aside class="rail">
+      <h2>Etiquetas</h2>
+      <ul>
+        <li class="on"><button><span class="name">todas</span></button></li>
+        <li><button><span class="name">fisiología</span><span class="n">27</span></button></li>
+        <li><button><span class="name">mitocondria</span><span class="n">19</span></button></li>
+        <li><button><span class="name">anatomía</span><span class="n">11</span></button></li>
+        <li><button><span class="name">neurofisiología del dolor</span><span class="n">7</span></button></li>
+        <li><button><span class="name">farmacología</span><span class="n">5</span></button></li>
+        <li><button><span class="name">ciclo celular</span><span class="n">3</span></button></li>
+      </ul>
+    </aside>
+    <div class="col">
+      <textarea spellcheck="false" placeholder="ATP	adenosín trifosfato — la moneda energética de la célula"></textarea>
+      <div class="chips"><button class="chip add">añadir</button></div>
+      <div class="rest">
+        <p class="rest__saved mono">5 tarjetas guardadas</p>
+        <p class="rest__call">Quedan 12 por repasar.</p>
+        <button class="k-btn">Repasar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="label">Estado vacío · oscuro</div>
+<div class="frame frame--short" data-theme="dark">
+  <div class="masthead">
+    <h1>El taller</h1>
+    <p class="tally mono">39 tarjetas</p>
+  </div>
+  <div class="body">
+    <aside class="rail">
+      <h2>Etiquetas</h2>
+      <ul>
+        <li class="on"><button><span class="name">todas</span></button></li>
+        <li><button><span class="name">fisiología</span><span class="n">27</span></button></li>
+        <li><button><span class="name">mitocondria</span><span class="n">19</span></button></li>
+        <li><button><span class="name">anatomía</span><span class="n">11</span></button></li>
+        <li><button><span class="name">neurofisiología del dolor</span><span class="n">7</span></button></li>
+        <li><button><span class="name">farmacología</span><span class="n">5</span></button></li>
+        <li><button><span class="name">ciclo celular</span><span class="n">3</span></button></li>
+      </ul>
+    </aside>
+    <div class="col">
+      <textarea spellcheck="false" placeholder="ATP	adenosín trifosfato — la moneda energética de la célula"></textarea>
+      <div class="chips"><button class="chip add">añadir</button></div>
+      <div class="rest">
+        <p class="rest__saved mono">5 tarjetas guardadas</p>
+        <p class="rest__call">Quedan 12 por repasar.</p>
+        <button class="k-btn">Repasar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
