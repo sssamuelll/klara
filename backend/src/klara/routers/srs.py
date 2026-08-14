@@ -19,7 +19,7 @@ from klara.schemas.srs import (
     ReviewSubmitRequest,
 )
 from klara.services.practice_session import apply_pronunciation_reviews
-from klara.services.srs_engine import project_intervals, schedule_next_review
+from klara.services.srs_engine import apply_review, project_intervals
 
 router = APIRouter(prefix="/srs", tags=["srs"])
 
@@ -113,12 +113,7 @@ async def submit_review(
     if card is None or card.user_id != user.id:
         raise HTTPException(status_code=404, detail=t("errors.card_not_found", locale))
 
-    prev_interval = card.interval_days
-    new_interval, next_review, new_state = schedule_next_review(card, payload.rating)
-    card.interval_days = new_interval
-    card.next_review_at = next_review
-    card.last_reviewed_at = datetime.now(UTC)
-    card.state = new_state
+    prev_interval = apply_review(card, payload.rating)
 
     review = Review(
         user_card_id=card.id,
@@ -126,7 +121,7 @@ async def submit_review(
         rating=payload.rating,
         elapsed_seconds=payload.elapsed_seconds,
         prev_interval_days=prev_interval,
-        new_interval_days=new_interval,
+        new_interval_days=card.interval_days,
         channel="recall",
     )
     db.add(review)
