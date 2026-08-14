@@ -28,6 +28,7 @@ from klara.routers import (
     speak,
     srs,
     stories,
+    taller,
     tts,
     users,
     waitlist,
@@ -231,6 +232,7 @@ def create_app() -> FastAPI:
     app.include_router(speak.router, prefix="/api/v1")
     app.include_router(modules.router, prefix="/api/v1")
     app.include_router(waitlist.router, prefix="/api/v1", tags=["waitlist"])
+    app.include_router(taller.router, prefix="/api/v1")
 
     return app
 

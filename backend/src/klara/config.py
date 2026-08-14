@@ -178,6 +178,16 @@ class Settings(BaseSettings):
     # longitud de los intervalos FSRS. Default upstream de fsrs.
     srs_desired_retention: float = 0.9
 
+    # --- El taller (F0) ---
+    # Allowlist de dogfood: user_ids (UUID) separados por coma. Vacío por
+    # defecto = cerrado. Fuera de la lista, /taller/* da 403 y el frontend no
+    # renderiza el enlace de entrada.
+    taller_user_ids: str = ""
+
+    @property
+    def taller_user_id_set(self) -> set[str]:
+        return {x.strip() for x in self.taller_user_ids.split(",") if x.strip()}
+
     @property
     def azure_speech_configured(self) -> bool:
         return bool(self.azure_speech_key)
