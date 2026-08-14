@@ -99,6 +99,48 @@ export interface CardOut {
   next_intervals: Record<"again" | "hard" | "good" | "easy", number>;
 }
 
+// --- El taller (F0): tarjetas de tema libre, aisladas del alemán ---
+
+export type TallerCardState = "new" | "learning" | "reviewing" | "relearning" | "suspended";
+
+export interface StudyCardOut {
+  id: string;
+  front: string;
+  back: string;
+  tags: string[];
+  batch_id: string;
+  archived_at: string | null;
+  state: TallerCardState;
+  interval_days: number;
+  next_review_at: string;
+  last_reviewed_at: string | null;
+  repetitions: number;
+  next_intervals: Record<"again" | "hard" | "good" | "easy", number>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TallerTagCount {
+  tag: string;
+  count: number;
+}
+
+export interface TallerOverview {
+  total: number;
+  due: number;
+  tags: TallerTagCount[];
+}
+
+export interface TallerCardList {
+  total: number;
+  items: StudyCardOut[];
+}
+
+export interface TallerBulkOut {
+  created: number;
+  cards: StudyCardOut[];
+}
+
 export type AuthMethod = "password" | "google";
 
 export interface User {

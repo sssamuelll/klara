@@ -1062,6 +1062,59 @@
       "evaluando": "評価中…"
     }
   },
+  "taller": {
+    "masthead": {
+      "total_one": "{{count}} tarjeta",
+      "total_other": "{{count}} tarjetas",
+      "due_one": "{{count}} por repasar",
+      "due_other": "{{count}} por repasar"
+    },
+    "rail": {
+      "tagsTitle": "Etiquetas",
+      "all": "todas"
+    },
+    "compose": {
+      "placeholder": "ATP\tadenosín trifosfato — la moneda energética de la célula",
+      "addChip": "añadir",
+      "removeChip": "Quitar etiqueta {{tag}}",
+      "save_one": "Guardar {{count}} tarjeta",
+      "save_other": "Guardar {{count}} tarjetas",
+      "preview": {
+        "count_one": "{{count}} tarjeta",
+        "count_other": "{{count}} tarjetas",
+        "incomplete_one": "{{count}} incompleta",
+        "incomplete_other": "{{count}} incompletas",
+        "noBack": "sin reverso — no se guarda"
+      },
+      "pasteTruncated_one": "Pegado recortado a 100 000 caracteres — se perdió {{count}} línea",
+      "pasteTruncated_other": "Pegado recortado a 100 000 caracteres — se perdieron {{count}} líneas"
+    },
+    "rejected": {
+      "line": "línea {{line}}: {{text}}"
+    },
+    "empty": {
+      "saved_one": "{{count}} tarjeta guardada",
+      "saved_other": "{{count}} tarjetas guardadas",
+      "call_one": "Queda {{count}} por repasar.",
+      "call_other": "Quedan {{count}} por repasar.",
+      "callNone": "No queda ninguna por repasar.",
+      "review": "Repasar"
+    },
+    "review": {
+      "comingSoon": "El repaso del taller llega en el siguiente PR.",
+      "back": "Volver"
+    },
+    "gate": {
+      "message": "El taller vive en escritorio — ábrelo en una pantalla más ancha para usarlo."
+    },
+    "entry": {
+      "link": "El taller"
+    },
+    "errors": {
+      "invalid": "No se pudo guardar. Revisa las líneas marcadas e intenta de nuevo.",
+      "saveFailed": "No se pudo guardar. Intenta de nuevo."
+    }
+  },
   "landing": {
     "hero": {
       "tagline": "あなたの学習ライブラリ。",

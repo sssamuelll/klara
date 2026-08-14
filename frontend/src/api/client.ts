@@ -32,6 +32,10 @@ import type {
   Story,
   StoryDifficultyValue,
   StoryListItem,
+  StudyCardOut,
+  TallerBulkOut,
+  TallerCardList,
+  TallerOverview,
   User,
   UserUpdate,
   WaitlistRow,
@@ -488,4 +492,66 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  // --- el taller (F0) ---
+  tallerOverview: () => request<TallerOverview>("/taller/overview"),
+
+  createTallerCard: (front: string, back: string, tags: string[], batchId: string) =>
+    request<StudyCardOut>("/taller/cards", {
+      method: "POST",
+      body: JSON.stringify({ front, back, tags, batch_id: batchId }),
+    }),
+
+  createTallerCardsBulk: (
+    cards: { front: string; back: string }[],
+    tags: string[],
+    batchId: string,
+  ) =>
+    request<TallerBulkOut>("/taller/cards/bulk", {
+      method: "POST",
+      body: JSON.stringify({ cards, tags, batch_id: batchId }),
+    }),
+
+  listTallerCards: (opts?: { tag?: string; limit?: number; offset?: number }) => {
+    const params = new URLSearchParams();
+    if (opts?.tag) params.set("tag", opts.tag);
+    if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
+    if (opts?.offset !== undefined) params.set("offset", String(opts.offset));
+    const qs = params.toString();
+    return request<TallerCardList>(`/taller/cards${qs ? `?${qs}` : ""}`);
+  },
+
+  dueTallerCards: (limit = 20) => request<StudyCardOut[]>(`/taller/cards/due?limit=${limit}`),
+
+  reviewTallerCard: (
+    cardId: string,
+    rating: ReviewRating,
+    device: "desktop" | "mobile",
+    elapsedSeconds?: number,
+  ) =>
+    request<StudyCardOut>(`/taller/cards/${cardId}/review`, {
+      method: "POST",
+      body: JSON.stringify(
+        elapsedSeconds === undefined
+          ? { rating, device }
+          : { rating, device, elapsed_seconds: elapsedSeconds },
+      ),
+    }),
+
+  archiveTallerCard: (cardId: string) =>
+    request<void>(`/taller/cards/${cardId}/archive`, { method: "POST" }),
+
+  // TSV crudo, no JSON — bypassa request() (mismo patrón que login()).
+  exportTaller: async (): Promise<string> => {
+    const resp = await fetch(`${API_BASE}/taller/export`, { credentials: "include" });
+    if (resp.status === 401) {
+      for (const fn of unauthorizedListeners) fn();
+      throw new AuthRequiredError();
+    }
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new ApiError(resp.status, `${resp.status} ${resp.statusText}: ${text}`);
+    }
+    return resp.text();
+  },
 };
