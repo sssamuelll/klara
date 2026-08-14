@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.auth.db import get_auth_session
@@ -22,6 +22,7 @@ __all__ = [
     "LocaleDep",
     "SettingsDep",
     "StoryLLM",
+    "TallerUser",
     "UserManagerDep",
 ]
 
@@ -66,3 +67,15 @@ ChatLLM = Annotated[LLMClient, Depends(get_chat_llm)]
 
 CurrentUser = Annotated[User, Depends(current_active_user)]
 UserManagerDep = Annotated[UserManager, Depends(get_user_manager)]
+
+
+def _require_taller_access(user: CurrentUser, settings: SettingsDep) -> User:
+    """El guard de F0: fuera de `taller_user_ids` -> 403. Cerrado por defecto
+    (el ajuste nace vacío) para que el dogfood no despliegue escritura sin
+    cuota a cualquier cuenta autenticada."""
+    if str(user.id) not in settings.taller_user_id_set:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_in_taller_allowlist")
+    return user
+
+
+TallerUser = Annotated[User, Depends(_require_taller_access)]
