@@ -14,6 +14,7 @@ import NuevoPlaceholder from "./routes/NuevoPlaceholder";
 import Module from "./routes/Module";
 import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
+import Taller from "./routes/Taller";
 import Practice from "./routes/Practice";
 import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
@@ -238,6 +239,16 @@ function AppShell() {
       />
       <Route path="/story/:id" element={<LegacyStoryRedirect />} />
 
+      {/* El taller (F0): suelta fuera de V4Shell, como /estudiar/:id — el
+          taller es su propia superficie, no un panel dentro del shell móvil. */}
+      <Route
+        path="/taller"
+        element={
+          <ProtectedRoute>
+            <Taller />
+          </ProtectedRoute>
+        }
+      />
       {/* ponytail: sin pantalla 404 — con el Masthead dentro de LegacyShell una URL
           suelta pinta en blanco; redirigir a Inicio es la respuesta correcta y barata. */}
       <Route path="*" element={<Navigate to="/" replace />} />

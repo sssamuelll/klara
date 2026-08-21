@@ -136,14 +136,18 @@ async def list_cards(
         await db.execute(select(func.count()).select_from(StudyCard).where(*filters))
     ).scalar_one()
     rows = (
-        await db.execute(
-            select(StudyCard)
-            .where(*filters)
-            .order_by(StudyCard.created_at.asc(), StudyCard.id.asc())
-            .limit(limit)
-            .offset(offset)
+        (
+            await db.execute(
+                select(StudyCard)
+                .where(*filters)
+                .order_by(StudyCard.created_at.asc(), StudyCard.id.asc())
+                .limit(limit)
+                .offset(offset)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return CardListOut(total=total, items=[_card_to_out(card) for card in rows])
 
 
@@ -157,17 +161,21 @@ async def due_cards(
     effective_limit = min(limit, 50)
     now = datetime.now(UTC)
     rows = (
-        await db.execute(
-            select(StudyCard)
-            .where(
-                StudyCard.user_id == user.id,
-                StudyCard.archived_at.is_(None),
-                StudyCard.next_review_at <= now,
+        (
+            await db.execute(
+                select(StudyCard)
+                .where(
+                    StudyCard.user_id == user.id,
+                    StudyCard.archived_at.is_(None),
+                    StudyCard.next_review_at <= now,
+                )
+                .order_by(StudyCard.next_review_at.asc())
+                .limit(effective_limit)
             )
-            .order_by(StudyCard.next_review_at.asc())
-            .limit(effective_limit)
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     return [_card_to_out(card) for card in rows]
 
 
@@ -219,12 +227,16 @@ async def archive_card(
 @router.get("/export")
 async def export_cards(db: DBSession, user: TallerUser) -> Response:
     rows = (
-        await db.execute(
-            select(StudyCard)
-            .where(StudyCard.user_id == user.id)
-            .order_by(StudyCard.created_at.asc(), StudyCard.id.asc())
+        (
+            await db.execute(
+                select(StudyCard)
+                .where(StudyCard.user_id == user.id)
+                .order_by(StudyCard.created_at.asc(), StudyCard.id.asc())
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     lines = [
         "\t".join(
             [
