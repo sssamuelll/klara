@@ -91,7 +91,12 @@ async def test_front_con_tab_es_rechazado(client, seed_invite, db_session, app_s
 
     r = await client.post(
         "/api/v1/taller/cards",
-        json={"front": "Anverso\tconTab", "back": "Reverso", "tags": [], "batch_id": str(uuid.uuid4())},
+        json={
+            "front": "Anverso\tconTab",
+            "back": "Reverso",
+            "tags": [],
+            "batch_id": str(uuid.uuid4()),
+        },
         headers={"Cookie": cookie},
     )
 
@@ -99,7 +104,9 @@ async def test_front_con_tab_es_rechazado(client, seed_invite, db_session, app_s
 
 
 @pytest.mark.asyncio
-async def test_tags_se_normalizan_strip_minusculas_dedupe(client, seed_invite, db_session, app_settings):
+async def test_tags_se_normalizan_strip_minusculas_dedupe(
+    client, seed_invite, db_session, app_settings
+):
     cookie, _ = await _sembrada(client, seed_invite, db_session, app_settings, "tags1@example.com")
 
     r = await client.post(
@@ -140,7 +147,9 @@ async def test_mas_de_10_tags_es_rechazado(client, seed_invite, db_session, app_
 
 @pytest.mark.asyncio
 async def test_bulk_es_todo_o_nada(client, seed_invite, db_session, app_settings):
-    cookie, user = await _sembrada(client, seed_invite, db_session, app_settings, "bulk1@example.com")
+    cookie, user = await _sembrada(
+        client, seed_invite, db_session, app_settings, "bulk1@example.com"
+    )
     cards = [{"front": f"F{i}", "back": f"B{i}"} for i in range(58)]
     cards[57] = {"front": "roto\tconTab", "back": "B57"}  # el índice 57 revienta
 
@@ -152,8 +161,10 @@ async def test_bulk_es_todo_o_nada(client, seed_invite, db_session, app_settings
 
     assert r.status_code == 422, r.text
     count = (
-        await db_session.execute(select(StudyCard).where(StudyCard.user_id == user.id))
-    ).scalars().all()
+        (await db_session.execute(select(StudyCard).where(StudyCard.user_id == user.id)))
+        .scalars()
+        .all()
+    )
     assert count == []  # cero filas, no 57 de 58
 
 
@@ -173,7 +184,9 @@ async def test_bulk_topa_en_200(client, seed_invite, db_session, app_settings):
 
 @pytest.mark.asyncio
 async def test_bulk_mismo_batch_id_no_duplica(client, seed_invite, db_session, app_settings):
-    cookie, user = await _sembrada(client, seed_invite, db_session, app_settings, "bulk3@example.com")
+    cookie, user = await _sembrada(
+        client, seed_invite, db_session, app_settings, "bulk3@example.com"
+    )
     batch_id = str(uuid.uuid4())
     payload = {
         "cards": [{"front": "F1", "back": "B1"}, {"front": "F2", "back": "B2"}],
@@ -192,8 +205,10 @@ async def test_bulk_mismo_batch_id_no_duplica(client, seed_invite, db_session, a
     assert {c["id"] for c in r2.json()["cards"]} == first_ids  # las MISMAS filas
 
     rows = (
-        await db_session.execute(select(StudyCard).where(StudyCard.user_id == user.id))
-    ).scalars().all()
+        (await db_session.execute(select(StudyCard).where(StudyCard.user_id == user.id)))
+        .scalars()
+        .all()
+    )
     assert len(rows) == 2  # no 4
 
 
@@ -202,11 +217,18 @@ async def test_bulk_mismo_batch_id_no_duplica(client, seed_invite, db_session, a
 
 @pytest.mark.asyncio
 async def test_listar_cards_filtra_por_tag_y_pagina(client, seed_invite, db_session, app_settings):
-    cookie, _ = await _sembrada(client, seed_invite, db_session, app_settings, "listar1@example.com")
+    cookie, _ = await _sembrada(
+        client, seed_invite, db_session, app_settings, "listar1@example.com"
+    )
     for i in range(3):
         await client.post(
             "/api/v1/taller/cards",
-            json={"front": f"F{i}", "back": f"B{i}", "tags": ["bio"], "batch_id": str(uuid.uuid4())},
+            json={
+                "front": f"F{i}",
+                "back": f"B{i}",
+                "tags": ["bio"],
+                "batch_id": str(uuid.uuid4()),
+            },
             headers={"Cookie": cookie},
         )
     await client.post(
@@ -227,8 +249,12 @@ async def test_listar_cards_filtra_por_tag_y_pagina(client, seed_invite, db_sess
 
 
 @pytest.mark.asyncio
-async def test_due_ordena_por_vencimiento_y_topa_en_50(client, seed_invite, db_session, app_settings):
-    cookie, user = await _sembrada(client, seed_invite, db_session, app_settings, "due1@example.com")
+async def test_due_ordena_por_vencimiento_y_topa_en_50(
+    client, seed_invite, db_session, app_settings
+):
+    cookie, user = await _sembrada(
+        client, seed_invite, db_session, app_settings, "due1@example.com"
+    )
     now = datetime.now(UTC)
     for i in range(55):
         db_session.add(
@@ -279,7 +305,9 @@ async def test_review_exige_device(client, seed_invite, db_session, app_settings
 
 @pytest.mark.asyncio
 async def test_review_persiste_ledger_y_tarjeta(client, seed_invite, db_session, app_settings):
-    cookie, user = await _sembrada(client, seed_invite, db_session, app_settings, "rev2@example.com")
+    cookie, user = await _sembrada(
+        client, seed_invite, db_session, app_settings, "rev2@example.com"
+    )
     created = await client.post(
         "/api/v1/taller/cards",
         json={"front": "A", "back": "B", "tags": [], "batch_id": str(uuid.uuid4())},
@@ -299,10 +327,14 @@ async def test_review_persiste_ledger_y_tarjeta(client, seed_invite, db_session,
     assert body["state"] != "new"
 
     reviews = (
-        await db_session.execute(
-            select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+        (
+            await db_session.execute(
+                select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(reviews) == 1
     assert reviews[0].device == "desktop"
     assert reviews[0].user_id == user.id
@@ -326,16 +358,22 @@ async def test_elapsed_seconds_se_recorta_no_rechaza(client, seed_invite, db_ses
 
     assert r.status_code == 200, r.text  # nunca 422 por esto
     reviews = (
-        await db_session.execute(
-            select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+        (
+            await db_session.execute(
+                select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert reviews[0].elapsed_seconds == 3600
 
 
 @pytest.mark.asyncio
 async def test_tarjeta_ajena_da_404(client, seed_invite, db_session, app_settings):
-    cookie_a, user_a = await _sembrada(client, seed_invite, db_session, app_settings, "aje1@example.com")
+    cookie_a, user_a = await _sembrada(
+        client, seed_invite, db_session, app_settings, "aje1@example.com"
+    )
     cookie_b = await _register_and_login(client, seed_invite, "aje2@example.com")
     user_b = await _usuario(db_session, "aje2@example.com")
     _allow(app_settings, user_a.id, user_b.id)  # ambos en la lista: aísla el 404 del 403
@@ -378,10 +416,14 @@ async def test_archivar_conserva_los_reviews(client, seed_invite, db_session, ap
     assert r.status_code == 204, r.text
 
     reviews = (
-        await db_session.execute(
-            select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+        (
+            await db_session.execute(
+                select(StudyCardReview).where(StudyCardReview.study_card_id == uuid.UUID(card_id))
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
     assert len(reviews) == 1  # el ledger sobrevive
 
     overview = await client.get("/api/v1/taller/overview", headers={"Cookie": cookie})
@@ -423,12 +465,22 @@ async def test_export_es_tsv_parseable(client, seed_invite, db_session, app_sett
     cookie, _ = await _sembrada(client, seed_invite, db_session, app_settings, "exp1@example.com")
     await client.post(
         "/api/v1/taller/cards",
-        json={"front": "Anverso uno", "back": "Reverso uno", "tags": ["a"], "batch_id": str(uuid.uuid4())},
+        json={
+            "front": "Anverso uno",
+            "back": "Reverso uno",
+            "tags": ["a"],
+            "batch_id": str(uuid.uuid4()),
+        },
         headers={"Cookie": cookie},
     )
     await client.post(
         "/api/v1/taller/cards",
-        json={"front": "Anverso dos", "back": "Reverso dos", "tags": [], "batch_id": str(uuid.uuid4())},
+        json={
+            "front": "Anverso dos",
+            "back": "Reverso dos",
+            "tags": [],
+            "batch_id": str(uuid.uuid4()),
+        },
         headers={"Cookie": cookie},
     )
 

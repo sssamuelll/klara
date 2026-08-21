@@ -78,6 +78,8 @@ services:
       BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://localhost:8000}
       AZURE_SPEECH_KEY: ${AZURE_SPEECH_KEY:-}
       AZURE_SPEECH_REGION: ${AZURE_SPEECH_REGION:-eastus}
+      # El taller (F0): allowlist de dogfood; vacío = cerrado (spec §10).
+      TALLER_USER_IDS: ${TALLER_USER_IDS:-}
     ports:
       - "8000:8000"
     volumes:
