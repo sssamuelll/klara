@@ -1,3 +1,4 @@
+from klara.models.access_token import AccessToken
 from klara.models.attempts import PronunciationAttempt, QuizAttempt
 from klara.models.audio import AudioCache
 from klara.models.audio_quality_measurement import AudioQualityMeasurement
@@ -22,6 +23,7 @@ from klara.models.vocab import VocabItem
 from klara.models.waitlist import WaitlistSignup
 
 __all__ = [
+    "AccessToken",
     "AudioCache",
     "AudioQualityMeasurement",
     "Base",
