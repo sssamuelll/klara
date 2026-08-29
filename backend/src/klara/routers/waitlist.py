@@ -1,5 +1,3 @@
-import ipaddress
-import time
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
@@ -13,6 +11,7 @@ from klara.auth.db import AuthSessionDep
 from klara.auth.users import current_admin_user
 from klara.models.user import User
 from klara.models.waitlist import WaitlistSignup
+from klara.ratelimit import client_ip, waitlist_limiter
 
 router = APIRouter()
 
@@ -38,57 +37,11 @@ class WaitlistRowOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ponytail: rate limit in-memory por proceso (un worker en prod; se resetea al
-# reiniciar) y single-hop XFF (confía en el último hop si el peer inmediato es
-# el proxy del host). _hits se purga de entradas con ventana expirada al pasar
-# de 1024 IPs distintas, así que la rotación de IPv6 no crece sin límite. Si
-# hay N workers, cadena de proxies, o abuso real: slowapi con
-# forwarded-allow-ips, ver TODO de main.py:147.
-_WINDOW_S = 3600
-_MAX_PER_WINDOW = 10
-_MAX_HITS_ENTRIES = 1024
-_hits: dict[str, tuple[int, float]] = {}
-
-
-def _client_ip(request: Request) -> str:
-    peer = request.client.host if request.client else "unknown"
-    xff = request.headers.get("x-forwarded-for")
-    if not xff:
-        return peer
-    try:
-        peer_addr = ipaddress.ip_address(peer)
-    except ValueError:
-        return peer
-    if not (peer_addr.is_loopback or peer_addr.is_private):
-        return peer
-    candidate = xff.split(",")[-1].strip()
-    try:
-        ipaddress.ip_address(candidate)
-    except ValueError:
-        return peer
-    return candidate
-
-
-def _rate_limited(ip: str, now: float | None = None) -> bool:
-    t = now if now is not None else time.monotonic()
-    if len(_hits) > _MAX_HITS_ENTRIES:
-        expired = [k for k, (_, start) in _hits.items() if t - start > _WINDOW_S]
-        for k in expired:
-            del _hits[k]
-    count, start = _hits.get(ip, (0, t))
-    if t - start > _WINDOW_S:
-        count, start = 0, t
-    count += 1
-    _hits[ip] = (count, start)
-    return count > _MAX_PER_WINDOW
-
-
 @router.post("/waitlist", response_model=WaitlistOut)
 async def join_waitlist(
     payload: WaitlistIn, request: Request, session: AuthSessionDep
 ) -> WaitlistOut:
-    ip = _client_ip(request)
-    if _rate_limited(ip):
+    if waitlist_limiter.hit(client_ip(request)):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
     email = payload.email.strip().lower()
     existing = await session.scalar(select(WaitlistSignup).where(WaitlistSignup.email == email))

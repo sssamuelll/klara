@@ -86,6 +86,17 @@ async def _clean_tables():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    """login_limiter/waitlist_limiter are process-wide singletons (klara.ratelimit);
+    without a per-test reset, cumulative login calls across unrelated test files
+    (all from the same ASGITransport peer IP) trip the 429 and cascade failures."""
+    from klara import ratelimit
+
+    ratelimit.waitlist_limiter.reset()
+    ratelimit.login_limiter.reset()
+
+
 @pytest_asyncio.fixture
 async def db_engine():
     engine = create_async_engine(TEST_DATABASE_URL)
