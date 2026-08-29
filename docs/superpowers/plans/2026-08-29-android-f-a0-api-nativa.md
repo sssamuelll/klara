@@ -677,7 +677,6 @@ git commit -m "feat(auth): rate limit 10/5min por IP en login, reutilizando el l
 **Files:**
 - Create: `backend/src/klara/auth/google_native.py`
 - Create: `backend/src/klara/routers/auth_native.py`
-- Modify: `backend/src/klara/routers/__init__.py` (exportar `auth_native`, siguiendo el patrón del archivo)
 - Modify: `backend/src/klara/i18n/messages.py:134` (clave nueva antes de `auth.invite_required`)
 - Modify: `backend/src/klara/main.py` (import + include)
 - Modify: `backend/pyproject.toml:19-21` (+ `pyjwt[crypto]`) y `backend/uv.lock` (`uv lock`)
@@ -1020,10 +1019,9 @@ async def google_native_login(
 
 `"google"` es el `name` del `GoogleOAuth2` de httpx-oauth que usa `auth/oauth_google.py` — el mismo `oauth_name` con el que el callback del navegador guarda la fila, así una cuenta enlazada por web entra por el app y viceversa.
 
-- [ ] **Step 7: Exportar e incluir**
+- [ ] **Step 7: Incluir el router**
 
-- `backend/src/klara/routers/__init__.py`: añadir `auth_native` a la lista de módulos importados/exportados (mismo patrón que `taller`).
-- `backend/src/klara/main.py`: en el bloque `from klara.routers import (...)` añadir `auth_native`; después del `include_router(taller.router, ...)`:
+`backend/src/klara/routers/__init__.py` está vacío a propósito (los routers se importan como submódulos); no se toca. En `backend/src/klara/main.py`: en el bloque `from klara.routers import (...)` añadir `auth_native` (orden alfabético); después del `include_router(taller.router, ...)`:
   ```python
       app.include_router(auth_native.router, prefix="/api/v1", dependencies=login_guard)
   ```
@@ -1036,7 +1034,7 @@ Expected: PASS. Si `test_native_adopts_legacy_owner` falla, leer `manager.py:284
 - [ ] **Step 9: Commit**
 
 ```bash
-git add backend/pyproject.toml backend/uv.lock backend/src/klara/auth/google_native.py backend/src/klara/routers/auth_native.py backend/src/klara/routers/__init__.py backend/src/klara/i18n/messages.py backend/src/klara/main.py backend/tests/test_auth_google_native.py
+git add backend/pyproject.toml backend/uv.lock backend/src/klara/auth/google_native.py backend/src/klara/routers/auth_native.py backend/src/klara/i18n/messages.py backend/src/klara/main.py backend/tests/test_auth_google_native.py
 git commit -m "feat(auth): Google nativo por ID token → sesión Bearer, mismo oauth_callback (F-A0 §2.2)"
 ```
 
