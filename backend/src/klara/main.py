@@ -21,6 +21,7 @@ from klara.models import User
 from klara.models.enums import CEFRLevel
 from klara.ratelimit import login_rate_limit
 from klara.routers import (
+    auth_native,
     gender,
     health,
     invitations,
@@ -243,6 +244,7 @@ def create_app() -> FastAPI:
     app.include_router(modules.router, prefix="/api/v1")
     app.include_router(waitlist.router, prefix="/api/v1", tags=["waitlist"])
     app.include_router(taller.router, prefix="/api/v1")
+    app.include_router(auth_native.router, prefix="/api/v1", dependencies=login_guard)
 
     return app
 
