@@ -440,6 +440,9 @@ def test_ws_rejects_without_cookie(app_settings):
             "/api/v1/pronunciation/stream",
             headers={"origin": "http://localhost:5173"},  # pass the Origin gate
         ) as ws:
+            # Handshake now precedes auth (F-A0 §2.3) — send it so the server
+            # reaches the auth check instead of timing out on the read.
+            ws.send_json({"reference_text": "Hallo", "language": "de"})
             ws.receive_text()
     assert exc_info.value.code == WS_CLOSE_AUTH == 4401
 
@@ -458,7 +461,7 @@ def test_ws_capacity_closes_when_global_cap_full(app_settings, monkeypatch):
     class _FakeUser:
         id = "00000000-0000-0000-0000-000000000001"
 
-    async def _fake_auth(websocket, settings):
+    async def _fake_auth(websocket, settings, token=None):
         return _FakeUser()
 
     monkeypatch.setattr(pron_router, "authenticate_ws", _fake_auth)
@@ -469,5 +472,8 @@ def test_ws_capacity_closes_when_global_cap_full(app_settings, monkeypatch):
             "/api/v1/pronunciation/stream",
             headers={"origin": "http://localhost:5173"},
         ) as ws:
+            # Handshake now precedes auth/capacity (F-A0 §2.3) — send it so the
+            # server reaches the capacity check instead of timing out on the read.
+            ws.send_json({"reference_text": "Hallo", "language": "de"})
             ws.receive_text()
     assert exc_info.value.code == WS_CLOSE_CAPACITY == 4408
