@@ -279,7 +279,9 @@ async def stream(websocket: WebSocket) -> None:
     # Handshake primero: el primer frame trae reference_text, language y — para
     # el app nativo — el token Bearer (spec android §2.3). Se lee ANTES de
     # autenticar porque el token viene dentro; un peer sin credenciales solo
-    # nos cuesta este receive con timeout, y el origin-gate ya lo filtró.
+    # nos cuesta este receive con timeout, y el origin-gate ya lo filtró. De
+    # ahí en adelante, el único frame de texto que el receptor de la sesión
+    # espera es el de fin de habla.
     try:
         handshake = await asyncio.wait_for(
             websocket.receive_json(), timeout=settings.pron_stream_send_timeout_s

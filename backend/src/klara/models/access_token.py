@@ -17,5 +17,5 @@ class AccessToken(SQLAlchemyBaseAccessTokenTableUUID, Base):
 
     # Igual que OAuthAccount: la clase base apunta a "user.id"; la tabla es "users".
     user_id: Mapped[GUID] = mapped_column(
-        GUID, ForeignKey("users.id", ondelete="cascade"), nullable=False
+        GUID, ForeignKey("users.id", ondelete="cascade"), nullable=False, index=True
     )

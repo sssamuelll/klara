@@ -5,6 +5,8 @@ ahí viven la regla de invitación y la adopción del dueño legacy. Nunca se cr
 el usuario a mano.
 """
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
@@ -37,8 +39,11 @@ async def google_native_login(
     if not settings.google_oauth_client_id:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
     try:
-        claims = google_native.verify_google_id_token(
-            payload.id_token, settings.google_oauth_client_id
+        # A un hilo: PyJWKClient puede refrescar el JWKS por red en un kid
+        # desconocido (timeout 5s), y prod corre un solo worker uvicorn — eso
+        # en el loop congela el proceso entero, streaming WS incluido.
+        claims = await asyncio.to_thread(
+            google_native.verify_google_id_token, payload.id_token, settings.google_oauth_client_id
         )
     except google_native.InvalidGoogleToken:
         raise HTTPException(
@@ -63,4 +68,7 @@ async def google_native_login(
             detail=t("auth.google_native.invalid", locale),
         )
     token = await strategy.write_token(user)
+    # Mismo hook que jwt/bearer login (spec android §2.5): limpia el cupo de
+    # intentos fallidos de esta IP en un login exitoso.
+    await user_manager.on_after_login(user, request)
     return BearerOut(access_token=token)

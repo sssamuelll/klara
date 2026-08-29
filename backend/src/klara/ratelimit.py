@@ -14,6 +14,8 @@ import time
 
 from fastapi import HTTPException, Request, status
 
+from klara.i18n.messages import DEFAULT_LOCALE, t
+
 _MAX_HITS_ENTRIES = 1024
 
 
@@ -45,6 +47,10 @@ class RateLimiter:
     def reset(self) -> None:
         self._hits.clear()
 
+    def clear(self, ip: str) -> None:
+        """Borra el cupo de esta IP (login exitoso). No-op si no tenía entrada."""
+        self._hits.pop(ip, None)
+
     def hit(self, ip: str, now: float | None = None) -> bool:
         """Registra una petición; True si con ella se excede el cupo."""
         t = now if now is not None else time.monotonic()
@@ -73,4 +79,12 @@ def login_rate_limit(request: Request) -> None:
     if not request.url.path.endswith(_LOGIN_PATHS):
         return
     if login_limiter.hit(client_ip(request)):
-        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+        # getattr en vez de klara.dependencies.get_locale: ese módulo importa
+        # klara.auth.manager, que importa este módulo (on_after_login) — un
+        # import directo acá cerraría el ciclo.
+        locale = getattr(request.state, "locale", DEFAULT_LOCALE)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=t("auth.too_many_attempts", locale),
+            headers={"Retry-After": str(login_limiter.window_s)},
+        )

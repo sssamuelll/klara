@@ -77,6 +77,44 @@ def test_verify_rejects_garbage(google_keys):
         verify_google_id_token("not.a.jwt", AUD)
 
 
+def test_verify_rejects_token_signed_by_another_key(google_keys, rsa_key):
+    """google_keys sustituye _signing_key por la clave pública de rsa_key (la
+    PRIMERA); un token firmado con una segunda clave debe fallar la firma."""
+    from klara.auth.google_native import InvalidGoogleToken, verify_google_id_token
+
+    other_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    forged = _mint(other_key)
+    with pytest.raises(InvalidGoogleToken):
+        verify_google_id_token(forged, AUD)
+
+
+@pytest.mark.asyncio
+async def test_jwks_unavailable_is_400_and_logged(client, app_settings, monkeypatch):
+    """Fallo de transporte del JWKS (no de las claims): 400 igual, pero deja un
+    warning distinguible en vez de morir en silencio como una firma inválida."""
+    from structlog.testing import capture_logs
+
+    from klara.auth import google_native
+
+    app_settings(GOOGLE_OAUTH_CLIENT_ID=AUD)
+
+    def _raise(_id_token):
+        raise jwt.exceptions.PyJWKClientConnectionError("boom")
+
+    monkeypatch.setattr(google_native, "_signing_key", _raise)
+
+    with capture_logs() as logs:
+        r = await client.post("/api/v1/auth/google/native", json={"id_token": "whatever"})
+
+    assert r.status_code == 400
+    assert "Google" in r.json()["detail"]  # auth.google_native.invalid
+
+    warnings = [ln for ln in logs if ln.get("event") == "google_native.jwks_unavailable"]
+    assert warnings, f"no se logueó jwks_unavailable: {[ln.get('event') for ln in logs]}"
+    assert warnings[0]["log_level"] == "warning"
+    assert "boom" in warnings[0]["error"]
+
+
 # --- ruta ----------------------------------------------------------------------
 
 

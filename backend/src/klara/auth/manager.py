@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 from uuid import UUID
 
 import structlog
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_users import BaseUserManager, UUIDIDMixin, exceptions, models, schemas
 from fastapi_users.password import PasswordHelper
@@ -18,6 +18,7 @@ from klara.config import Settings, get_settings
 from klara.i18n.messages import DEFAULT_LOCALE, SUPPORTED, t
 from klara.models import User
 from klara.models.enums import CEFRLevel
+from klara.ratelimit import client_ip, login_limiter
 
 if TYPE_CHECKING:
     from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
@@ -81,6 +82,19 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     ) -> None:
         log.info("auth.request_verify", user_id=str(user.id))
         await self.email_service.send_verify(user, token)
+
+    async def on_after_login(
+        self,
+        user: User,
+        request: Request | None = None,
+        response: Response | None = None,
+    ) -> None:
+        # fastapi-users llama este hook desde jwt/login, bearer/login y el
+        # callback OAuth del navegador; auth_native.py lo llama a mano porque
+        # su ruta no pasa por esos routers. Spec android §2.5: un login
+        # exitoso limpia el cupo de intentos fallidos de esa IP.
+        if request is not None:
+            login_limiter.clear(client_ip(request))
 
     # --- overrides -----------------------------------------------------------
 

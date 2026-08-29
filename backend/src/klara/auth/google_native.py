@@ -13,10 +13,13 @@ from dataclasses import dataclass
 from typing import Any
 
 import jwt
+import structlog
 from jwt import PyJWKClient
 
 GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 GOOGLE_ISSUERS = frozenset({"https://accounts.google.com", "accounts.google.com"})
+
+log = structlog.get_logger(__name__)
 
 _jwks_client: PyJWKClient | None = None
 
@@ -37,7 +40,7 @@ def _signing_key(id_token: str) -> Any:
     Separada para que los tests la sustituyan por una clave local."""
     global _jwks_client
     if _jwks_client is None:
-        _jwks_client = PyJWKClient(GOOGLE_JWKS_URL, cache_keys=True)
+        _jwks_client = PyJWKClient(GOOGLE_JWKS_URL, cache_keys=True, timeout=5)
     return _jwks_client.get_signing_key_from_jwt(id_token).key
 
 
@@ -51,6 +54,12 @@ def verify_google_id_token(id_token: str, audience: str) -> GoogleClaims:
             audience=audience,
             options={"require": ["exp", "iat", "sub", "aud", "iss"]},
         )
+    except jwt.exceptions.PyJWKClientError as e:
+        # Fallo de transporte (red/DNS/timeout) al refrescar el JWKS, no una
+        # firma inválida — distinto del resto de fallos de claims, que se
+        # quedan silenciosos como hasta ahora.
+        log.warning("google_native.jwks_unavailable", error=str(e))
+        raise InvalidGoogleToken(str(e)) from e
     except jwt.PyJWTError as e:
         raise InvalidGoogleToken(str(e)) from e
     # `issuer=` de pyjwt acepta lista solo en versiones recientes; comparar a mano

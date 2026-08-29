@@ -139,6 +139,14 @@ MESSAGES: dict[str, dict[str, str]] = {
         "ja": "Google アカウントを確認できませんでした。もう一度お試しください。",
         "pt": "Não conseguimos validar a tua conta Google. Tenta de novo.",
     },
+    "auth.too_many_attempts": {
+        "es": "Demasiados intentos. Espera unos minutos y vuelve a intentarlo.",
+        "en": "Too many attempts. Wait a few minutes and try again.",
+        "de": "Zu viele Versuche. Warte ein paar Minuten und versuche es erneut.",
+        "fr": "Trop de tentatives. Attends quelques minutes et réessaie.",
+        "ja": "試行回数が多すぎます。数分待ってからもう一度お試しください。",
+        "pt": "Demasiadas tentativas. Espera uns minutos e tenta de novo.",
+    },
     "auth.invite_required": {
         "es": "Este registro es solo por invitación. Pide un enlace al administrador.",
         "en": "Signup is invitation-only. Ask the admin for a link.",

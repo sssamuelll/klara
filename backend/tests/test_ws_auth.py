@@ -99,6 +99,20 @@ async def test_revoked_bearer_token_is_rejected(client, seed_invite, app_setting
 
 
 @pytest.mark.asyncio
+async def test_stale_cookie_with_valid_token_authenticates(client, seed_invite, app_settings):
+    """Una cookie presente pero inválida no debe tapar un token Bearer válido."""
+    from klara.config import get_settings
+    from klara.pronunciation.ws_auth import authenticate_ws
+
+    await _register(client, seed_invite, app_settings)
+    settings = get_settings()
+    token = await _bearer(client)
+    ws = FakeWS(cookies={settings.auth_cookie_name: "garbage"})
+    user = await authenticate_ws(ws, settings, token=token)
+    assert user is not None and user.email == EMAIL
+
+
+@pytest.mark.asyncio
 async def test_garbage_or_nothing_is_rejected(client):
     from klara.config import get_settings
     from klara.pronunciation.ws_auth import authenticate_ws
