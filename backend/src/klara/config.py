@@ -137,6 +137,9 @@ class Settings(BaseSettings):
     auth_jwt_secret: str = "dev-secret-do-not-use-in-prod-change-me-32b"
     auth_cookie_name: str = "klara_session"
     auth_cookie_max_age: int = 60 * 60 * 24 * 30  # 30 days
+    # Sesión Bearer del app nativo (spec android §2.1). Larga porque es
+    # revocable desde el servidor: el logout borra la fila de access_tokens.
+    auth_bearer_max_age: int = 60 * 60 * 24 * 180  # 180 días
     initial_owner_email: str | None = None
     google_oauth_client_id: str | None = None
     google_oauth_client_secret: str | None = None

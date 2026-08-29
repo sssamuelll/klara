@@ -9,6 +9,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from klara.auth.backend import auth_backend
+from klara.auth.bearer import bearer_backend
 from klara.auth.oauth_google import make_google_oauth_client
 from klara.auth.schemas import UserCreate, UserRead
 from klara.auth.users import fastapi_users
@@ -152,6 +153,11 @@ def create_app() -> FastAPI:
     app.include_router(
         fastapi_users.get_auth_router(auth_backend),
         prefix=f"{auth_prefix}/jwt",
+        tags=["auth"],
+    )
+    app.include_router(
+        fastapi_users.get_auth_router(bearer_backend),
+        prefix=f"{auth_prefix}/bearer",
         tags=["auth"],
     )
     app.include_router(
