@@ -35,7 +35,10 @@ services:
     build: !reset {}
     environment:
       APP_ENV: production
-      CORS_ORIGINS: "https://klara.sdar.dev"
+      # Los dos últimos son el origen del WebView del app nativo (Android e iOS).
+      # Seguro con allow_credentials: la cookie es SameSite=Strict y localhost no
+      # es same-site con sdar.dev; el Bearer exige el token. Spec android §2.4.
+      CORS_ORIGINS: "https://klara.sdar.dev,https://localhost,capacitor://localhost"
       FRONTEND_BASE_URL: "https://klara.sdar.dev"
       BACKEND_BASE_URL: "https://klara.sdar.dev"
     ports: !override

@@ -116,7 +116,7 @@ selector de cuenta en hoja inferior, sin salir del app.
   el propio `id_token` (decisión deliberada, documentada en el código: no hay access
   token en este flujo y el campo no se lee en ningún sitio).
 - Errores: 400 `auth.google_native.invalid` (firma/aud/iss/exp/email no verificado),
-  403 `auth.invite_required` (viene del manager), 429 (§2.5).
+  400 `auth.invite_required` (viene del manager) (es lo que lanza `manager.py:210-214`), 429 (§2.5).
 - Google Cloud (lo hace el dueño, fuera del repo): en el mismo proyecto OAuth, un
   cliente tipo **Android** con paquete `dev.sdar.klara` + SHA-1 del keystore de debug
   (`~/.android/debug.keystore`; el de release se suma en F-A4). El plugin se
@@ -148,8 +148,8 @@ misma lista (`ws_auth.py:23-25`), así que el WS queda cubierto con el mismo cam
 Por qué es seguro con `allow_credentials=True`: la cookie es `SameSite=Strict` y
 `localhost` no es *same-site* con `sdar.dev`, así que una página maliciosa servida en
 `https://localhost` no puede montar la cookie del usuario; el Bearer exige el token,
-que solo tiene el app. El cambio de `CORS_ORIGINS` en la caja es un paso manual del
-despliegue de F-A0 (el script `deploy-prod.sh` no toca el `.env` de prod, a propósito).
+que solo tiene el app. `CORS_ORIGINS` de prod vive en `docker-compose.prod.yml:38`, así
+que el cambio va en el PR y lo aplica el despliegue normal.
 
 ### 2.5 Rate limit en login — cerrar el `TODO(security)` de `main.py:149`
 
@@ -292,7 +292,7 @@ en `i18n/messages.py`.
 | Sin red | Los estados de error existentes; no hay modo offline (fuera de scope). |
 | Token revocado o vencido | 401 → borrar token → login. |
 | ID token de Google inválido | 400 → `auth.login.error.googleFailed` (clave existente). |
-| Google sin invitación | 403 → `auth.invite_required` (existente). |
+| Google sin invitación | 400 → `auth.invite_required` (existente). |
 | SHA-1 no registrado en Google Cloud | El plugin falla sin ID token: mensaje `googleFailed` + log. Es el fallo #1 de configuración; va en el checklist del plan. |
 | Mic denegado | `NotAllowedError` por el camino existente de `pronunciation.ts`. |
 | App a segundo plano grabando | `pause` cierra todo; la toma se pierde limpia, sin sesión colgada en el servidor. |
