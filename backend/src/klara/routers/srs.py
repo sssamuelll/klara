@@ -2,13 +2,13 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from klara.curriculum.modules import advance_module_if_mastered
 from klara.dependencies import CurrentUser, DBSession, LocaleDep
 from klara.i18n import t
-from klara.models import Review, UserCard, VocabItem
+from klara.models import Review, StudyCard, UserCard, VocabItem
 from klara.models.enums import PartOfSpeech
 from klara.schemas.srs import (
     CardCreateRequest,
@@ -17,6 +17,7 @@ from klara.schemas.srs import (
     PronunciationBatchOut,
     ReviewOut,
     ReviewSubmitRequest,
+    SrsNextOut,
 )
 from klara.services.practice_session import apply_pronunciation_reviews
 from klara.services.srs_engine import apply_review, project_intervals
@@ -78,6 +79,48 @@ async def add_card(
     card = await db.get(UserCard, new_id)
     assert card is not None
     return _card_to_out(card, vocab, user.native_language)
+
+
+@router.get("/next", response_model=SrsNextOut)
+async def next_due(db: DBSession, user: CurrentUser) -> SrsNextOut:
+    """Cuántas vencen ya y cuándo vence la próxima, sumando la caja de alemán
+    (user_cards; NULL cuenta como vencida, igual que /cards/due) y las tarjetas
+    del taller no archivadas. Solo lectura; lo consume el recordatorio del app."""
+    now = datetime.now(UTC)
+    due_de = await db.scalar(
+        select(func.count())
+        .select_from(UserCard)
+        .where(
+            UserCard.user_id == user.id,
+            or_(UserCard.next_review_at.is_(None), UserCard.next_review_at <= now),
+        )
+    )
+    due_taller = await db.scalar(
+        select(func.count())
+        .select_from(StudyCard)
+        .where(
+            StudyCard.user_id == user.id,
+            StudyCard.archived_at.is_(None),
+            StudyCard.next_review_at <= now,
+        )
+    )
+    next_de = await db.scalar(
+        select(func.min(UserCard.next_review_at)).where(
+            UserCard.user_id == user.id, UserCard.next_review_at > now
+        )
+    )
+    next_taller = await db.scalar(
+        select(func.min(StudyCard.next_review_at)).where(
+            StudyCard.user_id == user.id,
+            StudyCard.archived_at.is_(None),
+            StudyCard.next_review_at > now,
+        )
+    )
+    candidates = [d for d in (next_de, next_taller) if d is not None]
+    return SrsNextOut(
+        due_now=(due_de or 0) + (due_taller or 0),
+        next_due_at=min(candidates) if candidates else None,
+    )
 
 
 @router.get("/cards/due", response_model=list[CardOut])

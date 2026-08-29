@@ -67,3 +67,10 @@ class RescheduledCardOut(BaseModel):
 
 class PronunciationBatchOut(BaseModel):
     rescheduled: list[RescheduledCardOut]
+
+
+class SrsNextOut(BaseModel):
+    """Lo que el recordatorio del app necesita (spec android §2.6)."""
+
+    due_now: int
+    next_due_at: datetime | None
