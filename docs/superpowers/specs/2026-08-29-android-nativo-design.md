@@ -156,8 +156,13 @@ que el cambio va en el PR y lo aplica el despliegue normal.
 Se reutiliza el limitador in-memory por IP que ya existe en `routers/waitlist.py:41-91`
 (`_client_ip` respeta `X-Forwarded-For`, verificado en la puerta de entrada v4):
 se mueve a `klara/ratelimit.py` y se aplica como dependencia a `/auth/jwt/login`,
-`/auth/bearer/login` y `/auth/google/native`: **10 intentos / 5 min por IP → 429**.
-Sin dependencia nueva (`slowapi` no hace falta).
+`/auth/bearer/login` y `/auth/google/native`: **10 intentos fallidos / 5 min por IP →
+429** con `Retry-After: 300` y detail i18n `auth.too_many_attempts`. Un login exitoso
+limpia el contador de esa IP (`UserManager.on_after_login`, que fastapi-users llama
+desde las tres rutas y la de OAuth del navegador) — si contara también los exitosos, el
+gate de F-A1 (login/logout repetidos desde el mismo wifi) lo dispararía. Sin
+dependencia nueva (`slowapi` no hace falta). El mapeo del 429 a un mensaje propio en
+`Login.tsx` va en F-A1 (hoy el web muestra el genérico de credenciales para todo error).
 
 ### 2.6 `GET /api/v1/srs/next` — lo que el recordatorio necesita saber
 
@@ -291,7 +296,8 @@ en `i18n/messages.py`.
 |---|---|
 | Sin red | Los estados de error existentes; no hay modo offline (fuera de scope). |
 | Token revocado o vencido | 401 → borrar token → login. |
-| ID token de Google inválido | 400 → `auth.login.error.googleFailed` (clave existente). |
+| ID token de Google inválido | 400 → `auth.login.error.googleFailed` (clave existente). Si lo que falló fue bajar el JWKS de Google, el backend deja un `warning` `google_native.jwks_unavailable`; la respuesta sigue siendo 400. |
+| Demasiados intentos de login | 429 con `Retry-After: 300` y `auth.too_many_attempts`; un login exitoso limpia el contador de esa IP. |
 | Google sin invitación | 400 → `auth.invite_required` (existente). |
 | SHA-1 no registrado en Google Cloud | El plugin falla sin ID token: mensaje `googleFailed` + log. Es el fallo #1 de configuración; va en el checklist del plan. |
 | Mic denegado | `NotAllowedError` por el camino existente de `pronunciation.ts`. |
