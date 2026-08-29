@@ -151,7 +151,7 @@ Por qué es seguro con `allow_credentials=True`: la cookie es `SameSite=Strict` 
 que solo tiene el app. El cambio de `CORS_ORIGINS` en la caja es un paso manual del
 despliegue de F-A0 (el script `deploy-prod.sh` no toca el `.env` de prod, a propósito).
 
-### 2.5 Rate limit en login — cerrar el `TODO(security)` de `main.py:147`
+### 2.5 Rate limit en login — cerrar el `TODO(security)` de `main.py:149`
 
 Se reutiliza el limitador in-memory por IP que ya existe en `routers/waitlist.py:41-91`
 (`_client_ip` respeta `X-Forwarded-For`, verificado en la puerta de entrada v4):
@@ -404,7 +404,7 @@ de `2026-07-31-fase1-smoke-iphone.md`. Sin CI para Android (Actions apagadas a p
 |---|---|
 | Único transporte: cookie host-only, `SameSite=Strict`, JWT 30 d sin refresh | `backend/src/klara/auth/backend.py:7-19` |
 | Un solo backend registrado | `backend/src/klara/auth/users.py:9-12` |
-| `TODO(security)` rate limit en login | `backend/src/klara/main.py:146-149` |
+| `TODO(security)` rate limit en login | `backend/src/klara/main.py:149-151` |
 | OAuth Google: router + `redirect_url` al backend; 204→302 `/` | `main.py:111-126`, `main.py:176-186` |
 | Regla de invitación en OAuth | `backend/src/klara/auth/manager.py:172-216` |
 | CORS desde `CORS_ORIGINS`; `allow_credentials=True` | `main.py:137-143`, `config.py:135,196-197` |
