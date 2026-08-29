@@ -357,14 +357,13 @@ Los tests los escribe Claude antes de delegar (TDD); auth no se delega.
 **En dispositivo (manual, es el gate de cada fase)** — checklist en el plan, al estilo
 de `2026-07-31-fase1-smoke-iphone.md`. Sin CI para Android (Actions apagadas a propósito).
 
-## 12. Preguntas abiertas (para el dueño)
+## 12. Decisiones del dueño (cerradas 2026-08-29)
 
-1. **Google Cloud:** ¿creas tú el cliente OAuth tipo Android (paquete `dev.sdar.klara` +
-   SHA-1 del keystore de debug) o me das acceso? Sin eso el login de Google nativo no
-   arranca; es lo primero de F-A1 y no depende del código.
-2. **`dev.sdar.klara`** como id de paquete: ¿va? Cambiarlo después de publicar es imposible.
-3. **Token en `@capacitor/preferences`** con `allowBackup=false` (§3): ¿aceptas la
-   decisión o prefieres Keystore desde ya?
+1. **Google Cloud:** el dueño crea el cliente OAuth tipo Android (paquete `dev.sdar.klara`
+   + SHA-1 del keystore de debug) en la consola; el plan de F-A1 trae el comando para
+   sacar el SHA-1. Es lo primero de F-A1 y no depende del código.
+2. **`dev.sdar.klara`** confirmado como id de paquete.
+3. **Token en `@capacitor/preferences`** con `allowBackup=false` (§3): aceptado.
 
 ## Anexo A — Hechos verificados (2026-08-29; refutación adversarial, fuentes)
 
