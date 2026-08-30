@@ -1,3 +1,4 @@
+import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -7,6 +8,20 @@ const TOKEN_KEY = "klara.bearer";
 /** The only place in the app allowed to ask whether we are inside the shell. */
 export function isNative(): boolean {
   return Capacitor.isNativePlatform();
+}
+
+/**
+ * Run `fn` when Android backgrounds the app. Returns an unsubscribe.
+ * No-op on the web. Together with NativeChrome this is the only door to
+ * @capacitor/app — the boundary exists so a plugin's import-time side
+ * effects can never reach the web bundle.
+ */
+export function onAppPause(fn: () => void): () => void {
+  if (!isNative()) return () => undefined;
+  const handle = App.addListener("pause", fn);
+  return () => {
+    void handle.then((h) => h.remove()).catch(() => undefined);
+  };
 }
 
 /**

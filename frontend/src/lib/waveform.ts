@@ -43,7 +43,10 @@ export function getWaveform(text: string, lang?: string): Promise<number[]> {
   if (existing) return existing;
 
   const promise = (async () => {
-    const resp = await fetch(urlFor(text, lang), { headers: await authHeaders() });
+    const resp = await fetch(urlFor(text, lang), {
+      headers: await authHeaders(),
+      signal: AbortSignal.timeout(15_000),
+    });
     if (!resp.ok) throw new Error(`tts fetch failed: ${resp.status}`);
     const buf = await resp.arrayBuffer();
 

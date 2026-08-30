@@ -1,4 +1,3 @@
-import { SocialLogin } from "@capgo/capacitor-social-login";
 import { api } from "../api/client";
 import { setToken } from "./native";
 
@@ -12,22 +11,28 @@ export class GoogleCancelled extends Error {}
 
 let initialized = false;
 
-async function ensureInit(): Promise<void> {
-  if (initialized) return;
+async function ensureInit() {
   if (!WEB_CLIENT_ID) {
     throw new GoogleNotConfigured("VITE_GOOGLE_WEB_CLIENT_ID no está definida");
   }
-  // The WEB client id on purpose, not the Android one. Credential Manager mints
-  // an ID token whose `aud` is this value, and that is what the backend's
-  // /auth/google/native verifies (spec §2.2). The Android OAuth client exists
-  // only so Google authorises this package + signing key; it never appears here.
-  await SocialLogin.initialize({ google: { webClientId: WEB_CLIENT_ID } });
-  initialized = true;
+  // Imported here, not at module scope: this dependency registers a global
+  // hashchange listener and processes OAuth callbacks the moment it evaluates.
+  // On the web that must never run, and Login.tsx is in the eager bundle.
+  const { SocialLogin } = await import("@capgo/capacitor-social-login");
+  if (!initialized) {
+    // The WEB client id on purpose, not the Android one. Credential Manager mints
+    // an ID token whose `aud` is this value, and that is what the backend's
+    // /auth/google/native verifies (spec §2.2). The Android OAuth client exists
+    // only so Google authorises this package + signing key; it never appears here.
+    await SocialLogin.initialize({ google: { webClientId: WEB_CLIENT_ID } });
+    initialized = true;
+  }
+  return SocialLogin;
 }
 
 /** Credential Manager → ID token → our endpoint → stored bearer. */
 export async function signInWithGoogleNative(): Promise<void> {
-  await ensureInit();
+  const SocialLogin = await ensureInit();
 
   let result;
   try {

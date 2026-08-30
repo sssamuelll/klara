@@ -7,10 +7,9 @@
  * with M key, ESC cancel, evaluating state shared with the parent).
  */
 
-import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
-import { isNative } from "./native";
+import { onAppPause } from "./native";
 import {
   bandsByTokenIndex,
   scoreAudio,
@@ -65,6 +64,7 @@ export function useMicScorer(
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
   const epochRef = useRef(0);
+  const startingRef = useRef(false);
   const autoStopRef = useRef<number | null>(null);
   const silenceCleanupRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<MicScorerPhase>("idle");
@@ -125,7 +125,12 @@ export function useMicScorer(
   }, [clearTimers, language, referenceText]);
 
   const start = useCallback(async () => {
-    if (phaseRef.current === "recording" || phaseRef.current === "scoring") return;
+    if (
+      startingRef.current ||
+      phaseRef.current === "recording" ||
+      phaseRef.current === "scoring"
+    ) return;
+    startingRef.current = true;
     const epoch = epochRef.current;
     setError(null);
     setResult(null);
@@ -157,6 +162,8 @@ export function useMicScorer(
     } catch (e) {
       setError(e as PronunciationError);
       setPhase("error");
+    } finally {
+      startingRef.current = false;
     }
   }, [stop]);
 
@@ -167,13 +174,15 @@ export function useMicScorer(
     setPhase("idle");
   }, [cancel]);
 
-  useEffect(() => {
-    if (!isNative()) return;
-    const handle = CapApp.addListener("pause", cancel);
-    return () => {
-      void handle.then((h) => h.remove());
-    };
-  }, [cancel]);
+  useEffect(
+    () => onAppPause(() => {
+      // Only tear down a live capture. Cancelling an already-scored turn
+      // would reset the phase while keeping the bands, and StoryFinish then
+      // shows neither the mic nor Next.
+      if (phaseRef.current === "recording") cancel();
+    }),
+    [cancel],
+  );
 
   useEffect(() => {
     return () => cancel();

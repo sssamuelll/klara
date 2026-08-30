@@ -34,6 +34,7 @@ import { api } from "../api/client";
 import type { SpeakTurnResponse } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import { useAuth } from "../lib/auth";
+import { onAppPause } from "../lib/native";
 import {
   startMicRecording,
   type MicRecorder,
@@ -270,6 +271,8 @@ export default function Speak() {
       stopTTS();
     };
   }, [releaseRecording]);
+
+  useEffect(() => onAppPause(releaseRecording), [releaseRecording]);
 
   // The column is the conversation — keep its tail in view as it grows.
   useEffect(() => {

@@ -30,7 +30,6 @@
  *   - the caller supplies the sentence list + target language.
  */
 
-import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
@@ -45,7 +44,7 @@ import {
   type ScoreBand,
 } from "./pronunciation";
 import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
-import { getToken, isNative } from "./native";
+import { getToken, onAppPause } from "./native";
 import { createAligner } from "./streamAlign";
 import { openScoreStream, type ScoreStream } from "./streamClient";
 import { startSilenceDetector, type MicLevel } from "./silenceDetector";
@@ -252,13 +251,7 @@ export function useSentencePractice({
     return () => abandonRecording();
   }, [abandonRecording]);
 
-  useEffect(() => {
-    if (!isNative()) return;
-    const handle = CapApp.addListener("pause", abandonRecording);
-    return () => {
-      void handle.then((h) => h.remove());
-    };
-  }, [abandonRecording]);
+  useEffect(() => onAppPause(abandonRecording), [abandonRecording]);
 
   const handlePlayPause = useCallback(() => {
     if (!current) return;

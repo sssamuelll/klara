@@ -97,6 +97,14 @@ export function onUnauthorized(fn: UnauthorizedListener): () => void {
   return () => unauthorizedListeners.delete(fn);
 }
 
+async function handleUnauthorized(): Promise<never> {
+  // The bearer is dead server-side; keeping it means replaying it after
+  // every restart. Clearing is a no-op on the web, where there is none.
+  await clearToken();
+  for (const fn of unauthorizedListeners) fn();
+  throw new AuthRequiredError();
+}
+
 /**
  * Base headers, then the caller's, then the session's — in that order, through
  * the Headers API rather than object spread.
@@ -129,10 +137,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: mergeHeaders(init?.headers, await authHeaders()),
   });
-  if (resp.status === 401) {
-    for (const fn of unauthorizedListeners) fn();
-    throw new AuthRequiredError();
-  }
+  if (resp.status === 401) await handleUnauthorized();
   if (!resp.ok) {
     // Read body once as text; try to parse as JSON. Reading both .json() and
     // .text() on the same Response throws "body stream already read" because
@@ -385,10 +390,7 @@ export const api = {
       headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<PronunciationScoreResponse>;
   },
@@ -479,10 +481,7 @@ export const api = {
       headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<MCResolveResponse>;
   },
@@ -525,10 +524,7 @@ export const api = {
       body: fd,
       signal: AbortSignal.any(signals),
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<SpeakTurnResponse>;
   },
@@ -593,10 +589,7 @@ export const api = {
       credentials: "include",
       headers: await authHeaders(),
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) {
       const text = await resp.text();
       throw new ApiError(resp.status, `${resp.status} ${resp.statusText}: ${text}`);

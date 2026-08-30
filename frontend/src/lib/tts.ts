@@ -64,7 +64,10 @@ async function ttsSource(
 ): Promise<string> {
   const url = ttsUrl(text, lang, mode);
   if (!isNative()) return url;
-  const resp = await fetch(url, { headers: await authHeaders() });
+  const resp = await fetch(url, {
+    headers: await authHeaders(),
+    signal: AbortSignal.timeout(15_000),
+  });
   if (!resp.ok) throw new Error(`tts fetch failed: ${resp.status}`);
   const objectUrl = URL.createObjectURL(await resp.blob());
   if (isStale()) {
@@ -100,6 +103,7 @@ export type TTSDoneReason = "ended" | "error" | "interrupted";
 // must not settle — or speak — on behalf of a later one.
 let onDone: ((reason: TTSDoneReason) => void) | null = null;
 let generation = 0;
+let pauseRequested = false;
 
 function settleDone(reason: TTSDoneReason): void {
   const cb = onDone;
@@ -167,6 +171,7 @@ export function speak(
   }
   onDone = opts?.onDone ?? null;
   const gen = ++generation;
+  pauseRequested = false;
   // One fallback attempt per utterance, whether the trigger was the error
   // event (load failure) or the play() rejection (autoplay) — on an outright
   // load failure BOTH fire, and double-speaking the reply is worse than none.
@@ -253,6 +258,7 @@ export function speak(
       if (gen !== generation) return;
       a.src = src;
       a.load();
+      if (pauseRequested) return; // paused before the audio was even assigned
       a.play().catch((err) => {
         // A pending play() rejects (AbortError) when stop() or a newer speak()
         // paused this element — that utterance is dead; speaking its stale text
@@ -272,10 +278,12 @@ export function speak(
 }
 
 export function pause(): void {
+  pauseRequested = true;
   audio?.pause();
 }
 
 export function resume(): void {
+  pauseRequested = false;
   audio?.play().catch(() => undefined);
 }
 

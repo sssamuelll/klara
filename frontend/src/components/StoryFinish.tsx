@@ -17,7 +17,6 @@
  *  - NextSteps: Another story / Re-read / Home.
  */
 
-import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
@@ -38,7 +37,7 @@ import type {
 } from "../api/types";
 import GenderPicker from "./GenderPicker";
 import { startAudioBars } from "../lib/audioBars";
-import { isNative } from "../lib/native";
+import { onAppPause } from "../lib/native";
 import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
 import {
   currentItem,
@@ -313,6 +312,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const recorderRef = useRef<MicRecorder | null>(null);
   const epochRef = useRef(0);
+  const startingRef = useRef(false);
   const recAnalyserRef = useRef<AnalyserNode | null>(null);
   const recBarsRef = useRef<HTMLSpanElement[]>([]);
   const answered = picked !== null;
@@ -339,7 +339,8 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   };
 
   async function startMic() {
-    if (micPhase !== "idle" && micPhase !== "no_match") return;
+    if (startingRef.current || (micPhase !== "idle" && micPhase !== "no_match")) return;
+    startingRef.current = true;
     const epoch = epochRef.current;
     setLastTranscript("");
     try {
@@ -353,6 +354,8 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
       setMicPhase("recording");
     } catch {
       setMicPhase("idle");
+    } finally {
+      startingRef.current = false;
     }
   }
 
@@ -427,13 +430,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [micPhase]);
 
-  useEffect(() => {
-    if (!isNative()) return;
-    const handle = CapApp.addListener("pause", cancelMic);
-    return () => {
-      void handle.then((h) => h.remove());
-    };
-  }, [cancelMic]);
+  useEffect(() => onAppPause(cancelMic), [cancelMic]);
 
   // Cleanup on unmount
   useEffect(() => {
