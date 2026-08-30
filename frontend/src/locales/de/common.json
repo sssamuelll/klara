@@ -646,7 +646,8 @@
       "forgotLink": "Passwort vergessen",
       "error": {
         "invalidCredentials": "E-Mail oder Passwort ungültig.",
-        "googleFailed": "Anmeldung mit Google fehlgeschlagen. Versuche es erneut."
+        "googleFailed": "Anmeldung mit Google fehlgeschlagen. Versuche es erneut.",
+        "googleNativeUnavailable": "Die Google-Anmeldung ist in dieser App-Version nicht verfügbar."
       }
     },
     "signup": {
@@ -689,7 +690,9 @@
       "submit": "Passwort aktualisieren",
       "success": "Neues Passwort gespeichert. Melde dich damit an.",
       "goLogin": "Zur Anmeldung",
-      "error": { "missingToken": "Der Link ist unvollständig. Öffne den Link aus der E-Mail noch einmal." }
+      "error": {
+        "missingToken": "Der Link ist unvollständig. Öffne den Link aus der E-Mail noch einmal."
+      }
     }
   },
   "errors": {
@@ -1124,11 +1127,23 @@
       "ctaLoginAction": "Anmelden"
     },
     "que": {
-      "leer": { "title": "Lesen", "body": "Kurze Geschichten in der Sprache, die du lernst. Jedes Wort öffnet sich mit einem Antippen: Bedeutung, Genus, Kontext." },
-      "hablar": { "title": "Sprechen", "body": "Du sprichst, und Klara korrigiert genau den Laut, der nicht saß. Was du gestern gesagt hast, erinnert sie heute." },
-      "repasar": { "title": "Wiederholen", "body": "Karteikarten, die kurz vor dem Vergessen zurückkommen. Keine Serien, keine Herzen, kein schlechtes Gewissen." }
+      "leer": {
+        "title": "Lesen",
+        "body": "Kurze Geschichten in der Sprache, die du lernst. Jedes Wort öffnet sich mit einem Antippen: Bedeutung, Genus, Kontext."
+      },
+      "hablar": {
+        "title": "Sprechen",
+        "body": "Du sprichst, und Klara korrigiert genau den Laut, der nicht saß. Was du gestern gesagt hast, erinnert sie heute."
+      },
+      "repasar": {
+        "title": "Wiederholen",
+        "body": "Karteikarten, die kurz vor dem Vergessen zurückkommen. Keine Serien, keine Herzen, kein schlechtes Gewissen."
+      }
     },
-    "footer": { "contact": "Schreib mir", "copyright": "Klara" }
+    "footer": {
+      "contact": "Schreib mir",
+      "copyright": "Klara"
+    }
   },
   "waitlist": {
     "title": "Vorerst nur auf Einladung.",

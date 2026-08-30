@@ -646,7 +646,8 @@
       "forgotLink": "Forgot password",
       "error": {
         "invalidCredentials": "Invalid email or password.",
-        "googleFailed": "Couldn't sign in with Google. Please try again."
+        "googleFailed": "Couldn't sign in with Google. Please try again.",
+        "googleNativeUnavailable": "Google sign-in isn't available in this version of the app."
       }
     },
     "signup": {
@@ -689,7 +690,9 @@
       "submit": "Update password",
       "success": "New password saved. Sign in with it.",
       "goLogin": "Go to sign in",
-      "error": { "missingToken": "This link is incomplete. Open the link from your email again." }
+      "error": {
+        "missingToken": "This link is incomplete. Open the link from your email again."
+      }
     }
   },
   "errors": {
@@ -1124,11 +1127,23 @@
       "ctaLoginAction": "Sign in"
     },
     "que": {
-      "leer": { "title": "Read", "body": "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context." },
-      "hablar": { "title": "Speak", "body": "You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today." },
-      "repasar": { "title": "Review", "body": "Flashcards that come back right before you'd forget. No streaks, no hearts, no guilt." }
+      "leer": {
+        "title": "Read",
+        "body": "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context."
+      },
+      "hablar": {
+        "title": "Speak",
+        "body": "You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today."
+      },
+      "repasar": {
+        "title": "Review",
+        "body": "Flashcards that come back right before you'd forget. No streaks, no hearts, no guilt."
+      }
     },
-    "footer": { "contact": "Email me", "copyright": "Klara" }
+    "footer": {
+      "contact": "Email me",
+      "copyright": "Klara"
+    }
   },
   "waitlist": {
     "title": "For now, invitation only.",

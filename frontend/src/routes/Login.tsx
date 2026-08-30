@@ -3,12 +3,18 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { apiBase } from "../lib/apiBase";
 import { useAuth } from "../lib/auth";
+import {
+  GoogleCancelled,
+  GoogleNotConfigured,
+  signInWithGoogleNative,
+} from "../lib/googleNative";
+import { isNative } from "../lib/native";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { login } = useAuth();
+  const { login, reload } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -22,6 +28,10 @@ export default function Login() {
   // email/password login works everywhere.
   const iosStandalone =
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  // Inside the Capacitor shell the button stays, but it runs the native flow
+  // below — Google blocks the web OAuth gate in a WebView too, and there
+  // navigator.standalone is false, so this condition alone would not save us.
+  const hideGoogle = iosStandalone && !isNative();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +50,12 @@ export default function Login() {
   async function onGoogle() {
     setError(null);
     try {
+      if (isNative()) {
+        await signInWithGoogleNative();
+        await reload();
+        navigate(from, { replace: true });
+        return;
+      }
       const resp = await fetch(`${apiBase()}/auth/google/authorize`, {
         credentials: "include",
       });
@@ -47,8 +63,14 @@ export default function Login() {
       const data = (await resp.json()) as { authorization_url?: string };
       if (!data.authorization_url) throw new Error("no authorization_url");
       window.location.href = data.authorization_url;
-    } catch {
-      setError(t("auth.login.error.googleFailed"));
+    } catch (err) {
+      // Dismissing the account picker is not a failure worth a red banner.
+      if (err instanceof GoogleCancelled) return;
+      setError(
+        err instanceof GoogleNotConfigured
+          ? t("auth.login.error.googleNativeUnavailable")
+          : t("auth.login.error.googleFailed"),
+      );
     }
   }
 
@@ -95,7 +117,7 @@ export default function Login() {
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.login.submit")}
           </button>
-          {!iosStandalone && (
+          {!hideGoogle && (
             <button
               type="button"
               className="k-btn k-btn--ghost"

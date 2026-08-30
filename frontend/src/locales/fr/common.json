@@ -646,7 +646,8 @@
       "forgotLink": "Mot de passe oublié",
       "error": {
         "invalidCredentials": "E-mail ou mot de passe invalide.",
-        "googleFailed": "Impossible de se connecter avec Google. Réessaie."
+        "googleFailed": "Impossible de se connecter avec Google. Réessaie.",
+        "googleNativeUnavailable": "La connexion Google n'est pas disponible dans cette version de l'application."
       }
     },
     "signup": {
@@ -689,7 +690,9 @@
       "submit": "Mettre à jour le mot de passe",
       "success": "Nouveau mot de passe enregistré. Connecte-toi avec.",
       "goLogin": "Aller à la connexion",
-      "error": { "missingToken": "Le lien est incomplet. Rouvre le lien reçu par e-mail." }
+      "error": {
+        "missingToken": "Le lien est incomplet. Rouvre le lien reçu par e-mail."
+      }
     }
   },
   "errors": {
@@ -1124,11 +1127,23 @@
       "ctaLoginAction": "Se connecter"
     },
     "que": {
-      "leer": { "title": "Lire", "body": "De courtes histoires dans la langue que tu apprends. Chaque mot s'ouvre d'un geste : sens, genre, contexte." },
-      "hablar": { "title": "Parler", "body": "Tu discutes, et Klara corrige exactement le son qui a raté. Ce que tu as dit hier, elle s'en souvient aujourd'hui." },
-      "repasar": { "title": "Réviser", "body": "Des fiches qui reviennent juste avant l'oubli. Pas de séries, pas de cœurs, pas de culpabilité." }
+      "leer": {
+        "title": "Lire",
+        "body": "De courtes histoires dans la langue que tu apprends. Chaque mot s'ouvre d'un geste : sens, genre, contexte."
+      },
+      "hablar": {
+        "title": "Parler",
+        "body": "Tu discutes, et Klara corrige exactement le son qui a raté. Ce que tu as dit hier, elle s'en souvient aujourd'hui."
+      },
+      "repasar": {
+        "title": "Réviser",
+        "body": "Des fiches qui reviennent juste avant l'oubli. Pas de séries, pas de cœurs, pas de culpabilité."
+      }
     },
-    "footer": { "contact": "Écris-moi", "copyright": "Klara" }
+    "footer": {
+      "contact": "Écris-moi",
+      "copyright": "Klara"
+    }
   },
   "waitlist": {
     "title": "Pour l'instant, sur invitation.",
