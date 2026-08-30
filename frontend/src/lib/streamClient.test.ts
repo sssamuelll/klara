@@ -33,12 +33,10 @@ class FakeWs implements WsLike {
 const OPTS = { referenceText: "Hallo Welt", language: "de" };
 
 describe("deriveWsUrl", () => {
-  it("uses wss on https and ws on http, same origin", () => {
-    expect(deriveWsUrl({ protocol: "https:", host: "klara.example" })).toBe(
+  // Full coverage lives in apiBase.test.ts; this guards the re-export.
+  it("se reexporta y sigue derivando del mismo origen", () => {
+    expect(deriveWsUrl("/api/v1", { protocol: "https:", host: "klara.example" })).toBe(
       "wss://klara.example/api/v1/pronunciation/stream",
-    );
-    expect(deriveWsUrl({ protocol: "http:", host: "localhost:5273" })).toBe(
-      "ws://localhost:5273/api/v1/pronunciation/stream",
     );
   });
 });

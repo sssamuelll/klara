@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { apiBase } from "./apiBase";
 import { speechLocale } from "./languages";
 
 export interface TTSState {
@@ -32,7 +33,7 @@ function set(patch: Partial<TTSState>) {
 export type TTSMode = "narration" | "realtime";
 
 function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
-  let url = `/api/v1/tts?text=${encodeURIComponent(text)}`;
+  let url = `${apiBase()}/tts?text=${encodeURIComponent(text)}`;
   if (lang) url += `&lang=${encodeURIComponent(lang)}`;
   // Always explicit: the mode also VERSIONS the URL. TTS responses are
   // immutable-cached for a year, so without a new param existing devices

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { apiBase } from "../lib/apiBase";
 import { useAuth } from "../lib/auth";
 
 export default function Login() {
@@ -39,7 +40,7 @@ export default function Login() {
   async function onGoogle() {
     setError(null);
     try {
-      const resp = await fetch("/api/v1/auth/google/authorize", {
+      const resp = await fetch(`${apiBase()}/auth/google/authorize`, {
         credentials: "include",
       });
       if (!resp.ok) throw new Error(`http ${resp.status}`);

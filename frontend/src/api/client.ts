@@ -1,5 +1,6 @@
 import i18n from "../i18n";
 import type { PracticeQueue } from "../lib/practiceQueue";
+import { apiBase } from "../lib/apiBase";
 import type {
   CardOut,
   DiagnoseResponse,
@@ -40,8 +41,6 @@ import type {
   UserUpdate,
   WaitlistRow,
 } from "./types";
-
-const API_BASE = "/api/v1";
 
 export class ApiError extends Error {
   status: number;
@@ -98,7 +97,7 @@ export function onUnauthorized(fn: UnauthorizedListener): () => void {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`${API_BASE}${path}`, {
+  const resp = await fetch(`${apiBase()}${path}`, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -149,7 +148,7 @@ export const api = {
 
   login: async (email: string, password: string): Promise<void> => {
     const body = new URLSearchParams({ username: email, password });
-    const resp = await fetch(`${API_BASE}/auth/jwt/login`, {
+    const resp = await fetch(`${apiBase()}/auth/jwt/login`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -333,7 +332,7 @@ export const api = {
     fd.append("audio", audio, "user.webm");
     fd.append("reference_text", referenceText);
     fd.append("language", language);
-    const resp = await fetch(`${API_BASE}/pronunciation/score`, {
+    const resp = await fetch(`${apiBase()}/pronunciation/score`, {
       method: "POST",
       credentials: "include",
       headers: { "Accept-Language": i18n.language || "es" },
@@ -427,7 +426,7 @@ export const api = {
     fd.append("audio", audio, "mc.webm");
     fd.append("options", JSON.stringify(options));
     fd.append("language", language);
-    const resp = await fetch(`${API_BASE}/stories/${storyId}/quiz/resolve-mc`, {
+    const resp = await fetch(`${apiBase()}/stories/${storyId}/quiz/resolve-mc`, {
       method: "POST",
       credentials: "include",
       headers: { "Accept-Language": i18n.language || "es" },
@@ -472,7 +471,7 @@ export const api = {
 
     const signals = [AbortSignal.timeout(60_000)];
     if (opts.signal) signals.push(opts.signal);
-    const resp = await fetch(`${API_BASE}/speak/turn`, {
+    const resp = await fetch(`${apiBase()}/speak/turn`, {
       method: "POST",
       credentials: "include",
       headers: { "Accept-Language": i18n.language || "es" },
@@ -543,7 +542,7 @@ export const api = {
 
   // TSV crudo, no JSON — bypassa request() (mismo patrón que login()).
   exportTaller: async (): Promise<string> => {
-    const resp = await fetch(`${API_BASE}/taller/export`, { credentials: "include" });
+    const resp = await fetch(`${apiBase()}/taller/export`, { credentials: "include" });
     if (resp.status === 401) {
       for (const fn of unauthorizedListeners) fn();
       throw new AuthRequiredError();
