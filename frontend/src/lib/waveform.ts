@@ -13,6 +13,7 @@
  */
 
 import { apiBase } from "./apiBase";
+import { authHeaders } from "./native";
 
 const BARS = 64;
 const cache = new Map<string, Promise<number[]>>();
@@ -42,7 +43,7 @@ export function getWaveform(text: string, lang?: string): Promise<number[]> {
   if (existing) return existing;
 
   const promise = (async () => {
-    const resp = await fetch(urlFor(text, lang));
+    const resp = await fetch(urlFor(text, lang), { headers: await authHeaders() });
     if (!resp.ok) throw new Error(`tts fetch failed: ${resp.status}`);
     const buf = await resp.arrayBuffer();
 
