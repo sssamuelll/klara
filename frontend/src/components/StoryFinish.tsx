@@ -17,7 +17,8 @@
  *  - NextSteps: Another story / Re-read / Home.
  */
 
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { App as CapApp } from "@capacitor/app";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type {
@@ -37,6 +38,7 @@ import type {
 } from "../api/types";
 import GenderPicker from "./GenderPicker";
 import { startAudioBars } from "../lib/audioBars";
+import { isNative } from "../lib/native";
 import { startMicRecording, type MicRecorder, type ScoreBand } from "../lib/pronunciation";
 import {
   currentItem,
@@ -310,10 +312,18 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   const [micLevel, setMicLevel] = useState<MicLevel>("silent");
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const recorderRef = useRef<MicRecorder | null>(null);
-  const unmountedRef = useRef(false);
+  const epochRef = useRef(0);
   const recAnalyserRef = useRef<AnalyserNode | null>(null);
   const recBarsRef = useRef<HTMLSpanElement[]>([]);
   const answered = picked !== null;
+
+  const cancelMic = useCallback(() => {
+    epochRef.current += 1;
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    recAnalyserRef.current = null;
+    setMicPhase("idle");
+  }, []);
 
   const onTap = (i: number) => {
     if (answered || micPhase !== "idle") return;
@@ -328,19 +338,13 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
     onAnswered({ correct: false, revealed: true });
   };
 
-  function cancelMic() {
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    recAnalyserRef.current = null;
-    setMicPhase("idle");
-  }
-
   async function startMic() {
     if (micPhase !== "idle" && micPhase !== "no_match") return;
+    const epoch = epochRef.current;
     setLastTranscript("");
     try {
       const rec = await startMicRecording();
-      if (unmountedRef.current) {
+      if (epoch !== epochRef.current) {
         rec.cancel();
         return;
       }
@@ -423,15 +427,18 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [micPhase]);
 
+  useEffect(() => {
+    if (!isNative()) return;
+    const handle = CapApp.addListener("pause", cancelMic);
+    return () => {
+      void handle.then((h) => h.remove());
+    };
+  }, [cancelMic]);
+
   // Cleanup on unmount
   useEffect(() => {
-    unmountedRef.current = false;
-    return () => {
-      unmountedRef.current = true;
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
-    };
-  }, []);
+    return () => cancelMic();
+  }, [cancelMic]);
 
   return (
     <article className="qcard" data-type="mc">

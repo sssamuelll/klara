@@ -7,8 +7,10 @@
  * with M key, ESC cancel, evaluating state shared with the parent).
  */
 
+import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
+import { isNative } from "./native";
 import {
   bandsByTokenIndex,
   scoreAudio,
@@ -62,7 +64,7 @@ export function useMicScorer(
   const [result, setResult] = useState<MicScorerResult | null>(null);
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
-  const unmountedRef = useRef(false);
+  const epochRef = useRef(0);
   const autoStopRef = useRef<number | null>(null);
   const silenceCleanupRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<MicScorerPhase>("idle");
@@ -80,6 +82,7 @@ export function useMicScorer(
   }, []);
 
   const cancel = useCallback(() => {
+    epochRef.current += 1;
     clearTimers();
     recorderRef.current?.cancel();
     recorderRef.current = null;
@@ -123,11 +126,12 @@ export function useMicScorer(
 
   const start = useCallback(async () => {
     if (phaseRef.current === "recording" || phaseRef.current === "scoring") return;
+    const epoch = epochRef.current;
     setError(null);
     setResult(null);
     try {
       const rec = await startMicRecording();
-      if (unmountedRef.current) {
+      if (epoch !== epochRef.current) {
         rec.cancel();
         return;
       }
@@ -164,14 +168,16 @@ export function useMicScorer(
   }, [cancel]);
 
   useEffect(() => {
-    unmountedRef.current = false;
+    if (!isNative()) return;
+    const handle = CapApp.addListener("pause", cancel);
     return () => {
-      unmountedRef.current = true;
-      clearTimers();
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
+      void handle.then((h) => h.remove());
     };
-  }, [clearTimers]);
+  }, [cancel]);
+
+  useEffect(() => {
+    return () => cancel();
+  }, [cancel]);
 
   return {
     phase,
