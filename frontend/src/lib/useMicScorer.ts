@@ -176,9 +176,12 @@ export function useMicScorer(
 
   useEffect(
     () => onAppPause(() => {
-      // Only tear down a live capture. Cancelling an already-scored turn
-      // would reset the phase while keeping the bands, and StoryFinish then
-      // shows neither the mic nor Next.
+      // Always invalidate a pending start: going to the background must make
+      // any in-flight getUserMedia unusable, whatever phase we are in.
+      epochRef.current += 1;
+      // Tearing down is the conditional half. Cancelling an already-scored
+      // turn would reset the phase while keeping the bands, and StoryFinish
+      // then shows neither the mic nor Next.
       if (phaseRef.current === "recording") cancel();
     }),
     [cancel],

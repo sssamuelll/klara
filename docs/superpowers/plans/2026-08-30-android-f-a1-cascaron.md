@@ -1138,9 +1138,10 @@ VITE_API_BASE=https://klara.sdar.dev/api/v1
 > que `vite.config.ts:5` ya hace las recoge — así que `env.VITE_NATIVE` funciona
 > para el `disable` del PWA sin tocar nada más. Cero dependencias nuevas.
 >
-> El client id de Google va en `frontend/.env.native.local`, que está en
-> `.gitignore` y Vite también carga en ese modo:
-> `VITE_GOOGLE_WEB_CLIENT_ID=<el client id Web del proyecto 904183028633>`.
+> `VITE_GOOGLE_WEB_CLIENT_ID` vive versionado en `frontend/.env.native`: el
+> client ID de OAuth es público por diseño y el APK lo necesita para iniciar
+> sesión con Google. El client **secret** sí sigue siendo secreto y vive solo
+> en el servidor.
 >
 > `android:run` **no** usa `--mode native` a propósito: en live reload el WebView
 > carga el Vite de la PC y el proxy `/api` de `vite.config.ts:65` reenvía HTTP y
