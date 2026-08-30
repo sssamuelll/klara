@@ -1,6 +1,7 @@
 import i18n from "../i18n";
 import type { PracticeQueue } from "../lib/practiceQueue";
 import { apiBase } from "../lib/apiBase";
+import { authHeaders, clearToken, isNative, setToken } from "../lib/native";
 import type {
   CardOut,
   DiagnoseResponse,
@@ -99,12 +100,16 @@ export function onUnauthorized(fn: UnauthorizedListener): () => void {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(`${apiBase()}${path}`, {
     credentials: "include",
+    // `...init` goes BEFORE `headers`: spread the other way round, an init that
+    // carried its own headers would replace this whole object — including the
+    // Authorization the native session depends on.
+    ...init,
     headers: {
       "Content-Type": "application/json",
       "Accept-Language": i18n.language || "es",
+      ...(await authHeaders()),
       ...(init?.headers ?? {}),
     },
-    ...init,
   });
   if (resp.status === 401) {
     for (const fn of unauthorizedListeners) fn();
@@ -148,7 +153,10 @@ export const api = {
 
   login: async (email: string, password: string): Promise<void> => {
     const body = new URLSearchParams({ username: email, password });
-    const resp = await fetch(`${apiBase()}/auth/jwt/login`, {
+    // Same credentials, two transports: the cookie one on the web, the
+    // revocable bearer one inside the shell, where there is no cookie jar.
+    const path = isNative() ? "/auth/bearer/login" : "/auth/jwt/login";
+    const resp = await fetch(`${apiBase()}${path}`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -168,10 +176,31 @@ export const api = {
       }
       throw new ApiError(resp.status, `${resp.status}: ${detail}`);
     }
+    if (isNative()) {
+      const data = (await resp.json()) as { access_token: string };
+      await setToken(data.access_token);
+    }
   },
 
-  logout: () =>
-    request<void>("/auth/jwt/logout", { method: "POST" }),
+  logout: async (): Promise<void> => {
+    const path = isNative() ? "/auth/bearer/logout" : "/auth/jwt/logout";
+    try {
+      await request<void>(path, { method: "POST" });
+    } finally {
+      // Even if the round trip failed, the phone forgets the token. The server
+      // session outlives it until expiry, but the safe failure is the device
+      // holding nothing.
+      await clearToken();
+    }
+  },
+
+  googleNative: async (idToken: string): Promise<string> => {
+    const data = await request<{ access_token: string }>("/auth/google/native", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken }),
+    });
+    return data.access_token;
+  },
 
   forgotPassword: (email: string) =>
     request<void>("/auth/forgot-password", {
@@ -335,7 +364,7 @@ export const api = {
     const resp = await fetch(`${apiBase()}/pronunciation/score`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
     if (resp.status === 401) {
@@ -429,7 +458,7 @@ export const api = {
     const resp = await fetch(`${apiBase()}/stories/${storyId}/quiz/resolve-mc`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
     if (resp.status === 401) {
@@ -474,7 +503,7 @@ export const api = {
     const resp = await fetch(`${apiBase()}/speak/turn`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
       signal: AbortSignal.any(signals),
     });
@@ -542,7 +571,10 @@ export const api = {
 
   // TSV crudo, no JSON — bypassa request() (mismo patrón que login()).
   exportTaller: async (): Promise<string> => {
-    const resp = await fetch(`${apiBase()}/taller/export`, { credentials: "include" });
+    const resp = await fetch(`${apiBase()}/taller/export`, {
+      credentials: "include",
+      headers: await authHeaders(),
+    });
     if (resp.status === 401) {
       for (const fn of unauthorizedListeners) fn();
       throw new AuthRequiredError();
