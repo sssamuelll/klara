@@ -76,6 +76,43 @@ describe("transporte en el cascarón", () => {
     expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer tok-1");
   });
 
+  // The three FormData uploads bypass request() too. They are the ones a
+  // dropped header would hurt most: recording a sentence and getting a 401 in
+  // the middle of a study session reads as "the mic broke".
+  it.each([
+    [
+      "scorePronunciation",
+      "/api/v1/pronunciation/score",
+      () => api.scorePronunciation(new Blob(["x"]), "Hallo", "de"),
+    ],
+    [
+      "resolveMC",
+      "/api/v1/stories/s1/quiz/resolve-mc",
+      () => api.resolveMC("s1", new Blob(["x"]), ["a", "b"], "de"),
+    ],
+    [
+      "speakTurn",
+      "/api/v1/speak/turn",
+      () =>
+        api.speakTurn(new Blob(["x"]), {
+          language: "de",
+          focusSound: "r",
+          focusExamples: [],
+          history: [],
+        }),
+    ],
+  ])("%s emite el Authorization y no fija Content-Type", async (_n, url, call) => {
+    h.token = "tok-1";
+    const spy = mockFetch(200, "{}");
+    await call();
+    const [calledUrl, init] = spy.mock.calls[0];
+    expect(calledUrl).toBe(url);
+    const headers = new Headers(init?.headers);
+    expect(headers.get("Authorization")).toBe("Bearer tok-1");
+    // FormData must set its own boundary; a manual Content-Type breaks the body.
+    expect(headers.get("Content-Type")).toBeNull();
+  });
+
   it("el logout va a /auth/bearer/logout y borra el token", async () => {
     h.token = "tok-1";
     const spy = mockFetch(204, null);

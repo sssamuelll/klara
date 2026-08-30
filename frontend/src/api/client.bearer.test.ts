@@ -26,7 +26,10 @@ describe("transporte en web", () => {
     await api.login("a@b.com", "secreta");
     const [url, init] = spy.mock.calls[0];
     expect(url).toBe("/api/v1/auth/jwt/login");
-    expect((init?.headers as Record<string, string>).Authorization).toBeUndefined();
+    // Read through Headers: request() now hands fetch a Headers instance, and
+    // a plain property access on one is always undefined — an assert that can
+    // never fail is worse than no assert.
+    expect(new Headers(init?.headers).get("Authorization")).toBeNull();
     expect(init?.credentials).toBe("include");
   });
 
@@ -40,7 +43,7 @@ describe("transporte en web", () => {
     const spy = mockFetch(200, '{"id":"u1"}');
     await api.getMe();
     const [, init] = spy.mock.calls[0];
-    expect((init?.headers as Record<string, string>).Authorization).toBeUndefined();
+    expect(new Headers(init?.headers).get("Authorization")).toBeNull();
   });
 
   it("manda los headers base", async () => {
