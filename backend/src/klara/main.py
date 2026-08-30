@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 from uuid import uuid4
 
 import structlog
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
 from klara.auth.backend import auth_backend
+from klara.auth.bearer import bearer_backend
 from klara.auth.oauth_google import make_google_oauth_client
 from klara.auth.schemas import UserCreate, UserRead
 from klara.auth.users import fastapi_users
@@ -18,7 +19,9 @@ from klara.i18n.messages import DEFAULT_LOCALE, SUPPORTED
 from klara.logging_setup import configure_logging
 from klara.models import User
 from klara.models.enums import CEFRLevel
+from klara.ratelimit import login_rate_limit
 from klara.routers import (
+    auth_native,
     gender,
     health,
     invitations,
@@ -146,13 +149,21 @@ def create_app() -> FastAPI:
     app.add_middleware(OAuthCallbackRedirectMiddleware)
 
     auth_prefix = "/api/v1/auth"
-    # TODO(security): wire slowapi rate limiting on /jwt/login and /register
-    # (e.g. 5 req/min per IP). Invite-only signup limits account creation but
-    # doesn't slow password-spray against /jwt/login.
+    # Spec android §2.5: 10 intentos / 5 min por IP en las rutas de login.
+    # Como dependencia de router alcanza también a /logout; la dependencia
+    # misma filtra por path y solo cuenta las de login.
+    login_guard = [Depends(login_rate_limit)]
     app.include_router(
         fastapi_users.get_auth_router(auth_backend),
         prefix=f"{auth_prefix}/jwt",
         tags=["auth"],
+        dependencies=login_guard,
+    )
+    app.include_router(
+        fastapi_users.get_auth_router(bearer_backend),
+        prefix=f"{auth_prefix}/bearer",
+        tags=["auth"],
+        dependencies=login_guard,
     )
     app.include_router(
         fastapi_users.get_register_router(UserRead, UserCreate),
@@ -233,6 +244,7 @@ def create_app() -> FastAPI:
     app.include_router(modules.router, prefix="/api/v1")
     app.include_router(waitlist.router, prefix="/api/v1", tags=["waitlist"])
     app.include_router(taller.router, prefix="/api/v1")
+    app.include_router(auth_native.router, prefix="/api/v1", dependencies=login_guard)
 
     return app
 

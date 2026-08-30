@@ -2,8 +2,8 @@ import pytest
 from sqlalchemy import select
 from starlette.requests import Request
 
+from klara import ratelimit
 from klara.models.waitlist import WaitlistSignup
-from klara.routers import waitlist as waitlist_router
 
 
 async def _login_cookie(client, email: str, password: str) -> str:
@@ -48,9 +48,9 @@ async def _register_owner(client, app_settings, db_session):
 
 @pytest.fixture(autouse=True)
 def _reset_rate_limit():
-    waitlist_router._hits.clear()
+    ratelimit.waitlist_limiter.reset()
     yield
-    waitlist_router._hits.clear()
+    ratelimit.waitlist_limiter.reset()
 
 
 def _make_request(client_host: str, headers: dict[str, str] | None = None) -> Request:
@@ -93,14 +93,14 @@ def test_client_ip_ignores_xff_from_non_private_peer():
     # El peer no es el proxy del host (IP pública real, no loopback/privada): el
     # XFF es spoofeable, se ignora.
     req = _make_request("8.8.8.8", {"x-forwarded-for": "9.9.9.9"})
-    assert waitlist_router._client_ip(req) == "8.8.8.8"
+    assert ratelimit.client_ip(req) == "8.8.8.8"
 
 
 def test_client_ip_uses_last_xff_hop_from_trusted_peer():
     # El peer es el hop confiable (nginx del host, loopback/privado): tomamos la
     # última IP del XFF que el propio proxy anexó; las anteriores son spoofeables.
     req = _make_request("127.0.0.1", {"x-forwarded-for": "1.2.3.4, 5.6.7.8"})
-    assert waitlist_router._client_ip(req) == "5.6.7.8"
+    assert ratelimit.client_ip(req) == "5.6.7.8"
 
 
 @pytest.mark.asyncio
@@ -113,29 +113,30 @@ async def test_rate_limit_429_after_10(client):
 
 
 def test_rate_limit_window_resets():
-    waitlist_router._hits.clear()
+    ratelimit.waitlist_limiter.reset()
     for _ in range(10):
-        assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is False
-    assert waitlist_router._rate_limited("1.2.3.4", now=1000.0) is True
-    assert waitlist_router._rate_limited("1.2.3.4", now=1000.0 + 3601) is False
+        assert ratelimit.waitlist_limiter.hit("1.2.3.4", now=1000.0) is False
+    assert ratelimit.waitlist_limiter.hit("1.2.3.4", now=1000.0) is True
+    assert ratelimit.waitlist_limiter.hit("1.2.3.4", now=1000.0 + 3601) is False
 
 
 def test_hits_evicts_expired_entries_past_threshold():
     # Rotación de IPs (p.ej. IPv6): _hits no debe crecer para siempre. Pasado
     # el umbral, una llamada nueva purga las entradas con ventana ya expirada.
-    waitlist_router._hits.clear()
+    limiter = ratelimit.waitlist_limiter
+    limiter.reset()
     now = 10_000.0
-    for i in range(waitlist_router._MAX_HITS_ENTRIES + 1):
-        waitlist_router._hits[f"stale-{i}"] = (1, now - waitlist_router._WINDOW_S - 1)
-    assert len(waitlist_router._hits) > waitlist_router._MAX_HITS_ENTRIES
+    for i in range(ratelimit._MAX_HITS_ENTRIES + 1):
+        limiter._hits[f"stale-{i}"] = (1, now - limiter.window_s - 1)
+    assert len(limiter._hits) > ratelimit._MAX_HITS_ENTRIES
 
-    assert waitlist_router._rate_limited("1.2.3.4", now=now) is False
-    assert len(waitlist_router._hits) == 1  # todas las stale purgadas, solo queda la nueva
+    assert limiter.hit("1.2.3.4", now=now) is False
+    assert len(limiter._hits) == 1  # todas las stale purgadas, solo queda la nueva
 
     # El 429 se conserva tras la purga.
     for _ in range(9):
-        assert waitlist_router._rate_limited("1.2.3.4", now=now) is False
-    assert waitlist_router._rate_limited("1.2.3.4", now=now) is True
+        assert limiter.hit("1.2.3.4", now=now) is False
+    assert limiter.hit("1.2.3.4", now=now) is True
 
 
 @pytest.mark.asyncio

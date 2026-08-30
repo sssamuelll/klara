@@ -276,7 +276,27 @@ async def stream(websocket: WebSocket) -> None:
         await websocket.close(code=WS_CLOSE_AUTH)
         return
     await websocket.accept()  # accept first so the app close code reaches the client
-    user = await authenticate_ws(websocket, settings)
+    # Handshake primero: el primer frame trae reference_text, language y — para
+    # el app nativo — el token Bearer (spec android §2.3). Se lee ANTES de
+    # autenticar porque el token viene dentro; un peer sin credenciales solo
+    # nos cuesta este receive con timeout, y el origin-gate ya lo filtró. De
+    # ahí en adelante, el único frame de texto que el receptor de la sesión
+    # espera es el de fin de habla.
+    try:
+        handshake = await asyncio.wait_for(
+            websocket.receive_json(), timeout=settings.pron_stream_send_timeout_s
+        )
+        reference_text = handshake["reference_text"]
+        language = handshake["language"]
+        token = handshake.get("token")
+        if not (isinstance(reference_text, str) and isinstance(language, str)):
+            raise TypeError("handshake fields must be strings")
+        if token is not None and not isinstance(token, str):
+            raise TypeError("token must be a string")
+    except Exception:
+        await _safe_close(websocket, WS_CLOSE_FAILURE)
+        return
+    user = await authenticate_ws(websocket, settings, token=token)
     if user is None:
         await _safe_close(websocket, WS_CLOSE_AUTH)
         return
@@ -293,20 +313,6 @@ async def stream(websocket: WebSocket) -> None:
     _active_global += 1
     _active_per_user[uid] += 1
     try:
-        # Handshake: first client frame is JSON text {"reference_text", "language"}.
-        # Consumed here, BEFORE the session starts — the only text frame the
-        # session's receiver ever sees is end-of-speech.
-        try:
-            handshake = await asyncio.wait_for(
-                websocket.receive_json(), timeout=settings.pron_stream_send_timeout_s
-            )
-            reference_text = handshake["reference_text"]
-            language = handshake["language"]
-            if not (isinstance(reference_text, str) and isinstance(language, str)):
-                raise TypeError("handshake fields must be strings")
-        except Exception:
-            await _safe_close(websocket, WS_CLOSE_FAILURE)
-            return
         recognizer = _build_stream_recognizer(settings, reference_text, language)
         session = StreamingSession(
             recognizer,

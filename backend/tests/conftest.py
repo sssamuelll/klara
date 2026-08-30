@@ -74,7 +74,7 @@ async def _clean_tables():
     async with engine.connect() as conn:
         await conn.execute(
             text(
-                "TRUNCATE audio_cache, invitations, oauth_accounts, reviews, user_cards, "
+                "TRUNCATE audio_cache, access_tokens, invitations, oauth_accounts, reviews, user_cards, "
                 "story_views, study_sessions, stories, module_vocab, modules, "
                 "gender_attempts, gender_lexicon, gender_l1_notes, pronunciation_diagnoses, "
                 "waitlist_signups, users "
@@ -84,6 +84,17 @@ async def _clean_tables():
         await conn.commit()
     await engine.dispose()
     yield
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    """login_limiter/waitlist_limiter are process-wide singletons (klara.ratelimit);
+    without a per-test reset, cumulative login calls across unrelated test files
+    (all from the same ASGITransport peer IP) trip the 429 and cascade failures."""
+    from klara import ratelimit
+
+    ratelimit.waitlist_limiter.reset()
+    ratelimit.login_limiter.reset()
 
 
 @pytest_asyncio.fixture
