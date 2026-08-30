@@ -11,7 +11,14 @@ const config: CapacitorConfig = {
     adjustMarginsForEdgeToEdge: "auto",
   },
   plugins: {
-    SplashScreen: { launchAutoHide: false, backgroundColor: "#F4EFE6" },
+    SplashScreen: {
+      // Belt and braces: NativeChrome hides it on first render, but if the
+      // bundle never boots that effect never runs — and a splash with no exit
+      // is indistinguishable from a frozen app.
+      launchAutoHide: true,
+      launchShowDuration: 3000,
+      backgroundColor: "#F4EFE6",
+    },
     Keyboard: { resize: "native" },
   },
 };

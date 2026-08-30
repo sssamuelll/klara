@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "build:native": "tsc -b && vite build --mode native",
     "cap:sync": "npm run build:native && npx cap sync android",
-    "android:run": "npx cap run android -l --external",
+    "android:run": "npx cap run android -l --host localhost --port 5273 --forwardPorts 5273:5273",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "i18n:check": "node scripts/check-i18n.mjs",

@@ -27,6 +27,7 @@ import ForgotPassword from "./routes/ForgotPassword";
 import ResetPassword from "./routes/ResetPassword";
 import VerifyEmail from "./routes/VerifyEmail";
 import { useMastheadDate } from "./lib/dateLabel";
+import { isNative } from "./lib/native";
 import { useTheme } from "./lib/preferences";
 import { AuthProvider, useAuth } from "./lib/auth";
 
@@ -260,7 +261,7 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
-      <NativeChrome />
+      {isNative() && <NativeChrome />}
       <AppShell />
     </AuthProvider>
   );
