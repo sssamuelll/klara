@@ -153,6 +153,62 @@ async def test_native_links_existing_invited_user(
 
 
 @pytest.mark.asyncio
+async def test_native_accepts_a_real_sized_id_token(
+    client, seed_invite, app_settings, google_keys, rsa_key
+):
+    """Un ID token de Google real pasa de 1024 caracteres.
+
+    `oauth_accounts.access_token` es VARCHAR(1024) en fastapi-users. Guardar ahí
+    el id_token reventaba con StringDataRightTruncationError — un 500 que además
+    sale SIN cabeceras CORS, así que desde el WebView se veía como un error de
+    CORS y no como lo que era. Los tokens de este archivo son cortos porque sus
+    claims son mínimos; este los infla al tamaño de uno de verdad.
+    """
+    await _register_invited(client, seed_invite, app_settings, "invited@example.com")
+
+    # Google mete name, picture, given_name, family_name, nonce, at_hash…
+    # Un id_token real ronda los 1000-1300 caracteres; este pasa de 1024 seguro.
+    gordo = _mint(
+        rsa_key,
+        name="Samuel Dario Ballesteros",
+        picture="https://lh3.googleusercontent.com/a/" + "x" * 700,
+        given_name="Samuel",
+        family_name="Ballesteros",
+    )
+    assert len(gordo) > 1024, f"el token de prueba mide {len(gordo)}, no reproduce el fallo"
+
+    r = await client.post("/api/v1/auth/google/native", json={"id_token": gordo})
+    assert r.status_code == 200, r.text
+
+    token = r.json()["access_token"]
+    me = await client.get("/api/v1/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_native_does_not_persist_the_id_token(
+    client, seed_invite, app_settings, google_keys, rsa_key, db_session
+):
+    """El id_token no se guarda: es una aserción firmada de identidad, y la
+    columna donde caía es para un access token de API que este flujo no tiene
+    y que Klara nunca usa."""
+    from sqlalchemy import select
+
+    from klara.models.oauth import OAuthAccount
+
+    await _register_invited(client, seed_invite, app_settings, "invited@example.com")
+    minted = _mint(rsa_key)
+    r = await client.post("/api/v1/auth/google/native", json={"id_token": minted})
+    assert r.status_code == 200, r.text
+
+    rows = (await db_session.execute(select(OAuthAccount))).scalars().all()
+    assert rows, "debería haber quedado una cuenta OAuth enlazada"
+    for row in rows:
+        assert row.access_token != minted
+        assert len(row.access_token) <= 1024
+
+
+@pytest.mark.asyncio
 async def test_native_unknown_email_requires_invite(client, app_settings, google_keys, rsa_key):
     app_settings(INITIAL_OWNER_EMAIL="", GOOGLE_OAUTH_CLIENT_ID=AUD)
     r = await client.post(
