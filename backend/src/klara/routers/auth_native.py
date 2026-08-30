@@ -50,11 +50,16 @@ async def google_native_login(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=t("auth.google_native.invalid", locale),
         ) from None
-    # access_token = el propio id_token: la columna de oauth_accounts es NOT NULL
-    # y este flujo no tiene access token de Google (decisión deliberada, spec §2.2).
+    # access_token vacío, NO el id_token. Este flujo no tiene access token de
+    # Google —Credential Manager entrega una aserción de identidad, no una
+    # credencial de API— y Klara nunca llama APIs de Google, así que nadie lee
+    # esta columna. Guardar ahí el id_token reventaba en producción: la columna
+    # es VARCHAR(1024) en fastapi-users y un id_token real la pasa. Y el 500
+    # resultante sale SIN cabeceras CORS, así que desde el WebView se veía como
+    # un error de CORS, no como lo que era.
     user = await user_manager.oauth_callback(
         "google",
-        payload.id_token,
+        "",
         claims.sub,
         claims.email,
         expires_at=claims.exp,
