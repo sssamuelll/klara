@@ -44,6 +44,7 @@ import {
   type ScoreBand,
 } from "./pronunciation";
 import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
+import { getToken } from "./native";
 import { createAligner } from "./streamAlign";
 import { openScoreStream, type ScoreStream } from "./streamClient";
 import { startSilenceDetector, type MicLevel } from "./silenceDetector";
@@ -345,6 +346,7 @@ export function useSentencePractice({
           const stream = openScoreStream({
             referenceText: current.target,
             language: targetLanguage,
+            token: (await getToken()) ?? undefined,
             onWord: (w) => {
               if (streamRef.current !== stream) return; // stale post-EOS drain frame
               const idx = aligner(w.word, w.error_type);

@@ -47,6 +47,7 @@ const FINAL_TIMEOUT_MS = 8000;
 export function openScoreStream(opts: {
   referenceText: string;
   language: string;
+  token?: string;
   onWord: (w: LiveWord) => void;
   makeWs?: (url: string) => WsLike;
   finalTimeoutMs?: number;
@@ -99,8 +100,13 @@ export function openScoreStream(opts: {
   ws.onopen = () => {
     if (settled) return;
     // Handshake MUST be the first frame (backend reads it before the session).
+    // The token goes here and never in the URL: query strings land in access logs.
     ws.send(
-      JSON.stringify({ reference_text: opts.referenceText, language: opts.language }),
+      JSON.stringify({
+        reference_text: opts.referenceText,
+        language: opts.language,
+        ...(opts.token ? { token: opts.token } : {}),
+      }),
     );
     for (const buf of pending) sendBinary(buf);
     pending.length = 0;

@@ -43,10 +43,11 @@ describe("deriveWsUrl", () => {
 
 describe("openScoreStream", () => {
   let ws: FakeWs;
-  const make = () => {
+  const make = (extra: { token?: string } = {}) => {
     ws = new FakeWs();
     return openScoreStream({
       ...OPTS,
+      ...extra,
       onWord: (w) => words.push(w.word),
       makeWs: () => ws,
       url: "ws://test/api/v1/pronunciation/stream",
@@ -63,6 +64,34 @@ describe("openScoreStream", () => {
     make();
     ws.open();
     expect(ws.sent[0]).toBe(JSON.stringify({ reference_text: "Hallo Welt", language: "de" }));
+  });
+
+  it("incluye token en el handshake solo cuando se le pasa", () => {
+    make({ token: "tok-abc" });
+    ws.open();
+    expect(JSON.parse(ws.sent[0] as string)).toEqual({
+      reference_text: "Hallo Welt",
+      language: "de",
+      token: "tok-abc",
+    });
+  });
+
+  it("no incluye la clave token cuando no se le pasa", () => {
+    make();
+    ws.open();
+    expect(Object.keys(JSON.parse(ws.sent[0] as string))).toEqual([
+      "reference_text",
+      "language",
+    ]);
+  });
+
+  it("el token no viaja en la URL", () => {
+    // Deliberate: query strings land in access logs, headers are impossible on
+    // a browser WebSocket. The handshake frame is the only place left.
+    const s = make({ token: "tok-abc" });
+    ws.open();
+    expect(String((s as unknown as { url?: string }).url ?? "")).not.toContain("tok-abc");
+    expect(ws.sent.filter((f) => typeof f === "string" && f.includes("tok-abc"))).toHaveLength(1);
   });
 
   it("buffers chunks before open and flushes them after the handshake", () => {
