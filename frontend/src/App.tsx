@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
+import NativeChrome from "./components/NativeChrome";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TabBar from "./components/TabBar";
 import Landing from "./routes/Landing";
@@ -259,6 +260,7 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
+      <NativeChrome />
       <AppShell />
     </AuthProvider>
   );

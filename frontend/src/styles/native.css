@@ -1,0 +1,14 @@
+/* Only inside the shell: on the web these would break normal page behaviour. */
+html.native,
+html.native body {
+  overscroll-behavior: none;
+}
+html.native {
+  -webkit-tap-highlight-color: transparent;
+}
+html.native button,
+html.native .k-btn,
+html.native [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
