@@ -8,3 +8,14 @@
 Dockerfile* text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# `cap sync` REGENERA estos dos en cada build del app Android, y Capacitor los
+# escribe siempre con LF. Con core.autocrlf=true el árbol quedaba sucio después
+# de cada build —sin un solo cambio real, solo finales de línea— y
+# scripts/deploy-prod.sh se negaba a desplegar. Descubierto desplegando el
+# arreglo del login nativo.
+#
+# La regla va sobre estos archivos concretos y NO sobre frontend/android/**:
+# un glob así marca como texto los PNG del splash y los corrompe al normalizar.
+frontend/android/capacitor.settings.gradle text eol=lf
+frontend/android/app/capacitor.build.gradle text eol=lf
