@@ -15,7 +15,7 @@ vi.mock("./native", () => ({
   tap: () => undefined,
 }));
 
-const { ttsSourceForTest } = await import("./tts");
+const { ttsSourceForTest, TtsSuperseded } = await import("./tts");
 
 const created: string[] = [];
 const revoked: string[] = [];
@@ -74,5 +74,34 @@ describe("origen del audio de TTS en el cascarón", () => {
     mockFetch(500);
     await expect(ttsSourceForTest("Hallo", "de", "narration")).rejects.toThrow();
     expect(created).toEqual([]);
+  });
+});
+
+describe("dos speak() encabalgados", () => {
+  it("la llamada vieja no revoca el blob de la nueva", async () => {
+    mockFetch();
+    // The new call already won and its blob is the one playing.
+    const deLaNueva = await ttsSourceForTest("nueva", "de", "narration");
+    const revocadosAntes = revoked.length;
+
+    // The old call finishes its download afterwards and finds itself stale.
+    // It must drop only what it made: revoking the current one would kill the
+    // audio that is playing right now.
+    await expect(
+      ttsSourceForTest("vieja", "de", "narration", () => true),
+    ).rejects.toBeInstanceOf(TtsSuperseded);
+
+    const revocadosDespues = revoked.slice(revocadosAntes);
+    expect(revocadosDespues).toHaveLength(1);
+    expect(revocadosDespues[0]).not.toBe(deLaNueva);
+    expect(revoked).not.toContain(deLaNueva);
+  });
+
+  it("una llamada vigente sí revoca la anterior", async () => {
+    mockFetch();
+    const primera = await ttsSourceForTest("uno", "de", "narration", () => false);
+    const revocadosAntes = revoked.length;
+    await ttsSourceForTest("dos", "de", "narration", () => false);
+    expect(revoked.slice(revocadosAntes)).toEqual([primera]);
   });
 });

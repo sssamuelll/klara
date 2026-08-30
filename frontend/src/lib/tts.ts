@@ -33,6 +33,9 @@ function set(patch: Partial<TTSState>) {
  */
 export type TTSMode = "narration" | "realtime";
 
+/** A newer speak() won while this one was still downloading. */
+export class TtsSuperseded extends Error {}
+
 function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
   let url = `${apiBase()}/tts?text=${encodeURIComponent(text)}`;
   if (lang) url += `&lang=${encodeURIComponent(lang)}`;
@@ -53,15 +56,26 @@ let lastBlobUrl: string | null = null;
  * we fetch with the header and hand over a blob. The previous blob is revoked
  * on every call — otherwise every played sentence leaks a few hundred KB.
  */
-async function ttsSource(text: string, lang?: string, mode?: TTSMode): Promise<string> {
+async function ttsSource(
+  text: string,
+  lang?: string,
+  mode?: TTSMode,
+  isStale: () => boolean = () => false,
+): Promise<string> {
   const url = ttsUrl(text, lang, mode);
   if (!isNative()) return url;
   const resp = await fetch(url, { headers: await authHeaders() });
   if (!resp.ok) throw new Error(`tts fetch failed: ${resp.status}`);
-  const blob = await resp.blob();
+  const objectUrl = URL.createObjectURL(await resp.blob());
+  if (isStale()) {
+    // A newer speak() won while we were downloading. Drop only what we made:
+    // lastBlobUrl now belongs to that newer call and may be playing.
+    URL.revokeObjectURL(objectUrl);
+    throw new TtsSuperseded("superseded");
+  }
   if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-  lastBlobUrl = URL.createObjectURL(blob);
-  return lastBlobUrl;
+  lastBlobUrl = objectUrl;
+  return objectUrl;
 }
 
 /** Test seam — do not use in app code. */
@@ -234,7 +248,7 @@ export function speak(
   );
   audio = a;
   set({ text, playing: false, progress: 0, duration: 0 });
-  void ttsSource(text, language, opts?.mode)
+  void ttsSource(text, language, opts?.mode, () => gen !== generation)
     .then((src) => {
       if (gen !== generation) return;
       a.src = src;
@@ -249,7 +263,12 @@ export function speak(
         tryFallback();
       });
     })
-    .catch(() => tryFallback());
+    .catch((err) => {
+      if (gen !== generation || err instanceof TtsSuperseded) return;
+      if (audio === a) audio = null;
+      set({ text: null, playing: false, progress: 0, duration: 0 });
+      tryFallback();
+    });
 }
 
 export function pause(): void {
