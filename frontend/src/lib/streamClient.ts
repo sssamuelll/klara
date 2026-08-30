@@ -41,8 +41,6 @@ export interface WsLike {
   onerror: (() => void) | null;
 }
 
-/** Full path of the stream, kept for callers that still reference it. */
-export const STREAM_PATH = "/api/v1/pronunciation/stream";
 const WS_OPEN = 1;
 const FINAL_TIMEOUT_MS = 8000;
 
