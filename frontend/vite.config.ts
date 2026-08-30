@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        disable: !!env.VITE_NATIVE,
         registerType: "autoUpdate",
         includeAssets: ["favicon.svg", "apple-touch-icon.png"],
         manifest: {

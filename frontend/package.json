@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:native": "tsc -b && vite build --mode native",
+    "cap:sync": "npm run build:native && npx cap sync android",
+    "android:run": "npx cap run android -l --external",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "i18n:check": "node scripts/check-i18n.mjs",
