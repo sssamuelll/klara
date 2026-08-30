@@ -88,10 +88,25 @@ describe("openScoreStream", () => {
   it("el token no viaja en la URL", () => {
     // Deliberate: query strings land in access logs, headers are impossible on
     // a browser WebSocket. The handshake frame is the only place left.
-    const s = make({ token: "tok-abc" });
-    ws.open();
-    expect(String((s as unknown as { url?: string }).url ?? "")).not.toContain("tok-abc");
-    expect(ws.sent.filter((f) => typeof f === "string" && f.includes("tok-abc"))).toHaveLength(1);
+    // Asserted on the url actually handed to makeWs — reading it off the
+    // returned stream would be an assertion that can never fail, since
+    // ScoreStream exposes no url at all.
+    let urlVista = "";
+    const fake = new FakeWs();
+    openScoreStream({
+      ...OPTS,
+      token: "tok-abc",
+      onWord: () => undefined,
+      makeWs: (u) => {
+        urlVista = u;
+        return fake;
+      },
+      url: "ws://test/api/v1/pronunciation/stream",
+    });
+    fake.open();
+    expect(urlVista).toBe("ws://test/api/v1/pronunciation/stream");
+    expect(urlVista).not.toContain("tok-abc");
+    expect(fake.sent.filter((f) => typeof f === "string" && f.includes("tok-abc"))).toHaveLength(1);
   });
 
   it("buffers chunks before open and flushes them after the handshake", () => {

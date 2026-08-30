@@ -62,6 +62,7 @@ export function useMicScorer(
   const [result, setResult] = useState<MicScorerResult | null>(null);
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
+  const unmountedRef = useRef(false);
   const autoStopRef = useRef<number | null>(null);
   const silenceCleanupRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<MicScorerPhase>("idle");
@@ -126,6 +127,10 @@ export function useMicScorer(
     setResult(null);
     try {
       const rec = await startMicRecording();
+      if (unmountedRef.current) {
+        rec.cancel();
+        return;
+      }
       recorderRef.current = rec;
       setAnalyser(rec.analyser);
       setPhase("recording");
@@ -159,7 +164,9 @@ export function useMicScorer(
   }, [cancel]);
 
   useEffect(() => {
+    unmountedRef.current = false;
     return () => {
+      unmountedRef.current = true;
       clearTimers();
       recorderRef.current?.cancel();
       recorderRef.current = null;

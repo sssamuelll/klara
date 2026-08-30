@@ -310,6 +310,7 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
   const [micLevel, setMicLevel] = useState<MicLevel>("silent");
   const [lastTranscript, setLastTranscript] = useState<string>("");
   const recorderRef = useRef<MicRecorder | null>(null);
+  const unmountedRef = useRef(false);
   const recAnalyserRef = useRef<AnalyserNode | null>(null);
   const recBarsRef = useRef<HTMLSpanElement[]>([]);
   const answered = picked !== null;
@@ -339,6 +340,10 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
     setLastTranscript("");
     try {
       const rec = await startMicRecording();
+      if (unmountedRef.current) {
+        rec.cancel();
+        return;
+      }
       recorderRef.current = rec;
       recAnalyserRef.current = rec.analyser;
       setMicPhase("recording");
@@ -420,7 +425,9 @@ function MCQuestion({ q, story, onAnswered, onNext, isLast }: MCProps): JSX.Elem
 
   // Cleanup on unmount
   useEffect(() => {
+    unmountedRef.current = false;
     return () => {
+      unmountedRef.current = true;
       recorderRef.current?.cancel();
       recorderRef.current = null;
     };

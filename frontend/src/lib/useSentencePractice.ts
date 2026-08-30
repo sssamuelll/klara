@@ -30,6 +30,7 @@
  *   - the caller supplies the sentence list + target language.
  */
 
+import { App as CapApp } from "@capacitor/app";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
@@ -44,7 +45,7 @@ import {
   type ScoreBand,
 } from "./pronunciation";
 import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
-import { getToken } from "./native";
+import { getToken, isNative } from "./native";
 import { createAligner } from "./streamAlign";
 import { openScoreStream, type ScoreStream } from "./streamClient";
 import { startSilenceDetector, type MicLevel } from "./silenceDetector";
@@ -211,6 +212,7 @@ export function useSentencePractice({
 
   // While set, recorder is live; calling stop() returns the captured Blob.
   const recorderRef = useRef<MicRecorder | null>(null);
+  const unmountedRef = useRef(false);
   const [liveBands, setLiveBands] = useState<PronScores>({});
   const streamRef = useRef<ScoreStream | null>(null);
   const pcmRef = useRef<{ stop(): void } | null>(null);
@@ -234,11 +236,26 @@ export function useSentencePractice({
 
   // Cleanup any in-flight recording when the component unmounts.
   useEffect(() => {
+    unmountedRef.current = false;
     return () => {
+      unmountedRef.current = true;
       recorderRef.current?.cancel();
       recorderRef.current = null;
       setMicAnalyser(null);
       teardownStream();
+    };
+  }, [teardownStream]);
+
+  useEffect(() => {
+    if (!isNative()) return;
+    const handle = CapApp.addListener("pause", () => {
+      recorderRef.current?.cancel();
+      recorderRef.current = null;
+      setMicAnalyser(null);
+      teardownStream();
+    });
+    return () => {
+      void handle.then((h) => h.remove());
     };
   }, [teardownStream]);
 
@@ -334,6 +351,10 @@ export function useSentencePractice({
     setPronError(null);
     try {
       const rec = await startMicRecording();
+      if (unmountedRef.current) {
+        rec.cancel();
+        return;
+      }
       recorderRef.current = rec;
       setMicAnalyser(rec.analyser);
       setRecordingIndex(currentIndex);
@@ -343,10 +364,15 @@ export function useSentencePractice({
       if (pcmStreamingSupported()) {
         try {
           const aligner = createAligner(current.target);
+          // Reading the token is async (Preferences, on Android). A cancel or an
+          // unmount can land inside that await, and there is no streamRef yet for
+          // their teardown to close — opening the socket after that orphans it.
+          const token = (await getToken()) ?? undefined;
+          if (unmountedRef.current || recorderRef.current !== rec) return;
           const stream = openScoreStream({
             referenceText: current.target,
             language: targetLanguage,
-            token: (await getToken()) ?? undefined,
+            token,
             onWord: (w) => {
               if (streamRef.current !== stream) return; // stale post-EOS drain frame
               const idx = aligner(w.word, w.error_type);
