@@ -11,6 +11,10 @@
   gap: var(--space-6);
   padding: 16px 22px 40px;
   padding-top: calc(16px + env(safe-area-inset-top));
+  /* Gate de F-A1 en un S21 FE con Android 16: con targetSdk 36 el edge-to-edge
+     es obligatorio, y los 40px fijos no alcanzaban — el pie quedaba debajo de
+     la barra de gestos. env() es 0 en el navegador, así que la web no cambia. */
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 
 @media (min-width: 520px) {
