@@ -44,6 +44,7 @@ import {
   type ScoreBand,
 } from "./pronunciation";
 import { startPcmCapture, pcmStreamingSupported } from "./pcmCapture";
+import { getToken, onAppPause } from "./native";
 import { createAligner } from "./streamAlign";
 import { openScoreStream, type ScoreStream } from "./streamClient";
 import { startSilenceDetector, type MicLevel } from "./silenceDetector";
@@ -210,6 +211,11 @@ export function useSentencePractice({
 
   // While set, recorder is live; calling stop() returns the captured Blob.
   const recorderRef = useRef<MicRecorder | null>(null);
+  // Bumped by unmount, by `pause`, and by an explicit cancel. A recording attempt
+  // captures it before its first await and re-checks after every one: the guard
+  // has to survive going to the background, which does NOT unmount React.
+  const epochRef = useRef(0);
+  const startingRef = useRef(false);
   const [liveBands, setLiveBands] = useState<PronScores>({});
   const streamRef = useRef<ScoreStream | null>(null);
   const pcmRef = useRef<{ stop(): void } | null>(null);
@@ -220,6 +226,15 @@ export function useSentencePractice({
     pcmRef.current?.stop();
     pcmRef.current = null;
   }, []);
+
+  const abandonRecording = useCallback(() => {
+    epochRef.current += 1;
+    recorderRef.current?.cancel();
+    recorderRef.current = null;
+    setRecordingIndex(null);
+    setMicAnalyser(null);
+    teardownStream();
+  }, [teardownStream]);
 
   const tts = useTTS();
 
@@ -233,13 +248,10 @@ export function useSentencePractice({
 
   // Cleanup any in-flight recording when the component unmounts.
   useEffect(() => {
-    return () => {
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
-      setMicAnalyser(null);
-      teardownStream();
-    };
-  }, [teardownStream]);
+    return () => abandonRecording();
+  }, [abandonRecording]);
+
+  useEffect(() => onAppPause(abandonRecording), [abandonRecording]);
 
   const handlePlayPause = useCallback(() => {
     if (!current) return;
@@ -327,13 +339,20 @@ export function useSentencePractice({
 
   const startRecording = useCallback(async () => {
     // Ignore if we're already recording or no sentence yet.
-    if (recordingIndex !== null || !current) return;
-    stop(); // any Klara playback stops when the mic opens
-    clearFeedback();
-    setPronError(null);
+    if (startingRef.current || recordingIndex !== null || !current) return;
+    startingRef.current = true;
+    const epoch = epochRef.current;
     try {
+      stop(); // any Klara playback stops when the mic opens
+      clearFeedback();
+      setPronError(null);
       const rec = await startMicRecording();
+      if (epoch !== epochRef.current) {
+        rec.cancel();
+        return;
+      }
       recorderRef.current = rec;
+      startingRef.current = false;
       setMicAnalyser(rec.analyser);
       setRecordingIndex(currentIndex);
       setLiveBands({});
@@ -342,9 +361,15 @@ export function useSentencePractice({
       if (pcmStreamingSupported()) {
         try {
           const aligner = createAligner(current.target);
+          // Reading the token is async (Preferences, on Android). A cancel or an
+          // unmount can land inside that await, and there is no streamRef yet for
+          // their teardown to close — opening the socket after that orphans it.
+          const token = (await getToken()) ?? undefined;
+          if (epoch !== epochRef.current || recorderRef.current !== rec) return;
           const stream = openScoreStream({
             referenceText: current.target,
             language: targetLanguage,
+            token,
             onWord: (w) => {
               if (streamRef.current !== stream) return; // stale post-EOS drain frame
               const idx = aligner(w.word, w.error_type);
@@ -355,7 +380,7 @@ export function useSentencePractice({
           });
           streamRef.current = stream;
           const pcm = await startPcmCapture(rec.stream, (chunk) => stream.sendChunk(chunk));
-          if (streamRef.current !== stream) {
+          if (epoch !== epochRef.current || streamRef.current !== stream) {
             pcm?.stop();
             return;
           }
@@ -372,6 +397,8 @@ export function useSentencePractice({
       }
     } catch (e) {
       setPronError(e as PronunciationError);
+    } finally {
+      startingRef.current = false;
     }
   }, [clearFeedback, current, currentIndex, recordingIndex, targetLanguage, teardownStream]);
 
@@ -465,14 +492,10 @@ export function useSentencePractice({
   }, [fetchAndStoreDiagnosis, fetchAndStoreHints, persistTargets, recordingIndex, sentences, targetLanguage]);
 
   const cancelRecording = useCallback(() => {
-    recorderRef.current?.cancel();
-    recorderRef.current = null;
-    setRecordingIndex(null);
-    setMicAnalyser(null);
-    teardownStream();
+    abandonRecording();
     setLiveBands({});
     setPronError(null);
-  }, [teardownStream]);
+  }, [abandonRecording]);
 
   // Primary stop trigger for the sentence pronunciation flow: 1.5s of
   // silence (after a 800ms grace period) auto-stops the take. Manual

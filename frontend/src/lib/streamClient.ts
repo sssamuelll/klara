@@ -7,6 +7,9 @@
  * batches iff null — close codes are never inspected.
  */
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
+import { apiBase, deriveWsUrl } from "./apiBase";
+
+export { deriveWsUrl };
 
 export interface LiveWord {
   word: string;
@@ -38,26 +41,20 @@ export interface WsLike {
   onerror: (() => void) | null;
 }
 
-export const STREAM_PATH = "/api/v1/pronunciation/stream";
 const WS_OPEN = 1;
 const FINAL_TIMEOUT_MS = 8000;
-
-/** Browser is always same-origin (api/client.ts uses relative /api/v1). */
-export function deriveWsUrl(loc: { protocol: string; host: string }): string {
-  const proto = loc.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${loc.host}${STREAM_PATH}`;
-}
 
 export function openScoreStream(opts: {
   referenceText: string;
   language: string;
+  token?: string;
   onWord: (w: LiveWord) => void;
   makeWs?: (url: string) => WsLike;
   finalTimeoutMs?: number;
   url?: string;
 }): ScoreStream {
   const timeoutMs = opts.finalTimeoutMs ?? FINAL_TIMEOUT_MS;
-  const url = opts.url ?? deriveWsUrl(window.location);
+  const url = opts.url ?? deriveWsUrl(apiBase(), window.location);
   const makeWs =
     opts.makeWs ?? ((u: string) => new WebSocket(u) as unknown as WsLike);
 
@@ -103,8 +100,13 @@ export function openScoreStream(opts: {
   ws.onopen = () => {
     if (settled) return;
     // Handshake MUST be the first frame (backend reads it before the session).
+    // The token goes here and never in the URL: query strings land in access logs.
     ws.send(
-      JSON.stringify({ reference_text: opts.referenceText, language: opts.language }),
+      JSON.stringify({
+        reference_text: opts.referenceText,
+        language: opts.language,
+        ...(opts.token ? { token: opts.token } : {}),
+      }),
     );
     for (const buf of pending) sendBinary(buf);
     pending.length = 0;

@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { Navigate, Outlet, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Masthead from "./components/Masthead";
+import NativeChrome from "./components/NativeChrome";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TabBar from "./components/TabBar";
 import Landing from "./routes/Landing";
@@ -26,6 +27,7 @@ import ForgotPassword from "./routes/ForgotPassword";
 import ResetPassword from "./routes/ResetPassword";
 import VerifyEmail from "./routes/VerifyEmail";
 import { useMastheadDate } from "./lib/dateLabel";
+import { isNative } from "./lib/native";
 import { useTheme } from "./lib/preferences";
 import { AuthProvider, useAuth } from "./lib/auth";
 
@@ -259,6 +261,7 @@ function AppShell() {
 export default function App() {
   return (
     <AuthProvider>
+      {isNative() && <NativeChrome />}
       <AppShell />
     </AuthProvider>
   );

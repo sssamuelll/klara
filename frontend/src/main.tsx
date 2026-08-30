@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import "./i18n";
 import App from "./App";
 import "./styles/global.css";
+import "./styles/native.css";
 import "./styles/onboarding.css";
 import "./styles/sentence-view.css";
 import "./styles/finish.css";

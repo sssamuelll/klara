@@ -55,7 +55,7 @@ frontend/
 | Script | Qué hace |
 |---|---|
 | `npm run build` | Como hoy (web, PWA). |
-| `npm run build:native` | `VITE_NATIVE=1 VITE_API_BASE_URL=https://klara.sdar.dev/api/v1 vite build` — sin SW, API absoluta. |
+| `npm run build:native` | `tsc -b && vite build --mode native` — lee `frontend/.env.native` (`VITE_NATIVE=1`, `VITE_API_BASE=https://klara.sdar.dev/api/v1`). Sin SW, API absoluta. **Corregido en F-A1:** las variables NO van en la línea de comando, porque `VAR=x cmd` no es sintaxis válida en Windows; y el nombre es `VITE_API_BASE`, NO `VITE_API_BASE_URL` — esa última ya existe en `vite.config.ts:6` como target del proxy de desarrollo, con forma de origen y sin `/api/v1`. |
 | `npm run cap:sync` | `build:native` + `npx cap sync android`. |
 | `npm run android:run` | `npx cap run android -l --external` — live reload contra el Vite de la PC (`host: true`, puerto 5273, ya configurado). |
 
@@ -175,14 +175,14 @@ endpoint nuevo que no es de auth; existe porque las listas de vencidas actuales
 **F-A0 se despliega solo y no cambia nada visible en web.** Este PR **no se delega**
 (archivos de auth).
 
-## 3. Frontend: las tres costuras (F-A1)
+## 3. Frontend: las costuras de mismo origen (F-A1)
 
 Todo el frontend es "mismo origen relativo". Son tres líneas y se resuelven con una
 función:
 
 | Costura | Hoy | Después |
 |---|---|---|
-| `client.ts:44` | `const API_BASE = "/api/v1"` | `apiBase()` → `VITE_API_BASE_URL` si está definida, si no `/api/v1` |
+| `client.ts:44` | `const API_BASE = "/api/v1"` | `apiBase()` → `VITE_API_BASE` si está definida, si no `/api/v1` |
 | `streamClient.ts:47` | `deriveWsUrl(window.location)` | deriva de `apiBase()` (`https:`→`wss:`); si es relativa, como hoy |
 | `tts.ts:35`, `waveform.ts:22` | `` `/api/v1/tts?...` `` | `` `${apiBase()}/tts?...` `` |
 
@@ -355,7 +355,7 @@ Los tests los escribe Claude antes de delegar (TDD); auth no se delega.
   vencida; sin tarjetas → `{0, null}`.
 
 **Frontend (`vitest`)**
-- `apiBase()` con y sin `VITE_API_BASE_URL`; `deriveWsUrl` desde base absoluta y relativa.
+- `apiBase()` con y sin `VITE_API_BASE`; `deriveWsUrl` desde base absoluta y relativa.
 - `openScoreStream` incluye `token` en el handshake solo cuando se le pasa.
 - `speak()` en nativo usa `fetch` + blob y revoca el anterior (con `fetch` mockeado).
 - `native.ts` en web: `isNative()` false, `tap()` y token son no-op.

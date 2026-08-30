@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { apiBase } from "../lib/apiBase";
 import { useAuth } from "../lib/auth";
 import { detectBrowserLang } from "../lib/preferences";
 
@@ -35,7 +36,7 @@ export default function Signup() {
     let cancelled = false;
     (async () => {
       try {
-        const r = await fetch(`/api/v1/invitations/${inviteToken}`);
+        const r = await fetch(`${apiBase()}/invitations/${inviteToken}`);
         if (!r.ok) {
           if (!cancelled) setInviteError(t("auth.signup.error.inviteInvalid"));
           return;

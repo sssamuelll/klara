@@ -34,6 +34,7 @@ import { api } from "../api/client";
 import type { SpeakTurnResponse } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import { useAuth } from "../lib/auth";
+import { onAppPause } from "../lib/native";
 import {
   startMicRecording,
   type MicRecorder,
@@ -200,6 +201,7 @@ export default function Speak() {
 
   // Teardown owners — ONE place releases every resource.
   const recorderRef = useRef<MicRecorder | null>(null);
+  const epochRef = useRef(0);
   const vadCleanupRef = useRef<(() => void) | null>(null);
   const capTimerRef = useRef<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -244,6 +246,7 @@ export default function Speak() {
   }, [demoActive, focus?.sound]);
 
   const releaseRecording = useCallback(() => {
+    epochRef.current += 1;
     vadCleanupRef.current?.();
     vadCleanupRef.current = null;
     if (capTimerRef.current !== null) {
@@ -270,6 +273,8 @@ export default function Speak() {
       stopTTS();
     };
   }, [releaseRecording]);
+
+  useEffect(() => onAppPause(releaseRecording), [releaseRecording]);
 
   // The column is the conversation — keep its tail in view as it grows.
   useEffect(() => {
@@ -442,11 +447,16 @@ export default function Speak() {
     setHint(null);
     setMicLevel("silent");
     setState("listening");
+    const epoch = epochRef.current;
     try {
       const rec = await startMicRecording();
       // The world may have moved while getUserMedia was pending (second tap,
       // unmount, ✕): release the orphan or the mic indicator stays lit.
-      if (unmountedRef.current || stateRef.current !== "listening") {
+      if (
+        epoch !== epochRef.current ||
+        unmountedRef.current ||
+        stateRef.current !== "listening"
+      ) {
         rec.cancel();
         return;
       }

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { api } from "../api/client";
 import type { ReviewRating } from "../api/types";
+import { tap } from "../lib/native";
 import { speak } from "../lib/tts";
 import { formatInterval } from "../lib/srsProjection";
 import { initialRecallState, recallReducer, restedCount } from "../lib/recallSession";
@@ -47,6 +48,7 @@ export default function RecallReviewSession({ onExit, exitLabel }: Props): JSX.E
     (rating: ReviewRating) => {
       if (!card) return;
       const elapsed = Math.max(0, Math.round((performance.now() - shownAt.current) / 1000));
+      tap();
       void api.reviewCard(card.id, rating, elapsed).catch(() => dispatch({ type: "rateFailed" }));
       dispatch({ type: "rate", rating });
     },

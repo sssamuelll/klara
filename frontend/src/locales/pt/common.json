@@ -646,7 +646,8 @@
       "forgotLink": "Esqueci-me da palavra-passe",
       "error": {
         "invalidCredentials": "Email ou palavra-passe inválidos.",
-        "googleFailed": "Não foi possível iniciar sessão com Google. Tenta de novo."
+        "googleFailed": "Não foi possível iniciar sessão com Google. Tenta de novo.",
+        "googleNativeUnavailable": "O login com Google não está disponível nesta versão do app."
       }
     },
     "signup": {
@@ -689,7 +690,9 @@
       "submit": "Atualizar palavra-passe",
       "success": "Nova palavra-passe guardada. Entra com ela.",
       "goLogin": "Ir para entrar",
-      "error": { "missingToken": "O link está incompleto. Abre novamente o link do e-mail." }
+      "error": {
+        "missingToken": "O link está incompleto. Abre novamente o link do e-mail."
+      }
     }
   },
   "errors": {
@@ -1124,11 +1127,23 @@
       "ctaLoginAction": "Entrar"
     },
     "que": {
-      "leer": { "title": "Ler", "body": "Histórias curtas na língua que estudas. Cada palavra abre-se com um toque: significado, género, contexto." },
-      "hablar": { "title": "Falar", "body": "Falas e a Klara corrige o som exato que falhou. O que disseste ontem, ela lembra-se hoje." },
-      "repasar": { "title": "Rever", "body": "Fichas que voltam mesmo antes do esquecimento. Sem sequências, sem corações, sem culpa." }
+      "leer": {
+        "title": "Ler",
+        "body": "Histórias curtas na língua que estudas. Cada palavra abre-se com um toque: significado, género, contexto."
+      },
+      "hablar": {
+        "title": "Falar",
+        "body": "Falas e a Klara corrige o som exato que falhou. O que disseste ontem, ela lembra-se hoje."
+      },
+      "repasar": {
+        "title": "Rever",
+        "body": "Fichas que voltam mesmo antes do esquecimento. Sem sequências, sem corações, sem culpa."
+      }
     },
-    "footer": { "contact": "Escreve-me", "copyright": "Klara" }
+    "footer": {
+      "contact": "Escreve-me",
+      "copyright": "Klara"
+    }
   },
   "waitlist": {
     "title": "Por agora, só por convite.",

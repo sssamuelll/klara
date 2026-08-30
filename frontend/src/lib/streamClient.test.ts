@@ -33,22 +33,21 @@ class FakeWs implements WsLike {
 const OPTS = { referenceText: "Hallo Welt", language: "de" };
 
 describe("deriveWsUrl", () => {
-  it("uses wss on https and ws on http, same origin", () => {
-    expect(deriveWsUrl({ protocol: "https:", host: "klara.example" })).toBe(
+  // Full coverage lives in apiBase.test.ts; this guards the re-export.
+  it("se reexporta y sigue derivando del mismo origen", () => {
+    expect(deriveWsUrl("/api/v1", { protocol: "https:", host: "klara.example" })).toBe(
       "wss://klara.example/api/v1/pronunciation/stream",
-    );
-    expect(deriveWsUrl({ protocol: "http:", host: "localhost:5273" })).toBe(
-      "ws://localhost:5273/api/v1/pronunciation/stream",
     );
   });
 });
 
 describe("openScoreStream", () => {
   let ws: FakeWs;
-  const make = () => {
+  const make = (extra: { token?: string } = {}) => {
     ws = new FakeWs();
     return openScoreStream({
       ...OPTS,
+      ...extra,
       onWord: (w) => words.push(w.word),
       makeWs: () => ws,
       url: "ws://test/api/v1/pronunciation/stream",
@@ -65,6 +64,49 @@ describe("openScoreStream", () => {
     make();
     ws.open();
     expect(ws.sent[0]).toBe(JSON.stringify({ reference_text: "Hallo Welt", language: "de" }));
+  });
+
+  it("incluye token en el handshake solo cuando se le pasa", () => {
+    make({ token: "tok-abc" });
+    ws.open();
+    expect(JSON.parse(ws.sent[0] as string)).toEqual({
+      reference_text: "Hallo Welt",
+      language: "de",
+      token: "tok-abc",
+    });
+  });
+
+  it("no incluye la clave token cuando no se le pasa", () => {
+    make();
+    ws.open();
+    expect(Object.keys(JSON.parse(ws.sent[0] as string))).toEqual([
+      "reference_text",
+      "language",
+    ]);
+  });
+
+  it("el token no viaja en la URL", () => {
+    // Deliberate: query strings land in access logs, headers are impossible on
+    // a browser WebSocket. The handshake frame is the only place left.
+    // Asserted on the url actually handed to makeWs — reading it off the
+    // returned stream would be an assertion that can never fail, since
+    // ScoreStream exposes no url at all.
+    let urlVista = "";
+    const fake = new FakeWs();
+    openScoreStream({
+      ...OPTS,
+      token: "tok-abc",
+      onWord: () => undefined,
+      makeWs: (u) => {
+        urlVista = u;
+        return fake;
+      },
+      url: "ws://test/api/v1/pronunciation/stream",
+    });
+    fake.open();
+    expect(urlVista).toBe("ws://test/api/v1/pronunciation/stream");
+    expect(urlVista).not.toContain("tok-abc");
+    expect(fake.sent.filter((f) => typeof f === "string" && f.includes("tok-abc"))).toHaveLength(1);
   });
 
   it("buffers chunks before open and flushes them after the handshake", () => {

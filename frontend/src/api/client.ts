@@ -1,5 +1,7 @@
 import i18n from "../i18n";
 import type { PracticeQueue } from "../lib/practiceQueue";
+import { apiBase } from "../lib/apiBase";
+import { authHeaders, clearToken, isNative, setToken } from "../lib/native";
 import type {
   CardOut,
   DiagnoseResponse,
@@ -40,8 +42,6 @@ import type {
   UserUpdate,
   WaitlistRow,
 } from "./types";
-
-const API_BASE = "/api/v1";
 
 export class ApiError extends Error {
   status: number;
@@ -97,20 +97,47 @@ export function onUnauthorized(fn: UnauthorizedListener): () => void {
   return () => unauthorizedListeners.delete(fn);
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const resp = await fetch(`${API_BASE}${path}`, {
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept-Language": i18n.language || "es",
-      ...(init?.headers ?? {}),
-    },
-    ...init,
+async function handleUnauthorized(): Promise<never> {
+  // The bearer is dead server-side; keeping it means replaying it after
+  // every restart. Clearing is a no-op on the web, where there is none.
+  await clearToken();
+  for (const fn of unauthorizedListeners) fn();
+  throw new AuthRequiredError();
+}
+
+/**
+ * Base headers, then the caller's, then the session's — in that order, through
+ * the Headers API rather than object spread.
+ *
+ * Object spread was wrong in three ways that all end as a silent logout: it
+ * cannot merge a `Headers` instance or an array of tuples at all, it treats
+ * `authorization` and `Authorization` as two different keys, and whichever side
+ * came last simply won. The session's Authorization is applied last and on
+ * purpose: a caller may override Content-Type, never the credential.
+ *
+ * Exported for its own tests — no caller passes init.headers today, which is
+ * exactly why this needs pinning before one does.
+ */
+export function mergeHeaders(
+  init: HeadersInit | undefined,
+  session: Record<string, string>,
+): Headers {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Accept-Language": i18n.language || "es",
   });
-  if (resp.status === 401) {
-    for (const fn of unauthorizedListeners) fn();
-    throw new AuthRequiredError();
-  }
+  if (init) new Headers(init).forEach((value, key) => headers.set(key, value));
+  for (const [key, value] of Object.entries(session)) headers.set(key, value);
+  return headers;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const resp = await fetch(`${apiBase()}${path}`, {
+    credentials: "include",
+    ...init,
+    headers: mergeHeaders(init?.headers, await authHeaders()),
+  });
+  if (resp.status === 401) await handleUnauthorized();
   if (!resp.ok) {
     // Read body once as text; try to parse as JSON. Reading both .json() and
     // .text() on the same Response throws "body stream already read" because
@@ -149,7 +176,10 @@ export const api = {
 
   login: async (email: string, password: string): Promise<void> => {
     const body = new URLSearchParams({ username: email, password });
-    const resp = await fetch(`${API_BASE}/auth/jwt/login`, {
+    // Same credentials, two transports: the cookie one on the web, the
+    // revocable bearer one inside the shell, where there is no cookie jar.
+    const path = isNative() ? "/auth/bearer/login" : "/auth/jwt/login";
+    const resp = await fetch(`${apiBase()}${path}`, {
       method: "POST",
       credentials: "include",
       headers: {
@@ -169,10 +199,31 @@ export const api = {
       }
       throw new ApiError(resp.status, `${resp.status}: ${detail}`);
     }
+    if (isNative()) {
+      const data = (await resp.json()) as { access_token: string };
+      await setToken(data.access_token);
+    }
   },
 
-  logout: () =>
-    request<void>("/auth/jwt/logout", { method: "POST" }),
+  logout: async (): Promise<void> => {
+    const path = isNative() ? "/auth/bearer/logout" : "/auth/jwt/logout";
+    try {
+      await request<void>(path, { method: "POST" });
+    } finally {
+      // Even if the round trip failed, the phone forgets the token. The server
+      // session outlives it until expiry, but the safe failure is the device
+      // holding nothing.
+      await clearToken();
+    }
+  },
+
+  googleNative: async (idToken: string): Promise<string> => {
+    const data = await request<{ access_token: string }>("/auth/google/native", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken }),
+    });
+    return data.access_token;
+  },
 
   forgotPassword: (email: string) =>
     request<void>("/auth/forgot-password", {
@@ -333,16 +384,13 @@ export const api = {
     fd.append("audio", audio, "user.webm");
     fd.append("reference_text", referenceText);
     fd.append("language", language);
-    const resp = await fetch(`${API_BASE}/pronunciation/score`, {
+    const resp = await fetch(`${apiBase()}/pronunciation/score`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<PronunciationScoreResponse>;
   },
@@ -427,16 +475,13 @@ export const api = {
     fd.append("audio", audio, "mc.webm");
     fd.append("options", JSON.stringify(options));
     fd.append("language", language);
-    const resp = await fetch(`${API_BASE}/stories/${storyId}/quiz/resolve-mc`, {
+    const resp = await fetch(`${apiBase()}/stories/${storyId}/quiz/resolve-mc`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<MCResolveResponse>;
   },
@@ -472,17 +517,14 @@ export const api = {
 
     const signals = [AbortSignal.timeout(60_000)];
     if (opts.signal) signals.push(opts.signal);
-    const resp = await fetch(`${API_BASE}/speak/turn`, {
+    const resp = await fetch(`${apiBase()}/speak/turn`, {
       method: "POST",
       credentials: "include",
-      headers: { "Accept-Language": i18n.language || "es" },
+      headers: { "Accept-Language": i18n.language || "es", ...(await authHeaders()) },
       body: fd,
       signal: AbortSignal.any(signals),
     });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) throw await audioApiError(resp);
     return resp.json() as Promise<SpeakTurnResponse>;
   },
@@ -543,11 +585,11 @@ export const api = {
 
   // TSV crudo, no JSON — bypassa request() (mismo patrón que login()).
   exportTaller: async (): Promise<string> => {
-    const resp = await fetch(`${API_BASE}/taller/export`, { credentials: "include" });
-    if (resp.status === 401) {
-      for (const fn of unauthorizedListeners) fn();
-      throw new AuthRequiredError();
-    }
+    const resp = await fetch(`${apiBase()}/taller/export`, {
+      credentials: "include",
+      headers: await authHeaders(),
+    });
+    if (resp.status === 401) await handleUnauthorized();
     if (!resp.ok) {
       const text = await resp.text();
       throw new ApiError(resp.status, `${resp.status} ${resp.statusText}: ${text}`);

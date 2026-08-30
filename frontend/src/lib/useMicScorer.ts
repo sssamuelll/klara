@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PronunciationScoreResponse, WordScore } from "../api/types";
+import { onAppPause } from "./native";
 import {
   bandsByTokenIndex,
   scoreAudio,
@@ -62,6 +63,8 @@ export function useMicScorer(
   const [result, setResult] = useState<MicScorerResult | null>(null);
   const [error, setError] = useState<PronunciationError | null>(null);
   const recorderRef = useRef<MicRecorder | null>(null);
+  const epochRef = useRef(0);
+  const startingRef = useRef(false);
   const autoStopRef = useRef<number | null>(null);
   const silenceCleanupRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<MicScorerPhase>("idle");
@@ -79,6 +82,7 @@ export function useMicScorer(
   }, []);
 
   const cancel = useCallback(() => {
+    epochRef.current += 1;
     clearTimers();
     recorderRef.current?.cancel();
     recorderRef.current = null;
@@ -121,11 +125,21 @@ export function useMicScorer(
   }, [clearTimers, language, referenceText]);
 
   const start = useCallback(async () => {
-    if (phaseRef.current === "recording" || phaseRef.current === "scoring") return;
+    if (
+      startingRef.current ||
+      phaseRef.current === "recording" ||
+      phaseRef.current === "scoring"
+    ) return;
+    startingRef.current = true;
+    const epoch = epochRef.current;
     setError(null);
     setResult(null);
     try {
       const rec = await startMicRecording();
+      if (epoch !== epochRef.current) {
+        rec.cancel();
+        return;
+      }
       recorderRef.current = rec;
       setAnalyser(rec.analyser);
       setPhase("recording");
@@ -148,6 +162,8 @@ export function useMicScorer(
     } catch (e) {
       setError(e as PronunciationError);
       setPhase("error");
+    } finally {
+      startingRef.current = false;
     }
   }, [stop]);
 
@@ -158,13 +174,22 @@ export function useMicScorer(
     setPhase("idle");
   }, [cancel]);
 
+  useEffect(
+    () => onAppPause(() => {
+      // Always invalidate a pending start: going to the background must make
+      // any in-flight getUserMedia unusable, whatever phase we are in.
+      epochRef.current += 1;
+      // Tearing down is the conditional half. Cancelling an already-scored
+      // turn would reset the phase while keeping the bands, and StoryFinish
+      // then shows neither the mic nor Next.
+      if (phaseRef.current === "recording") cancel();
+    }),
+    [cancel],
+  );
+
   useEffect(() => {
-    return () => {
-      clearTimers();
-      recorderRef.current?.cancel();
-      recorderRef.current = null;
-    };
-  }, [clearTimers]);
+    return () => cancel();
+  }, [cancel]);
 
   return {
     phase,

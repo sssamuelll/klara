@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { apiBase } from "./apiBase";
 import { speechLocale } from "./languages";
+import { authHeaders, isNative } from "./native";
 
 export interface TTSState {
   text: string | null;
@@ -31,8 +33,11 @@ function set(patch: Partial<TTSState>) {
  */
 export type TTSMode = "narration" | "realtime";
 
+/** A newer speak() won while this one was still downloading. */
+export class TtsSuperseded extends Error {}
+
 function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
-  let url = `/api/v1/tts?text=${encodeURIComponent(text)}`;
+  let url = `${apiBase()}/tts?text=${encodeURIComponent(text)}`;
   if (lang) url += `&lang=${encodeURIComponent(lang)}`;
   // Always explicit: the mode also VERSIONS the URL. TTS responses are
   // immutable-cached for a year, so without a new param existing devices
@@ -42,6 +47,42 @@ function ttsUrl(text: string, lang?: string, mode?: TTSMode): string {
   url += `&mode=${mode ?? "narration"}`;
   return url;
 }
+
+let lastBlobUrl: string | null = null;
+
+/**
+ * Where the <audio> element should point. On the web that's the plain URL and
+ * the cookie rides along; in the shell the token can't ride on <audio src>, so
+ * we fetch with the header and hand over a blob. The previous blob is revoked
+ * on every call — otherwise every played sentence leaks a few hundred KB.
+ */
+async function ttsSource(
+  text: string,
+  lang?: string,
+  mode?: TTSMode,
+  isStale: () => boolean = () => false,
+): Promise<string> {
+  const url = ttsUrl(text, lang, mode);
+  if (!isNative()) return url;
+  const resp = await fetch(url, {
+    headers: await authHeaders(),
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!resp.ok) throw new Error(`tts fetch failed: ${resp.status}`);
+  const objectUrl = URL.createObjectURL(await resp.blob());
+  if (isStale()) {
+    // A newer speak() won while we were downloading. Drop only what we made:
+    // lastBlobUrl now belongs to that newer call and may be playing.
+    URL.revokeObjectURL(objectUrl);
+    throw new TtsSuperseded("superseded");
+  }
+  if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
+  lastBlobUrl = objectUrl;
+  return objectUrl;
+}
+
+/** Test seam — do not use in app code. */
+export const ttsSourceForTest = ttsSource;
 
 /**
  * Why the playback finished. "interrupted" = stop() ran (a new speak(), a mic
@@ -62,6 +103,7 @@ export type TTSDoneReason = "ended" | "error" | "interrupted";
 // must not settle — or speak — on behalf of a later one.
 let onDone: ((reason: TTSDoneReason) => void) | null = null;
 let generation = 0;
+let pauseRequested = false;
 
 function settleDone(reason: TTSDoneReason): void {
   const cb = onDone;
@@ -129,6 +171,7 @@ export function speak(
   }
   onDone = opts?.onDone ?? null;
   const gen = ++generation;
+  pauseRequested = false;
   // One fallback attempt per utterance, whether the trigger was the error
   // event (load failure) or the play() rejection (autoplay) — on an outright
   // load failure BOTH fire, and double-speaking the reply is worse than none.
@@ -142,7 +185,6 @@ export function speak(
   const a = unlockedEl ?? new Audio();
   listenerCtrl = new AbortController();
   const sig = listenerCtrl.signal;
-  a.src = ttsUrl(text, language, opts?.mode);
   a.preload = "auto";
   const rate = opts?.rate ?? 1;
   // Reset playback knobs every utterance — the element is reused.
@@ -211,22 +253,37 @@ export function speak(
   );
   audio = a;
   set({ text, playing: false, progress: 0, duration: 0 });
-  a.play().catch((err) => {
-    // A pending play() rejects (AbortError) when stop() or a newer speak()
-    // paused this element — that utterance is dead; speaking its stale text
-    // over whatever the user is doing now would be a real bug, not a fallback.
-    if (gen !== generation) return;
-    console.warn("TTS playback failed, falling back to Web Speech", err);
-    if (audio === a) audio = null;
-    tryFallback();
-  });
+  void ttsSource(text, language, opts?.mode, () => gen !== generation)
+    .then((src) => {
+      if (gen !== generation) return;
+      a.src = src;
+      a.load();
+      if (pauseRequested) return; // paused before the audio was even assigned
+      a.play().catch((err) => {
+        // A pending play() rejects (AbortError) when stop() or a newer speak()
+        // paused this element — that utterance is dead; speaking its stale text
+        // over whatever the user is doing now would be a real bug, not a fallback.
+        if (gen !== generation) return;
+        console.warn("TTS playback failed, falling back to Web Speech", err);
+        if (audio === a) audio = null;
+        tryFallback();
+      });
+    })
+    .catch((err) => {
+      if (gen !== generation || err instanceof TtsSuperseded) return;
+      if (audio === a) audio = null;
+      set({ text: null, playing: false, progress: 0, duration: 0 });
+      tryFallback();
+    });
 }
 
 export function pause(): void {
+  pauseRequested = true;
   audio?.pause();
 }
 
 export function resume(): void {
+  pauseRequested = false;
   audio?.play().catch(() => undefined);
 }
 
