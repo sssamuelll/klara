@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api } from "./client";
+import { api, mergeHeaders } from "./client";
 
 function mockFetch(status = 200, body: string | null = "{}") {
   const spy = vi.fn(
@@ -18,8 +18,8 @@ function mockFetch(status = 200, body: string | null = "{}") {
 afterEach(() => vi.unstubAllGlobals());
 
 // The web path is the one that must not change. isNative() is false under
-// vitest, so these assert that adding the bearer transport left the cookie
-// transport byte-for-byte where it was.
+// vitest, so these assert that the bearer transport did not move the cookie
+// transport's routes, credentials or headers.
 describe("transporte en web", () => {
   it("el login va a /auth/jwt/login y no manda Authorization", async () => {
     const spy = mockFetch();
@@ -43,13 +43,54 @@ describe("transporte en web", () => {
     expect((init?.headers as Record<string, string>).Authorization).toBeUndefined();
   });
 
-  it("un init.headers propio no borra los headers base", async () => {
+  it("manda los headers base", async () => {
     const spy = mockFetch(200, '{"id":"u1"}');
     await api.getMe();
-    const [, init] = spy.mock.calls[0];
-    const headers = init?.headers as Record<string, string>;
-    expect(headers["Content-Type"]).toBe("application/json");
-    expect(headers["Accept-Language"]).toBeTruthy();
+    const headers = new Headers(spy.mock.calls[0][1]?.headers);
+    expect(headers.get("Content-Type")).toBe("application/json");
+    expect(headers.get("Accept-Language")).toBeTruthy();
+  });
+});
+
+// No caller passes init.headers today, so none of this is reachable yet — which
+// is exactly why it needs a test: the day one does, silently dropping the
+// Authorization would look like a random logout, not like a bug here.
+describe("mergeHeaders", () => {
+  it("conserva los base cuando el init no trae nada", () => {
+    const h = mergeHeaders(undefined, {});
+    expect(h.get("Content-Type")).toBe("application/json");
+  });
+
+  it("el init puede sobrescribir un header base", () => {
+    const h = mergeHeaders({ "Content-Type": "text/plain" }, {});
+    expect(h.get("Content-Type")).toBe("text/plain");
+  });
+
+  it("el Authorization gana aunque el init traiga uno", () => {
+    const h = mergeHeaders({ Authorization: "Bearer del-llamador" }, {
+      Authorization: "Bearer de-la-sesion",
+    });
+    expect(h.get("Authorization")).toBe("Bearer de-la-sesion");
+  });
+
+  it("el Authorization gana aunque el init lo escriba en otro casing", () => {
+    const h = mergeHeaders({ authorization: "Bearer del-llamador" }, {
+      Authorization: "Bearer de-la-sesion",
+    });
+    expect(h.get("authorization")).toBe("Bearer de-la-sesion");
+    expect([...h].filter(([k]) => k.toLowerCase() === "authorization")).toHaveLength(1);
+  });
+
+  it("acepta un objeto Headers como init", () => {
+    const h = mergeHeaders(new Headers({ "X-Prueba": "1" }), {});
+    expect(h.get("X-Prueba")).toBe("1");
+    expect(h.get("Content-Type")).toBe("application/json");
+  });
+
+  it("acepta un arreglo de tuplas como init", () => {
+    const h = mergeHeaders([["X-Prueba", "1"]], {});
+    expect(h.get("X-Prueba")).toBe("1");
+    expect(h.get("Content-Type")).toBe("application/json");
   });
 });
 

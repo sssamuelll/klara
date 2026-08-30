@@ -97,19 +97,37 @@ export function onUnauthorized(fn: UnauthorizedListener): () => void {
   return () => unauthorizedListeners.delete(fn);
 }
 
+/**
+ * Base headers, then the caller's, then the session's — in that order, through
+ * the Headers API rather than object spread.
+ *
+ * Object spread was wrong in three ways that all end as a silent logout: it
+ * cannot merge a `Headers` instance or an array of tuples at all, it treats
+ * `authorization` and `Authorization` as two different keys, and whichever side
+ * came last simply won. The session's Authorization is applied last and on
+ * purpose: a caller may override Content-Type, never the credential.
+ *
+ * Exported for its own tests — no caller passes init.headers today, which is
+ * exactly why this needs pinning before one does.
+ */
+export function mergeHeaders(
+  init: HeadersInit | undefined,
+  session: Record<string, string>,
+): Headers {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+    "Accept-Language": i18n.language || "es",
+  });
+  if (init) new Headers(init).forEach((value, key) => headers.set(key, value));
+  for (const [key, value] of Object.entries(session)) headers.set(key, value);
+  return headers;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(`${apiBase()}${path}`, {
     credentials: "include",
-    // `...init` goes BEFORE `headers`: spread the other way round, an init that
-    // carried its own headers would replace this whole object — including the
-    // Authorization the native session depends on.
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      "Accept-Language": i18n.language || "es",
-      ...(await authHeaders()),
-      ...(init?.headers ?? {}),
-    },
+    headers: mergeHeaders(init?.headers, await authHeaders()),
   });
   if (resp.status === 401) {
     for (const fn of unauthorizedListeners) fn();
