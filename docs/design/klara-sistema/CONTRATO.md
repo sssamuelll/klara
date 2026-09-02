@@ -1316,6 +1316,16 @@ Cada entrada dice qué es, dónde vive hoy y qué migración de pantalla la deci
 
 ---
 
+## Enmiendas que pidieron las pantallas reales
+
+La hoja muestra átomos sueltos; la pantalla los compone. Cada migración deja aquí lo que la composición pidió y la hoja no sabía. Migración 1 (cascarón, TabBar, SessTop, Biblioteca, Mapa, Perfil, Nuevo — PR #173):
+
+- `.k-row > .k-bar { flex: 1 0 100%; order: 2; margin-top: var(--space-2) }` — la barra dentro de una fila es línea propia (mapa del átomo 4: `.m4-tema .m4-bar` → `.k-bar` dentro de la fila). Sin esto la pista se colapsaba a 0px y la barra de progreso del curso desaparecía de Inicio.
+- `.k-row:has(> .k-row__n) .k-row__sub { padding-left: calc(22px + var(--space-3)) }` — la bajada se sangra a la columna del título cuando hay numeral; si no, cae bajo el numeral.
+- `.k-bar--milestones { position: relative }` + `.k-bar--milestones .k-cap { position: absolute; …; color: var(--accent) }` — «estás aquí» en acento sobre el punto (mapa del átomo 5: `.m3-cefr .aqui` → `.k-cap` en acento sobre el punto). Los hitos y el punto van **fuera** del nodo `role="progressbar"` (children presentational) para que el lector de pantalla los lea; la hoja se corrigió igual.
+- `:where(.k-hero) + :where(.k-bar) { margin-top: var(--space-3) }` — junta héroe + barra (Portada): sin ella la barra se leía como subrayado del título.
+- `.k-topline` deja de sumar `env(safe-area-inset-top)`: lo pone `.k-page` (gramática 12) y con los dos se duplicaba el hueco en el teléfono con muesca.
+
 ## Decisiones abiertas para el dueño (tras la revisión visual)
 
 La hoja renderizada pasó por tres lentes (fidelidad al contrato, roto/legibilidad, disciplina visual). Los defectos se corrigieron; estas son las opiniones que el orquestador **no** ejecutó porque son juicio de identidad, no de implementación. Cada una con su evidencia; ninguna bloquea el uso del sistema.
