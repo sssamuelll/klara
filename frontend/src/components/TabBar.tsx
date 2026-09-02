@@ -4,16 +4,19 @@ import { useTranslation } from "react-i18next";
 
 function IcLib() {
   return (
-    <svg width="20" height="18" viewBox="0 0 20 18" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-      <path d="M3.5 2.5v13M8 2.5v13" />
-      <path d="M11.5 3l3.4 12.4" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 4.5v14M10 4.5v14" />
+      <path d="M13.8 5.6 18 18.4" />
+      <path d="M3.5 20.5h17" />
     </svg>
   );
 }
 function IcMas() {
   return (
-    <svg width="20" height="18" viewBox="0 0 20 18" fill="currentColor" aria-hidden="true">
-      <circle cx="4" cy="9" r="1.7" /><circle cx="10" cy="9" r="1.7" /><circle cx="16" cy="9" r="1.7" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -36,40 +39,44 @@ export default function TabBar() {
 
   return (
     <>
-      {menu && <div className="m3-scrim" onClick={() => setMenu(false)} />}
+      {menu && <div className="k-scrim" data-role="cerrar" onClick={() => setMenu(false)} />}
       {menu && (
-        <div className="m3-menu" role="menu" aria-label={t("tabbar.moreAria")}>
+        <div className="k-tabs__menu" role="menu" aria-label={t("tabbar.moreAria")}>
           <button
-            className="m3-menu-item"
+            type="button"
+            className="k-tabs__menu-item"
             role="menuitem"
             data-active={enPerfil ? "true" : "false"}
             aria-current={enPerfil ? "page" : undefined}
             onClick={() => { setMenu(false); navigate("/perfil"); }}
           >
-            <span>{t("tabbar.perfil")}</span>
-            <span className="ch" aria-hidden="true">›</span>
+            {t("tabbar.perfil")}
+            <span className="k-tabs__menu-ch" aria-hidden="true">›</span>
           </button>
         </div>
       )}
-      <nav className="m3-tabbar m4" aria-label={t("tabbar.navAria")}>
+      <nav className="k-tabs k-tabs--2" aria-label={t("tabbar.navAria")}>
         <button
-          className="m3-tab"
+          type="button"
+          className="k-tabs__tab"
           data-active={pathname === "/" ? "true" : "false"}
           aria-current={pathname === "/" ? "page" : undefined}
           onClick={() => { setMenu(false); navigate("/"); }}
         >
-          <span className="ic"><IcLib /></span>
-          <span className="lbl">{t("tabbar.inicio")}</span>
+          <span className="k-tabs__ic" aria-hidden="true"><IcLib /></span>
+          <span className="k-tabs__lbl">{t("tabbar.inicio")}</span>
         </button>
         <button
-          className="m3-tab"
+          type="button"
+          className="k-tabs__tab"
           data-active={menu || enPerfil ? "true" : "false"}
+          aria-current={enPerfil ? "page" : undefined}
           aria-haspopup="menu"
           aria-expanded={menu ? "true" : "false"}
           onClick={() => setMenu((v) => !v)}
         >
-          <span className="ic"><IcMas /></span>
-          <span className="lbl">{t("tabbar.mas")}</span>
+          <span className="k-tabs__ic" aria-hidden="true"><IcMas /></span>
+          <span className="k-tabs__lbl">{t("tabbar.mas")}</span>
         </button>
       </nav>
     </>

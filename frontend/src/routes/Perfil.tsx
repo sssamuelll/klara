@@ -44,54 +44,57 @@ export default function Perfil() {
         : t("perfil.aprendizaje.fila.aMedias", { fecha });
 
   return (
-    <main className="m3-page">
-      <div className="m3-top">
-        <span className="marca"><KlaraMark size={14} /><span className="wordmark">Klara</span></span>
-        <span>{t("perfil.kicker")}</span>
-      </div>
-      <h1 className="m4-h1" style={{ marginTop: 14 }}>{user?.display_name ?? "…"}</h1>
-      <p className="m3-mapa-frase">{t("perfil.sub", { level: user?.level ?? "" })}</p>
-      <ul className="m3-rows">
+    <main className="k-page">
+      <header className="k-topline">
+        <span className="k-topline__mark"><KlaraMark size={14} /><span className="wordmark">Klara</span></span>
+        <span className="k-topline__meta">{t("perfil.kicker")}</span>
+      </header>
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{user?.display_name ?? "…"}</h1>
+        <p className="k-hero__dek">{t("perfil.sub", { level: user?.level ?? "" })}</p>
+      </header>
+      <ul>
         <li>
-          <button type="button" className="m3-rowbtn" onClick={() => navigate("/perfil/aprendizaje")}>
-            <span className="n">01</span>
-            <span className="tit">{t("perfil.aprendizaje.fila.titulo")}</span>
-            <span className="estado">{estadoAprendizaje} <span aria-hidden="true">›</span></span>
+          <button type="button" className="k-row" onClick={() => navigate("/perfil/aprendizaje")}>
+            <span className="k-row__n">01</span>
+            <span className="k-row__title">{t("perfil.aprendizaje.fila.titulo")}</span>
+            <span className="k-row__meta">{estadoAprendizaje}</span>
+            <span className="k-row__arrow" aria-hidden="true">›</span>
           </button>
         </li>
         <li>
           <button
             type="button"
-            className="m3-rowbtn"
+            className="k-row"
             role="switch"
             aria-checked={theme === "dark"}
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
-            <span className="n">02</span>
-            <span className="tit">{t("perfil.tema")}</span>
-            <span className="estado">{theme === "light" ? t("perfil.temaClaro") : t("perfil.temaOscuro")} <span aria-hidden="true">›</span></span>
+            <span className="k-row__n">02</span>
+            <span className="k-row__title">{t("perfil.tema")}</span>
+            <span className="k-row__meta">{theme === "light" ? t("perfil.temaClaro") : t("perfil.temaOscuro")}</span>
           </button>
         </li>
         <li>
-          <button type="button" className="m3-rowbtn" onClick={() => navigate("/settings")}>
-            <span className="n">03</span>
-            <span className="tit">{t("perfil.editar")}</span>
-            <span className="estado"><span aria-hidden="true">›</span></span>
+          <button type="button" className="k-row" onClick={() => navigate("/settings")}>
+            <span className="k-row__n">03</span>
+            <span className="k-row__title">{t("perfil.editar")}</span>
+            <span className="k-row__arrow" aria-hidden="true">›</span>
           </button>
         </li>
         <li>
           <button
             type="button"
-            className="m3-rowbtn"
+            className="k-row"
             onClick={async () => { await logout(); navigate("/login", { replace: true }); }}
           >
-            <span className="n">04</span>
-            <span className="tit">{t("perfil.salir")}</span>
-            <span className="estado"><span aria-hidden="true">›</span></span>
+            <span className="k-row__n">04</span>
+            <span className="k-row__title">{t("perfil.salir")}</span>
+            <span className="k-row__arrow" aria-hidden="true">›</span>
           </button>
         </li>
       </ul>
-      <div className="m3-statline">{t("perfil.pie")}</div>
+      <p className="k-cap k-cap--center" style={{ marginTop: "auto" }}>{t("perfil.pie")}</p>
     </main>
   );
 }

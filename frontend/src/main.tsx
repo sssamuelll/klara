@@ -12,7 +12,6 @@ import "./styles/finish.css";
 import "./styles/speak.css";
 import "./styles/path.css";
 import "./styles/mobile3.css";
-import "./styles/mobile4.css";
 import "./styles/perfil-aprendizaje.css";
 import "./styles/auth.css";
 import "./styles/landing.css";

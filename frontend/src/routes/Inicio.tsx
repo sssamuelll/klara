@@ -47,52 +47,68 @@ export default function Inicio() {
   const titulo = user ? languageLabel(user.target_language) : "…";
 
   return (
-    <main className="m3-page">
-      <div className="m3-top">
-        <span className="marca"><KlaraMark size={14} /><span className="wordmark">Klara</span></span>
-        <span>{fecha}</span>
-      </div>
-      <h1 className="m4-saludo">
-        <Trans
-          i18nKey="home.greeting.conNombre"
-          values={{ hola, name: user?.display_name ?? "…" }}
-          components={{ 1: <em /> }}
-        />
-      </h1>
-      <div className="m4-sec">{t("biblioteca.titulo")}</div>
-      <div className="m4-lib">
-        <button className="m4-tema" onClick={() => navigate("/curso/aleman")}>
-          <span className="f1">
-            <span className="tit">{titulo}</span>
-            <span className="estado" data-hot={vm.vencen != null && vm.vencen > 0 ? "true" : "false"}>
+    <main className="k-page">
+      <header className="k-topline">
+        <span className="k-topline__mark"><KlaraMark size={14} /><span className="wordmark">Klara</span></span>
+        <span className="k-topline__meta">{fecha}</span>
+      </header>
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">
+          <Trans
+            i18nKey="home.greeting.conNombre"
+            values={{ hola, name: user?.display_name ?? "…" }}
+            components={{ 1: <em /> }}
+          />
+        </h1>
+      </header>
+      <h2 className="k-cap k-cap--rule">{t("biblioteca.titulo")}</h2>
+      <ul>
+        <li>
+          <button
+            type="button"
+            className="k-row"
+            data-state={vm.vencen != null && vm.vencen > 0 ? "now" : undefined}
+            onClick={() => navigate("/curso/aleman")}
+          >
+            <span className="k-row__title">{titulo}</span>
+            <span className="k-row__meta">
               {vm.vencen != null && vm.vencen > 0
                 ? t("biblioteca.estadoDue", { count: vm.vencen })
                 : t("biblioteca.estadoHoy")}
             </span>
-          </span>
-          <span className="sub">{t("biblioteca.cursoSub", { level: user?.level ?? "" })}</span>
-          <span className="m4-bar"><i style={{ width: `${vm.progreso * 100}%` }} /></span>
-        </button>
-        <button className="m4-add" onClick={() => navigate("/nuevo")}>
-          <span className="tile" aria-hidden="true">+</span>
-          <span>
-            <span className="tit">{t("biblioteca.nuevoTitulo")}</span>
-            <span className="sub">{t("biblioteca.nuevoDek")}</span>
-          </span>
-        </button>
-      </div>
-      <button className="m3-hero" style={{ marginTop: "auto" }} onClick={() => navigate(paso.to, { state: { from: "/" } })}>
-        <span className="tag">
+            <span className="k-row__sub">{t("biblioteca.cursoSub", { level: user?.level ?? "" })}</span>
+            <span className="k-bar k-bar--fill">
+              <span
+                className="k-bar__track"
+                role="progressbar"
+                aria-label={t("mapa.progressAria", { pct: Math.round(vm.progreso * 100) })}
+                aria-valuenow={Math.round(vm.progreso * 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              >
+                <i className="k-bar__fill" style={{ width: `${vm.progreso * 100}%` }} />
+              </span>
+            </span>
+          </button>
+        </li>
+        <li>
+          <button type="button" className="k-row" onClick={() => navigate("/nuevo")}>
+            <span className="k-row__n" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+            </span>
+            <span className="k-row__title">{t("biblioteca.nuevoTitulo")}</span>
+            <span className="k-row__sub">{t("biblioteca.nuevoDek")}</span>
+          </button>
+        </li>
+      </ul>
+      <button type="button" className="k-hero" style={{ marginTop: "auto" }} onClick={() => navigate(paso.to, { state: { from: "/" } })}>
+        <span className="k-hero__tag">
           <span>{t("biblioteca.heroTag", { curso: titulo })}</span>
           <span>{t(`curso.paso.${paso.id}.meta`)}</span>
         </span>
-        <span className="fila">
-          <span>
-            <h2>{t(`curso.paso.${paso.id}.titulo`)}</h2>
-            <p className="dek">{t(`curso.paso.${paso.id}.dek`)}</p>
-          </span>
-          <span className="arrow" aria-hidden="true">→</span>
-        </span>
+        <span className="k-hero__title">{t(`curso.paso.${paso.id}.titulo`)}</span>
+        <span className="k-hero__arrow" aria-hidden="true">→</span>
+        <span className="k-hero__dek">{t(`curso.paso.${paso.id}.dek`)}</span>
       </button>
     </main>
   );

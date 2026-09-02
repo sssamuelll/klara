@@ -52,7 +52,7 @@ function LegacyShell({ theme, setTheme, edition }: {
 
 function V4Frame({ children }: { children: ReactNode }) {
   return (
-    <div className="m3-app">
+    <div className="k-app">
       {children}
       <TabBar />
     </div>
@@ -82,10 +82,10 @@ function RootGate() {
 
 function AuthShell() {
   return (
-    <div className="m3-app">
-      <div className="m3-page auth-page">
-        <header className="m3-top">
-          <span className="marca">
+    <div className="k-app">
+      <div className="k-page auth-page">
+        <header className="k-topline">
+          <span className="k-topline__mark">
             <span className="wordmark">Klara</span>
           </span>
         </header>
@@ -230,7 +230,7 @@ function AppShell() {
       </Route>
 
       {/* Sesión v4: sin TabBar (mockup) y sin LegacyShell (sin Masthead).
-          Story renderiza su propio .m3-app; StoryFinish interino trae su kframe. */}
+          Story renderiza su propio .k-app; StoryFinish interino trae su kframe. */}
       <Route
         path="/estudiar/:id"
         element={

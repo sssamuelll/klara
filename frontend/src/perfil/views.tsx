@@ -42,14 +42,14 @@ export function Entrada({
 }) {
   const { t } = useTranslation();
   return (
-    <main className="m3-page">
-      <div className="m3-top">
-        <span className="marca">
+    <main className="k-page">
+      <header className="k-topline">
+        <span className="k-topline__mark">
           <KlaraMark size={13} />
           <span className="wordmark">Klara</span>
         </span>
-        <span>{t("perfil.aprendizaje.kicker")}</span>
-      </div>
+        <span className="k-topline__meta">{t("perfil.aprendizaje.kicker")}</span>
+      </header>
       <div className="ob5-entrada">
         <div className="ob5-kicker">{t("perfil.aprendizaje.entrada.antes")}</div>
         <h1 className="ob5-h1">
@@ -179,10 +179,11 @@ export function Pregunta({ q, idx, answers, onSet, onNext, onSkip, onBack, ultim
   const autoAvanza = q.control === "radio" && !otraSel;
 
   return (
-    <main className="m3-page">
+    <main className="k-page">
       <div className="ob5-top">
         <button
-          className="m3-back"
+          type="button"
+          className="k-btn k-btn--text"
           onClick={onBack}
           style={{ justifySelf: "start" }}
           aria-label={t("common.back")}
@@ -349,14 +350,14 @@ export function Sintesis({
   const entradas = Object.entries(facts || {});
 
   return (
-    <main className="m3-page">
-      <div className="m3-top">
-        <span className="marca">
+    <main className="k-page">
+      <header className="k-topline">
+        <span className="k-topline__mark">
           <KlaraMark size={13} speaking={pendiente} />
           <span className="wordmark">Klara</span>
         </span>
-        <span>{pendiente ? t("perfil.aprendizaje.sintesis.guardado") : t("perfil.aprendizaje.sintesis.tuPerfil")}</span>
-      </div>
+        <span className="k-topline__meta">{pendiente ? t("perfil.aprendizaje.sintesis.guardado") : t("perfil.aprendizaje.sintesis.tuPerfil")}</span>
+      </header>
       <div className="ob5-sint">
         <h1 className="ob5-h1" style={{ marginTop: 18 }}>
           {t("perfil.aprendizaje.sintesis.h1pre")}{" "}
@@ -377,7 +378,7 @@ export function Sintesis({
             {dicho ? <p className="ob5-leyenda">{t("perfil.aprendizaje.sintesis.leyenda")}</p> : null}
             {entradas.length ? (
               <div className="ob5-facts">
-                <div className="m4-sec">{t("perfil.aprendizaje.sintesis.anotado")}</div>
+                <h2 className="k-cap k-cap--rule">{t("perfil.aprendizaje.sintesis.anotado")}</h2>
                 {entradas.map(([k, v]) => (
                   <div className="ob5-fact" key={k}>
                     <span className="k">{t(`perfil.aprendizaje.facts.${k}`, k)}</span>

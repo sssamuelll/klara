@@ -645,12 +645,26 @@ li:first-child > .k-row:not(.k-row--boxed),
 }
 
 .k-row__sub {
-  order: 1;                        /* siempre la última: con wrap cae a su línea esté donde esté en el markup */
+  order: 1;                        /* bajo el título: con wrap cae a su línea esté donde esté en el markup */
   flex: 1 0 100%;
   font-family: var(--font-serif);
   font-style: italic;
   font-size: var(--t-meta);
   color: var(--ink-3);
+}
+
+/* Con numeral, la bajada es la segunda línea del título, no un texto suelto de la página:
+   se sangra la columna del numeral (su min-width de 22px) más el gap. Es padding y no margin
+   porque la base ya es el 100 % de la fila y un margen la desbordaría. */
+.k-row:has(> .k-row__n) .k-row__sub { padding-left: calc(22px + var(--space-3)); }
+
+/* La barra (átomo 5) dentro de la fila es su última línea, a ancho completo.
+   Sin flex propia su ancho max-content es 0 —.k-bar__track es flex:1;min-width:0—
+   y la pista no se pinta. El mapa del átomo 4 manda esta composición (.m4-tema .m4-bar). */
+.k-row > .k-bar {
+  order: 2;                        /* después de __sub, que ya es order:1 */
+  flex: 1 0 100%;
+  margin-top: var(--space-2);
 }
 
 .k-row__meta {
@@ -814,15 +828,36 @@ li:first-child > .k-row:not(.k-row--boxed),
   transition: width var(--dur-med) var(--ease-out);
 }
 
-/* Hitos: bloque, no fila. Los 16px laterales reservan medio rótulo a cada lado,
-   para que el hito de 0 % y el de 100 % no se salgan del carril; abajo, sitio para las etiquetas. */
+/* Hitos: bloque, no fila, y el contexto de posición del átomo. Los rótulos, el punto
+   y la cinta son hermanos de la pista, no hijos: la pista lleva role="progressbar",
+   que es «children presentational», y ahí dentro «A0 A1 A2 B1» no llega al árbol de
+   accesibilidad —el aria-label del track los pisaría—, así que el hito solo se vería
+   (§7.6). Los 16px laterales van en margen y no en padding porque la caja de posición
+   de un absoluto es la de padding: con padding, left:0% caería 16px antes que la
+   pista. Reservan medio rótulo a cada lado; arriba el sitio de la cinta, abajo el de
+   las etiquetas. */
 .k-bar--milestones {
   display: block;
-  padding: 0 var(--space-4) var(--space-5);
+  position: relative;
+  margin: var(--space-5) var(--space-4) 0;
+  padding-bottom: var(--space-5);
 }
 
 .k-bar--milestones .k-bar__track,
 .k-bar--milestones .k-bar__fill { height: 1px; }
+
+/* «Estás aquí»: la cinta en acento sobre el punto (mapa del átomo 5, .m3-cefr .aqui).
+   El left en línea desde el .tsx, como el punto. El margen se anula porque en un
+   absoluto se sumaría al desplazamiento; bottom:100% la apoya justo encima de la
+   pista sin depender de su alto. */
+.k-bar--milestones .k-cap {
+  position: absolute;
+  bottom: 100%;
+  margin: 0 0 var(--space-1);
+  transform: translateX(-50%);
+  color: var(--accent);
+  white-space: nowrap;
+}
 
 /* left en línea desde el .tsx; translateX(-50%) centra el rótulo sobre su marca. */
 .k-bar__stop {
@@ -1292,7 +1327,10 @@ li:first-child > .k-row:not(.k-row--boxed),
   letter-spacing: var(--tracking-mark);
   text-transform: uppercase;
   color: var(--ink-3);
-  padding-top: env(safe-area-inset-top);   /* obligatorio en toda ruta de alto completo */
+  /* Sin `env(safe-area-inset-top)`: lo pone el contenedor —`.k-page`
+     (gramática 12) y `.landing` (landing.css:13)—, y repetirlo aquí lo
+     sumaba dos veces en todo teléfono con muesca. Solo `--session` lo
+     lleva, porque es la única tira que cuelga de `.k-app` sin página. */
 }
 
 /* El lockup marca + wordmark lleva tinta plena: es firma, no marginalia. */
@@ -1399,6 +1437,15 @@ li:first-child > .k-row:not(.k-row--boxed),
   flex: 0 0 auto;
   transition: transform var(--dur-fast) var(--ease-out);
 }
+
+/* La junta que le falta al par: el héroe trae `margin-top` y ningún margen
+   inferior, y `.k-bar` no trae ninguno (tampoco debe: también vive dentro de
+   una fila). Sin esto el filete se lee como subrayado del titular. Los 12px
+   son los que tenía `.m4-h1` bajo la misma barra en la portada de curso.
+   Va en `:where()` —especificidad 0— a propósito: es un suelo, no un mandato.
+   La variante que ya reserva su propio aire arriba (`--milestones`, que cuelga
+   la cinta «estás aquí» sobre la pista) lo pisa sin tener que pelearlo. */
+:where(.k-hero) + :where(.k-bar) { margin-top: var(--space-3); }
 
 /* Hundido al pulsar: el bloque entero es el objetivo táctil (bien por encima de 44px). */
 .k-hero:active { transform: scale(0.985); }

@@ -162,7 +162,7 @@ export default function StoryView() {
 
   if (error) {
     return (
-      <div className="m3-app">
+      <div className="k-app">
         <SessTop titulo="" right="" onExit={salir} />
         <div className="m3-lect" />
         <div className="m3-fb">
@@ -177,7 +177,7 @@ export default function StoryView() {
 
   if (!story) {
     return (
-      <div className="m3-app">
+      <div className="k-app">
         <SessTop titulo="" right="" onExit={salir} />
         <div className="m3-lect">
           <div className="m3-cargando"><span className="k-spinner" /></div>
@@ -187,7 +187,7 @@ export default function StoryView() {
   }
 
   // Interim until F2.4: StoryFinish keeps its legacy skin inside a plain
-  // kapp/kframe (no Masthead) — .m3-app's overflow:hidden would break the
+  // kapp/kframe (no Masthead) — .k-app's overflow:hidden would break the
   // quiz scroll.
   if (finished) {
     return (
@@ -229,7 +229,7 @@ export default function StoryView() {
   }
 
   return (
-    <div className="m3-app">
+    <div className="k-app">
       {current && (
         <EstudiarView
           storyTitle={story.title}

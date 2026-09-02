@@ -25,8 +25,8 @@ export default function Landing() {
 
   return (
     <div className="landing">
-      <header className="m3-top">
-        <span className="marca">
+      <header className="k-topline">
+        <span className="k-topline__mark">
           <span className="wordmark">Klara</span>
         </span>
         <span className="landing__login">
