@@ -1,0 +1,52 @@
+{
+  "projectId": "b46c1d95-c939-42a2-b887-bd1dac59705c",
+  "shape": "package",
+  "pkg": "klara-frontend",
+  "globalName": "Klara",
+  "entry": "frontend/.ds-entry.tsx",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.json",
+  "guidelinesGlob": "../docs/design/klara-sistema/*.md",
+  "componentSrcMap": {
+    "BreakdownPopover": "src/components/BreakdownPopover.tsx",
+    "EstudiarView": "src/components/EstudiarView.tsx",
+    "GenderPicker": "src/components/GenderPicker.tsx",
+    "GenderReviewSession": "src/components/GenderReviewSession.tsx",
+    "InvitationsPanel": "src/components/InvitationsPanel.tsx",
+    "KlaraMark": "src/components/KlaraMark.tsx",
+    "Masthead": "src/components/Masthead.tsx",
+    "OwnerPasswordGate": "src/components/OwnerPasswordGate.tsx",
+    "PasswordSetForm": "src/components/PasswordSetForm.tsx",
+    "RecallReviewSession": "src/components/RecallReviewSession.tsx",
+    "SentenceView": "src/components/SentenceView.tsx",
+    "SessTop": "src/components/SessTop.tsx",
+    "StoryFinish": "src/components/StoryFinish.tsx",
+    "TabBar": "src/components/TabBar.tsx",
+    "WordPopover": "src/components/WordPopover.tsx",
+    "NativeChrome": null,
+    "ProtectedRoute": null
+  },
+  "dtsPropsFor": {
+    "KlaraMark": "size?: number; speaking?: boolean; italic?: boolean;",
+    "SessTop": "titulo: string; right: string; onExit: () => void;",
+    "Masthead": "edition: string; theme: \"light\" | \"dark\"; onToggleTheme: () => void;",
+    "PasswordSetForm": "onSuccess?: () => void; submitLabel?: string;",
+    "RecallReviewSession": "onExit: () => void; exitLabel: string;",
+    "GenderReviewSession": "onExit: () => void; exitLabel: string;",
+    "GenderPicker": "lemma: string; en?: string | null; onGrade: (article: \"der\" | \"die\" | \"das\") => Promise<{ correct: boolean; article: string }>; onResult: (correct: boolean) => void; onNext: () => void; isLast: boolean;",
+    "WordPopover": "word: { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }; anchorRect: DOMRect; targetLanguage: \"de\" | \"en\" | \"fr\" | \"ja\" | \"pt\" | \"es\"; alreadyAdded?: boolean; onClose: () => void; onAdded?: (wordId: string) => void;",
+    "BreakdownPopover": "entry: { word: string; translation: string; pos?: string | null }; anchorRect: DOMRect; targetLanguage: \"de\" | \"en\" | \"fr\" | \"ja\" | \"pt\" | \"es\"; onClose: () => void;",
+    "StoryFinish": "story: { id: string; level: string; target_language: \"de\" | \"en\" | \"fr\" | \"ja\" | \"pt\" | \"es\"; native_language: \"de\" | \"en\" | \"fr\" | \"ja\" | \"pt\" | \"es\"; title: string; content: { sentences: { target: string; native: string; new_words: string[]; breakdown?: { word: string; translation: string; pos?: string | null }[] | null }[]; comprehension_questions: { q_target: string; q_native: string; options_target: string[]; correct_index: number }[] }; target_words: { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }[] }; scoresBySentence: Record<number, { accuracy: number; fluency: number; completeness: number; pronunciation: number }>; reviewIds: Set<string>; adding: string | null; onToggleReview: (word: { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }) => void; onRestart: () => void; onNew: () => void; onNextInModule?: () => void; onHome: () => void; onSummaryShown?: () => void;",
+    "SentenceView": "storyTitle: string; storyLevel: string; onExit: () => void;\n  sentence: { target: string; native: string; new_words: string[]; breakdown?: { word: string; translation: string; pos?: string | null }[] | null }; index: number; total: number; targetLanguage: string;\n  lemmaIndex: Record<string, string>; wordsById: Record<string, { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }>;\n  activeWordKey: string | null;\n  onWordTap: (word: { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }, key: string, el: HTMLElement) => void;\n  onBreakdownTap?: (entry: { word: string; translation: string; pos?: string | null }, key: string, el: HTMLElement) => void;\n  playing: boolean; progress: number; duration: number; recording: boolean;\n  micAnalyser: AnalyserNode | null; micLevel: \"silent\" | \"quiet\" | \"ok\" | \"loud\"; evaluating: boolean;\n  feedback?: Record<number, \"good\" | \"ok\" | \"bad\">; liveBands?: Record<number, \"good\" | \"ok\" | \"bad\">;\n  phoneticHints?: Record<string, string>;\n  diagnosis?: { word: string; tip: string }; diagnosing: boolean; rate: number;\n  onPlayPause: () => void; onCycleSpeed: () => void;\n  onRecordStart: () => void; onRecordStop: () => void; onRetry: () => void;\n  onListenFromFeedback: () => void; onPrev: () => void; onNext: () => void;\n  canPrev: boolean; canNext: boolean;",
+    "EstudiarView": "storyTitle: string; onExit: () => void;\n  sentence: { target: string; native: string; new_words: string[]; breakdown?: { word: string; translation: string; pos?: string | null }[] | null }; index: number; total: number; targetLanguage: string;\n  lemmaIndex: Record<string, string>; wordsById: Record<string, { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }>;\n  activeWordKey: string | null;\n  onWordTap: (word: { id: string; lemma: string; pos: string; gender: string | null; plural: string | null; translation: string | null; example_target: string | null; frequency_rank: number | null }, key: string, el: HTMLElement) => void;\n  onBreakdownTap?: (entry: { word: string; translation: string; pos?: string | null }, key: string, el: HTMLElement) => void;\n  playing: boolean; recording: boolean; micLevel: \"silent\" | \"quiet\" | \"ok\" | \"loud\"; evaluating: boolean;\n  feedback?: Record<number, \"good\" | \"ok\" | \"bad\">; liveBands?: Record<number, \"good\" | \"ok\" | \"bad\">;\n  phoneticHints?: Record<string, string>;\n  diagnosis?: { word: string; tip: string }; diagnosing: boolean; rate: number;\n  pronError: { kind: string; message?: string } | null; fscale: number;\n  onPlayPause: () => void; onCycleSpeed: () => void;\n  onRecordStart: () => void; onRecordStop: () => void; onRetry: () => void;\n  onErrorDismiss: () => void; onPrev: () => void; onNext: () => void;"
+  },
+  "provider": {
+    "component": "DesignPreviewProvider"
+  },
+  "overrides": {
+    "SentenceView": {
+      "cardMode": "column",
+      "viewport": "430x820"
+    }
+  }
+}

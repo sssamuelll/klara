@@ -48,3 +48,10 @@ Thumbs.db
 # remove` con "Filename too long".
 docs/research/
 .reasonix/
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+.design-sync/.probe*.mjs
+.design-sync/.serve.log
