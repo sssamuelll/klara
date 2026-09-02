@@ -12,6 +12,7 @@
   /* Editorial type scale — generous, slow */
   --t-mark: 14px;          /* metadata, badges */
   --t-meta: 13px;          /* marginalia */
+  --t-mono: 11px;          /* el único escalón mono del sistema k-* (versalitas + tracking-mark) */
   --t-body: 17px;          /* spanish secondary */
   --t-read: 22px;          /* german body sentence */
   --t-read-lg: 26px;       /* german large */
@@ -43,6 +44,21 @@
   --accent: oklch(0.58 0.17 25);
   --accent-ink: oklch(0.36 0.13 25);
   --accent-wash: oklch(0.94 0.04 25);
+
+  /* Puntaje de pronunciación — bien / regular / mal (mal = el acento) */
+  --score-good: oklch(0.62 0.13 145);
+  --score-good-ink: oklch(0.42 0.12 145);
+  --score-ok: oklch(0.74 0.13 80);
+  --score-bad: var(--accent);
+
+  /* Artículos alemanes — der / die / das */
+  --art-der: oklch(0.48 0.09 250);
+  --art-die: oklch(0.42 0.14 10);
+  --art-das: oklch(0.46 0.1 150);
+
+  /* Texto sobre el acento, y el velo bajo la hoja inferior */
+  --on-accent: var(--paper);
+  --scrim: rgba(26, 24, 20, 0.35);
 
   /* Level badges (A0..B1) — tonal, not rainbow */
   --lvl-bg: var(--paper-3);
@@ -99,6 +115,11 @@
   --accent: oklch(0.72 0.15 28);
   --accent-ink: oklch(0.85 0.1 30);
   --accent-wash: oklch(0.28 0.07 25);
+
+  --art-der: oklch(0.72 0.09 250);
+  --art-die: oklch(0.68 0.13 10);
+  --art-das: oklch(0.7 0.1 150);
+  --scrim: rgba(0, 0, 0, 0.5);
 
   --lvl-bg: var(--paper-3);
   --lvl-ink: var(--ink-2);

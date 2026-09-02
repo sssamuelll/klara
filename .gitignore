@@ -55,3 +55,4 @@ ds-bundle/
 .design-sync/node_modules
 .design-sync/.probe*.mjs
 .design-sync/.serve.log
+.hoja-out/

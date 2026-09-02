@@ -6,6 +6,7 @@
 // Estilos en el MISMO orden que main.tsx, para que esbuild los empaquete igual
 // que la app real. global.css arrastra tokens.css y pages.css por @import.
 import "./src/styles/global.css";
+import "./src/styles/sistema.css";
 import "./src/styles/native.css";
 import "./src/styles/onboarding.css";
 import "./src/styles/sentence-view.css";

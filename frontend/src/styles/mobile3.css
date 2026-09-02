@@ -3,8 +3,8 @@
    Depende de tokens.css + global.css
    ============================================================ */
 
-:root{--art-der:oklch(0.48 0.09 250);--art-die:oklch(0.42 0.14 10);--art-das:oklch(0.46 0.1 150);--tb:58px}
-:root[data-theme="dark"]{--art-der:oklch(0.72 0.09 250);--art-die:oklch(0.68 0.13 10);--art-das:oklch(0.7 0.1 150)}
+/* --art-der/die/das viven en tokens.css desde la hoja de componentes */
+:root{--tb:58px}
 
 /* ---------- Shell: viewport fijo, nada scrollea ---------- */
 .m3-app{height:100dvh;max-width:430px;margin:0 auto;display:flex;flex-direction:column;background:var(--paper);position:relative;overflow:hidden}
