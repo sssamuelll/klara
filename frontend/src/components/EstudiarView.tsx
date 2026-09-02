@@ -1,10 +1,11 @@
 /**
- * Teleprompter de Estudiar — piel m3 (spec F2 §5.1).
+ * Teleprompter de Estudiar — vocabulario k-* (spec F2 §5.1).
  *
- * La oración es la protagonista; debajo, un dock con estadoK (quién actúa:
- * Klara lee / te escucho / evaluando) y cuatro botones redondos
- * (← · play · mic · →). El feedback de pronunciación y los errores de
- * captura ocupan el mismo slot inferior (m3-fb) en sustitución del dock.
+ * La oración es la protagonista; debajo, un `.k-dock` con su línea de
+ * estado (quién actúa: Klara lee / te escucho / evaluando) y cuatro
+ * botones redondos (← · play · mic · →). El feedback de pronunciación y
+ * los errores de captura ocupan el mismo slot inferior (`.k-band`) en
+ * sustitución del dock.
  *
  * Vive aparte de SentenceView (legacy) porque Practice comparte aquel
  * archivo y su segmento de pronunciación está fuera del alcance de F2.1;
@@ -146,14 +147,44 @@ function buildBreakdownMap(
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+// Iconos de trazo 1.5 del átomo 2 (hoja.html §02). El tamaño lo pone
+// `.k-rbtn svg`, por eso no llevan width/height.
 function IcPlay() {
-  return <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>;
+  return (
+    <svg data-icon="play" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 5.4 19 12 8 18.6Z" />
+    </svg>
+  );
 }
 function IcPause() {
-  return <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" /></svg>;
+  return (
+    <svg data-icon="pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <path d="M9.5 5.5v13M14.5 5.5v13" />
+    </svg>
+  );
 }
 function IcMic() {
-  return <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z" fill="currentColor" /></svg>;
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3.5a2.75 2.75 0 0 1 2.75 2.75v5.25a2.75 2.75 0 0 1-5.5 0V6.25A2.75 2.75 0 0 1 12 3.5Z" />
+      <path d="M5.75 11.25v.5a6.25 6.25 0 0 0 12.5 0v-.5" />
+      <path d="M12 18v2.5" />
+    </svg>
+  );
+}
+function IcPrev() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14.5 5.5 8 12l6.5 6.5" />
+    </svg>
+  );
+}
+function IcNext() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9.5 5.5 16 12l-6.5 6.5" />
+    </svg>
+  );
 }
 
 export default function EstudiarView({
@@ -250,7 +281,7 @@ export default function EstudiarView({
     return { word: focus, hint, tip };
   }, [feedback, phoneticHints, tokens, diagnosis]);
 
-  // ---- Dock status line (estadoK) ------------------------------------------
+  // ---- Dock status line (.k-dock__status) ----------------------------------
   const status = dockStatus({ playing, recording, evaluating, micLevel, rate });
   const nivelKey = (nivel: MicLevel) =>
     nivel === "quiet" ? "story.sentence.micLevel.quiet"
@@ -268,19 +299,29 @@ export default function EstudiarView({
   return (
     <>
       <SessTop titulo={storyTitle} right={`${pad2(index + 1)}/${pad2(total)}`} onExit={onExit} />
-      <div className="m3-prog">
-        <div className="segs">
+      <div className="k-bar k-bar--segs">
+        <div
+          className="k-bar__track"
+          role="progressbar"
+          aria-valuenow={index + 1}
+          aria-valuemin={0}
+          aria-valuemax={total}
+        >
           {Array.from({ length: total }, (_, i) => (
-            <span key={i} className="seg" data-done={i <= index ? "true" : "false"} />
+            <span
+              key={i}
+              className="k-bar__seg"
+              data-state={i < index ? "done" : i === index ? "now" : undefined}
+            />
           ))}
         </div>
       </div>
-      <div className="m3-lect">
+      <div className="k-fill">
         {/* Sentence (target language). Feedback bands are keyed by full token
             index (including spaces/punct), matching what bandsByTokenIndex
             returns from pronunciation.ts. `key={index}` re-triggers the
             page-in animation on every sentence change. */}
-        <p className="m3-oracion" lang={targetLanguage} key={index} style={{ "--fscale": fscale } as CSSProperties}>
+        <p className="k-stage" lang={targetLanguage} key={index} style={{ "--fscale": fscale } as CSSProperties}>
           {tokens.map((tok, i) => {
             if (tok.type !== "word") return <span key={i}>{tok.text}</span>;
             const wordId = matchToken(tok.text, lemmaIndex);
@@ -297,7 +338,7 @@ export default function EstudiarView({
               <button
                 key={i}
                 type="button"
-                className="m3-w"
+                className="k-word"
                 data-score={band}
                 data-active={activeWordKey === key ? "true" : undefined}
                 onClick={(e) => {
@@ -313,32 +354,32 @@ export default function EstudiarView({
         </p>
 
         {/* Translation (native language) */}
-        <p className="m3-gloss" key={`g${index}`}>{sentence.native}</p>
+        <p className="k-note k-note--mono" key={`g${index}`}>{sentence.native}</p>
       </div>
 
       {pronError || showFeedback ? (
-        <div className="m3-fb">
+        <div className="k-band">
           {pronError ? (
             <>
-              <p className="nota" role="alert">{t(`pron.error.${pronError.kind}`)}</p>
-              <div className="acciones">
-                <button className="k-btn k-btn--ghost" onClick={onErrorDismiss}>
+              <p className="k-error" role="alert">{t(`pron.error.${pronError.kind}`)}</p>
+              <div className="k-wrap">
+                <button type="button" className="k-btn k-btn--ghost k-btn--block" onClick={onErrorDismiss}>
                   {t("story.sentence.feedback.retry")}
                 </button>
-                <button className="k-btn" onClick={onNext}>
-                  {t("story.step.next")} <span className="arrow" aria-hidden="true">→</span>
+                <button type="button" className="k-btn k-btn--block" onClick={onNext}>
+                  {t("story.step.next")} <span className="k-btn__arrow" aria-hidden="true">→</span>
                 </button>
               </div>
             </>
           ) : (
             <>
-              <p className="nota" role="status">
+              <p className="k-note" role="status">
                 {verdictKey && t(`story.sentence.verdict.${verdictKey}`)}
                 {badWordTip && (
                   <>
                     {" "}
                     {t("story.sentence.feedback.tipPrefix")}{" "}
-                    <em>{badWordTip.hint ?? badWordTip.word}</em>.
+                    <span className="k-note__right">{badWordTip.hint ?? badWordTip.word}</span>.
                   </>
                 )}
                 {badWordTip?.tip && <> {badWordTip.tip}</>}
@@ -346,67 +387,82 @@ export default function EstudiarView({
                   <> {t("story.sentence.feedback.diagnosing")}</>
                 )}
               </p>
-              <div className="acciones">
-                <button className="k-btn k-btn--ghost" onClick={onRetry}>
+              <div className="k-wrap">
+                <button type="button" className="k-btn k-btn--ghost k-btn--block" onClick={onRetry}>
                   {t("story.sentence.feedback.retry")}
                 </button>
-                <button className="k-btn" onClick={onNext}>
-                  {t("story.step.next")} <span className="arrow" aria-hidden="true">→</span>
+                <button type="button" className="k-btn k-btn--block" onClick={onNext}>
+                  {t("story.step.next")} <span className="k-btn__arrow" aria-hidden="true">→</span>
                 </button>
               </div>
             </>
           )}
         </div>
       ) : (
-        <div className="m3-dock">
-          <div className="estadoK">
-            {status?.kind === "escuchando" && (
-              <span className="rec" role="status">
-                <span aria-hidden="true">● </span>
-                {t(nivelKey(status.nivel))}
-              </span>
-            )}
-            {status?.kind === "evaluando" && (
-              <span role="status">{t("estudiar.estadoK.evaluando")}</span>
-            )}
-            {status?.kind === "leyendo" && (
-              <button onClick={onCycleSpeed} aria-label={t("story.sentence.speedAria", { rate })}>
-                {t(status.despacio ? "estudiar.estadoK.leeDespacio" : "estudiar.estadoK.lee")}
-              </button>
-            )}
+        <div className="k-dock">
+          <div className="k-dock__status">
+            <p className="k-cap k-cap--center">
+              {status?.kind === "escuchando" && (
+                <span className="k-cap__count" data-tone="live" role="status">
+                  <span aria-hidden="true">● </span>
+                  {t(nivelKey(status.nivel))}
+                </span>
+              )}
+              {status?.kind === "evaluando" && (
+                <span role="status">{t("estudiar.estadoK.evaluando")}</span>
+              )}
+              {status?.kind === "leyendo" && (
+                <button
+                  type="button"
+                  className="k-btn k-btn--text"
+                  onClick={onCycleSpeed}
+                  aria-label={t("story.sentence.speedAria", { rate })}
+                >
+                  {t(status.despacio ? "estudiar.estadoK.leeDespacio" : "estudiar.estadoK.lee")}
+                </button>
+              )}
+            </p>
           </div>
-          <div className="fila">
+          <div className="k-dock__row">
             <button
-              className="m3-rbtn step"
+              type="button"
+              className="k-rbtn k-rbtn--sm"
               aria-label={t("story.step.prev")}
               disabled={index === 0}
               onClick={onPrev}
             >
-              ←
+              <IcPrev />
             </button>
             <button
-              className="m3-rbtn play"
+              type="button"
+              className="k-rbtn k-rbtn--ink k-rbtn--lg"
+              data-state={playing ? "playing" : undefined}
               aria-label={playing ? t("story.sentence.pauseAria") : t("story.sentence.playAria")}
               onClick={onPlayPause}
             >
-              {playing ? <IcPause /> : <IcPlay />}
+              <IcPlay />
+              <IcPause />
             </button>
             <button
-              className="m3-rbtn mic"
+              type="button"
+              className="k-rbtn k-rbtn--rec k-rbtn--md"
               data-on={recording ? "true" : "false"}
+              aria-pressed={recording}
               aria-label={
                 recording ? t("story.sentence.micAriaRecording") : t("story.sentence.micAria")
               }
               onClick={onMicClick}
             >
               <IcMic />
+              <span className="k-rbtn__ring" aria-hidden="true"></span>
             </button>
             <button
-              className="m3-rbtn step"
+              type="button"
+              className="k-rbtn k-rbtn--sm"
               aria-label={index < total - 1 ? t("story.step.next") : t("story.step.finish")}
               onClick={onNext}
             >
-              →
+              <IcNext />
             </button>
           </div>
         </div>

@@ -9,7 +9,7 @@
 
 /* ---------- 00-base ---------- */
 /* ============================================================
-   ARMAZÓN — gramática 12. No son átomos: son las cuatro piezas
+   ARMAZÓN — gramática 12. No son átomos: son las siete piezas
    que los átomos necesitan y que ninguna pantalla vuelve a escribir.
    `.k-scrim`, `.k-sheet`, `.k-tabs__menu` y `.k-card--anchored` se
    posicionan contra `.k-app`, no contra el viewport.
@@ -60,6 +60,14 @@
    Acotado al cascarón por la misma razón: sentence-view.css:81 define otro `.k-stage` vivo.
    reemplaza mobile3.css:114 `.m3-oracion` · sentence-view.css:81 `.k-stage` + :96 `.k-stage__de` · finish.css:404 `.qcard__cloze` */
 .k-app .k-stage {
+  /* Acotar el selector protege solo lo que este bloque DECLARA: lo que no
+     nombra sigue cayendo del `.k-stage` global de sentence-view.css:81 (+ :560).
+     De ahí estas tres: sin `flex` el pasaje crecía y empujaba la glosa al
+     fondo; sin `padding` y `text-align` heredaba los 8px y el centrado de
+     SentenceView. Mueren cuando muera esa hoja. */
+  flex: 0 1 auto;
+  padding: 0;
+  text-align: start;
   font-family: var(--font-serif);
   font-size: calc(clamp(25px, 7vw, 30px) * var(--fscale, 1));
   line-height: var(--lh-read);
@@ -71,6 +79,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  /* El paso de página al cambiar de oración; el .tsx la redispara con key={index}.
+     Con reduced-motion `--dur-med` es 0ms (tokens.css:136) y no hay animación. */
+  animation: page-in var(--dur-med) var(--ease-page) both;
 }
 
 /* Nube/rejilla: el único contenedor envolvente del sistema. Las listas
@@ -80,6 +91,99 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* Zona de sesión: crece con lo que sobre y centra su contenido. Ahí viven
+   `.k-stage` y su glosa `.k-note--mono`, o un `.k-spinner` mientras carga.
+   reemplaza mobile3.css:26 `.m3-lect` · mobile3.css:52 `.m3-cargando` */
+.k-fill {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 28px;
+  overflow: hidden;
+}
+/* El pasaje ocupa el ancho; el spinner no, y sin esto quedaría a la izquierda. */
+.k-fill > .k-spinner { align-self: center; }
+
+/* Dock de transporte al pie de la sesión. La safe-area va en el padding, como
+   en la hoja vieja: el cascarón no scrollea y nadie más la repone.
+   reemplaza mobile3.css:31 `.m3-dock` + :50 (safe-area) */
+.k-dock {
+  flex: 0 0 auto;
+  padding: 10px 22px calc(20px + env(safe-area-inset-bottom));
+}
+
+/* Quién actúa ahora. Reserva su alto para que encender y apagar el rótulo no
+   salte la fila de botones; dentro va una `.k-cap k-cap--center` con el texto
+   vivo en `.k-cap__count[data-tone="live"]` y la velocidad en `.k-btn--text`.
+   reemplaza mobile3.css:32 `.estadoK` · :53 `.rec` · :55 (el área táctil) */
+.k-dock__status {
+  /* Alto FIJO, no mínimo: es lo único que cumple lo que este bloque promete
+     —que encender y apagar el rótulo no mueva la fila de redondos—. Con
+     `min-height` el control de velocidad (`.k-btn--text`, 44px compensados a
+     20 por su margen negativo) estiraba la línea a 20px en el estado «leyendo»
+     y el dock cambiaba de alto a media sesión. Lo que sobre desborda sin
+     empujar; centrar es cosa del flex, como en `.estadoK`.
+     reemplaza mobile3.css:32 `.estadoK` (flex + alto) */
+  height: 18px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* El `.k-cap` trae 18px de aire de marginalia de página; aquí no hay página, y
+   como este contenedor no tiene ni relleno ni borde, ese margen se escapa por
+   colapso y empuja el dock entero. El aire del dock lo fija el dock. */
+.k-dock__status .k-cap { margin: 0; }
+
+/* La barra de progreso de la sesión cuelga del cascarón, no de `.k-page`, así
+   que nadie le pone el aire lateral: se lo ponemos aquí para que sus segmentos
+   arranquen a plomo con «Salir» y con la cuenta de la línea superior. Acotado a
+   hija directa de `.k-app`, así las `.k-bar` que viven dentro de una página no
+   se enteran. El `flex` es el de `.m3-prog`: en una columna que no scrollea, un
+   riel de 2px no se encoge. reemplaza mobile3.css:20 `.m3-prog` (padding y flex) */
+.k-app > .k-bar {
+  padding: 0 22px;
+  flex: 0 0 auto;
+}
+
+/* La fila de redondos: escuchar, grabar, avanzar.
+   reemplaza mobile3.css:33 `.m3-dock .fila` */
+.k-dock__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+/* Banda de respuesta: sustituye al dock cuando Klara dice algo. Dentro, una
+   `.k-note` (veredicto, role=status) o una `.k-error` (role=alert), y un
+   `.k-wrap` con dos `.k-btn k-btn--block`. El alto mínimo evita que el
+   pasaje salte cuando aparece; el filete la separa de la lectura.
+   reemplaza mobile3.css:43 `.m3-fb` + :51 (safe-area) · :44 `.nota` · :46 `.acciones` */
+.k-band {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--rule);
+  padding: var(--space-4) 22px calc(20px + env(safe-area-inset-bottom));
+  /* Exactamente lo que mide el dock —10 + 18 (estado) + 10 + 72 (redondo grande)
+     + 20—, que es lo que impide que el pasaje salte al cambiar un pie por otro.
+     Si cambia cualquiera de esos cinco, este número cambia con ellos. */
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+/* Aquí el aire lo reparte el `gap`; el margen que la nota trae de la glosa sobra.
+   Y la tinta vuelve a ser la secundaria: el veredicto es el texto que hay que
+   leer después de hablar, en serif itálica; con `--ink-3` se queda en 4.22:1
+   sobre el papel oscuro, por debajo del mínimo. Es la tinta que ya tenía en
+   `mobile3.css:44` `.m3-fb .nota`. */
+.k-band > .k-note {
+  margin-top: 0;
+  color: var(--ink-2);
 }
 
 /* ---------- 01-boton ---------- */
@@ -813,9 +917,8 @@ li:first-child > .k-row:not(.k-row--boxed),
   border-radius: 0;
 }
 
-/* Hecho. data-done="true" es el alias temporal que emite hoy EstudiarView; pintan igual. */
-.k-bar__seg[data-state="done"],
-.k-bar__seg[data-done="true"] { background: var(--ink-2); }
+/* Hecho: el segmento ya leído. */
+.k-bar__seg[data-state="done"] { background: var(--ink-2); }
 
 .k-bar__seg[data-state="now"] { background: var(--ink); }
 
@@ -2016,6 +2119,10 @@ li:first-child > .k-row:not(.k-row--boxed),
     padding: var(--space-3) 22px 10px;
     padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   }
+  /* El dock se pega al pasaje y la banda deja de reservar alto: en 720px el
+     mínimo de 124px se come la oración. */
+  .k-dock { padding-top: var(--space-2); }
+  .k-band { min-height: 0; }
   .k-row { padding: 7px 0; }
   .k-cap { margin: 10px 0 2px; }
   .k-hero {

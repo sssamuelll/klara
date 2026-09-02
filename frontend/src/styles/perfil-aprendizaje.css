@@ -1,7 +1,7 @@
 /* ============================================================
    KLARA — PERFIL DE APRENDIZAJE (F1.5)
    Del paquete de diseño «Onboarding v5», integrado sin retoques.
-   Depende de tokens.css + global.css + mobile3.css (ya en el repo).
+   Depende de tokens.css + global.css + sistema.css.
    ============================================================ */
 /* ---------- Entrada ---------- */
 .ob5-entrada{flex:1;min-height:0;display:flex;flex-direction:column}

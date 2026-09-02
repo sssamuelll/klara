@@ -164,11 +164,11 @@ export default function StoryView() {
     return (
       <div className="k-app">
         <SessTop titulo="" right="" onExit={salir} />
-        <div className="m3-lect" />
-        <div className="m3-fb">
-          <p className="nota" role="alert">{error}</p>
-          <div className="acciones">
-            <button className="k-btn k-btn--ghost" onClick={salir}>{t("common.exit")}</button>
+        <div className="k-fill" />
+        <div className="k-band">
+          <p className="k-error" role="alert">{error}</p>
+          <div className="k-wrap">
+            <button className="k-btn k-btn--ghost k-btn--block" onClick={salir}>{t("common.exit")}</button>
           </div>
         </div>
       </div>
@@ -179,8 +179,8 @@ export default function StoryView() {
     return (
       <div className="k-app">
         <SessTop titulo="" right="" onExit={salir} />
-        <div className="m3-lect">
-          <div className="m3-cargando"><span className="k-spinner" /></div>
+        <div className="k-fill">
+          <span className="k-spinner" />
         </div>
       </div>
     );
