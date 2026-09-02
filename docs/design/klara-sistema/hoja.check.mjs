@@ -93,7 +93,8 @@ for (const tema of ["light", "dark"]) {
         const atom = c.dataset.atom;
         if (!ESTADOS[atom]) { out.atomosFuera.push(atom); continue; }
         vistos.add(atom);
-        const tiene = new Set([...c.querySelectorAll(".hoja-estado")].map((f) => f.dataset.estado));
+        // Una figure puede documentar varios estados a la vez (los siete niveles, los tres tamaños): data-estado="A0 A1 …".
+        const tiene = new Set([...c.querySelectorAll(".hoja-estado")].flatMap((f) => (f.dataset.estado ?? "").split(/\s+/).filter(Boolean)));
         for (const e of ESTADOS[atom]) if (!tiene.has(e)) out.faltan.push(`${atom}:${e}`);
         // §7.2 objetivos táctiles ≥ 44px, sin excepciones
         const sel = 'button, a[href], [role="button"], input:not([type=hidden]), select, textarea, summary';
@@ -155,6 +156,8 @@ await browser.close();
   let html = readFileSync(HOJA, "utf8");
   html = html.replace(/<link[^>]+href="([^"]+\.css)"[^>]*>/g, (m, href) =>
     href.startsWith("http") ? m : `<style>\n${inline(join(HERE, href))}\n</style>`);
+  // Sin cascarón <html>/<head>/<body>: el visor de artefactos pone el suyo y un navegador los infiere.
+  html = html.replace(/<!doctype html>\s*|<\/?html[^>]*>\s*|<\/?head>\s*|<\/?body>\s*|<meta charset="utf-8">\s*|<meta name="viewport"[^>]*>\s*/gi, "");
   writeFileSync(join(OUT, "hoja.inline.html"), html);
   ok(`escrito ${join(OUT, "hoja.inline.html")} + 4 capturas`);
 }
