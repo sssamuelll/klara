@@ -5,6 +5,8 @@ import { api, ApiError } from "../api/client";
 
 type WlState = "idle" | "sending" | "ok" | "error";
 
+const PROMESAS = ["leer", "hablar", "repasar"] as const;
+
 export default function Landing() {
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState("");
@@ -23,72 +25,81 @@ export default function Landing() {
     }
   }
 
+  // La portada entra en el cascarón: 430px, filetes laterales y el inset de
+  // arriba los pone `.k-app`/`.k-page`, y el scroll —la portada es la única
+  // ruta pública que crece— lo pone su `.k-live`, como las cinco de auth.
   return (
-    <div className="landing">
-      <header className="k-topline">
-        <span className="k-topline__mark">
-          <span className="wordmark">Klara</span>
-        </span>
-        <span className="landing__login">
-          <span className="landing__login-q">{t("landing.hero.ctaLoginQuestion")}</span>
-          <Link className="landing__login-a" to="/login">{t("landing.hero.ctaLoginAction")}</Link>
-        </span>
-      </header>
+    <div className="k-app">
+      <div className="k-page">
+        <header className="k-topline">
+          <span className="k-topline__mark">
+            <span className="wordmark">Klara</span>
+          </span>
+          <span className="k-topline__meta">
+            {t("landing.hero.ctaLoginQuestion")}{" "}
+            <Link className="k-link" to="/login">{t("landing.hero.ctaLoginAction")}</Link>
+          </span>
+        </header>
 
-      <section>
-        <h1 className="landing__tagline">{t("landing.hero.tagline")}</h1>
-        <p className="landing__support">{t("landing.hero.support")}</p>
-        <a className="k-btn" href="#waitlist">{t("landing.hero.ctaPrimary")}</a>
-      </section>
-
-      <section>
-        {(["leer", "hablar", "repasar"] as const).map((k) => (
-          <div className="landing__bloque" key={k}>
-            <h2>{t(`landing.que.${k}.title`)}</h2>
-            <p>{t(`landing.que.${k}.body`)}</p>
+        <main className="k-live">
+          {/* El único titular de la portada. La itálica de la voz de Klara no
+              se pierde: se muda del titular al cuerpo, que va entero en ella. */}
+          <header className="k-hero k-hero--quiet">
+            <h1 className="k-hero__title">{t("landing.hero.tagline")}</h1>
+            <p className="k-hero__dek">{t("landing.hero.support")}</p>
+          </header>
+          <div className="k-wrap">
+            <a className="k-btn" href="#waitlist">{t("landing.hero.ctaPrimary")}</a>
           </div>
-        ))}
-      </section>
 
-      <section id="waitlist" className="landing__wl">
-        <h2 className="landing__wl-title">{t("waitlist.title")}</h2>
-        <p className="landing__wl-body">{t("waitlist.body")}</p>
-        {state === "ok" ? (
-          <p className="landing__wl-body" role="status">{t("waitlist.success")}</p>
-        ) : (
-          // El formulario ya habla k-* aunque la portada siga en su dialecto:
-          // era el único sitio fuera de /login que se colgaba de auth.css.
-          <form onSubmit={onJoin}>
-            <label className="k-field">
-              <span className="k-field__label">{t("auth.login.emailLabel")}</span>
-              <input
-                className="k-field__input"
-                type="email"
-                autoComplete="email"
-                placeholder={t("waitlist.placeholder")}
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={state === "sending"}
-              />
-            </label>
-            {state === "error" && (
-              <div className="k-error" role="alert">{t(`waitlist.error.${errorKey}`)}</div>
-            )}
-            <div className="k-wrap">
-              <button type="submit" className="k-btn" disabled={state === "sending"}>
-                {t("waitlist.submit")}
-              </button>
+          {PROMESAS.map((k) => (
+            <div key={k}>
+              <h2 className="k-cap k-cap--rule">{t(`landing.que.${k}.title`)}</h2>
+              <p className="k-note k-note--bare">{t(`landing.que.${k}.body`)}</p>
             </div>
-          </form>
-        )}
-        <p className="landing__wl-note">{t("waitlist.privacyNote")}</p>
-      </section>
+          ))}
 
-      <footer className="landing__footer">
-        <span>{t("landing.footer.copyright")}</span>
-        <a href="mailto:samueldarioballesteros@gmail.com">{t("landing.footer.contact")}</a>
-      </footer>
+          <section id="waitlist">
+            <h2 className="k-cap k-cap--rule">{t("waitlist.title")}</h2>
+            <p className="k-note k-note--bare">{t("waitlist.body")}</p>
+            {state === "ok" ? (
+              <p className="k-note k-note--bare" role="status">{t("waitlist.success")}</p>
+            ) : (
+              <form onSubmit={onJoin}>
+                <label className="k-field">
+                  <span className="k-field__label">{t("auth.login.emailLabel")}</span>
+                  <input
+                    className="k-field__input"
+                    type="email"
+                    autoComplete="email"
+                    placeholder={t("waitlist.placeholder")}
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={state === "sending"}
+                  />
+                </label>
+                {state === "error" && (
+                  <div className="k-error" role="alert">{t(`waitlist.error.${errorKey}`)}</div>
+                )}
+                <div className="k-wrap">
+                  <button type="submit" className="k-btn" disabled={state === "sending"}>
+                    {t("waitlist.submit")}
+                  </button>
+                </div>
+              </form>
+            )}
+            <p className="k-note k-note--mono k-note--bare">{t("waitlist.privacyNote")}</p>
+          </section>
+
+          <footer className="k-topline k-topline--foot">
+            <span>{t("landing.footer.copyright")}</span>
+            <a className="k-link" href="mailto:samueldarioballesteros@gmail.com">
+              {t("landing.footer.contact")}
+            </a>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }

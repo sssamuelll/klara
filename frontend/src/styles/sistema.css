@@ -53,6 +53,17 @@
   overflow: hidden;
 }
 
+/* El inset de abajo lo lleva quien toca el fondo de la pantalla, y ese es el
+   dock o la banda en la sesión y la barra de pestañas en la app. Cuando la
+   página es el último hijo del cascarón —la puerta: la portada y las cinco de
+   auth— no hay nadie debajo y le toca a ella. Va con `:last-child` a propósito
+   y no en el bloque de arriba: dentro de `V4Frame` la barra ya lo pone, y
+   ponerlo también aquí abriría un hueco de más sobre ella.
+   reemplaza landing.css:17 (el arreglo de la barra de gestos del commit 18cc68e) */
+.k-app > .k-page:last-child {
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+}
+
 /* Pasaje de lectura: el sitio donde viven `.k-word` y sus hermanos sin
    clase, y el ancla del selector de puntaje (átomo 14). `--fscale` lo
    pone el .tsx en línea (EstudiarView.tsx:283). No fija `white-space`:
@@ -1301,7 +1312,8 @@ li:first-child > .k-row:not(.k-row--boxed),
    Reemplaza: .m4-sec + ::after · .fin-cap · .fin-sched__head/__count ·
    .taller .rail h2 / .preview-head · .kc-transcript__cap · .kp-chips__cap ·
    .kp-returns__head/__count · .path__kicker · .m3-dock .estadoK (+ .rec) ·
-   .m3-statline · .m3-dock .miclbl.
+   .m3-statline · .m3-dock .miclbl · .landing__bloque + h2 · .landing__wl +
+   __wl-title (los cuatro rótulos de sección de la portada).
    ============================================================ */
 
 .k-cap {
@@ -1346,6 +1358,17 @@ li:first-child > .k-row:not(.k-row--boxed),
 
 /* Estado de la sesión bajo el dock: la cinta se centra aunque lleve contador. */
 .k-cap--center { justify-content: center; }
+
+/* «La etiqueta pertenece a lo que sigue» solo se cumple si lo que sigue no
+   trae su propio aire: la nota nace con 18px arriba —12 bajo viewport corto— y
+   el párrafo se despegaba de su rótulo hasta quedar flotando entre dos
+   secciones. Aquí NO va en `:where()`, y esa es la diferencia con las otras
+   juntas del sistema: `.k-bar` y `.k-wrap` no traen margen y un suelo de
+   especificidad 0 les basta, pero `.k-note` sí lo trae y lo ganaba. Dos clases
+   para pisarlo, como `.k-band > .k-note`.
+   reemplaza landing.css:88 `.landing__wl` + :67 `.landing__bloque` (el filete
+   con el que la portada separaba sus cuatro secciones) */
+.k-cap + .k-note { margin-top: 0; }
 
 /* Gramática 13: en viewport corto se comprime el margen, nunca el texto ni el control. */
 /* La compresión en viewport corto vive en un solo bloque, al final de sistema.css (gramática 13). */
@@ -1738,10 +1761,11 @@ input.k-chip { cursor: text; }
   letter-spacing: var(--tracking-mark);
   text-transform: uppercase;
   color: var(--ink-3);
-  /* Sin `env(safe-area-inset-top)`: lo pone el contenedor —`.k-page`
-     (gramática 12) y `.landing` (landing.css:13)—, y repetirlo aquí lo
-     sumaba dos veces en todo teléfono con muesca. Solo `--session` lo
-     lleva, porque es la única tira que cuelga de `.k-app` sin página. */
+  /* Sin `env(safe-area-inset-top)`: lo pone el contenedor —`.k-page`, y desde
+     la migración 10 solo él: la portada era el otro (landing.css:13) y ahora
+     cuelga de la misma página—, y repetirlo aquí lo sumaba dos veces en todo
+     teléfono con muesca. Solo `--session` lo lleva, porque es la única tira
+     que cuelga de `.k-app` sin página. */
 }
 
 /* El lockup marca + wordmark lleva tinta plena: es firma, no marginalia. */
@@ -1843,9 +1867,20 @@ input.k-chip { cursor: text; }
      reemplaza auth.css:67 `.auth-links` */
   margin-top: var(--space-5);
 }
-/* §7.2: el enlace del pie es tocable y .k-link (global.css) no declara altura;
-   con el contenido al fondo el subrayado sigue pegado a la palabra. */
-.k-topline--foot .k-link {
+/* §7.2: el enlace de la tira es tocable y .k-link (global.css) no declara
+   altura —son ~20px—. La migración 9 puso el suelo solo en el pie porque era
+   el único sitio donde había uno; la 10 estrena el de arriba («¿ya tienes
+   cuenta? entrar», que en landing.css:60 lo traía escrito a mano) y lo sube al
+   bloque: es de la tira, no de la variante. Sigue siendo la decisión 17 quien
+   diga si un `.k-link` suelto —fuera de cualquier tira— también lo lleva.
+   El contenido va al fondo en las dos, y no solo en el pie: el subrayado del
+   enlace es su `border-bottom`, o sea el canto de la caja, y con el texto
+   centrado en los 44px la raya se despega 12px de la palabra y se lee como un
+   filete del encabezado. Con el contenido al fondo, el área crece hacia
+   arriba —donde no hay dibujo— y la raya sigue pegada: es la gramática 6, que
+   manda no agrandar el dibujo.
+   reemplaza landing.css:57 `.landing__login-a` (su min-height) */
+.k-topline .k-link {
   min-height: 44px;
   align-items: flex-end;
 }
@@ -1861,7 +1896,7 @@ input.k-chip { cursor: text; }
 /* ============================================================
    12 · BLOQUE HÉROE — .k-hero
    Sustituye .m3-hero, .fin-hero, .quiz-hero, .ob-welcome, .ob-done,
-   .ob-prompt, .landing__tagline y familia.
+   .ob-prompt, .landing__tagline y .landing__support.
    ============================================================ */
 
 /* Rejilla de dos columnas porque el bloque reparte título y flecha en la misma
@@ -1891,6 +1926,15 @@ input.k-chip { cursor: text; }
    La variante que ya reserva su propio aire arriba (`--milestones`, que cuelga
    la cinta «estás aquí» sobre la pista) lo pisa sin tener que pelearlo. */
 :where(.k-hero) + :where(.k-bar) { margin-top: var(--space-3); }
+
+/* La otra junta del par, y la simétrica de la que cierra un formulario
+   (`.k-field ~ .k-wrap`, átomo 17): lo que se lee y el control que lo sigue.
+   El bloque no trae margen abajo y la nube no lo trae arriba, así que sin
+   esto el botón de la portada se pega a la bajada del titular. 16px son los
+   del `margin-bottom` de `.landing__support`, y aquí no hay que medirlos
+   contra otro hueco: lo único que hay arriba son los 4px del `__dek`.
+   reemplaza landing.css:39 `.landing__support` (su margen inferior) */
+:where(.k-hero) + :where(.k-wrap) { margin-top: var(--space-4); }
 
 /* Hundido al pulsar: el bloque entero es el objetivo táctil (bien por encima de 44px). */
 .k-hero:active { transform: scale(0.985); }
@@ -2024,7 +2068,8 @@ input.k-chip { cursor: text; }
    .ob__whisper + __whisper-text · .k-stage__es · .k-hint ·
    .k-feedback__verdict + em · .k-diagnose-tip · .kc-note + __line/__cap/
    __lead/__actions/__tip/__tip-cap/__legend · .ob5-whisper / __dicho /
-   __leyenda / __pie · .landing__wl-note · .wpop__example-es.
+   __leyenda / __pie · .landing__wl-note · .landing__bloque p ·
+   .landing__wl-body · .wpop__example-es.
    ============================================================ */
 
 /* El filete a la izquierda y la serif itálica son la firma de la marginalia en
@@ -2087,6 +2132,14 @@ input.k-chip { cursor: text; }
   color: var(--accent-ink);
   font-weight: 500;
 }
+
+/* La junta que abre el formulario, hermana de la que lo cierra (átomo 17): el
+   párrafo que lo presenta no trae margen abajo y `.k-field` no lo trae arriba,
+   así que sin esto el rótulo del primer campo se pega al texto. Se dice sobre
+   `form` porque el formulario del sistema es un `<form>` corriente y no una
+   clase, y `:where()` deja el suelo en especificidad 0.
+   reemplaza landing.css:104 `.landing__wl-body` (su margen inferior) */
+:where(.k-note) + form { margin-top: var(--space-4); }
 
 /* Los controles de la nota son .k-btn/.k-rbtn y cumplen sus 44px por su cuenta;
    aquí solo se reparten. */

@@ -71,7 +71,9 @@ function V4Shell() {
 
 function RootGate() {
   const { user, loading } = useAuth();
-  if (loading) return <div className="landing" />;
+  // El cascarón vacío mientras se resuelve la sesión: pinta el papel a alto
+  // completo y así la portada no entra desde un fondo distinto del suyo.
+  if (loading) return <div className="k-app" />;
   if (!user) return <Landing />;
   return (
     <V4Frame>
