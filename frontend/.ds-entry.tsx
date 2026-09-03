@@ -16,8 +16,6 @@ import "./src/styles/path.css";
 import "./src/styles/perfil-aprendizaje.css";
 import "./src/styles/auth.css";
 import "./src/styles/landing.css";
-// Del taller: su ruta no se sincroniza, pero el brief habla de esa pantalla.
-import "./src/styles/taller.css";
 
 import "./src/i18n"; // efecto de módulo: deja i18next inicializado
 

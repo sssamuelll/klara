@@ -1077,6 +1077,7 @@
       "all": "todas"
     },
     "compose": {
+      "label": "Pega tus tarjetas — anverso, TAB, reverso",
       "placeholder": "ATP\tadenosín trifosfato — la moneda energética de la célula",
       "addChip": "añadir",
       "removeChip": "Quitar etiqueta {{tag}}",

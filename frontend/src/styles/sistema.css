@@ -186,6 +186,72 @@
   color: var(--ink-2);
 }
 
+/* ---------- el segundo cascarón: la mesa ancha ----------
+   `.k-app` es el teléfono: 430px, alto fijo, nada scrollea. El taller es lo
+   contrario y a propósito —dos columnas, mucho texto pegado, scroll normal—,
+   así que no cabe en el primero y necesita el suyo. Sigue siendo armazón, no
+   pantalla: ninguna hoja de pantalla vuelve a escribir esto.
+   reemplaza taller.css:9 `.taller-gate` · :20-34 `.taller` · :66 `.body` · :74 `.rail` · :141 `.col` */
+
+/* Debajo de 1024 la mesa no se abre y se dice por qué. Es política de la
+   superficie, no preferencia: el taller se usa tecleando y pegando. */
+.k-desk { display: none; }
+.k-desk__gate {
+  max-width: var(--maxw-read);
+  margin: 15vh auto 0;
+  padding: 0 var(--space-5);
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .k-desk__gate { display: none; }
+  .k-desk {
+    display: grid;
+    grid-template-columns: 200px 1fr;   /* 200px es el riel vivo de taller.css:68 */
+    column-gap: var(--space-7);
+    row-gap: var(--space-6);
+    align-content: start;               /* la mesa empieza arriba aunque sobre alto */
+    max-width: var(--maxw-page);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6);
+  }
+  /* La línea superior cruza las dos columnas y trae su filete: aquí la tira no
+     cuelga de una página que ya lo dibuje. */
+  .k-desk > .k-topline {
+    grid-column: 1 / -1;
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+/* El riel: índice separado por regla, no por vacío (taller.css:66). */
+.k-desk__rail {
+  border-right: 1px solid var(--rule);
+  padding-right: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* La cinta abre el riel: aquí arriba no hay nada de lo que separarse. */
+.k-desk__rail > .k-cap { margin-top: 0; }
+/* La lista tope a la altura de la columna, no a una constante. */
+.k-desk__rail > ul {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* La columna de trabajo. El `gap` da el aire base y los átomos que traen su
+   propio margen de página —la cinta, el héroe, la nota— lo suman encima: así
+   una sección se separa más que dos hermanos, que es el ritmo de la hoja vieja
+   sin escribir un margen por pieza. */
+.k-desk__col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
 /* ---------- 01-boton ---------- */
 /* ============================================================
    01 · BOTÓN — .k-btn
@@ -860,6 +926,11 @@ li:first-child > .k-row:not(.k-row--boxed),
 .k-row[data-state="locked"] .k-row__title,
 .k-row[data-state="locked"] .k-row__meta { color: var(--ink-4); }
 
+/* Incompleta: le falta la mitad y por eso no se guarda. Es el mismo `data-empty`
+   del átomo 3 —la ficha sin reverso— dicho en una lista: una sola señal, en la
+   bajada, y las vecinas conservan su cuerpo (taller.css:254). */
+.k-row[data-empty="true"] .k-row__sub { color: var(--accent-ink); }
+
 .k-row[data-state="mastered"] .k-row__title { color: var(--ink-3); }
 .k-row[data-state="mastered"] .k-row__meta { color: var(--ink-4); } /* el contrato: título --ink-3, meta --ink-4 */
 
@@ -1200,6 +1271,12 @@ li:first-child > .k-row:not(.k-row--boxed),
   transform: scale(0.96);
 }
 
+/* El chip en edición: la etiqueta que se está escribiendo ya tiene la forma del
+   chip que va a ser, así que no hace falta un `.k-field--chip` aparte (era el
+   pendiente de `taller.css:197`). Lo único que cambia es el cursor: en un campo
+   la mano no dice nada y la barra sí. */
+input.k-chip { cursor: text; }
+
 /* Sin tono hereda la tinta del chip, así que un punto suelto sigue viéndose. */
 .k-chip__dot {
   width: 6px;
@@ -1511,6 +1588,16 @@ li:first-child > .k-row:not(.k-row--boxed),
 
 /* La celda de salida ya alinea sola: muere el style={{justifySelf:"start"}} de perfil/views.tsx:183. */
 .k-topline__exit { justify-self: start; }
+
+/* Un titular dentro de la tira (la cabecera del taller: título a la izquierda,
+   recuento a la derecha, misma línea de base). El héroe nace `flex: 0 0 auto`
+   con `width: 100%` porque su sitio normal es una columna; en una fila eso
+   sumaba su ancho entero al del contador y la tira se salía de la página. Aquí
+   toma lo que sobra y el contador se queda entero, que es su regla. */
+.k-topline > .k-hero {
+  flex: 1 1 auto;
+  width: auto;
+}
 
 /* --- sesión: salida · título · contador; la barra de progreso va en una fila
        hermana, no aquí dentro, para que el título pueda crecer --- */
@@ -1933,6 +2020,11 @@ li:first-child > .k-row:not(.k-row--boxed),
   background: var(--accent-wash);
   overflow-wrap: anywhere;             /* gramática 8: un compuesto alemán parte palabra en vez de desbordar */
 }
+
+/* El error que enumera líneas es una lista y no lleva viñeta: cada renglón ya se
+   identifica por su número. El `padding` del bloque gana al del <ul>, así que
+   esto es todo lo que hacía falta (era el pendiente de `taller.css:307`). */
+ul.k-error { list-style: none; }
 
 /* ---------- 16-marca ---------- */
 /* ============================================================
