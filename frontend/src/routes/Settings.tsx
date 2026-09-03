@@ -69,125 +69,114 @@ export default function Settings() {
 
   if (loading && !user) {
     return (
-      <main className="k-page snew">
-        <div className="story-loading">
-          <span className="k-mono">{t("common.loading")}</span>
-        </div>
+      <main className="k-page">
+        <span className="k-spinner" role="status" aria-label={t("common.loading")} />
       </main>
     );
   }
 
   return (
-    <main className="k-page snew">
-      <button className="snew__back k-mono" onClick={() => navigate("/")}>
+    <main className="k-page">
+      <button type="button" className="k-btn k-btn--text" onClick={() => navigate("/")}>
         {t("common.back")}
       </button>
 
-      <div className="snew__head">
-        <span className="k-mono">{t("settings.kicker")}</span>
-        <h1 className="snew__title">{t("settings.title")}</h1>
-        <p className="snew__sub">{t("settings.sub")}</p>
-      </div>
+      <header className="k-hero k-hero--quiet">
+        <span className="k-hero__tag">{t("settings.kicker")}</span>
+        <h1 className="k-hero__title">{t("settings.title")}</h1>
+        <p className="k-hero__dek">{t("settings.sub")}</p>
+      </header>
 
-      {error && <div className="k-error" role="alert">{error}</div>}
-      {saved && !error && (
-        <div className="k-mono" style={{ color: "var(--ink-3)" }}>{t("settings.saved")}</div>
-      )}
+      {error && <p className="k-error" role="alert">{error}</p>}
+      {saved && !error && <p className="k-cap" role="status">{t("settings.saved")}</p>}
 
       <form onSubmit={onSubmit}>
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("settings.field.name")}
-        </label>
-        <input
-          className="snew__input"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          disabled={saving}
-        />
-
-        <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          {t("settings.field.level")}
-        </label>
-        <div className="snew__level">
+        <label className="k-field">
+          <span className="k-field__label">{t("settings.field.name")}</span>
           <input
-            type="range"
-            className="snew__range"
-            min={0}
-            max={LEVELS.length - 1}
-            step={1}
-            value={LEVELS.indexOf(level)}
-            onChange={(e) => setLevel(LEVELS[Number(e.target.value)])}
+            className="k-field__input"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
             disabled={saving}
-            aria-label={t("settings.field.levelAria")}
-            aria-valuetext={level}
           />
-          <div className="snew__level-marks k-mono">
+        </label>
+
+        {/* El nivel se elige igual que en el onboarding: seis rótulos cortos,
+            uno solo elegido. El deslizador de `pages.css` muere aquí (era su
+            único consumidor) y con él el candidato del contrato. */}
+        <div className="k-field">
+          <span className="k-field__label" id="ajustes-nivel">
+            {t("settings.field.level")}
+          </span>
+          <div className="k-wrap" role="radiogroup" aria-labelledby="ajustes-nivel">
             {LEVELS.map((l) => (
-              <span key={l} data-active={l === level}>{l}</span>
+              <button
+                key={l}
+                type="button"
+                role="radio"
+                aria-checked={l === level}
+                className="k-chip"
+                data-selected={l === level}
+                onClick={() => setLevel(l)}
+                disabled={saving}
+              >
+                {l}
+              </button>
             ))}
           </div>
         </div>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          {t("settings.field.nativeLang")}
+        <label className="k-field" data-error={sameLang || undefined}>
+          <span className="k-field__label">{t("settings.field.nativeLang")}</span>
+          <select
+            className="k-field__input"
+            value={nativeLang}
+            onChange={(e) => {
+              const next = e.target.value as LanguageCode;
+              setNativeLang(next);
+              if (next === targetLang) {
+                const fallback = LANGUAGE_CODES.find((c) => c !== next);
+                if (fallback) setTargetLang(fallback);
+              }
+            }}
+            disabled={saving}
+          >
+            {LANGUAGE_CODES.map((c) => (
+              <option key={c} value={c}>{languageLabel(c)}</option>
+            ))}
+          </select>
         </label>
-        <select
-          className="snew__input"
-          style={sameLang ? { borderColor: "var(--accent, currentColor)" } : undefined}
-          value={nativeLang}
-          onChange={(e) => {
-            const next = e.target.value as LanguageCode;
-            setNativeLang(next);
-            if (next === targetLang) {
-              const fallback = LANGUAGE_CODES.find((c) => c !== next);
-              if (fallback) setTargetLang(fallback);
-            }
-          }}
-          disabled={saving}
-        >
-          {LANGUAGE_CODES.map((c) => (
-            <option key={c} value={c}>{languageLabel(c)}</option>
-          ))}
-        </select>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          {t("settings.field.targetLang")}
+        <label className="k-field" data-error={sameLang || undefined}>
+          <span className="k-field__label">{t("settings.field.targetLang")}</span>
+          <select
+            className="k-field__input"
+            value={targetLang}
+            onChange={(e) => setTargetLang(e.target.value as LanguageCode)}
+            disabled={saving}
+          >
+            {LANGUAGE_CODES.map((c) => (
+              <option key={c} value={c} disabled={c === nativeLang}>
+                {languageLabel(c)}
+              </option>
+            ))}
+          </select>
+          {sameLang && <span className="k-field__hint">{t("settings.sameLangWarn")}</span>}
         </label>
-        <select
-          className="snew__input"
-          style={sameLang ? { borderColor: "var(--accent, currentColor)" } : undefined}
-          value={targetLang}
-          onChange={(e) => setTargetLang(e.target.value as LanguageCode)}
-          disabled={saving}
-        >
-          {LANGUAGE_CODES.map((c) => (
-            <option key={c} value={c} disabled={c === nativeLang}>
-              {languageLabel(c)}
-            </option>
-          ))}
-        </select>
-        {sameLang && (
-          <div className="k-mono" style={{ color: "var(--ink-3)", marginTop: ".5rem" }}>
-            {t("settings.sameLangWarn")}
-          </div>
-        )}
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1.5rem" }}>
-          {t("settings.field.context")}
+        <label className="k-field k-field--area">
+          <span className="k-field__label">{t("settings.field.context")}</span>
+          <textarea
+            className="k-field__input"
+            rows={3}
+            placeholder={t("settings.field.contextPlaceholder")}
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            disabled={saving}
+          />
         </label>
-        <textarea
-          className="snew__input"
-          rows={3}
-          placeholder={t("settings.field.contextPlaceholder")}
-          value={context}
-          onChange={(e) => setContext(e.target.value)}
-          disabled={saving}
-          style={{ resize: "vertical" }}
-        />
 
-        <hr className="k-hairline" />
-
-        <div className="snew__actions">
+        <div className="k-wrap">
           <button type="submit" className="k-btn" disabled={saving || sameLang}>
             {saving ? t("settings.button.saving") : t("settings.button.save")}
           </button>
@@ -204,22 +193,15 @@ export default function Settings() {
 
       <hr className="k-hairline" />
 
-      <section style={{ marginTop: "1.5rem" }}>
-        <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
-          {t("settings.account.section")}
-        </h2>
+      <section>
+        <p className="k-cap k-cap--rule">{t("settings.account.section")}</p>
 
-        <label className="k-mono" style={{ display: "block", marginTop: "1rem" }}>
-          {t("settings.account.emailLabel")}
+        <label className="k-field">
+          <span className="k-field__label">{t("settings.account.emailLabel")}</span>
+          <input className="k-field__input" value={user?.email ?? ""} readOnly disabled />
         </label>
-        <input
-          className="snew__input"
-          value={user?.email ?? ""}
-          readOnly
-          disabled
-        />
 
-        <div className="snew__actions" style={{ marginTop: "1rem" }}>
+        <div className="k-wrap">
           <button
             type="button"
             className="k-btn k-btn--ghost"
@@ -250,18 +232,18 @@ export default function Settings() {
       {user && (!user.auth_methods.includes("password") || recentlySetPw) && (
         <>
           <hr className="k-hairline" />
-          <section style={{ marginTop: "1.5rem" }}>
-            <span className="k-mono">{t("settings.security.kicker")}</span>
-            <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)", marginTop: "0.5rem" }}>
-              {t("settings.security.title")}
-            </h2>
-            <p className="snew__sub" style={{ marginTop: "0.5rem" }}>
+          <section>
+            <p className="k-cap k-cap--rule">{t("settings.security.kicker")}</p>
+            {/* El sistema tiene un solo nivel de titular y ya lo gasta la
+                página (candidato 21): dentro de una sección, el rótulo de lo
+                que se va a hacer es el `.k-note__cap` de su propia nota. Es lo
+                mismo que la migración 13 hizo con los hechos del módulo. */}
+            <p className="k-note">
+              <strong className="k-note__cap">{t("settings.security.title")}</strong>
               {t("settings.security.hint")}
             </p>
             {recentlySetPw && (
-              <div className="snew__toast k-mono" role="status">
-                {t("settings.security.savedToast")}
-              </div>
+              <p className="k-cap" role="status">{t("settings.security.savedToast")}</p>
             )}
             {!user.auth_methods.includes("password") && (
               <PasswordSetForm onSuccess={() => setRecentlySetPw(true)} />

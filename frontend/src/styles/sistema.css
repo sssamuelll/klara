@@ -156,6 +156,21 @@
    de la nota del módulo. Mismo escalón de 16px que la nube y la ficha. */
 :where(.k-page) > :where(.k-error) { margin-top: var(--space-4); }
 
+/* Y el formulario suelto en una página. El átomo 17 tiene juntas para todo lo
+   que pasa DENTRO —campo con campo, campo con la nube que cierra— y ninguna
+   para la primera: el `<form>` no trae margen y el bloque de arriba tampoco lo
+   trae abajo, así que en Ajustes y en Nuevo relato el primer rótulo se pegaba a
+   la bajada del titular. Mismo escalón de 16px que la nube y la ficha.
+   reemplaza pages.css:158 `.snew` (su `gap` de columna) */
+:where(.k-page) > :where(form) { margin-top: var(--space-4); }
+
+/* La cinta que encabeza una sección y el campo que la abre. «La etiqueta
+   pertenece a lo que sigue» (átomo 6, 2px abajo) vale cuando lo que sigue es
+   prosa; cuando es un campo, lo que sigue trae SU PROPIO rótulo mono en
+   versalitas, y las dos líneas a 2px se leían como una sola. Es la hermana de
+   `.k-cap + .k-note`, que resolvía el caso contrario. */
+:where(.k-cap) + :where(.k-field) { margin-top: var(--space-4); }
+
 /* Zona de sesión: crece con lo que sobre y centra su contenido. Ahí viven
    `.k-stage` y su glosa `.k-note--mono`, o un `.k-spinner` mientras carga.
    reemplaza mobile3.css:26 `.m3-lect` · mobile3.css:52 `.m3-cargando` */
@@ -1203,6 +1218,14 @@ li:first-child > .k-row:not(.k-row--boxed),
    `min-width` del átomo, no el margen. */
 .k-row > .k-btn--text { margin-inline: 0; }
 
+/* Una fila puede llevar su propia fila de acciones al pie —el panel de
+   invitaciones: correo, estado, nota, enlace y dos botones—. Va después de la
+   bajada (`order: 2` contra su `order: 1`) y ocupa el ancho, que es lo mismo
+   que hace `__sub` para caer sola de línea. Sin esto los botones se metían en
+   el primer renglón, entre el título y la marginalia.
+   reemplaza pages.css:278 `.snew__actions` dentro de una tarjeta de invitación */
+.k-row > .k-wrap { order: 2; flex: 1 0 100%; }
+
 .k-row__meta {
   flex-shrink: 0;                  /* la marginalia de la derecha no se encoge (gramática 8) */
   font-family: var(--font-mono);
@@ -2217,8 +2240,12 @@ input.k-chip { cursor: text; }
 /* No es tocable: la acción va en un .k-btn hermano, así que tampoco se hunde. */
 .k-hero--quiet:active { transform: none; }
 
-/* 40px literal y no var(--t-h2): pages.css redefine ese token a 28px en el
-   teléfono y el techo colapsaría contra el piso del clamp. */
+/* 40px literal y no var(--t-h2). El motivo era que `pages.css` redefinía ese
+   token a 28px en el teléfono y el techo colapsaba contra el piso del clamp
+   (trampa 3). La migración 15 mató esa hoja y con ella la redefinición, pero el
+   literal se queda: el clamp del titular no debe depender de un token que
+   ninguna otra pieza del sistema consume y que hoy solo usa la hoja de
+   componentes para su propio encabezado. */
 .k-hero--quiet .k-hero__title {
   font-size: clamp(28px, 8vw, 40px);
   font-weight: 500;

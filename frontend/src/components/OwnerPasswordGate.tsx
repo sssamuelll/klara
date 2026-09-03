@@ -7,17 +7,13 @@ import PasswordSetForm from "./PasswordSetForm";
 export default function OwnerPasswordGate() {
   const { t } = useTranslation();
   return (
-    <main className="k-page snew">
-      <div className="snew__head">
-        <span className="k-mono">{t("settings.security.kicker")}</span>
-        <h1 className="snew__title">{t("settings.security.title")}</h1>
-      </div>
-      <p className="snew__sub" style={{ marginTop: "0.5rem" }}>
-        {t("settings.security.gateHint")}
-      </p>
-      <div style={{ marginTop: "1.5rem" }}>
-        <PasswordSetForm />
-      </div>
+    <main className="k-page">
+      <header className="k-hero k-hero--quiet">
+        <span className="k-hero__tag">{t("settings.security.kicker")}</span>
+        <h1 className="k-hero__title">{t("settings.security.title")}</h1>
+        <p className="k-hero__dek">{t("settings.security.gateHint")}</p>
+      </header>
+      <PasswordSetForm />
     </main>
   );
 }

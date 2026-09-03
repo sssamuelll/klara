@@ -11,10 +11,8 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <main className="k-page snew">
-        <div className="story-loading">
-          <span className="k-mono">{t("common.loading")}</span>
-        </div>
+      <main className="k-page">
+        <span className="k-spinner" role="status" aria-label={t("common.loading")} />
       </main>
     );
   }

@@ -44,11 +44,12 @@ export default function PasswordSetForm({ onSuccess, submitLabel }: PasswordSetF
   }
 
   return (
-    <form className="pw-set-form" onSubmit={handleSubmit}>
-      {error && <div className="pw-set-form__error k-mono">{error}</div>}
-      <label className="pw-set-form__field">
-        <span className="k-mono">{t("onboarding.password.label")}</span>
+    <form onSubmit={handleSubmit}>
+      {error && <p className="k-error" role="alert">{error}</p>}
+      <label className="k-field" data-error={error ? true : undefined}>
+        <span className="k-field__label">{t("onboarding.password.label")}</span>
         <input
+          className="k-field__input"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -58,9 +59,10 @@ export default function PasswordSetForm({ onSuccess, submitLabel }: PasswordSetF
           disabled={submitting}
         />
       </label>
-      <label className="pw-set-form__field">
-        <span className="k-mono">{t("onboarding.password.confirm")}</span>
+      <label className="k-field" data-error={error ? true : undefined}>
+        <span className="k-field__label">{t("onboarding.password.confirm")}</span>
         <input
+          className="k-field__input"
           type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
@@ -70,13 +72,20 @@ export default function PasswordSetForm({ onSuccess, submitLabel }: PasswordSetF
           disabled={submitting}
         />
       </label>
-      <button
-        type="submit"
-        className="k-link"
-        disabled={submitting || !localValid}
-      >
-        {submitting ? t("common.loading") : (submitLabel ?? t("onboarding.password.submit"))}
-      </button>
+      <div className="k-wrap">
+        <button
+          type="submit"
+          className="k-btn"
+          disabled={submitting || !localValid}
+          aria-busy={submitting}
+        >
+          {submitting ? (
+            <span className="k-spinner" />
+          ) : (
+            (submitLabel ?? t("onboarding.password.submit"))
+          )}
+        </button>
+      </div>
     </form>
   );
 }

@@ -119,176 +119,134 @@ export default function InvitationsPanel() {
   }
 
   return (
-    <section style={{ marginTop: "1.5rem" }}>
-      <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
-        {t("settings.invitations.section")}
-      </h2>
-      <p className="k-mono" style={{ color: "var(--ink-3)", marginTop: ".5rem" }}>
-        {t("settings.invitations.help")}
-      </p>
+    <section>
+      <p className="k-cap k-cap--rule">{t("settings.invitations.section")}</p>
+      <p className="k-note">{t("settings.invitations.help")}</p>
 
-      {error && <div className="k-error" role="alert" style={{ marginTop: ".5rem" }}>{error}</div>}
+      {error && <p className="k-error" role="alert">{error}</p>}
 
-      <form onSubmit={onCreate} style={{ marginTop: "1rem" }}>
-        <label className="k-mono" style={{ display: "block" }}>
-          {t("settings.invitations.emailLabel")}
+      <form onSubmit={onCreate}>
+        <label className="k-field">
+          <span className="k-field__label">{t("settings.invitations.emailLabel")}</span>
+          <input
+            className="k-field__input"
+            type="email"
+            placeholder={t("settings.invitations.emailPlaceholder")}
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            disabled={creating}
+          />
         </label>
-        <input
-          className="snew__input"
-          type="email"
-          placeholder={t("settings.invitations.emailPlaceholder")}
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          disabled={creating}
-        />
 
-        <label className="k-mono" style={{ display: "block", marginTop: ".75rem" }}>
-          {t("settings.invitations.noteLabel")}
+        <label className="k-field">
+          <span className="k-field__label">{t("settings.invitations.noteLabel")}</span>
+          <input
+            className="k-field__input"
+            type="text"
+            maxLength={255}
+            placeholder={t("settings.invitations.notePlaceholder")}
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            disabled={creating}
+          />
         </label>
-        <input
-          className="snew__input"
-          type="text"
-          maxLength={255}
-          placeholder={t("settings.invitations.notePlaceholder")}
-          value={newNote}
-          onChange={(e) => setNewNote(e.target.value)}
-          disabled={creating}
-        />
 
-        <div className="snew__actions" style={{ marginTop: "1rem" }}>
-          <button type="submit" className="k-btn" disabled={creating}>
+        <div className="k-wrap">
+          <button type="submit" className="k-btn" disabled={creating} aria-busy={creating}>
             {creating ? t("settings.invitations.creating") : t("settings.invitations.createBtn")}
           </button>
         </div>
       </form>
 
-      <div style={{ marginTop: "1.5rem" }}>
-        {loading ? (
-          <p className="k-mono">{t("common.loading")}</p>
-        ) : items.length === 0 ? (
-          <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-            {t("settings.invitations.empty")}
-          </p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: ".75rem" }}>
-            {items.map((inv) => (
-              <li
-                key={inv.id}
-                style={{
-                  border: "1px solid var(--ink-3)",
-                  borderRadius: 4,
-                  padding: ".75rem",
-                  opacity: inv.state === "active" ? 1 : 0.6,
-                }}
+      {loading ? (
+        <span className="k-spinner" role="status" aria-label={t("common.loading")} />
+      ) : items.length === 0 ? (
+        <p className="k-note">{t("settings.invitations.empty")}</p>
+      ) : (
+        <ul>
+          {items.map((inv) => (
+            <li key={inv.id}>
+              {/* La caja, el radio y el atenuado que este panel llevaba en
+                  `style={{}}` son la fila con caja del átomo 4, y «revocada»
+                  es su estado bloqueado. */}
+              <div
+                className="k-row k-row--boxed k-row--quiet"
+                data-state={inv.state === "active" ? undefined : "locked"}
               >
-                <div className="k-mono" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem" }}>
-                  <span>{inv.email ?? t("settings.invitations.anyEmail")}</span>
-                  <span style={{ color: "var(--ink-3)" }}>
-                    {t(`settings.invitations.state.${inv.state}`)}
+                <span className="k-row__title">
+                  {inv.email ?? t("settings.invitations.anyEmail")}
+                </span>
+                <span className="k-row__meta">
+                  {t(`settings.invitations.state.${inv.state}`)}
+                </span>
+                {inv.note && <span className="k-row__sub">{inv.note}</span>}
+                <span className="k-row__sub">{inv.share_url}</span>
+                {inv.state === "active" && (
+                  <span className="k-wrap">
+                    <button
+                      type="button"
+                      className="k-btn k-btn--ghost"
+                      onClick={() => copyLink(inv)}
+                    >
+                      {copiedId === inv.id
+                        ? t("settings.invitations.copied")
+                        : t("settings.invitations.copyBtn")}
+                    </button>
+                    <button
+                      type="button"
+                      className="k-btn k-btn--ghost"
+                      onClick={() => onRevoke(inv.id)}
+                    >
+                      {t("settings.invitations.revokeBtn")}
+                    </button>
                   </span>
-                </div>
-                {inv.note && (
-                  <div className="k-mono" style={{ color: "var(--ink-3)", marginTop: ".25rem" }}>
-                    {inv.note}
-                  </div>
                 )}
-                <div
-                  className="k-mono"
-                  style={{
-                    color: "var(--ink-3)",
-                    marginTop: ".5rem",
-                    fontSize: "0.8rem",
-                    wordBreak: "break-all",
-                  }}
-                >
-                  {inv.share_url}
-                </div>
-                <div className="snew__actions" style={{ marginTop: ".5rem" }}>
-                  {inv.state === "active" && (
-                    <>
-                      <button
-                        type="button"
-                        className="k-btn k-btn--ghost"
-                        onClick={() => copyLink(inv)}
-                      >
-                        {copiedId === inv.id
-                          ? t("settings.invitations.copied")
-                          : t("settings.invitations.copyBtn")}
-                      </button>
-                      <button
-                        type="button"
-                        className="k-btn k-btn--ghost"
-                        onClick={() => onRevoke(inv.id)}
-                      >
-                        {t("settings.invitations.revokeBtn")}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <section style={{ marginTop: "2rem" }}>
-        <h2 className="k-mono" style={{ fontSize: "0.9rem", color: "var(--ink-3)" }}>
-          {t("settings.waitlist.title")}
-        </h2>
+      <p className="k-cap k-cap--rule">{t("settings.waitlist.title")}</p>
 
-        {wlError && (
-          <div className="k-error" role="alert" style={{ marginTop: ".5rem" }}>
-            {wlError}
-          </div>
-        )}
+      {wlError && <p className="k-error" role="alert">{wlError}</p>}
 
-        <div style={{ marginTop: "1rem" }}>
-          {waitlistLoading ? (
-            <p className="k-mono">{t("common.loading")}</p>
-          ) : waitlist.length === 0 ? (
-            <p className="k-mono" style={{ color: "var(--ink-3)" }}>
-              {t("settings.waitlist.empty")}
-            </p>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: ".75rem" }}>
-              {waitlist.map((row) => (
-                <li
-                  key={row.id}
-                  style={{
-                    border: "1px solid var(--ink-3)",
-                    borderRadius: 4,
-                    padding: ".75rem",
-                    opacity: row.invited_at ? 0.6 : 1,
-                  }}
-                >
-                  <div className="k-mono" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem" }}>
-                    <span>{row.email}</span>
-                    <span style={{ color: "var(--ink-3)" }}>
-                      {new Date(row.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="snew__actions" style={{ marginTop: ".5rem" }}>
-                    {row.invited_at ? (
-                      <span className="k-mono" style={{ color: "var(--ink-3)" }}>
-                        {t("settings.waitlist.invited")}
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="k-btn k-btn--ghost"
-                        disabled={invitingId === row.id}
-                        onClick={() => onInviteFromWaitlist(row)}
-                      >
-                        {t("settings.waitlist.invite")}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+      {waitlistLoading ? (
+        <span className="k-spinner" role="status" aria-label={t("common.loading")} />
+      ) : waitlist.length === 0 ? (
+        <p className="k-note">{t("settings.waitlist.empty")}</p>
+      ) : (
+        <ul>
+          {waitlist.map((row) => (
+            <li key={row.id}>
+              <div
+                className="k-row k-row--boxed k-row--quiet"
+                data-state={row.invited_at ? "locked" : undefined}
+              >
+                <span className="k-row__title">{row.email}</span>
+                <span className="k-row__meta">
+                  {new Date(row.created_at).toLocaleDateString()}
+                </span>
+                {row.invited_at ? (
+                  <span className="k-row__sub">{t("settings.waitlist.invited")}</span>
+                ) : (
+                  <span className="k-wrap">
+                    <button
+                      type="button"
+                      className="k-btn k-btn--ghost"
+                      disabled={invitingId === row.id}
+                      aria-busy={invitingId === row.id}
+                      onClick={() => onInviteFromWaitlist(row)}
+                    >
+                      {t("settings.waitlist.invite")}
+                    </button>
+                  </span>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

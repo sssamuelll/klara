@@ -5,7 +5,7 @@
  * Ya no ejecuta ninguna sesión: las fichas viven en /repaso y la
  * pronunciación en /pronunciar, cada una con su propio `.k-app` (el
  * armazón de sesión no se puede anidar en el cascarón viejo). Géneros
- * sigue aquí en lo que le toque su migración.
+ * sigue aquí porque su sesión sí cabe en una página.
  *
  * This REPLACES the old /review stub — Practice IS the review.
  */
@@ -27,40 +27,49 @@ export default function Practice() {
     );
   }
 
+  // Las dos primeras son su propia superficie de sesión, no un segmento
+  // dentro del cascarón viejo; la tercera se abre aquí mismo.
+  const puertas = [
+    {
+      k: "cards",
+      title: t("practice.segment.cards.title"),
+      dek: t("practice.segment.cards.dek"),
+      go: () => navigate("/repaso", { state: { from: "/review" } }),
+    },
+    {
+      k: "pron",
+      title: t("practice.segment.pron.title"),
+      dek: t("practice.segment.pron.dek"),
+      go: () => navigate("/pronunciar", { state: { from: "/review" } }),
+    },
+    {
+      k: "gender",
+      title: t("practice.segment.gender.title"),
+      dek: t("practice.segment.gender.dek"),
+      go: () => setGender(true),
+    },
+  ];
+
   // ---- SEGMENT CHOOSER ---------------------------------------------------
   return (
-    <main className="k-page kp-setup">
-      <button className="story__back k-mono" onClick={() => navigate("/")}>
+    <main className="k-page">
+      <button type="button" className="k-btn k-btn--text" onClick={() => navigate("/")}>
         {t("common.back")}
       </button>
-      <header className="kp-setup__head">
-        <h1 className="kp-setup__title">{t("practice.segment.title")}</h1>
+
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{t("practice.segment.title")}</h1>
       </header>
-      <section className="kp-segments">
-        {/* Las dos primeras son su propia superficie de sesión, no un
-            segmento dentro del cascarón viejo. */}
-        <button
-          className="kp-segment"
-          onClick={() => navigate("/repaso", { state: { from: "/review" } })}
-        >
-          <span className="kp-segment__title">{t("practice.segment.cards.title")}</span>
-          <span className="kp-segment__dek">{t("practice.segment.cards.dek")}</span>
-          <span className="kp-segment__arrow k-serif">→</span>
-        </button>
-        <button
-          className="kp-segment"
-          onClick={() => navigate("/pronunciar", { state: { from: "/review" } })}
-        >
-          <span className="kp-segment__title">{t("practice.segment.pron.title")}</span>
-          <span className="kp-segment__dek">{t("practice.segment.pron.dek")}</span>
-          <span className="kp-segment__arrow k-serif">→</span>
-        </button>
-        <button className="kp-segment" onClick={() => setGender(true)}>
-          <span className="kp-segment__title">{t("practice.segment.gender.title")}</span>
-          <span className="kp-segment__dek">{t("practice.segment.gender.dek")}</span>
-          <span className="kp-segment__arrow k-serif">→</span>
-        </button>
-      </section>
+
+      <div className="k-wrap">
+        {puertas.map((p) => (
+          <button key={p.k} type="button" className="k-row k-row--boxed" onClick={p.go}>
+            <span className="k-row__title">{p.title}</span>
+            <span className="k-row__sub">{p.dek}</span>
+            <span className="k-row__arrow">→</span>
+          </button>
+        ))}
+      </div>
     </main>
   );
 }
