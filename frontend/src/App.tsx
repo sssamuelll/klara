@@ -224,7 +224,7 @@ function AppShell() {
       </Route>
 
       {/* Sesión v4: sin TabBar (mockup) y sin LegacyShell (sin Masthead).
-          Story renderiza su propio .k-app; StoryFinish interino trae su kframe. */}
+          Story y su cierre (StoryFinish) pintan su propio .k-app. */}
       <Route
         path="/estudiar/:id"
         element={

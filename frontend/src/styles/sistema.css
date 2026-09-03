@@ -1058,6 +1058,15 @@ li:first-child > .k-row:not(.k-row--boxed),
   margin-top: var(--space-2);
 }
 
+/* El control en mono (átomo 1, `--text`) crece su área táctil hacia AFUERA con
+   margen negativo, y eso funciona donde el contenedor trae relleno propio: la
+   línea superior, el dock, el pie de la ficha. La fila no tiene relleno lateral,
+   así que ahí el voladizo se sale —12px medidos en la agenda del cierre, dentro
+   de la columna viva—. Se cancela el horizontal y se conserva el vertical, que
+   sí cabe en los 12px de aire de la fila; los 44px de lado los sostiene el
+   `min-width` del átomo, no el margen. */
+.k-row > .k-btn--text { margin-inline: 0; }
+
 .k-row__meta {
   flex-shrink: 0;                  /* la marginalia de la derecha no se encoge (gramática 8) */
   font-family: var(--font-mono);

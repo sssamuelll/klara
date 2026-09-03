@@ -72,7 +72,7 @@ export default function GenderReviewSession({
         <p className="gr__empty">
           {t(phase === "failed" ? "genderReview.failed" : "genderReview.empty")}
         </p>
-        <button type="button" className="fin-btn fin-btn--primary" onClick={onExit}>
+        <button type="button" className="k-btn" onClick={onExit}>
           {exitLabel}
         </button>
       </main>
@@ -85,10 +85,10 @@ export default function GenderReviewSession({
         <h1 className="gr__title">{t("genderReview.title")}</h1>
         <p className="gr__summary">{t("genderReview.summary", { correct, total: items.length })}</p>
         <div className="gr__actions">
-          <button type="button" className="fin-btn fin-btn--primary" onClick={restart}>
+          <button type="button" className="k-btn" onClick={restart}>
             {t("genderReview.again")}
           </button>
-          <button type="button" className="fin-btn" onClick={onExit}>
+          <button type="button" className="k-btn k-btn--ghost" onClick={onExit}>
             {exitLabel}
           </button>
         </div>

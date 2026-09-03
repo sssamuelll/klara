@@ -186,45 +186,40 @@ export default function StoryView() {
     );
   }
 
-  // Interim until F2.4: StoryFinish keeps its legacy skin inside a plain
-  // kapp/kframe (no Masthead) — .k-app's overflow:hidden would break the
-  // quiz scroll.
+  // El cierre pinta su propio `.k-app`: la historia entera —leer, responder,
+  // cerrar— vive en el mismo cascarón. Lo que scrollea dentro es `.k-live`.
   if (finished) {
     return (
-      <div className="kapp">
-        <div className="kframe">
-          <StoryFinish
-            story={story}
-            reviewIds={reviewIds}
-            adding={adding}
-            scoresBySentence={practice.scoresBySentence}
-            onRestart={() => {
-              practice.reset();
-              setFinished(false);
-            }}
-            onNew={() => navigate("/story/new")}
-            onHome={() => navigate("/")}
-            onToggleReview={toggleReview}
-            onSummaryShown={() => {
-              api.finishStory(story.id).catch(() => {});
-            }}
-            onNextInModule={
-              story.module_id
-                ? async () => {
-                    try {
-                      const next = await api.claimModuleStory(story.module_id!);
-                      navigate(`/estudiar/${next.id}`, { state: { from: exitTo } });
-                      setFinished(false);
-                      practice.reset();
-                    } catch {
-                      navigate(`/story/new?module=${story.module_id}`);
-                    }
-                  }
-                : undefined
-            }
-          />
-        </div>
-      </div>
+      <StoryFinish
+        story={story}
+        reviewIds={reviewIds}
+        adding={adding}
+        scoresBySentence={practice.scoresBySentence}
+        onRestart={() => {
+          practice.reset();
+          setFinished(false);
+        }}
+        onNew={() => navigate("/story/new")}
+        onHome={() => navigate("/")}
+        onToggleReview={toggleReview}
+        onSummaryShown={() => {
+          api.finishStory(story.id).catch(() => {});
+        }}
+        onNextInModule={
+          story.module_id
+            ? async () => {
+                try {
+                  const next = await api.claimModuleStory(story.module_id!);
+                  navigate(`/estudiar/${next.id}`, { state: { from: exitTo } });
+                  setFinished(false);
+                  practice.reset();
+                } catch {
+                  navigate(`/story/new?module=${story.module_id}`);
+                }
+              }
+            : undefined
+        }
+      />
     );
   }
 

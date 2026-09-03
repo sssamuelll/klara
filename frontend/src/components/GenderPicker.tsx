@@ -1,3 +1,10 @@
+/**
+ * La pregunta de artículo (der/die/das), compartida por el quiz de fin de
+ * historia y por la sesión de género. Vocabulario k-*: es una ficha plana
+ * (átomo 3) con el hueco del pasaje puntuado (átomo 14) y sus acciones en el
+ * pie de la ficha, porque sus dos consumidores viven en cascarones distintos.
+ */
+
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -51,52 +58,61 @@ export default function GenderPicker({
   const ruleNote = result ? genderRuleNote(t, result.rule, result.correctGender, lemma) : null;
 
   return (
-    <article className="qcard" data-type="gender_cloze">
-      <header className="qcard__head">
-        <span className="fin-cap">{t("story.finish.quiz.genderCloze.cap")}</span>
+    <article className="k-card k-card--flat" data-type="gender_cloze">
+      <header className="k-card__head">
+        <span className="k-cap">{t("story.finish.quiz.genderCloze.cap")}</span>
       </header>
-      <div className="qcard__body">
-        <p className="qcard__cloze">
-          <span
-            className="qcard__blank"
-            data-state={picked ? (result?.correct ? "correct" : "revealed") : "empty"}
-          >
+      <div className="k-card__body">
+        {/* La línea de respuesta del átomo 3, no el pasaje: este componente se
+            usa también fuera de `.k-app` (la sesión de género) y `.k-stage` va
+            acotado al cascarón. El artículo trae su color por `data-gender`. */}
+        <p className="k-card__answer">
+          <span className="k-card__article" data-gender={result?.correctGender ?? undefined}>
             {result ? result.correctGender || "—" : "___"}
-          </span>{" "}
-          <span>{lemma}</span>
+          </span>
+          <span className="k-card__word">{lemma}</span>
         </p>
-        {en && <p className="qcard__en">{en}</p>}
-        <p className="qcard__hint">{t("story.finish.quiz.genderCloze.prompt")}</p>
-      </div>
-      <footer className="qcard__foot">
+        {en && <p className="k-note">{en}</p>}
+        {/* La prosa en el cuerpo y los controles en el pie: el pie reparte a los
+            extremos y estrangula cualquier nota que se meta ahí. */}
         {!picked && (
-          <div className="qcard__actions qcard__gender-opts">
-            {GENDER_OPTIONS.map((a) => (
-              <button key={a} type="button" className="qcard__gender-btn" onClick={() => onPick(a)}>
-                {a}
-              </button>
-            ))}
-          </div>
+          <p className="k-note k-note--bare">{t("story.finish.quiz.genderCloze.prompt")}</p>
         )}
         {result && (
           <>
-            <div className="qcard__result">
-              <span className="qcard__verdict">
-                {result.correct ? (
-                  <em>{t("story.finish.quiz.genderCloze.correct")}</em>
-                ) : result.correctGender ? (
-                  t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
-                ) : (
-                  t("story.finish.quiz.genderCloze.failed")
-                )}
-              </span>
-            </div>
-            {ruleNote && <p className="qcard__rule">{ruleNote}</p>}
-            <button type="button" className="fin-btn fin-btn--primary qcard__next" onClick={onNext}>
-              {isLast ? t("story.finish.quiz.toSummary") : t("story.finish.quiz.next")}{" "}
-              <span className="fin-arr">→</span>
-            </button>
+            <p className="k-note k-note--bare">
+              {result.correct
+                ? t("story.finish.quiz.genderCloze.correct")
+                : result.correctGender
+                  ? t("story.finish.quiz.genderCloze.wrong", { correct: result.correctGender })
+                  : t("story.finish.quiz.genderCloze.failed")}
+            </p>
+            {ruleNote && <p className="k-note">{ruleNote}</p>}
           </>
+        )}
+      </div>
+      <hr className="k-card__rule" />
+      <footer className="k-card__foot">
+        {!picked ? (
+          // Hijos directos del pie: `--block` los reparte en tercios. Dentro de
+          // un `.k-wrap` la base sería del 50 % y tres no cuadran.
+          GENDER_OPTIONS.map((a) => (
+            <button
+              key={a}
+              type="button"
+              className="k-btn k-btn--ghost k-btn--block"
+              onClick={() => onPick(a)}
+            >
+              {a}
+            </button>
+          ))
+        ) : (
+          result && (
+            <button type="button" className="k-btn k-btn--block" onClick={onNext}>
+              {isLast ? t("story.finish.quiz.toSummary") : t("story.finish.quiz.next")}{" "}
+              <span className="k-btn__arrow" aria-hidden="true">→</span>
+            </button>
+          )
         )}
       </footer>
     </article>
