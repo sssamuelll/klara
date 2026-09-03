@@ -512,6 +512,26 @@
       </div>
     </figure>
 
+    <figure class="hoja-estado" data-estado="al-lado">
+      <figcaption>Al lado <code>.k-row--aside</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ul>
+          <li><button type="button" class="k-row" role="radio" aria-checked="false">
+            <span class="k-row__mark" aria-hidden="true"></span>
+            <span class="k-row__title">Copiando a alguien que ya sabía</span>
+          </button></li>
+          <li><button type="button" class="k-row" role="radio" aria-checked="false">
+            <span class="k-row__mark" aria-hidden="true"></span>
+            <span class="k-row__title">Un rato corto, todos los días</span>
+          </button></li>
+          <li><button type="button" class="k-row k-row--aside" role="radio" aria-checked="false">
+            <span class="k-row__mark" aria-hidden="true"></span>
+            <span class="k-row__title">Otra cosa</span>
+          </button></li>
+        </ul>
+      </div>
+    </figure>
+
   </div>
 </section>
 
@@ -520,13 +540,13 @@
     <p class="hoja-card__reemplaza"><b>reemplaza</b> .m3-prog · .m3-cefr · .m3-repbar · .m4-bar · .quiz-hero__prog · .ob__pips · .k-prog · .rr-prog · .ob5-ticks · .path__bar</p>
     <div class="hoja-card__estados">
 
-      <figure class="hoja-estado" data-estado="segmentos">
-        <figcaption>Segmentos <code>.k-bar--segs</code></figcaption>
+      <figure class="hoja-estado" data-estado="segmentos saltado">
+        <figcaption>Segmentos <code>.k-bar--segs</code> · el cuarto va <code>data-state="skipped"</code></figcaption>
         <div class="hoja-estado__muestra">
           <div class="k-bar k-bar--segs">
-            <span class="k-bar__count">03 <span aria-hidden="true">/</span> 08</span>
-            <div class="k-bar__track" role="progressbar" aria-valuenow="3" aria-valuemin="0" aria-valuemax="8">
-              <span class="k-bar__seg" data-state="done"></span><span class="k-bar__seg" data-state="done"></span><span class="k-bar__seg" data-state="now"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span>
+            <span class="k-bar__count">05 <span aria-hidden="true">/</span> 08</span>
+            <div class="k-bar__track" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="8">
+              <span class="k-bar__seg" data-state="done"></span><span class="k-bar__seg" data-state="done"></span><span class="k-bar__seg" data-state="done"></span><span class="k-bar__seg" data-state="skipped"></span><span class="k-bar__seg" data-state="now"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span><span class="k-bar__seg"></span>
             </div>
           </div>
         </div>

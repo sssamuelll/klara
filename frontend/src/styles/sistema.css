@@ -37,9 +37,8 @@
 /* En pantallas anchas el cascarón se recorta con dos filetes (mobile3.css:11). */
 @media (min-width: 520px) { .k-app { border-inline: 1px solid var(--rule); } }
 
-/* Página: ocupa lo que queda del cascarón y no scrollea. El
-   `padding-top` se repone aparte porque el shorthand resetea el inset;
-   instalada con viewport-fit=cover, 100dvh incluye las zonas seguras.
+/* Página: ocupa lo que queda del cascarón y no scrollea.
+   Instalada con viewport-fit=cover, 100dvh incluye las zonas seguras.
    Acotada al cascarón: global.css:246 define otro `.k-page` (el de escritorio,
    vivo en 10 pantallas) y sin el ancestro este bloque lo pisaría.
    reemplaza mobile3.css:14 `.m3-page` · global.css:246 `.k-page` (el de escritorio) */
@@ -49,17 +48,27 @@
   display: flex;
   flex-direction: column;
   padding: var(--space-4) 22px 14px;
-  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
   overflow: hidden;
 }
 
-/* El inset de abajo lo lleva quien toca el fondo de la pantalla, y ese es el
-   dock o la banda en la sesión y la barra de pestañas en la app. Cuando la
-   página es el último hijo del cascarón —la puerta: la portada y las cinco de
-   auth— no hay nadie debajo y le toca a ella. Va con `:last-child` a propósito
-   y no en el bloque de arriba: dentro de `V4Frame` la barra ya lo pone, y
-   ponerlo también aquí abriría un hueco de más sobre ella.
-   reemplaza landing.css:17 (el arreglo de la barra de gestos del commit 18cc68e) */
+/* Los dos insets los lleva quien toca el borde de la pantalla, y por eso van
+   los dos con una pseudo-clase de posición y no en el bloque de arriba.
+
+   Arriba: la página, cuando abre el cascarón. Si no lo abre —el cuestionario
+   del perfil cuelga su línea superior y su barra de `.k-app`, como una sesión,
+   y la página empieza debajo— el inset ya se lo comió la tira, y repetirlo aquí
+   lo sumaba dos veces en todo teléfono con muesca. Hasta la migración 11 toda
+   `.k-page` era la primera hija, así que la regla de antes acertaba por
+   descarte. El `padding-top` se repone aparte porque el shorthand lo resetea.
+
+   Abajo: el dock o la banda en la sesión y la barra de pestañas en la app.
+   Cuando la página es la última hija —la puerta: la portada y las cinco de
+   auth— no hay nadie debajo y le toca a ella; dentro de `V4Frame` la barra ya
+   lo pone y escribirlo también aquí abriría un hueco de más sobre ella.
+   reemplaza landing.css:13 y :17 (el arreglo de la barra de gestos, commit 18cc68e) */
+.k-app > .k-page:first-child {
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+}
 .k-app > .k-page:last-child {
   padding-bottom: calc(14px + env(safe-area-inset-bottom));
 }
@@ -99,6 +108,29 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+/* La fila de acciones que cierra una PÁGINA. Hasta la migración 11 todas las
+   nubes de botones vivían dentro de algo que ya traía relleno —el dock de la
+   sesión, un `<form>`, el pie de la ficha—, y el cuestionario del perfil y la
+   sesión de género son las dos primeras páginas que terminan en una nube
+   suelta. Sin ancestro `.k-app` a propósito: la de género cuelga del `.k-page`
+   de escritorio (global.css:246), que es el que le toca dentro de `.kframe`.
+   `:where()` —especificidad 0— porque es un suelo, y la nube no declara ningún
+   margen que pisar (trampa 17).
+   reemplaza perfil-aprendizaje.css:14 `.ob5-cta` · :70 `.ob5-foot` · :88
+   `.ob5-acciones` · gender-review.css:46 `.gr__actions` (sus márgenes de arriba) */
+:where(.k-page) > :where(.k-wrap) { margin-top: var(--space-4); }
+
+/* El control en mono crece su área táctil hacia afuera con margen negativo, y
+   en la fila que cierra una página el que no cabe es el vertical: la página
+   deja 14px de relleno abajo —10 en viewport corto— y el voladizo pide 12, así
+   que el área se recortaba 2px contra el `overflow: hidden` del cascarón (§7.3,
+   medido en la sonda del cuestionario; ninguna captura lo enseña porque lo que
+   se sale es el área, no el rótulo). Se cancela el vertical y se conserva el
+   horizontal, que es el que deja el rótulo a plomo con la columna; el alto lo
+   sostiene el `min-height` del átomo, y en una nube que estira lo sube el botón
+   grande que va al lado. Es la hermana de `.k-row > .k-btn--text` (átomo 4). */
+.k-page > .k-wrap > .k-btn--text { margin-block: 0; }
 
 /* Zona de sesión: crece con lo que sobre y centra su contenido. Ahí viven
    `.k-stage` y su glosa `.k-note--mono`, o un `.k-spinner` mientras carga.
@@ -143,8 +175,13 @@
 }
 /* El `.k-cap` trae 18px de aire de marginalia de página; aquí no hay página, y
    como este contenedor no tiene ni relleno ni borde, ese margen se escapa por
-   colapso y empuja el dock entero. El aire del dock lo fija el dock. */
-.k-dock__status .k-cap { margin: 0; }
+   colapso y empuja el dock entero. El aire del dock lo fija el dock. Y lo mismo
+   en una fila de transporte: ahí la cinta no encabeza una sección, dice qué
+   toca hacer —«toca para seguir», cuando la pregunta avanza sola y no hay botón
+   que pulsar— y su aire lo reparte el `gap` de la nube.
+   reemplaza perfil-aprendizaje.css:71 `.ob5-hint` */
+.k-dock__status .k-cap,
+.k-wrap > .k-cap { margin: 0; }
 
 /* La barra de progreso de la sesión cuelga del cascarón, no de `.k-page`, así
    que nadie le pone el aire lateral: se lo ponemos aquí para que sus segmentos
@@ -985,7 +1022,8 @@
 /* ============================================================
    4 — FILA · .k-row
    Sustituye a m3-rowbtn / m4-tema / qcard__opt / fin-sched__item /
-   ob-isel__opt / ob-level__card / rail button / kp-segment / ob5-opt.
+   ob-isel__opt / ob-level__card / rail button / kp-segment / ob5-opt /
+   ob5-fact (clave y valor) / ob5-tri (con dos chips a la derecha).
    ============================================================ */
 
 /* La lista que contiene filas no lleva clase (gramática 12): se resetea desde aquí. */
@@ -1165,6 +1203,20 @@ li:first-child > .k-row:not(.k-row--boxed),
 /* Con caja el canto vive dentro del borde: la fila no se desplaza, ya tiene su gotera. */
 .k-row--boxed[data-state="selected"] { padding-left: var(--space-4); margin-left: 0; }
 
+/* Al lado: la opción que no es una respuesta sino la salida —«Otra cosa»,
+   «Las fichas no me funcionan», la que abre un campo y la que excluye a las
+   demás—. La itálica no es un adorno: es la misma con la que el sistema dice
+   «esto está al lado del contenido, no es contenido» en `.k-row__sub`, en
+   `.k-note` y en `.k-topline__title`. Variante y no `data-`, porque lo decide
+   el catálogo y no el uso (gramática 3): una fila es «al lado» antes de que
+   nadie la toque, y las dos que había —negativa y «otra»— pintaban lo mismo,
+   así que en el sistema son un solo nombre.
+   reemplaza perfil-aprendizaje.css:46 `.ob5-opt[data-nega] .txt` + `[data-otra] .txt` */
+.k-row--aside .k-row__title {
+  font-style: italic;
+  color: var(--ink-2);
+}
+
 /* La fila no tiene @keyframes; solo transiciones. Se apagan igual, y no se pierde
    información: el fondo de contacto y el canto de selección son estáticos. */
 @media (prefers-reduced-motion: reduce) {
@@ -1233,6 +1285,15 @@ li:first-child > .k-row:not(.k-row--boxed),
 .k-bar__seg[data-state="done"] { background: var(--ink-2); }
 
 .k-bar__seg[data-state="now"] { background: var(--ink); }
+
+/* Saltado: la pregunta que se dejó en blanco no puede parecer pendiente —el
+   progreso informa, no reprocha, y por eso el cuestionario no lleva contador de
+   saltos—. Se dice con la escala de tinta que el átomo ya usa y que aquí queda
+   completa: `--rule` pendiente, `--ink-4` saltado, `--ink-2` hecho, `--ink`
+   ahora. El anillo de 1px de la hoja vieja no entra: sobre un riel de 2px un
+   `inset 0 0 0 1px` no deja hueco, así que lo que se veía era el relleno.
+   reemplaza perfil-aprendizaje.css:27 `.ob5-tick[data-s="skip"]` */
+.k-bar__seg[data-state="skipped"] { background: var(--ink-4); }
 
 /* El ancho lo pone el .tsx en línea; <i> es inline por defecto, de ahí el display:block. */
 .k-bar__fill {
@@ -1313,7 +1374,8 @@ li:first-child > .k-row:not(.k-row--boxed),
    .taller .rail h2 / .preview-head · .kc-transcript__cap · .kp-chips__cap ·
    .kp-returns__head/__count · .path__kicker · .m3-dock .estadoK (+ .rec) ·
    .m3-statline · .m3-dock .miclbl · .landing__bloque + h2 · .landing__wl +
-   __wl-title (los cuatro rótulos de sección de la portada).
+   __wl-title (los cuatro rótulos de sección de la portada) · .ob5-kicker ·
+   .ob5-hint (el «toca para seguir» del cuestionario).
    ============================================================ */
 
 .k-cap {
@@ -1369,6 +1431,15 @@ li:first-child > .k-row:not(.k-row--boxed),
    reemplaza landing.css:88 `.landing__wl` + :67 `.landing__bloque` (el filete
    con el que la portada separaba sus cuatro secciones) */
 .k-cap + .k-note { margin-top: 0; }
+
+/* Y el otro vecino que trae su propio margen: el héroe nace con 18px arriba y
+   la cinta prometía 2, así que el rótulo de arranque del cuestionario —«Antes
+   del primer tema»— se descolgaba de su titular. Sin `:where()` por lo mismo
+   que la de arriba (trampa 17): un suelo de especificidad 0 no pisa un margen
+   declarado. Con esto la cinta pertenece a lo que sigue sea nota o titular, que
+   es lo que este átomo promete y hasta ahora solo cumplía a medias.
+   reemplaza perfil-aprendizaje.css:8 `.ob5-kicker` + :9 `.ob5-h1` (sus márgenes) */
+.k-cap + .k-hero { margin-top: 0; }
 
 /* Gramática 13: en viewport corto se comprime el margen, nunca el texto ni el control. */
 /* La compresión en viewport corto vive en un solo bloque, al final de sistema.css (gramática 13). */
@@ -1469,8 +1540,16 @@ li:first-child > .k-row:not(.k-row--boxed),
   cursor: default;
 }
 
-/* El :not() deja fuera al estático, que no es tocable. */
-.k-chip:not(.k-chip--static):hover {
+/* El :not() deja fuera al estático, que no es tocable — y al seleccionado, que
+   ya es tinta sólida: `[data-selected]` es (0,2,0) y este selector (0,3,0), así
+   que el hover GANABA y le ponía `color: var(--ink)` a un chip con fondo de
+   tinta. Rótulo negro sobre negro: el chip pulsado desaparecía bajo el cursor.
+   No se veía en el teléfono (no hay hover) ni en la hoja de componentes (nadie
+   pasa por encima); lo enseñó la captura del triaje del cuestionario, donde el
+   «No» seleccionado salió como un círculo negro vacío. El átomo 1 ya tenía
+   escrita la misma lección para `:disabled`; aquí se resuelve con `:not()`
+   porque el orden no basta: la especificidad manda. */
+.k-chip:not(.k-chip--static, [data-selected="true"]):hover {
   border-color: var(--ink);
   color: var(--ink);
 }
@@ -1896,7 +1975,8 @@ input.k-chip { cursor: text; }
 /* ============================================================
    12 · BLOQUE HÉROE — .k-hero
    Sustituye .m3-hero, .fin-hero, .quiz-hero, .ob-welcome, .ob-done,
-   .ob-prompt, .landing__tagline y .landing__support.
+   .ob-prompt, .landing__tagline, .landing__support, .ob5-h1, .ob5-lede,
+   .ob5-label (la pregunta ES el titular de su pantalla) y .ob5-meta.
    ============================================================ */
 
 /* Rejilla de dos columnas porque el bloque reparte título y flecha en la misma
@@ -2067,9 +2147,9 @@ input.k-chip { cursor: text; }
    __en / __hint · .fin-souvenir__en · .fin-l1__hint / __word ·
    .ob__whisper + __whisper-text · .k-stage__es · .k-hint ·
    .k-feedback__verdict + em · .k-diagnose-tip · .kc-note + __line/__cap/
-   __lead/__actions/__tip/__tip-cap/__legend · .ob5-whisper / __dicho /
-   __leyenda / __pie · .landing__wl-note · .landing__bloque p ·
-   .landing__wl-body · .wpop__example-es.
+   __lead/__actions/__tip/__tip-cap/__legend · .ob5-whisper / .ob5-prosa /
+   .ob5-dicho / .ob5-leyenda / .ob5-pie / .ob5-esperando · .landing__wl-note ·
+   .landing__bloque p · .landing__wl-body · .wpop__example-es.
    ============================================================ */
 
 /* El filete a la izquierda y la serif itálica son la firma de la marginalia en
@@ -2407,6 +2487,15 @@ ul.k-error { list-style: none; }
    reemplaza auth.css:60 `.auth-actions` */
 :where(.k-field) ~ :where(.k-wrap) { margin-top: var(--space-5); }
 
+/* La junta contraria, y la tercera de esta familia (`.k-note + form` abre,
+   `.k-field ~ .k-wrap` cierra): la nube de etiquetas y el escape a texto que la
+   sigue. Es la salida del cuestionario cuando ninguna etiqueta sirve —«+
+   Escribir algo»—, y ni la nube trae margen abajo ni el campo lo trae arriba.
+   Un escalón por debajo de la que cierra: el campo sigue perteneciendo a la
+   pregunta que las etiquetas ya contestaban, no abre una sección nueva.
+   reemplaza perfil-aprendizaje.css:62 `.ob5-cloudwrap` (su `gap`) */
+:where(.k-wrap) + :where(.k-field) { margin-top: var(--space-4); }
+
 /* Marginalia: el escalón mono único en versalitas (gramática 10).
    reemplaza auth.css:33 `.auth-label` (12px) · onboarding.css:604 `.ob-field__label` */
 .k-field__label {
@@ -2540,9 +2629,13 @@ ul.k-error { list-style: none; }
    ============================================================ */
 
 @media (max-height: 720px) {
-  /* El shorthand resetea el `padding-top` — hay que reponer el inset. */
-  .k-app > .k-page {
-    padding: var(--space-3) 22px 10px;
+  /* El shorthand resetea el `padding-top` — hay que reponer el inset. Y hay que
+     reponerlo en el MISMO selector de arriba, no en este: `@media` no eleva la
+     especificidad (trampa 12), así que un `padding-top` escrito aquí en (0,2,0)
+     no pisa al de `.k-app > .k-page:first-child` (0,3,0) por muy dentro de la
+     consulta que esté, y la página comprimida se quedaba con los 16px. */
+  .k-app > .k-page { padding: var(--space-3) 22px 10px; }
+  .k-app > .k-page:first-child {
     padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   }
   /* El dock se pega al pasaje y la banda deja de reservar alto: en 720px el

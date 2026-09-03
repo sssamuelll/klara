@@ -1,9 +1,14 @@
-/* Pantallas del Perfil de Aprendizaje (F1.5).
+/* Pantallas del Perfil de Aprendizaje (F1.5), en el vocabulario k-*.
  *
- * Porte del paquete de diseño «Onboarding v5» sin retoques visuales: las
- * clases y la estructura del DOM son las suyas (perfil-aprendizaje.css entra
- * tal cual). Lo único que cambia es que el texto sale de i18n en vez de estar
- * incrustado, y que los valores guardados son los IDs del catálogo.
+ * Venía del paquete de diseño «Onboarding v5» con sus clases propias, y era la
+ * otra mitad del onboarding: la migración 8 pasó una y esta pasa la que
+ * quedaba. Las dos son el mismo cuestionario, así que aquí no se inventa nada —
+ * se copia la forma que ya tiene `ObStep`/`ObNav`: línea superior de sesión,
+ * barra de segmentos, columna que scrollea y una nube de transporte al pie.
+ *
+ * Lo único que cambia de sitio es el cascarón: el cuestionario vive dentro de
+ * `V4Frame`, o sea con barra de pestañas, así que la tira y la barra cuelgan de
+ * `.k-app` (como en una sesión) y el cuerpo sigue en `.k-page`.
  *
  * Interacción que NO se puede perder al portar (viene del handoff):
  *  - los radio avanzan solos a los 240 ms; checkbox, triage y chips piden botón
@@ -11,10 +16,10 @@
  *  - el pie dice «toca para seguir» cuando avanza solo, y muestra botón si no
  */
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import KlaraMark from "../components/KlaraMark";
-import { OB_BLOQUES, OB_PREGUNTAS, type ObPregunta } from "./catalog";
+import { OB_PREGUNTAS, type ObPregunta } from "./catalog";
 
 export type Respuesta = string | string[] | Record<string, string> | null;
 export type Answers = Record<string, Respuesta | undefined>;
@@ -50,64 +55,73 @@ export function Entrada({
         </span>
         <span className="k-topline__meta">{t("perfil.aprendizaje.kicker")}</span>
       </header>
-      <div className="ob5-entrada">
-        <div className="ob5-kicker">{t("perfil.aprendizaje.entrada.antes")}</div>
-        <h1 className="ob5-h1">
-          {t("perfil.aprendizaje.entrada.h1pre")} <em>{t("perfil.aprendizaje.entrada.h1em")}</em>{" "}
-          {t("perfil.aprendizaje.entrada.h1post")}
-        </h1>
-        <p className="ob5-lede">{t("perfil.aprendizaje.entrada.lede")}</p>
-        <div className="ob5-meta">
-          <div>
-            <b>{OB_PREGUNTAS.length}</b>
-            {t("perfil.aprendizaje.entrada.metaPreguntas")}
-          </div>
-          <div>
-            <b>~5</b>
-            {t("perfil.aprendizaje.entrada.metaMinutos")}
-          </div>
-          <div>
-            <b>0</b>
-            {t("perfil.aprendizaje.entrada.metaObligatorias")}
-          </div>
-        </div>
-        <div className="ob5-cta">
-          {primerArranque ? (
-            <button className="ob5-mute" onClick={onLuego}>
-              {t("perfil.aprendizaje.entrada.masTarde")}
-            </button>
-          ) : (
-            <span />
-          )}
-          <button className="k-btn" onClick={onEmpezar}>
-            {t("perfil.aprendizaje.entrada.empezar")} <span className="arrow">→</span>
+      <div className="k-live">
+        <p className="k-cap">{t("perfil.aprendizaje.entrada.antes")}</p>
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">
+            {t("perfil.aprendizaje.entrada.h1pre")} <em>{t("perfil.aprendizaje.entrada.h1em")}</em>{" "}
+            {t("perfil.aprendizaje.entrada.h1post")}
+          </h1>
+          <p className="k-hero__dek">{t("perfil.aprendizaje.entrada.lede")}</p>
+          {/* Las tres cifras son el bloque de ledger que el candidato 20 cerró:
+              van en la cifra del héroe, no en una tira propia al pie. */}
+          <p className="k-hero__meta">
+            <strong>{OB_PREGUNTAS.length}</strong> {t("perfil.aprendizaje.entrada.metaPreguntas")}
+            <span aria-hidden="true">·</span>
+            <strong>~5</strong> {t("perfil.aprendizaje.entrada.metaMinutos")}
+            <span aria-hidden="true">·</span>
+            <strong>0</strong> {t("perfil.aprendizaje.entrada.metaObligatorias")}
+          </p>
+        </header>
+      </div>
+      <div className="k-wrap">
+        {primerArranque && (
+          <button type="button" className="k-btn k-btn--text" onClick={onLuego}>
+            {t("perfil.aprendizaje.entrada.masTarde")}
           </button>
-        </div>
+        )}
+        <button type="button" className="k-btn k-btn--lg k-btn--block" onClick={onEmpezar}>
+          {t("perfil.aprendizaje.entrada.empezar")}{" "}
+          <span className="k-btn__arrow" aria-hidden="true">→</span>
+        </button>
       </div>
     </main>
   );
 }
 
-/* ----------------------------------------------------------------- Ticks */
+/* ------------------------------------------------------------------ Barra */
 
-/** 23 marcas agrupadas por bloque. Tres estados y ningún contador de saltos:
- *  el progreso informa, no reprocha (D-A). */
-function Ticks({ idx, answers }: { idx: number; answers: Answers }) {
+/** 23 segmentos y cuatro estados. Los grupos por bloque no entran —el sistema
+ *  tiene una barra de segmentos, no una de grupos con peso—: el bloque en el
+ *  que estás lo dice el título de la línea superior, que es donde el sistema
+ *  pone la orientación. El saltado sí entra: sin él una pregunta en blanco se
+ *  vería igual que una por responder. */
+function Barra({ idx, answers }: { idx: number; answers: Answers }) {
   return (
-    <div className="ob5-ticks">
-      {OB_BLOQUES.map((b) => (
-        <div
-          className="ob5-grupo"
-          key={b.id}
-          style={{ "--w": b.n } as React.CSSProperties}
-        >
-          {OB_PREGUNTAS.filter((q) => q.b === b.id).map((q) => {
-            const i = OB_PREGUNTAS.indexOf(q);
-            const s = i === idx ? "now" : i > idx ? "" : esVacia(answers[q.id]) ? "skip" : "done";
-            return <span className="ob5-tick" key={q.id} data-s={s} />;
-          })}
-        </div>
-      ))}
+    <div className="k-bar k-bar--segs">
+      <div
+        className="k-bar__track"
+        role="progressbar"
+        aria-valuenow={idx + 1}
+        aria-valuemin={1}
+        aria-valuemax={OB_PREGUNTAS.length}
+      >
+        {OB_PREGUNTAS.map((q, i) => (
+          <span
+            key={q.id}
+            className="k-bar__seg"
+            data-state={
+              i === idx
+                ? "now"
+                : i > idx
+                  ? undefined
+                  : esVacia(answers[q.id])
+                    ? "skipped"
+                    : "done"
+            }
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -178,145 +192,174 @@ export function Pregunta({ q, idx, answers, onSet, onNext, onSkip, onBack, ultim
         : Array.isArray(val) && val.length > 0;
   const autoAvanza = q.control === "radio" && !otraSel;
 
+  /* Fragmento a propósito: la tira y la barra cuelgan de `.k-app` —como en
+     cualquier sesión— y por eso la página deja de ser la primera hija y no
+     repone el inset de arriba. Ningún envoltorio puede meterse en medio. */
   return (
-    <main className="k-page">
-      <div className="ob5-top">
+    <>
+      <header className="k-topline k-topline--session">
         <button
           type="button"
-          className="k-btn k-btn--text"
+          className="k-btn k-btn--text k-topline__exit"
           onClick={onBack}
-          style={{ justifySelf: "start" }}
           aria-label={t("common.back")}
         >
           ←
         </button>
-        <span className="bloque">{t(`perfil.aprendizaje.bloque.${q.b}`)}</span>
-        <span className="cuenta">
+        <span className="k-topline__title">{t(`perfil.aprendizaje.bloque.${q.b}`)}</span>
+        <span className="k-topline__meta">
           {String(idx + 1).padStart(2, "0")} / {OB_PREGUNTAS.length}
         </span>
-      </div>
-      <Ticks idx={idx} answers={answers} />
+      </header>
+      <Barra idx={idx} answers={answers} />
 
-      <div className="ob5-q" key={q.id}>
-        <h2 className="ob5-label">{t(`perfil.aprendizaje.q.${q.id}.label`)}</h2>
-        {q.whisper ? (
-          <p className="ob5-whisper">{t(`perfil.aprendizaje.q.${q.id}.whisper`)}</p>
-        ) : null}
+      <main className="k-page">
+        {/* `key` para que la columna vuelva a montar y el scroll arranque
+            arriba en cada pregunta. La animación de paso no entra: lo que
+            cambia ya lo dicen la barra y el contador (migraciones 7 y 8). */}
+        <div className="k-live" key={q.id}>
+          <header className="k-hero k-hero--quiet">
+            <h1 className="k-hero__title">{t(`perfil.aprendizaje.q.${q.id}.label`)}</h1>
+          </header>
+          {q.whisper ? (
+            <p className="k-note">{t(`perfil.aprendizaje.q.${q.id}.whisper`)}</p>
+          ) : null}
 
-        {q.control === "triage" ? (
-          <div className="ob5-opts">
-            <div className="ob5-trihead">
-              <span />
-              <span>{t("perfil.aprendizaje.triage.sirve")}</span>
-              <span>{t("perfil.aprendizaje.triage.no")}</span>
-            </div>
-            {q.ops.map((op, n) => {
-              const tri = (val as Record<string, string>) || {};
-              return (
-                <div className="ob5-tri" key={op} data-set={tri[op] ? "true" : "false"}>
-                  <span className="n">{label(n)}</span>
+          {q.control === "triage" ? (
+            /* Los dos botones cuadrados de 46px pasan a chips, y con ellos se
+               va la fila de encabezado: el chip dice «Sirve» o «No» en vez de
+               un glifo bajo un rótulo, así que no hay dos columnas que rotular.
+               Tampoco entra el «seleccionado negativo» —papel apagado y tinta
+               baja—, que se leía como deshabilitado: cuál es cuál lo dice la
+               posición y el rótulo, no una segunda manera de estar pulsado. */
+            <ul>
+              {q.ops.map((op, n) => {
+                const tri = (val as Record<string, string>) || {};
+                return (
+                  <li key={op}>
+                    <div className="k-row k-row--quiet">
+                      <span className="k-row__title">{label(n)}</span>
+                      {(["sirve", "no"] as const).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          className="k-chip"
+                          data-selected={tri[op] === v ? "true" : "false"}
+                          aria-pressed={tri[op] === v}
+                          aria-label={`${label(n)}: ${t(`perfil.aprendizaje.triage.${v}`)}`}
+                          onClick={() => setTri(op, v)}
+                        >
+                          {t(`perfil.aprendizaje.triage.${v}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : q.control === "chips" ? (
+            <>
+              <div className="k-wrap">
+                {q.ops.map((op, n) => (
                   <button
-                    className="si"
-                    data-on={tri[op] === "sirve" ? "true" : "false"}
-                    onClick={() => setTri(op, "sirve")}
-                    aria-pressed={tri[op] === "sirve"}
-                    aria-label={`${label(n)}: ${t("perfil.aprendizaje.triage.sirve")}`}
+                    key={op}
+                    type="button"
+                    className="k-chip"
+                    data-selected={Array.isArray(val) && val.includes(op) ? "true" : "false"}
+                    aria-pressed={Array.isArray(val) && val.includes(op)}
+                    onClick={() => toggle(op, n)}
                   >
-                    ✓
+                    {label(n)}
                   </button>
+                ))}
+                {/* El escape vive dentro de la nube: es una manera más de
+                    contestar la misma pregunta, y en mono no se confunde con
+                    una etiqueta. Cuando se abre, lo sustituye el campo. */}
+                {!escribiendo && (
                   <button
-                    className="no"
-                    data-on={tri[op] === "no" ? "true" : "false"}
-                    onClick={() => setTri(op, "no")}
-                    aria-pressed={tri[op] === "no"}
-                    aria-label={`${label(n)}: ${t("perfil.aprendizaje.triage.no")}`}
+                    type="button"
+                    className="k-btn k-btn--text"
+                    onClick={() => setEscribiendo(true)}
                   >
-                    ✕
+                    {t("perfil.aprendizaje.chips.escribir")}
                   </button>
-                </div>
-              );
-            })}
-          </div>
-        ) : q.control === "chips" ? (
-          <div className="ob5-cloudwrap">
-            <div className="ob5-cloud">
-              {q.ops.map((op, n) => (
-                <button
-                  key={op}
-                  className="k-chip"
-                  data-selected={Array.isArray(val) && val.includes(op) ? "true" : "false"}
-                  aria-pressed={Array.isArray(val) && val.includes(op)}
-                  onClick={() => toggle(op, n)}
-                >
-                  {label(n)}
-                </button>
-              ))}
-            </div>
-            {escribiendo && q.escape ? (
-              <textarea
-                className="ob5-area"
-                placeholder={t("perfil.aprendizaje.chips.placeholder")}
-                maxLength={1000}
-                value={(answers[q.escape] as string) || ""}
-                onChange={(e) => onSet(q.escape as string, e.target.value)}
-                aria-label={t("perfil.aprendizaje.chips.escribir")}
-              />
-            ) : (
-              <button className="ob5-mute" onClick={() => setEscribiendo(true)}>
-                {t("perfil.aprendizaje.chips.escribir")}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="ob5-opts">
-            {q.ops.map((op, n) => {
-              const on = q.control === "radio" ? val === op : Array.isArray(val) && val.includes(op);
-              return (
-                <Fragment key={op}>
-                  <button
-                    className="ob5-opt"
-                    data-on={on ? "true" : "false"}
-                    data-nega={q.excl === n ? "true" : "false"}
-                    data-otra={q.otra === n ? "true" : "false"}
-                    role={q.control === "radio" ? "radio" : "checkbox"}
-                    aria-checked={on}
-                    onClick={() => (q.control === "radio" ? pickRadio(op, n) : toggle(op, n))}
-                  >
-                    <span className={`ob5-mark ${q.control === "radio" ? "radio" : "check"}`}>✓</span>
-                    <span className="txt">{label(n)}</span>
-                  </button>
-                  {q.otra === n && on ? (
-                    <input
-                      className="ob5-otra"
-                      autoFocus
-                      placeholder={t("perfil.aprendizaje.otra.placeholder")}
-                      maxLength={200}
-                      value={(answers[otraKey] as string) || ""}
-                      onChange={(e) => onSet(otraKey, e.target.value)}
-                      aria-label={t("perfil.aprendizaje.otra.placeholder")}
-                    />
-                  ) : null}
-                </Fragment>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                )}
+              </div>
+              {escribiendo && q.escape ? (
+                <label className="k-field k-field--area k-field--rule">
+                  <textarea
+                    className="k-field__input"
+                    placeholder={t("perfil.aprendizaje.chips.placeholder")}
+                    maxLength={1000}
+                    value={(answers[q.escape] as string) || ""}
+                    onChange={(e) => onSet(q.escape as string, e.target.value)}
+                    aria-label={t("perfil.aprendizaje.chips.escribir")}
+                  />
+                  <span className="k-field__rule" />
+                </label>
+              ) : null}
+            </>
+          ) : (
+            <ul>
+              {q.ops.map((op, n) => {
+                const on = q.control === "radio" ? val === op : Array.isArray(val) && val.includes(op);
+                // Negativa y «otra cosa» son la misma cosa para la pintura: no
+                // son respuestas, son la salida (variante `--aside`).
+                const aside = q.excl === n || q.otra === n;
+                return (
+                  <li key={op}>
+                      <button
+                        type="button"
+                        className={aside ? "k-row k-row--aside" : "k-row"}
+                        data-state={on ? "selected" : undefined}
+                        role={q.control === "radio" ? "radio" : "checkbox"}
+                        aria-checked={on}
+                        onClick={() => (q.control === "radio" ? pickRadio(op, n) : toggle(op, n))}
+                      >
+                        <span className="k-row__mark" aria-hidden="true" />
+                        <span className="k-row__title">{label(n)}</span>
+                      </button>
+                      {q.otra === n && on ? (
+                        <label className="k-field k-field--rule">
+                          <input
+                            className="k-field__input"
+                            autoFocus
+                            placeholder={t("perfil.aprendizaje.otra.placeholder")}
+                            maxLength={200}
+                            value={(answers[otraKey] as string) || ""}
+                            onChange={(e) => onSet(otraKey, e.target.value)}
+                            aria-label={t("perfil.aprendizaje.otra.placeholder")}
+                          />
+                          <span className="k-field__rule" />
+                        </label>
+                      ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
 
-      <div className="ob5-foot">
-        <button className="ob5-mute" onClick={onSkip}>
-          {t("perfil.aprendizaje.nav.saltar")}
-        </button>
-        {autoAvanza && !ultima ? (
-          <span className="ob5-hint">{t("perfil.aprendizaje.nav.tocaParaSeguir")}</span>
-        ) : (
-          <button className="k-btn" onClick={onNext} disabled={!lleno && !ultima}>
-            {ultima ? t("perfil.aprendizaje.nav.guardar") : t("perfil.aprendizaje.nav.siguiente")}{" "}
-            <span className="arrow">→</span>
+        <div className="k-wrap">
+          <button type="button" className="k-btn k-btn--text" onClick={onSkip}>
+            {t("perfil.aprendizaje.nav.saltar")}
           </button>
-        )}
-      </div>
-    </main>
+          {autoAvanza && !ultima ? (
+            <span className="k-cap">{t("perfil.aprendizaje.nav.tocaParaSeguir")}</span>
+          ) : (
+            <button
+              type="button"
+              className="k-btn k-btn--lg k-btn--block"
+              onClick={onNext}
+              disabled={!lleno && !ultima}
+            >
+              {ultima ? t("perfil.aprendizaje.nav.guardar") : t("perfil.aprendizaje.nav.siguiente")}{" "}
+              <span className="k-btn__arrow" aria-hidden="true">→</span>
+            </button>
+          )}
+        </div>
+      </main>
+    </>
   );
 }
 
@@ -353,49 +396,73 @@ export function Sintesis({
     <main className="k-page">
       <header className="k-topline">
         <span className="k-topline__mark">
-          <KlaraMark size={13} speaking={pendiente} />
+          {/* Sin `speaking`: aquí Klara no está sonando, está escribiendo, y el
+              halo del átomo 16 es señal de audio (sus Notas prohíben el
+              decorativo). Que está pensando lo dice la copia de espera. */}
+          <KlaraMark size={13} />
           <span className="wordmark">Klara</span>
         </span>
-        <span className="k-topline__meta">{pendiente ? t("perfil.aprendizaje.sintesis.guardado") : t("perfil.aprendizaje.sintesis.tuPerfil")}</span>
+        <span className="k-topline__meta">
+          {pendiente
+            ? t("perfil.aprendizaje.sintesis.guardado")
+            : t("perfil.aprendizaje.sintesis.tuPerfil")}
+        </span>
       </header>
-      <div className="ob5-sint">
-        <h1 className="ob5-h1" style={{ marginTop: 18 }}>
-          {t("perfil.aprendizaje.sintesis.h1pre")}{" "}
-          <em>{t("perfil.aprendizaje.sintesis.h1em")}</em>
-          {t("perfil.aprendizaje.sintesis.h1post")}
-        </h1>
+      <div className="k-live">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">
+            {t("perfil.aprendizaje.sintesis.h1pre")}{" "}
+            <em>{t("perfil.aprendizaje.sintesis.h1em")}</em>
+            {t("perfil.aprendizaje.sintesis.h1post")}
+          </h1>
+        </header>
         {pendiente ? (
-          <div className="ob5-esperando">
-            <KlaraMark size={20} speaking />
+          <p className="k-note k-note--bare" role="status">
             {t("perfil.aprendizaje.sintesis.esperando")}
-          </div>
+          </p>
         ) : (
           <>
-            <div className="ob5-prosa">
-              {anclado ? <p>{anclado}</p> : null}
-              {dicho ? <p className="ob5-dicho">{dicho}</p> : null}
-            </div>
-            {dicho ? <p className="ob5-leyenda">{t("perfil.aprendizaje.sintesis.leyenda")}</p> : null}
-            {entradas.length ? (
-              <div className="ob5-facts">
-                <h2 className="k-cap k-cap--rule">{t("perfil.aprendizaje.sintesis.anotado")}</h2>
-                {entradas.map(([k, v]) => (
-                  <div className="ob5-fact" key={k}>
-                    <span className="k">{t(`perfil.aprendizaje.facts.${k}`, k)}</span>
-                    <span className="v">{Array.isArray(v) ? v.join(" · ") : String(v)}</span>
-                  </div>
-                ))}
-              </div>
+            {/* La procedencia se dice con el filete de la nota, no con una
+                regla punteada nueva: lo observado va a plomo («arriba, lo que
+                hiciste») y lo que dices de ti va al margen, que es como el
+                sistema atribuye lo tuyo desde `.k-live__turn[data-who="you"]`.
+                La leyenda ya lo decía con esas palabras. */}
+            {anclado ? <p className="k-note k-note--bare">{anclado}</p> : null}
+            {dicho ? <p className="k-note">{dicho}</p> : null}
+            {/* La leyenda va sin filete: explica el margen, no está en él.
+                Con el suyo propio —como en la hoja vieja— eran dos bloques al
+                margen seguidos y el gesto que describe dejaba de leerse. */}
+            {dicho ? (
+              <p className="k-note k-note--mono k-note--bare">
+                {t("perfil.aprendizaje.sintesis.leyenda")}
+              </p>
             ) : null}
-            <p className="ob5-pie">{t("perfil.aprendizaje.sintesis.pie")}</p>
+            {entradas.length ? (
+              <>
+                <h2 className="k-cap k-cap--rule">{t("perfil.aprendizaje.sintesis.anotado")}</h2>
+                <ul>
+                  {entradas.map(([k, v]) => (
+                    <li key={k}>
+                      <div className="k-row k-row--quiet">
+                        <span className="k-row__n">{t(`perfil.aprendizaje.facts.${k}`, k)}</span>
+                        <span className="k-row__title">
+                          {Array.isArray(v) ? v.join(" · ") : String(v)}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            <p className="k-note k-note--bare">{t("perfil.aprendizaje.sintesis.pie")}</p>
           </>
         )}
       </div>
-      <div className="ob5-acciones">
-        <button className="k-btn k-btn--ghost" onClick={onCorregir}>
+      <div className="k-wrap">
+        <button type="button" className="k-btn k-btn--ghost k-btn--block" onClick={onCorregir}>
           {t("perfil.aprendizaje.sintesis.corregir")}
         </button>
-        <button className="k-btn" onClick={onListo}>
+        <button type="button" className="k-btn k-btn--block" onClick={onListo}>
           {t("perfil.aprendizaje.sintesis.entendido")}
         </button>
       </div>
