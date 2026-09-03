@@ -141,6 +141,21 @@
    grande que va al lado. Es la hermana de `.k-row > .k-btn--text` (átomo 4). */
 .k-page > .k-wrap > .k-btn--text { margin-block: 0; }
 
+/* Y el mismo voladizo cuando el control en mono ABRE la página (el «volver» del
+   mapa de curso). Arriba no hay línea que no mover —es la primera pieza—, así
+   que los -12px solo se comen el relleno de la página y suben el rótulo contra
+   el filete de la cabecera. Se cancela el vertical y se conserva el horizontal,
+   que es lo que deja el rótulo a plomo con el titular de abajo.
+   reemplaza path.css (el `.k-link` suelto de Module.tsx:76 y :85, que además no
+   llegaba a 44px de alto: ver decisión 17) */
+.k-page > .k-btn--text:first-child { margin-block: 0; }
+
+/* El fallo suelto en una página. `.k-error` es el único átomo de bloque sin aire
+   propio —nació dentro de un formulario— y la junta que la migración 12 le dio
+   solo cubre el par «titular + fallo»; en el mapa de curso el fallo va después
+   de la nota del módulo. Mismo escalón de 16px que la nube y la ficha. */
+:where(.k-page) > :where(.k-error) { margin-top: var(--space-4); }
+
 /* Zona de sesión: crece con lo que sobre y centra su contenido. Ahí viven
    `.k-stage` y su glosa `.k-note--mono`, o un `.k-spinner` mientras carga.
    reemplaza mobile3.css:26 `.m3-lect` · mobile3.css:52 `.m3-cargando` */
@@ -2057,6 +2072,17 @@ input.k-chip { cursor: text; }
   margin-bottom: var(--space-2);
 }
 
+/* La marca de nivel en la ranura del rótulo: cuando la pantalla TIENE nivel, el
+   nivel es el rótulo, y el sistema ya sabe dibujarlo (átomo 7). Va aquí y no en
+   un `.k-hero__tag` envolvente porque la tira mono lleva `opacity: .6` y la
+   insignia trae su propio contraste; anidarlas la lavaba.
+   reemplaza path.css:67 `.mod__head` (su hueco de 8px sobre el titular) */
+.k-hero > .k-level {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-bottom: var(--space-2);
+}
+
 /* El clamp sustituye a los cuatro tamaños de titular que había (25/52/80/112px). */
 .k-hero__title {
   grid-column: 1;
@@ -2661,10 +2687,16 @@ ul.k-error { list-style: none; }
   .k-band { min-height: 0; }
   .k-row { padding: 7px 0; }
   .k-cap { margin: 10px 0 2px; }
-  .k-hero {
-    padding: var(--space-3) var(--space-4);
-    margin-top: var(--space-3);
-  }
+  /* El margen sí comprime en las dos formas: es el hueco contra lo de arriba.
+     El relleno NO, y ahí estaba la trampa 21: `.k-hero--quiet` lo apaga
+     (`padding: 0`) con la misma especificidad (0,1,0), y esta consulta está
+     escrita 540 líneas después, así que se lo devolvía. En todo teléfono de
+     ≤720px de alto —los de 667 y cualquiera en horizontal— los 31 héroes
+     apagados de la app salían con 12px arriba y 16 a los lados que su variante
+     había apagado. Lo encontró la sonda del mapa midiendo el borde izquierdo de
+     una pieza HIJA del héroe; el rectángulo del héroe no lo delata. */
+  .k-hero { margin-top: var(--space-3); }
+  .k-hero:not(.k-hero--quiet) { padding: var(--space-3) var(--space-4); }
   .k-note { margin-top: var(--space-3); }
   /* El medallón encoge entero —132 es la caja comprimida de speak.css:199— y
      ahora el anillo encoge con él: para eso existe `--orbit`. */

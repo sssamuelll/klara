@@ -61,20 +61,24 @@ export default function Module() {
     }
   }
 
+  const back = (
+    <button type="button" className="k-btn k-btn--text" onClick={() => navigate("/")}>
+      {t("module.back")}
+    </button>
+  );
+
   if (mod === undefined) {
     return (
       <main className="k-page">
-        <div className="story-loading">
-          <span className="k-mono">{t("common.loading")}</span>
-        </div>
+        <span className="k-spinner" role="status" aria-label={t("common.loading")} />
       </main>
     );
   }
   if (mod === null) {
     return (
       <main className="k-page">
-        <button className="k-mono k-link" onClick={() => navigate("/")}>{t("module.back")}</button>
-        <div className="k-error" role="alert">{t("module.claimError")}</div>
+        {back}
+        <p className="k-error" role="alert">{t("module.claimError")}</p>
       </main>
     );
   }
@@ -82,48 +86,64 @@ export default function Module() {
   const hasLibrary = mod.library_available > 0;
   return (
     <main className="k-page">
-      <button className="k-mono k-link" onClick={() => navigate("/")}>← {t("module.back")}</button>
-      <div className="mod__head">
+      {back}
+
+      <header className="k-hero k-hero--quiet">
         <span className="k-level">{mod.cefr_level}</span>
-        <h1 className="mod__title">{mod.title}</h1>
-        <div className="mod__facts">
-          {mod.can_dos.length > 0 && (
-            <span className="mod__fact">
-              <strong>{t("module.canDo")}:</strong> {mod.can_dos.join(" · ")}
-            </span>
-          )}
-          {mod.grammatical_focus.length > 0 && (
-            <span className="mod__fact">
-              <strong>{t("module.grammarFocus")}:</strong> {mod.grammatical_focus.join(" · ")}
-            </span>
-          )}
-          <span className="mod__fact k-mono">
-            {t("module.storiesDone", { count: mod.stories_finished, total: mod.stories_to_complete })}
+        <h1 className="k-hero__title">{mod.title}</h1>
+        <p className="k-hero__meta">
+          <span>
+            {t("module.storiesDone", {
+              count: mod.stories_finished,
+              total: mod.stories_to_complete,
+            })}
           </span>
-          <span className="mod__fact k-mono">
-            {t("module.mastered", { count: mod.mastered, total: mod.total })}
-          </span>
+          <span>{t("module.mastered", { count: mod.mastered, total: mod.total })}</span>
           {mod.gender_total > 0 && (
-            <span className="mod__fact k-mono">
+            <span>
               {t("module.gender", { count: mod.gender_mastered, total: mod.gender_total })}
             </span>
           )}
+        </p>
+      </header>
+
+      {(mod.can_dos.length > 0 || mod.grammatical_focus.length > 0) && (
+        <div className="k-note">
+          {mod.can_dos.length > 0 && (
+            <p className="k-note__body">
+              <strong className="k-note__cap">{t("module.canDo")}</strong> {mod.can_dos.join(" · ")}
+            </p>
+          )}
+          {mod.grammatical_focus.length > 0 && (
+            <p className="k-note__body">
+              <strong className="k-note__cap">{t("module.grammarFocus")}</strong>{" "}
+              {mod.grammatical_focus.join(" · ")}
+            </p>
+          )}
         </div>
-      </div>
+      )}
 
-      {error && <div className="k-error" role="alert">{error}</div>}
+      {error && <p className="k-error" role="alert">{error}</p>}
 
-      <div className="mod__actions">
-        <button className="k-btn" onClick={readStory} disabled={claiming}>
+      <div className="k-wrap">
+        <button
+          type="button"
+          className="k-btn"
+          onClick={readStory}
+          disabled={claiming}
+          aria-busy={claiming}
+        >
           {claiming ? (
             <span className="k-spinner" />
-          ) : hasLibrary ? (
-            <>{t("module.readStory")} →</>
           ) : (
-            <>{t("module.noLibrary")} →</>
+            <>
+              {hasLibrary ? t("module.readStory") : t("module.noLibrary")}
+              <span className="k-btn__arrow">→</span>
+            </>
           )}
         </button>
         <button
+          type="button"
           className="k-btn k-btn--ghost"
           onClick={() => navigate(`/story/new?module=${mod.id}`)}
           disabled={claiming}
@@ -133,15 +153,25 @@ export default function Module() {
       </div>
 
       {stories.length > 0 && (
-        <section className="mod__stories">
-          <span className="k-mono path__kicker">{t("module.yourStories")}</span>
-          {stories.map((s) => (
-            <button key={s.id} className="mod__story" onClick={() => navigate(`/estudiar/${s.id}`, { state: { from: `/module/${id}` } })}>
-              <span>{s.title}</span>
-              <span className="k-mono">→</span>
-            </button>
-          ))}
-        </section>
+        <>
+          <p className="k-cap">{t("module.yourStories")}</p>
+          <ul>
+            {stories.map((s) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  className="k-row"
+                  onClick={() =>
+                    navigate(`/estudiar/${s.id}`, { state: { from: `/module/${id}` } })
+                  }
+                >
+                  <span className="k-row__title">{s.title}</span>
+                  <span className="k-row__arrow">→</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </main>
   );

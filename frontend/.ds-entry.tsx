@@ -8,7 +8,6 @@
 import "./src/styles/global.css";
 import "./src/styles/sistema.css";
 import "./src/styles/native.css";
-import "./src/styles/path.css";
 
 import "./src/i18n"; // efecto de módulo: deja i18next inicializado
 
