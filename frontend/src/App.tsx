@@ -172,15 +172,19 @@ function AppShell() {
         <Route path="/verify" element={<VerifyEmail />} />
       </Route>
 
+      {/* Onboarding sale de LegacyShell: pinta su propio .k-app (100dvh) y ese
+          armazón no se puede anidar dentro de .kframe. De paso deja de asomar
+          el Masthead de la app a quien todavía no ha entrado en ella. */}
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <Onboarding />
+          </ProtectedRoute>
+        }
+      />
+
       <Route element={<LegacyShell theme={theme} setTheme={setTheme} edition={edition} />}>
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/story/new"
           element={

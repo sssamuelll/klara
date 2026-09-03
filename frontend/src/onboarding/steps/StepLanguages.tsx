@@ -9,9 +9,10 @@ import {
 } from "../data";
 import ObPrompt from "../primitives/ObPrompt";
 import ObNav from "../primitives/ObNav";
-import ObInlineSelect from "../primitives/ObInlineSelect";
+import ObStep from "../primitives/ObStep";
+import { ObInlineTrigger, ObSelectSheet } from "../primitives/ObInlineSelect";
 
-type Props = Pick<StepProps, "data" | "setField" | "next" | "prev">;
+type Props = Pick<StepProps, "data" | "setField" | "next" | "prev" | "whisper">;
 
 const TARGET_SUB: Record<TargetLang, string> = {
   de: "Buena elección. El alemán recompensa la paciencia.",
@@ -21,10 +22,11 @@ const TARGET_SUB: Record<TargetLang, string> = {
   ja: "Japonés: paciencia y placer en partes iguales.",
 };
 
-export default function StepLanguages({ data, setField, next, prev }: Props) {
+export default function StepLanguages({ data, setField, next, prev, whisper }: Props) {
   const { patchUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<"native" | "target" | null>(null);
 
   // Native is restricted to NativeLang and target to TargetLang, so any non-equal
   // pair is valid — but mirror the JSX check for defense-in-depth.
@@ -51,35 +53,61 @@ export default function StepLanguages({ data, setField, next, prev }: Props) {
   }
 
   return (
-    <div className="ob-step ob-lang">
+    <ObStep
+      whisper={whisper}
+      nav={
+        <ObNav
+          onNext={() => void commit()}
+          onPrev={prev}
+          canNext={can}
+          submitting={submitting}
+        />
+      }
+    >
       <ObPrompt>¿Qué hablas y qué quieres aprender?</ObPrompt>
 
-      <p className="ob-lang__sentence">
-        <span>Hablo&nbsp;</span>
-        <ObInlineSelect<NativeLang>
+      {/* La frase que se rellena es un pasaje, y los dos valores son palabras
+          del pasaje que se pueden tocar (átomo 14). */}
+      <p className="k-stage">
+        Hablo{" "}
+        <ObInlineTrigger<NativeLang>
           value={data.native}
-          onChange={(v) => setField("native", v)}
           options={NATIVE_LANGS}
-        />
-        <span>&nbsp;y quiero aprender&nbsp;</span>
-        <ObInlineSelect<TargetLang>
+          open={open === "native"}
+          onOpen={() => setOpen("native")}
+        />{" "}
+        y quiero aprender{" "}
+        <ObInlineTrigger<TargetLang>
           value={data.target}
-          onChange={(v) => setField("target", v)}
           options={TARGET_LANGS}
+          open={open === "target"}
+          onOpen={() => setOpen("target")}
         />
-        <span>.</span>
+        .
       </p>
 
-      <div className="ob-lang__sub k-serif">{TARGET_SUB[data.target]}</div>
+      <p className="k-note">{TARGET_SUB[data.target]}</p>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
+      {error && <p className="k-error" role="alert">{error}</p>}
 
-      <ObNav
-        onNext={() => void commit()}
-        onPrev={prev}
-        canNext={can}
-        submitting={submitting}
-      />
-    </div>
+      {open === "native" && (
+        <ObSelectSheet<NativeLang>
+          title="Hablo"
+          value={data.native}
+          options={NATIVE_LANGS}
+          onChange={(v) => setField("native", v)}
+          onClose={() => setOpen(null)}
+        />
+      )}
+      {open === "target" && (
+        <ObSelectSheet<TargetLang>
+          title="Quiero aprender"
+          value={data.target}
+          options={TARGET_LANGS}
+          onChange={(v) => setField("target", v)}
+          onClose={() => setOpen(null)}
+        />
+      )}
+    </ObStep>
   );
 }

@@ -1813,9 +1813,22 @@ input.k-chip { cursor: text; }
 }
 .k-topline--session .k-topline__meta { justify-self: end; }
 /* La pista central también admite un chip en vez de un rótulo (el foco de la
-   sesión de Hablar). Sin esto la rejilla lo estira de lado a lado: un elemento
-   de rejilla se bloquifica y `justify-self` vale `stretch` por defecto. */
-.k-topline--session > .k-chip { justify-self: center; }
+   sesión de Hablar) o el lockup de la marca (el chrome del onboarding). Sin
+   esto la rejilla los estira de lado a lado: un elemento de rejilla se
+   bloquifica y `justify-self` vale `stretch` por defecto. */
+.k-topline--session > .k-chip,
+.k-topline--session > .k-topline__mark { justify-self: center; }
+
+/* …y cuando lo del centro es una de esas dos piezas cortas —no un título que
+   trunca— las dos pistas laterales se reparten por igual. Con `auto` a los
+   lados, el centro se mide contra el hueco que queda a la derecha de «Salir» y
+   se descuelga: 19,7px medidos en el onboarding, donde el contador va vacío en
+   la bienvenida y en el cierre. El título se queda con `minmax(0, 1fr)` en el
+   centro, que es lo que dispara su elipsis, y esa es toda la diferencia. */
+.k-topline--session:has(> .k-topline__mark),
+.k-topline--session:has(> .k-chip) {
+  grid-template-columns: 1fr auto 1fr;
+}
 
 /* --- pie: la misma tira abajo, con el filete arriba y la tinta un paso más apagada --- */
 .k-topline--foot {
@@ -2313,6 +2326,12 @@ ul.k-error { list-style: none; }
   gap: 6px;
   min-width: 0;
 }
+
+/* Dos campos seguidos son la forma normal de un formulario (contraseña +
+   repetirla, correo + contraseña) y el átomo no trae margen: sin esto se tocan.
+   18px es el hueco vivo de `onboarding.css:593` `.ob-pass__fields`.
+   reemplaza onboarding.css:592 `.ob-pass__fields` (que era una rejilla solo para eso) */
+.k-field + .k-field { margin-top: 18px; }
 
 /* Marginalia: el escalón mono único en versalitas (gramática 10).
    reemplaza auth.css:33 `.auth-label` (12px) · onboarding.css:604 `.ob-field__label` */

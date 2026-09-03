@@ -26,8 +26,6 @@ import StepDone from "./steps/StepDone";
 
 const STORAGE_KEY = "klara:onboarding:draft";
 
-type Direction = "forward" | "backward";
-
 interface DraftShape {
   step: number;
   data: OnboardingData;
@@ -101,11 +99,7 @@ function writeDraft(draft: DraftShape) {
   }
 }
 
-function roman(n: number): string {
-  // We never need more than V for chapters here.
-  const map = ["—", "I", "II", "III", "IV", "V"];
-  return map[n] ?? String(n);
-}
+const pad2 = (n: number) => String(n).padStart(2, "0");
 
 export default function Onboarding() {
   const { user, logout } = useAuth();
@@ -119,6 +113,7 @@ export default function Onboarding() {
     setField: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
     next: () => void;
     prev: () => void;
+    whisper?: string;
   }>;
 
   const chapterComponents = useMemo<ChapterComp[]>(() => {
@@ -136,7 +131,6 @@ export default function Onboarding() {
     if (!initial) return 0;
     return Math.min(initial.step, lastIndex);
   });
-  const [direction, setDirection] = useState<Direction>("forward");
   const [data, setData] = useState<OnboardingData>(
     () => initial?.data ?? INITIAL_DATA,
   );
@@ -160,12 +154,10 @@ export default function Onboarding() {
   );
 
   const goNext = useCallback(() => {
-    setDirection("forward");
     setStep((s) => Math.min(s + 1, lastIndex));
   }, [lastIndex]);
 
   const goPrev = useCallback(() => {
-    setDirection("backward");
     setStep((s) => Math.max(s - 1, 0));
   }, []);
 
@@ -196,68 +188,66 @@ export default function Onboarding() {
     }
     return (
       <Chapter
+        key={step}
         data={data}
         setField={setField}
         next={goNext}
         prev={goPrev}
+        whisper={WHISPERS[chapterIndex]?.(data)}
       />
     );
   }
 
+  // El cascarón es el de siempre: el teléfono. La rejilla de tres columnas de
+  // la hoja vieja —numeral romano a la izquierda, marginalia de Klara a la
+  // derecha— desaparecía por debajo de 860px, o sea que ningún teléfono la vio
+  // nunca; el capítulo pasa a la línea superior y a la barra de segmentos, y la
+  // marginalia baja a la columna como la nota que siempre fue.
   return (
-    <div className="ob">
-      <header className="ob__chrome">
+    <div className="k-app">
+      <header className="k-topline k-topline--session">
         <button
           type="button"
-          className="ob__exit k-mono"
+          className="k-btn k-btn--text k-topline__exit"
           onClick={() => void handleExit()}
         >
-          ← Salir
+          Salir
         </button>
-        <div className="ob__chrome-mark">
-          <KlaraMark size={18} />
-          <span className="k-mono ob__chrome-label">Klara</span>
-        </div>
-        <span className="ob__chrome-spacer" />
+        <span className="k-topline__mark">
+          <KlaraMark size={16} />
+          <span className="wordmark">Klara</span>
+        </span>
+        <span className="k-topline__meta">
+          {isChapter ? `${pad2(chapterIndex)}/${pad2(total)}` : ""}
+        </span>
       </header>
 
-      <main className="ob__main" data-step={step} data-direction={direction}>
-        <aside className="ob__rail" aria-hidden="true">
-          {isChapter && (
-            <div className="ob__rail-inner">
-              <span className="k-mono ob__rail-label">Capítulo</span>
-              <span className="ob__rail-numeral">{roman(chapterIndex)}</span>
-              <span className="k-mono ob__rail-of">de {roman(total)}</span>
-            </div>
-          )}
-        </aside>
-
-        <section className="ob__content" key={step}>
-          {renderBody()}
-        </section>
-
-        <aside className="ob__margin">
-          {isChapter && WHISPERS[chapterIndex] && (
-            <div className="ob__whisper">
-              <KlaraMark size={12} />
-              <p className="ob__whisper-text">{WHISPERS[chapterIndex](data)}</p>
-            </div>
-          )}
-        </aside>
-      </main>
-
       {isChapter && (
-        <footer className="ob__progress">
-          <div className="ob__pips">
-            {Array.from({ length: total }).map((_, i) => {
+        <div className="k-bar k-bar--segs">
+          <div
+            className="k-bar__track"
+            role="progressbar"
+            aria-valuenow={chapterIndex}
+            aria-valuemin={0}
+            aria-valuemax={total}
+          >
+            {Array.from({ length: total }, (_, i) => {
               const pos = i + 1;
-              const state =
-                pos < chapterIndex ? "done" : pos === chapterIndex ? "now" : "next";
-              return <span key={i} className="ob__pip" data-state={state} />;
+              return (
+                <span
+                  key={i}
+                  className="k-bar__seg"
+                  data-state={
+                    pos < chapterIndex ? "done" : pos === chapterIndex ? "now" : undefined
+                  }
+                />
+              );
             })}
           </div>
-        </footer>
+        </div>
       )}
+
+      {renderBody()}
     </div>
   );
 }

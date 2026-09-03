@@ -45,6 +45,8 @@ export interface StepProps {
   setField: <K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) => void;
   next: () => void;
   prev: () => void;
+  /** La marginalia del capítulo, ya resuelta contra `data` (ver WHISPERS). */
+  whisper?: string;
 }
 
 /* ============================================================

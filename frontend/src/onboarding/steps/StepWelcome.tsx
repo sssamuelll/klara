@@ -1,35 +1,48 @@
-import KlaraMark from "../../components/KlaraMark";
+import ObStep from "../primitives/ObStep";
 
 interface Props {
   next: () => void;
 }
 
+const TRIADA = [
+  { n: "I", t: "Lectura" },
+  { n: "II", t: "Pronunciación" },
+  { n: "III", t: "Conversación" },
+];
+
 export default function StepWelcome({ next }: Props) {
   return (
-    <div className="ob-welcome">
-      <div className="ob-welcome__mark">
-        <KlaraMark size={140} speaking />
-      </div>
-      <h1 className="ob-welcome__hello">Hola.</h1>
-      <p className="ob-welcome__lede">
-        Me llamo Klara. Cada día te traigo una historia corta para leer, pronunciar y conversar.
-      </p>
-      <ul className="ob-welcome__triad">
-        <li><span className="k-mono">I</span> Lectura</li>
-        <li><span className="k-mono">II</span> Pronunciación</li>
-        <li><span className="k-mono">III</span> Conversación</li>
-      </ul>
-      <p className="ob-welcome__sub k-serif">
-        Antes, déjame conocerte. Son cinco preguntas.
-      </p>
+    <ObStep
+      nav={
+        <>
+          <div className="k-wrap">
+            <button type="button" className="k-btn k-btn--lg k-btn--block" onClick={next} autoFocus>
+              Empezar <span className="k-btn__arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <p className="k-note k-note--bare">o pulsa Enter</p>
+        </>
+      }
+    >
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">Hola.</h1>
+        <p className="k-hero__dek">
+          Me llamo Klara. Cada día te traigo una historia corta para leer, pronunciar y conversar.
+        </p>
+      </header>
 
-      <div className="ob-welcome__cta">
-        <button type="button" className="ob-btn ob-btn--lg" onClick={next} autoFocus>
-          <span>Empezar</span>
-          <span className="ob-btn__arrow k-serif">→</span>
-        </button>
-        <span className="k-mono ob-welcome__tip">o pulsa Enter</span>
-      </div>
-    </div>
+      <hr className="k-hairline" />
+      <ul>
+        {TRIADA.map((x) => (
+          <li key={x.n} className="k-row k-row--quiet">
+            <span className="k-row__n">{x.n}</span>
+            <span className="k-row__title">{x.t}</span>
+          </li>
+        ))}
+      </ul>
+      <hr className="k-hairline" />
+
+      <p className="k-note">Antes, déjame conocerte. Son cinco preguntas.</p>
+    </ObStep>
   );
 }

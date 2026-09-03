@@ -3,10 +3,11 @@ import { useAuth } from "../../lib/auth";
 import { LEVELS, type StepProps } from "../data";
 import ObPrompt from "../primitives/ObPrompt";
 import ObNav from "../primitives/ObNav";
+import ObStep from "../primitives/ObStep";
 
-type Props = Pick<StepProps, "data" | "setField" | "next" | "prev">;
+type Props = Pick<StepProps, "data" | "setField" | "next" | "prev" | "whisper">;
 
-export default function StepLevel({ data, setField, next, prev }: Props) {
+export default function StepLevel({ data, setField, next, prev, whisper }: Props) {
   const { patchUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,38 +29,45 @@ export default function StepLevel({ data, setField, next, prev }: Props) {
   }
 
   return (
-    <div className="ob-step ob-level">
+    <ObStep
+      whisper={whisper}
+      nav={
+        <ObNav
+          onNext={() => void commit()}
+          onPrev={prev}
+          canNext={can}
+          submitting={submitting}
+        />
+      }
+    >
       <ObPrompt sub="Klara empieza más fácil de lo que digas. Puedes cambiarlo cuando quieras.">
         ¿Dónde estás ahora?
       </ObPrompt>
 
-      <div className="ob-level__grid" role="radiogroup" aria-label="Tu nivel">
+      {/* La nube es la que reparte: en 430px cada ficha se lleva su renglón,
+          y el hueco de 8px lo pone `.k-wrap`, no el markup. */}
+      <div className="k-wrap" role="radiogroup" aria-label="Tu nivel">
         {LEVELS.map((lv) => (
           <button
             key={lv.code}
             type="button"
             role="radio"
             aria-checked={data.level === lv.code}
-            className="ob-level__card"
-            data-active={data.level === lv.code}
+            className="k-row k-row--boxed"
+            data-state={data.level === lv.code ? "selected" : undefined}
             onClick={() => setField("level", lv.code)}
             disabled={submitting}
           >
-            <span className="ob-level__code k-mono">{lv.code}</span>
-            <span className="ob-level__title">{lv.title}</span>
-            <span className="ob-level__phrase k-serif">{lv.phrase}</span>
+            <span className="k-level k-level--bare" data-active={data.level === lv.code}>
+              {lv.code}
+            </span>
+            <span className="k-row__title">{lv.title}</span>
+            <span className="k-row__sub">{lv.phrase}</span>
           </button>
         ))}
       </div>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
-
-      <ObNav
-        onNext={() => void commit()}
-        onPrev={prev}
-        canNext={can}
-        submitting={submitting}
-      />
-    </div>
+      {error && <p className="k-error" role="alert">{error}</p>}
+    </ObStep>
   );
 }

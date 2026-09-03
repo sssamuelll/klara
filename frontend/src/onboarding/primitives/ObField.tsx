@@ -8,10 +8,10 @@ interface Props {
 
 export default function ObField({ label, hint, children }: Props) {
   return (
-    <label className="ob-field">
-      <span className="k-mono ob-field__label">{label}</span>
+    <label className="k-field" data-error={hint ? "true" : undefined}>
+      <span className="k-field__label">{label}</span>
       {children}
-      {hint && <span className="ob-field__hint">{hint}</span>}
+      {hint && <span className="k-field__hint">{hint}</span>}
     </label>
   );
 }

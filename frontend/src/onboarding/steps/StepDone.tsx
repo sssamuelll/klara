@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/client";
 import { useAuth } from "../../lib/auth";
-import KlaraMark from "../../components/KlaraMark";
 import { NATIVE_LANGS, TARGET_LANGS, type OnboardingData } from "../data";
+import ObStep from "../primitives/ObStep";
 
 interface Props {
   data: OnboardingData;
@@ -45,47 +45,51 @@ export default function StepDone({ data, onCompleted }: Props) {
   }
 
   return (
-    <div className="ob-done">
-      <div className="ob-done__mark">
-        <KlaraMark size={120} speaking />
-      </div>
-      <h1 className="ob-done__title">
-        Bienvenido,
-        <span className="ob-done__name k-serif"> {name}</span>.
-      </h1>
-      <p className="ob-done__sub k-serif">
-        {data.level
-          ? `Empezaremos por ${data.level}. Tu primera historia te espera.`
-          : "Tu primera historia te espera."}
-      </p>
-
-      <div className="ob-done__summary">
-        <div className="ob-done__row">
-          <span className="k-mono">Aprenderás</span>
-          <span className="ob-done__row-val">{targetLabel}</span>
+    <ObStep
+      nav={
+        <div className="k-wrap">
+          <button
+            type="button"
+            className="k-btn k-btn--lg k-btn--block"
+            onClick={() => void complete()}
+            disabled={submitting}
+            autoFocus
+          >
+            Llévame a mi historia{" "}
+            <span className="k-btn__arrow" aria-hidden="true">→</span>
+          </button>
         </div>
-        <div className="ob-done__row">
-          <span className="k-mono">Desde</span>
-          <span className="ob-done__row-val">{nativeLabel}</span>
-        </div>
-        <div className="ob-done__row">
-          <span className="k-mono">Nivel</span>
-          <span className="ob-done__row-val">{data.level ?? "Sin definir"}</span>
-        </div>
-      </div>
+      }
+    >
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">
+          Bienvenido, <em>{name}</em>.
+        </h1>
+        <p className="k-hero__dek">
+          {data.level
+            ? `Empezaremos por ${data.level}. Tu primera historia te espera.`
+            : "Tu primera historia te espera."}
+        </p>
+      </header>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
+      <hr className="k-hairline" />
+      <ul>
+        <li className="k-row k-row--quiet">
+          <span className="k-row__n">Aprenderás</span>
+          <span className="k-row__title">{targetLabel}</span>
+        </li>
+        <li className="k-row k-row--quiet">
+          <span className="k-row__n">Desde</span>
+          <span className="k-row__title">{nativeLabel}</span>
+        </li>
+        <li className="k-row k-row--quiet">
+          <span className="k-row__n">Nivel</span>
+          <span className="k-row__title">{data.level ?? "Sin definir"}</span>
+        </li>
+      </ul>
+      <hr className="k-hairline" />
 
-      <button
-        type="button"
-        className="ob-btn ob-btn--lg"
-        onClick={() => void complete()}
-        disabled={submitting}
-        autoFocus
-      >
-        <span>Llévame a mi historia</span>
-        <span className="ob-btn__arrow k-serif">→</span>
-      </button>
-    </div>
+      {error && <p className="k-error" role="alert">{error}</p>}
+    </ObStep>
   );
 }

@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../lib/auth";
 import type { StepProps } from "../data";
 import ObPrompt from "../primitives/ObPrompt";
 import ObNav from "../primitives/ObNav";
+import ObStep from "../primitives/ObStep";
 
-type Props = Pick<StepProps, "data" | "setField" | "next">;
+type Props = Pick<StepProps, "data" | "setField" | "next" | "whisper">;
 
-export default function StepName({ data, setField, next }: Props) {
+export default function StepName({ data, setField, next, whisper }: Props) {
   const { patchUser } = useAuth();
   const inputRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -33,39 +34,40 @@ export default function StepName({ data, setField, next }: Props) {
     }
   }
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    void commit();
-  }
-
   return (
-    <form className="ob-step ob-name" onSubmit={onSubmit}>
+    <ObStep
+      whisper={whisper}
+      nav={<ObNav onNext={() => void commit()} canNext={can} submitting={submitting} />}
+    >
       <ObPrompt>¿Cómo te llamas?</ObPrompt>
 
-      <div className="ob-name__input-wrap">
+      {/* El campo manuscrito: sin caja, solo el renglón (átomo 17). El <form>
+          murió con el cascarón —no puede envolver `.k-fill` y `.k-dock`, que
+          son hermanos—, así que Enter lo recoge el propio campo. */}
+      <label className="k-field k-field--rule">
         <input
           ref={inputRef}
-          className="ob-name__input"
+          className="k-field__input"
           value={data.name}
           onChange={(e) => setField("name", e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void commit();
+            }
+          }}
           placeholder="Samuel"
           autoComplete="given-name"
           maxLength={40}
           disabled={submitting}
         />
-        <span className="ob-name__rule" />
-        <span className="ob-name__hint k-mono">
+        <span className="k-field__rule" />
+        <span className="k-field__hint">
           {trimmed ? `Encantada, ${trimmed}.` : "Como prefieras que te llame."}
         </span>
-      </div>
+      </label>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
-
-      <ObNav
-        onNext={() => void commit()}
-        canNext={can}
-        submitting={submitting}
-      />
-    </form>
+      {error && <p className="k-error" role="alert">{error}</p>}
+    </ObStep>
   );
 }

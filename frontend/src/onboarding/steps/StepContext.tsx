@@ -3,10 +3,11 @@ import { useAuth } from "../../lib/auth";
 import { CONTEXT_EXAMPLES, type StepProps } from "../data";
 import ObPrompt from "../primitives/ObPrompt";
 import ObNav from "../primitives/ObNav";
+import ObStep from "../primitives/ObStep";
 
-type Props = Pick<StepProps, "data" | "setField" | "next" | "prev">;
+type Props = Pick<StepProps, "data" | "setField" | "next" | "prev" | "whisper">;
 
-export default function StepContext({ data, setField, next, prev }: Props) {
+export default function StepContext({ data, setField, next, prev, whisper }: Props) {
   const { patchUser } = useAuth();
   const [exampleIdx, setExampleIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -36,14 +37,26 @@ export default function StepContext({ data, setField, next, prev }: Props) {
   }
 
   return (
-    <div className="ob-step ob-context">
+    <ObStep
+      whisper={whisper}
+      nav={
+        <ObNav
+          onNext={() => void commit()}
+          onPrev={prev}
+          onSkip={next}
+          skipLabel="Saltar"
+          canNext={true}
+          submitting={submitting}
+        />
+      }
+    >
       <ObPrompt sub="Klara usa esto para elegir temas, vocabulario y tono. Es opcional.">
         Cuéntame algo de ti.
       </ObPrompt>
 
-      <div className="ob-context__field">
+      <label className="k-field k-field--area">
         <textarea
-          className="ob-context__textarea"
+          className="k-field__input"
           value={data.context}
           onChange={(e) => setField("context", e.target.value)}
           placeholder={CONTEXT_EXAMPLES[exampleIdx]}
@@ -51,23 +64,12 @@ export default function StepContext({ data, setField, next, prev }: Props) {
           rows={5}
           disabled={submitting}
         />
-        <div className="ob-context__foot">
-          <span className="k-mono ob-context__count">
-            {data.context.length} / 500
-          </span>
-        </div>
-      </div>
+      </label>
+      <p className="k-cap">
+        <span className="k-cap__count">{data.context.length} / 500</span>
+      </p>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
-
-      <ObNav
-        onNext={() => void commit()}
-        onPrev={prev}
-        onSkip={next}
-        skipLabel="Saltar"
-        canNext={true}
-        submitting={submitting}
-      />
-    </div>
+      {error && <p className="k-error" role="alert">{error}</p>}
+    </ObStep>
   );
 }

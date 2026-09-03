@@ -4,11 +4,12 @@ import { useAuth } from "../../lib/auth";
 import type { StepProps } from "../data";
 import ObPrompt from "../primitives/ObPrompt";
 import ObNav from "../primitives/ObNav";
+import ObStep from "../primitives/ObStep";
 import ObField from "../primitives/ObField";
 
-type Props = Pick<StepProps, "data" | "setField" | "next" | "prev">;
+type Props = Pick<StepProps, "data" | "setField" | "next" | "prev" | "whisper">;
 
-export default function StepPassword({ data, setField, next, prev }: Props) {
+export default function StepPassword({ data, setField, next, prev, whisper }: Props) {
   const { applyUserResponse } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,45 +38,46 @@ export default function StepPassword({ data, setField, next, prev }: Props) {
   }
 
   return (
-    <div className="ob-step ob-pass">
+    <ObStep
+      whisper={whisper}
+      nav={
+        <ObNav
+          onNext={() => void commit()}
+          onPrev={prev}
+          canNext={valid}
+          submitting={submitting}
+        />
+      }
+    >
       <ObPrompt sub="Entraste con Google. Crea una contraseña como respaldo, por si pierdes el acceso a Google.">
         Crea tu contraseña
       </ObPrompt>
 
-      <div className="ob-pass__fields">
-        <ObField label="Contraseña">
-          <input
-            type="password"
-            className="ob-input"
-            value={data.password}
-            onChange={(e) => setField("password", e.target.value)}
-            placeholder="•••••••"
-            autoComplete="new-password"
-            disabled={submitting}
-          />
-        </ObField>
-        <ObField label="Repítela" hint={mismatch ? "No coinciden." : null}>
-          <input
-            type="password"
-            className="ob-input"
-            data-error={mismatch || undefined}
-            value={data.passwordConfirm}
-            onChange={(e) => setField("passwordConfirm", e.target.value)}
-            placeholder="•••••••"
-            autoComplete="new-password"
-            disabled={submitting}
-          />
-        </ObField>
-      </div>
+      <ObField label="Contraseña">
+        <input
+          type="password"
+          className="k-field__input"
+          value={data.password}
+          onChange={(e) => setField("password", e.target.value)}
+          placeholder="•••••••"
+          autoComplete="new-password"
+          disabled={submitting}
+        />
+      </ObField>
+      <ObField label="Repítela" hint={mismatch ? "No coinciden." : null}>
+        <input
+          type="password"
+          className="k-field__input"
+          aria-invalid={mismatch || undefined}
+          value={data.passwordConfirm}
+          onChange={(e) => setField("passwordConfirm", e.target.value)}
+          placeholder="•••••••"
+          autoComplete="new-password"
+          disabled={submitting}
+        />
+      </ObField>
 
-      {error && <div className="ob-error k-mono" role="alert">{error}</div>}
-
-      <ObNav
-        onNext={() => void commit()}
-        onPrev={prev}
-        canNext={valid}
-        submitting={submitting}
-      />
-    </div>
+      {error && <p className="k-error" role="alert">{error}</p>}
+    </ObStep>
   );
 }

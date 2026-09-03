@@ -8,6 +8,12 @@ interface Props {
   submitting?: boolean;
 }
 
+/**
+ * La fila de transporte del capítulo. Vive dentro del `.k-dock` de `ObStep`:
+ * una sola nube (`.k-wrap`) con los dos controles en mono a la izquierda y el
+ * botón de avanzar ocupando lo que sobra. Cuando no hay atrás ni saltar —el
+ * primer capítulo—, el botón se queda con la fila entera.
+ */
 export default function ObNav({
   onPrev,
   onNext,
@@ -18,35 +24,25 @@ export default function ObNav({
   submitting = false,
 }: Props) {
   return (
-    <nav className="ob-nav">
-      <div className="ob-nav__left">
-        {onPrev && (
-          <button type="button" className="ob-link" onClick={onPrev} disabled={submitting}>
-            <span className="k-serif ob-link__arrow">←</span> Atrás
-          </button>
-        )}
-      </div>
-      <div className="ob-nav__right">
-        {onSkip && skipLabel && (
-          <button
-            type="button"
-            className="ob-link ob-link--mute"
-            onClick={onSkip}
-            disabled={submitting}
-          >
-            {skipLabel}
-          </button>
-        )}
-        <button
-          type="button"
-          className="ob-btn"
-          onClick={onNext}
-          disabled={!canNext || submitting}
-        >
-          <span>{nextLabel}</span>
-          <span className="ob-btn__arrow k-serif">→</span>
+    <div className="k-wrap">
+      {onPrev && (
+        <button type="button" className="k-btn k-btn--text" onClick={onPrev} disabled={submitting}>
+          ← Atrás
         </button>
-      </div>
-    </nav>
+      )}
+      {onSkip && skipLabel && (
+        <button type="button" className="k-btn k-btn--text" onClick={onSkip} disabled={submitting}>
+          {skipLabel}
+        </button>
+      )}
+      <button
+        type="button"
+        className="k-btn k-btn--lg k-btn--block"
+        onClick={onNext}
+        disabled={!canNext || submitting}
+      >
+        {nextLabel} <span className="k-btn__arrow" aria-hidden="true">→</span>
+      </button>
+    </div>
   );
 }
