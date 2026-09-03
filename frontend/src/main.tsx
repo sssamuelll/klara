@@ -9,7 +9,6 @@ import "./styles/native.css";
 import "./styles/onboarding.css";
 import "./styles/sentence-view.css";
 import "./styles/finish.css";
-import "./styles/speak.css";
 import "./styles/path.css";
 import "./styles/perfil-aprendizaje.css";
 import "./styles/auth.css";

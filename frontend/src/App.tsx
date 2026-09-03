@@ -213,14 +213,6 @@ function AppShell() {
           }
         />
         <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <Speak />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/settings"
           element={
             <ProtectedRoute>
@@ -249,6 +241,17 @@ function AppShell() {
         element={
           <ProtectedRoute>
             <Repaso />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Hablar: la misma superficie suelta que /repaso — pinta su propio
+          .k-app y el armazón de sesión no se puede anidar en .kframe. */}
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Speak />
           </ProtectedRoute>
         }
       />

@@ -495,10 +495,9 @@
       "how": "HOW",
       "playAria": "Hear Klara's model",
       "legend": "I underline the word where the {{sound}} needs another pass.",
-      "clear": "The {{sound}} in “{{word}}” — clear. Let's go on."
+      "clear": "“{{word}}”: {{sound}} clear"
     },
     "controls": {
-      "exit": "← Exit",
       "micAria": "Speak",
       "endAria": "End the chat",
       "muteAria": "Mute Klara",
@@ -507,7 +506,7 @@
     "transcript": {
       "cap": "TODAY'S CONVERSATION · focus {{sound}}",
       "you": "YOU",
-      "improved": "There it is. The {{sound}} in “{{word}}”, clear. ✓"
+      "improved": "“{{word}}”: {{sound}} clear on the retry"
     },
     "hint": {
       "idle": "Answer out loud — Klara listens to how your {{sound}} sounds",
@@ -523,9 +522,9 @@
       "titlePost": ".",
       "dek": "{{minutes}} min of conversation. The {{sound}} is getting closer — these words go back to Practice to lock it in.",
       "stat": {
-        "clear": "{{sound}} CLEAR",
-        "minutes": "MINUTES",
-        "toPractice": "TO PRACTICE"
+        "clear": "{{sound}} clear",
+        "minutes": "minutes",
+        "toPractice": "to practice"
       },
       "returns": "BACK TO PRACTICE",
       "soon": "soon",

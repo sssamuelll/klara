@@ -495,10 +495,9 @@
       "how": "COMMENT",
       "playAria": "Écouter le modèle de Klara",
       "legend": "Je souligne le mot où le {{sound}} demande une autre passe.",
-      "clear": "Le {{sound}} dans « {{word}} » — clair. On continue."
+      "clear": "« {{word}} » : {{sound}} clair"
     },
     "controls": {
-      "exit": "← Quitter",
       "micAria": "Parler",
       "endAria": "Terminer la conversation",
       "muteAria": "Couper la voix de Klara",
@@ -507,7 +506,7 @@
     "transcript": {
       "cap": "CONVERSATION DU JOUR · focus {{sound}}",
       "you": "TOI",
-      "improved": "Voilà. Le {{sound}} de « {{word}} », clair. ✓"
+      "improved": "« {{word}} » : {{sound}} clair à la reprise"
     },
     "hint": {
       "idle": "Réponds à voix haute — Klara écoute comment sonne ton {{sound}}",
@@ -523,9 +522,9 @@
       "titlePost": ".",
       "dek": "{{minutes}} min de conversation. Le {{sound}} sonne déjà plus juste — ces mots retournent en Pratique.",
       "stat": {
-        "clear": "{{sound}} CLAIR",
-        "minutes": "MINUTES",
-        "toPractice": "EN PRATIQUE"
+        "clear": "{{sound}} clair",
+        "minutes": "minutes",
+        "toPractice": "vers Pratique"
       },
       "returns": "RETOUR EN PRATIQUE",
       "soon": "bientôt",

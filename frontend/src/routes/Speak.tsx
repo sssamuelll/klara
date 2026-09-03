@@ -11,6 +11,13 @@
  *   and is OMITTED when the focus sound came out clear (a quiet line says so).
  * - Zero mandatory taps per turn. Target: ≤5s p50 stop-to-voice.
  *
+ * Vocabulario k-*: superficie de sesión propia, como `/estudiar/:id` y
+ * `/repaso` — pinta su propio `.k-app` y por eso cuelga fuera de LegacyShell
+ * (el armazón de sesión es 100dvh y no se anida en `.kframe`). Composición:
+ * línea superior + `.k-fill` con el escenario `.k-presence` y la columna
+ * `.k-live` + `.k-dock` con el estado, los redondos y la guía. Ninguna clase
+ * es de esta pantalla; `speak.css` murió con la migración 5.
+ *
  * STATE MACHINE (voice):
  *   idle ──(mic)──▶ listening ──(VAD silence | tap | 20s cap)──▶ thinking
  *     ▲                                                             │
@@ -27,8 +34,8 @@
  * runtime review; those guards survive unchanged).
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import type { SpeakTurnResponse } from "../api/types";
@@ -82,7 +89,7 @@ const HARD_CAP_MS = 20_000;
 const MAX_HISTORY_TURNS = 8;
 const CLEAR_THRESHOLD = 70;
 
-const KC_TICKS = Array.from({ length: 44 });
+const TICKS = Array.from({ length: 44 });
 
 function clockLabel(d: Date): string {
   return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
@@ -93,29 +100,69 @@ function elapsedLabel(ms: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 }
 
-/* ============================================================
-   ChatPresence — Klara's K inside the reactive tick ring,
-   compact and PERSISTENT: listening/thinking/speaking are
-   rhythms of this one object (CSS [data-state]), never content
-   swaps. The K only yields to the dots while thinking.
-   ============================================================ */
-function ChatPresence({ state, thinkingLabel }: { state: VoiceState; thinkingLabel: string }) {
+// Iconos de trazo 1.5 del átomo 2; el tamaño lo pone `.k-rbtn svg`.
+function IcSound({ off = false }: { off?: boolean }) {
   return (
-    <div className="kc-presence kc-presence--sm" data-state={state}>
-      <div className="kc-disc" />
-      <div className="kc-ring" aria-hidden="true">
-        {KC_TICKS.map((_, i) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4Z" />
+      {off ? (
+        <path d="M15.5 9.5l5 5M20.5 9.5l-5 5" />
+      ) : (
+        <>
+          <path d="M15.5 9.5a3.5 3.5 0 0 1 0 5" />
+          <path d="M18 7a7 7 0 0 1 0 10" />
+        </>
+      )}
+    </svg>
+  );
+}
+function IcMic() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3.5a2.75 2.75 0 0 1 2.75 2.75v5.25a2.75 2.75 0 0 1-5.5 0V6.25A2.75 2.75 0 0 1 12 3.5Z" />
+      <path d="M5.75 11.25v.5a6.25 6.25 0 0 0 12.5 0v-.5" />
+      <path d="M12 18v2.5" />
+    </svg>
+  );
+}
+function IcClose() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  );
+}
+function IcPlay() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 5.4 19 12 8 18.6Z" />
+    </svg>
+  );
+}
+
+/* ============================================================
+   El escenario — la K de Klara dentro del anillo reactivo,
+   compacto y PERSISTENTE: escuchar, pensar y hablar son ritmos
+   de este mismo objeto (`.k-presence[data-state]`), nunca cambios
+   de contenido. La K solo cede su sitio a los puntos al pensar.
+   ============================================================ */
+function Escenario({ state, thinkingLabel }: { state: VoiceState; thinkingLabel: string }) {
+  return (
+    <div className="k-presence" data-state={state}>
+      <span className="k-presence__disc" />
+      <span className="k-presence__ring" aria-hidden="true">
+        {TICKS.map((_, i) => (
           <span
             key={i}
-            className="kc-tick"
-            style={{ transform: `rotate(${i * (360 / KC_TICKS.length)}deg) translateY(-78px)` }}
+            className="k-presence__tick"
+            style={{ "--a": `${i * (360 / TICKS.length)}deg` } as CSSProperties}
           >
-            <i className="kc-tick__bar" style={{ animationDelay: `${(i % 11) * 70}ms` }} />
+            <i style={{ animationDelay: `${(i % 11) * 70}ms` }} />
           </span>
         ))}
-      </div>
+      </span>
       {state === "thinking" ? (
-        <span className="kc-think" aria-label={thinkingLabel}>
+        <span className="k-presence__think" aria-label={thinkingLabel}>
           <i />
           <i />
           <i />
@@ -165,12 +212,17 @@ const DEMO_STRUGGLED: StruggledWord[] = [
 
 export default function Speak() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
 
   const targetLanguage = user?.target_language ?? "de";
   const focus: SpeakFocus | null = getSpeakFocus(targetLanguage);
+
+  // Igual que Story y Repaso: quien entra pasa { state: { from } } y la salida
+  // vuelve ahí; el Masthead entra sin estado y la salida cae en Inicio.
+  const exitTo = (location.state as { from?: string } | null)?.from ?? "/";
 
   const demo = searchParams.get("demo");
   const demoActive = demo !== null;
@@ -553,19 +605,40 @@ export default function Speak() {
     });
   }, []);
 
+  const salir = useCallback(() => navigate(exitTo), [navigate, exitTo]);
+
+  const lineaSuperior = (centro: JSX.Element | null) => (
+    <header className="k-topline k-topline--session">
+      <button type="button" className="k-btn k-btn--text k-topline__exit" onClick={salir}>
+        {t("common.exit")}
+      </button>
+      {centro}
+      <span className="k-topline__meta">
+        {clockLabel(new Date(now))} · {elapsedLabel(now - sessionStartRef.current)}
+      </span>
+    </header>
+  );
+
   /* ---- language gate: Speak opens in German first ---- */
   if (!focus) {
     return (
-      <main className="k-page placeholder">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("common.back")}
-        </button>
-        <div className="ph__head">
-          <span className="k-mono">{t("speak.gate.kicker")}</span>
-          <h1 className="ph__title">{t("speak.gate.title")}</h1>
-          <p className="ph__dek">{t("speak.gate.dek")}</p>
+      <div className="k-app">
+        {lineaSuperior(null)}
+        <div className="k-fill">
+          <header className="k-hero k-hero--quiet">
+            <span className="k-hero__tag">{t("speak.gate.kicker")}</span>
+            <h1 className="k-hero__title">{t("speak.gate.title")}</h1>
+            <p className="k-hero__dek">{t("speak.gate.dek")}</p>
+          </header>
         </div>
-      </main>
+        <div className="k-dock">
+          <div className="k-wrap">
+            <button type="button" className="k-btn k-btn--lg k-btn--block" onClick={salir}>
+              {t("speak.summary.home")}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -584,85 +657,86 @@ export default function Speak() {
       : finish;
     const toPractice = saved?.status === "saved" ? saved.added : "—";
     return (
-      <main className="k-page kp-summary">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("speak.controls.exit")}
-        </button>
-        <header className="kp-sum__head">
-          <div className="kp-sum__sig">
-            <span className="kp-sum__k">K</span>
-            <span className="k-mono">{t("speak.summary.kicker")}</span>
-          </div>
-          <h1 className="kp-sum__title">
-            {t("speak.summary.titlePre")}
-            <em className="kc-em">{focus.sound}</em>
-            {t("speak.summary.titlePost")}
-          </h1>
-          <p className="kp-sum__dek">{t("speak.summary.dek", { minutes, sound: focus.sound })}</p>
-        </header>
-
-        <section className="kp-sum__stats">
-          <div className="kp-stat">
-            <span className="kp-stat__n">
-              {stats.clear}
-              <span className="kp-stat__of">/{stats.total}</span>
-            </span>
-            <span className="k-mono">{t("speak.summary.stat.clear", { sound: focus.sound })}</span>
-          </div>
-          <span className="kp-stat__rule" />
-          <div className="kp-stat">
-            <span className="kp-stat__n">{minutes}</span>
-            <span className="k-mono">{t("speak.summary.stat.minutes")}</span>
-          </div>
-          <span className="kp-stat__rule" />
-          <div className="kp-stat">
-            <span className="kp-stat__n">{toPractice}</span>
-            <span className="k-mono">{t("speak.summary.stat.toPractice")}</span>
-          </div>
-        </section>
-
-        <hr className="k-hairline" />
-
-        <section className="kp-returns">
-          <header className="kp-returns__head">
-            <span className="k-mono">{t("speak.summary.returns")}</span>
-            <span className="k-mono kp-returns__count">{struggled.length}</span>
+      <div className="k-app">
+        {lineaSuperior(null)}
+        <div className="k-fill">
+          {/* Candidato 20 (bloque de cifra) sigue fuera: el cierre se compone
+              con el héroe silencioso, igual que decidió Repaso. */}
+          <header className="k-hero k-hero--quiet">
+            <span className="k-hero__tag">{t("speak.summary.kicker")}</span>
+            <h1 className="k-hero__title">
+              {t("speak.summary.titlePre")}
+              <em>{focus.sound}</em>
+              {t("speak.summary.titlePost")}
+            </h1>
+            <p className="k-hero__dek">{t("speak.summary.dek", { minutes, sound: focus.sound })}</p>
+            <p className="k-hero__meta">
+              <strong>
+                {stats.clear}/{stats.total}
+              </strong>{" "}
+              {t("speak.summary.stat.clear", { sound: focus.sound })}
+              <span aria-hidden="true">·</span>
+              <strong>{minutes}</strong> {t("speak.summary.stat.minutes")}
+              <span aria-hidden="true">·</span>
+              <strong>{toPractice}</strong> {t("speak.summary.stat.toPractice")}
+            </p>
           </header>
-          <ul className="kp-returns__list">
-            {struggled.map((w) => (
-              <li key={w.word} className="kp-returns__item">
-                <span className="kp-returns__word">{w.word}</span>
-                <span className="kp-returns__tx">{w.gloss ?? ""}</span>
-                <span className="kp-returns__next k-mono">
-                  {saved?.status === "saved" && w.modelSentence ? t("speak.summary.soon") : "—"}
-                </span>
-              </li>
-            ))}
-          </ul>
+
+          <h2 className="k-cap">
+            <span>{t("speak.summary.returns")}</span>
+            <span className="k-cap__count">{struggled.length}</span>
+          </h2>
+          <div className="k-live">
+            <ul>
+              {struggled.map((w) => (
+                <li key={w.word}>
+                  <div className="k-row k-row--quiet">
+                    <span className="k-row__title" lang={targetLanguage}>
+                      {w.word}
+                    </span>
+                    <span className="k-row__meta">
+                      {saved?.status === "saved" && w.modelSentence ? t("speak.summary.soon") : "—"}
+                    </span>
+                    {w.gloss && <span className="k-row__sub">{w.gloss}</span>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {saved?.status === "failed" && (
-            <p className="kc-hint" role="alert">
+            <p className="k-error" role="alert">
               {t("speak.summary.saveFailed")}
             </p>
           )}
           {saved?.status === "saved" && saved.skipped > 0 && (
-            <p className="kc-hint">{t("speak.summary.partial", { count: saved.skipped })}</p>
+            <p className="k-note">{t("speak.summary.partial", { count: saved.skipped })}</p>
           )}
-        </section>
+        </div>
 
-        <footer className="kp-sum__cta">
-          <button className="k-btn" onClick={startOver}>
-            {t("speak.summary.again")} <span className="arrow">→</span>
-          </button>
-          <button className="k-btn k-btn--ghost" onClick={() => navigate("/")}>
-            {t("speak.summary.home")}
-          </button>
-        </footer>
-      </main>
+        <div className="k-dock">
+          <div className="k-wrap">
+            <button type="button" className="k-btn k-btn--block" onClick={startOver}>
+              {t("speak.summary.again")}{" "}
+              <span className="k-btn__arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+            <button
+              type="button"
+              className="k-btn k-btn--ghost k-btn--block"
+              onClick={() => navigate("/")}
+            >
+              {t("speak.summary.home")}
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
-  // No cap in idle — the focus chip in the top bar already names the session
-  // (a second "FOCO DE HOY" under the medallion would just be an echo).
+  // Quién actúa ahora, en la línea de estado del dock. En reposo va vacía: lo
+  // que hay que hacer lo dice la guía de abajo, y repetirlo aquí sería un eco.
   const stageCap =
     state === "listening"
       ? // The mic verdict replaces the caption only once it has something to
@@ -677,46 +751,42 @@ export default function Speak() {
           ? t("speak.stage.speakingCap")
           : "";
 
+  const guia =
+    state === "idle"
+      ? t("speak.hint.idle", { sound: focus.sound })
+      : state === "listening"
+        ? t("speak.hint.listening")
+        : state === "thinking"
+          ? t("speak.hint.thinking")
+          : t("speak.hint.speaking");
+
   return (
-    <main className="k-page kc-page" data-state={state}>
-      <div className="kc-top">
-        <button className="story__back k-mono" onClick={() => navigate("/")}>
-          {t("speak.controls.exit")}
-        </button>
-        <span className="kc-top__time k-mono">
-          {clockLabel(new Date(now))} · {elapsedLabel(now - sessionStartRef.current)}
-        </span>
-        <div className="kc-foco" title={t("speak.focus.titleAttr")}>
-          <span className="kc-foco__dot" />
-          <span className="k-mono kc-foco__cap">{t("speak.focus.cap")}</span>
-          <span className="kc-foco__sound">{focus.sound}</span>
-          <span className="k-mono kc-foco__ipa">{focus.ipa}</span>
-        </div>
-      </div>
+    <div className="k-app">
+      {lineaSuperior(
+        <span className="k-chip k-chip--static" title={t("speak.focus.titleAttr")}>
+          <span className="k-chip__dot" aria-hidden="true" />
+          {t("speak.focus.cap")} {focus.sound}
+        </span>,
+      )}
 
-      {/* The one persistent surface: presence above, the conversation below. */}
-      <div className="kc-live">
-        <div className="kc-live__presence">
-          <ChatPresence state={state} thinkingLabel={t("speak.stage.thinkingAria")} />
-          <span className="kc-cap k-mono">{stageCap}</span>
-        </div>
+      {/* La superficie única: el escenario arriba, la conversación debajo. */}
+      <div className="k-fill">
+        <Escenario state={state} thinkingLabel={t("speak.stage.thinkingAria")} />
 
-        <div className="kc-live__column" ref={columnRef}>
-          <span className="k-mono kc-transcript__cap">
-            {t("speak.transcript.cap", { sound: focus.sound })}
-          </span>
-          <ul className="kc-turns">
+        <div className="k-live" ref={columnRef}>
+          <p className="k-cap">{t("speak.transcript.cap", { sound: focus.sound })}</p>
+          <ul>
             {effTurns.map((turn, i) => (
-              <li key={i} className="kc-turn" data-who={turn.who}>
-                <div className="kc-turn__meta">
+              <li key={i} className="k-live__turn" data-who={turn.who}>
+                <p className="k-cap">
                   {turn.who === "klara" ? (
                     <KlaraMark size={13} />
                   ) : (
-                    <span className="kc-turn__you k-mono">{t("speak.transcript.you")}</span>
+                    <span>{t("speak.transcript.you")}</span>
                   )}
-                  <span className="k-mono kc-turn__time">{turn.time}</span>
-                </div>
-                <p className="kc-turn__de">
+                  <span className="k-cap__count">{turn.time}</span>
+                </p>
+                <p className="k-live__said" lang={targetLanguage}>
                   {turn.note
                     ? turn.target.split(/(\s+)/).map((part, j) =>
                         // Azure's display transcript carries punctuation
@@ -725,7 +795,7 @@ export default function Speak() {
                         part
                           .replace(/^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu, "")
                           .toLowerCase() === turn.note!.word.toLowerCase() ? (
-                          <span key={j} className="kc-live-focus">
+                          <span key={j} data-active="true">
                             {part}
                           </span>
                         ) : (
@@ -734,24 +804,31 @@ export default function Speak() {
                       )
                     : turn.target}
                 </p>
-                {turn.native && <p className="kc-turn__es">{turn.native}</p>}
+                {turn.native && <p className="k-note k-note--mono">{turn.native}</p>}
 
                 {turn.note && (
-                  /* El apunte — woven under the turn, never a screen. */
-                  <div className="kc-note">
-                    <div className="kc-note__line">
-                      <span className="k-mono kc-note__cap">{t("speak.note.cap")}</span>
-                      <span className="kc-note__lead">
-                        {t("speak.note.lead", { sound: focus.sound, word: turn.note.word })}{" "}
-                        <strong>{turn.note.shouldIpa}</strong>
-                      </span>
-                    </div>
-                    {/* Both actions are inert while the mic is open or a turn
-                        is in flight: playing the model over an open mic would
-                        score Klara's voice as the user's (review finding). */}
-                    <div className="kc-note__actions">
+                  /* El apunte — tejido bajo el turno, nunca una pantalla. */
+                  <div className="k-note" data-state="fix">
+                    <span className="k-note__cap">{t("speak.note.cap")}</span>
+                    <p className="k-note__body">
+                      {t("speak.note.lead", { sound: focus.sound, word: turn.note.word })}{" "}
+                      <span className="k-note__right">{turn.note.shouldIpa}</span>
+                    </p>
+                    <p className="k-note__body">
+                      <span className="k-note__cap">{t("speak.note.how")}</span> {t(focus.tipKey)}
+                    </p>
+                    {turn.showLegend && (
+                      <p className="k-note__body">
+                        {t("speak.note.legend", { sound: focus.sound })}
+                      </p>
+                    )}
+                    {/* Los dos controles quedan inertes con el micrófono abierto
+                        o un turno en vuelo: sonar el modelo sobre el micrófono
+                        abierto puntuaría la voz de Klara como la del usuario. */}
+                    <div className="k-note__actions">
                       <button
-                        className="kac-tool kac-tool--play kc-note__play"
+                        type="button"
+                        className="k-rbtn k-rbtn--sm"
                         aria-label={t("speak.note.playAria")}
                         disabled={state === "listening" || state === "thinking"}
                         onClick={() =>
@@ -760,39 +837,36 @@ export default function Speak() {
                           })
                         }
                       >
-                        <span className="kac-tri" />
+                        <IcPlay />
                       </button>
                       <button
-                        className="kac-feedback__btn"
+                        type="button"
+                        className="k-btn k-btn--ghost"
                         disabled={state === "listening" || state === "thinking"}
                         onClick={() => retryWordAgain(turn.note!.word)}
                       >
-                        ↻ {t("speak.note.retry")}
+                        {t("speak.note.retry")}
+                        <span className="k-btn__arrow" aria-hidden="true">
+                          ↻
+                        </span>
                       </button>
                     </div>
-                    <p className="kc-note__tip">
-                      <span className="k-mono kc-note__tip-cap">{t("speak.note.how")}</span>{" "}
-                      {t(focus.tipKey)}
-                    </p>
-                    {turn.showLegend && (
-                      <p className="kc-note__legend">
-                        {t("speak.note.legend", { sound: focus.sound })}
-                      </p>
-                    )}
                   </div>
                 )}
                 {turn.clearWord && (
-                  <p className="kc-turn__fix" data-tone="clear">
+                  <span className="k-chip k-chip--static" data-tone="good">
+                    <span className="k-chip__dot" aria-hidden="true" />
                     {t("speak.note.clear", { sound: focus.sound, word: turn.clearWord })}
-                  </p>
+                  </span>
                 )}
                 {turn.improvedWord && (
-                  <p className="kc-turn__fix" data-tone="clear">
+                  <span className="k-chip k-chip--static" data-tone="good">
+                    <span className="k-chip__dot" aria-hidden="true" />
                     {t("speak.transcript.improved", {
                       sound: focus.sound,
                       word: turn.improvedWord,
                     })}
-                  </p>
+                  </span>
                 )}
               </li>
             ))}
@@ -800,55 +874,58 @@ export default function Speak() {
         </div>
       </div>
 
-      {/* Controls — mute (Klara's voice) · mic (protagonist) · end */}
-      <div className="kc-controls">
-        <button
-          className="kc-ctrl"
-          data-on={muted}
-          onClick={toggleMute}
-          aria-label={muted ? t("speak.controls.unmuteAria") : t("speak.controls.muteAria")}
-        >
-          <span className={muted ? "kc-mute kc-mute--off" : "kc-mute"}>
-            <span className="kac-mic" />
-          </span>
-        </button>
-        <button
-          className="kc-ctrl kc-ctrl--mic"
-          data-on={state === "listening"}
-          onClick={onMic}
-          aria-label={t("speak.controls.micAria")}
-        >
-          <span className="kac-mic" />
-        </button>
-        <button
-          className="kc-ctrl kc-ctrl--end"
-          onClick={endSession}
-          aria-label={t("speak.controls.endAria")}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          >
-            <path d="M3 3l10 10M13 3L3 13" />
-          </svg>
-        </button>
-      </div>
+      <div className="k-dock">
+        <div className="k-dock__status">
+          <p className="k-cap k-cap--center">
+            {stageCap && (
+              <span className="k-cap__count" data-tone={state === "listening" ? "live" : undefined}>
+                {stageCap}
+              </span>
+            )}
+          </p>
+        </div>
 
-      <p className="kc-hint">
-        {hint ??
-          (state === "idle"
-            ? t("speak.hint.idle", { sound: focus.sound })
-            : state === "listening"
-              ? t("speak.hint.listening")
-              : state === "thinking"
-                ? t("speak.hint.thinking")
-                : t("speak.hint.speaking"))}
-      </p>
-    </main>
+        {/* silenciar a Klara · el micrófono (protagonista) · terminar */}
+        <div className="k-dock__row">
+          <button
+            type="button"
+            className="k-rbtn"
+            data-on={muted}
+            aria-pressed={muted}
+            onClick={toggleMute}
+            aria-label={muted ? t("speak.controls.unmuteAria") : t("speak.controls.muteAria")}
+          >
+            <IcSound off={muted} />
+          </button>
+          <button
+            type="button"
+            className="k-rbtn k-rbtn--rec k-rbtn--ink k-rbtn--lg"
+            data-on={state === "listening"}
+            aria-pressed={state === "listening"}
+            onClick={onMic}
+            aria-label={t("speak.controls.micAria")}
+          >
+            <IcMic />
+            <span className="k-rbtn__ring" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="k-rbtn"
+            onClick={endSession}
+            aria-label={t("speak.controls.endAria")}
+          >
+            <IcClose />
+          </button>
+        </div>
+
+        {hint ? (
+          <p className="k-error" role="alert">
+            {hint}
+          </p>
+        ) : (
+          <p className="k-note k-note--bare">{guia}</p>
+        )}
+      </div>
+    </div>
   );
 }

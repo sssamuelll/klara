@@ -495,10 +495,9 @@
       "how": "WIE",
       "playAria": "Klaras Modell anhören",
       "legend": "Ich unterstreiche das Wort, in dem das {{sound}} noch eine Runde braucht.",
-      "clear": "Das {{sound}} in „{{word}}“ — klar. Weiter."
+      "clear": "„{{word}}“: {{sound}} klar"
     },
     "controls": {
-      "exit": "← Verlassen",
       "micAria": "Sprechen",
       "endAria": "Gespräch beenden",
       "muteAria": "Klara stummschalten",
@@ -507,7 +506,7 @@
     "transcript": {
       "cap": "GESPRÄCH VON HEUTE · Fokus {{sound}}",
       "you": "DU",
-      "improved": "Da ist es. Das {{sound}} in „{{word}}“, klar. ✓"
+      "improved": "„{{word}}“: {{sound}} klar beim zweiten Mal"
     },
     "hint": {
       "idle": "Antworte laut — Klara hört, wie dein {{sound}} klingt",
@@ -523,9 +522,9 @@
       "titlePost": ".",
       "dek": "{{minutes}} Min. Gespräch. Das {{sound}} klingt schon näher — diese Wörter gehen zurück in die Übung.",
       "stat": {
-        "clear": "{{sound}} KLAR",
-        "minutes": "MINUTEN",
-        "toPractice": "ZUR ÜBUNG"
+        "clear": "{{sound}} klar",
+        "minutes": "Minuten",
+        "toPractice": "zur Übung"
       },
       "returns": "ZURÜCK ZUR ÜBUNG",
       "soon": "bald",

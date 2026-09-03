@@ -495,10 +495,9 @@
       "how": "コツ",
       "playAria": "クララのお手本を聞く",
       "legend": "{{sound}}にもう一歩の単語に下線を引きます。",
-      "clear": "「{{word}}」の{{sound}} — クリアです。続けましょう。"
+      "clear": "「{{word}}」：{{sound}} クリア"
     },
     "controls": {
-      "exit": "← 終了",
       "micAria": "話す",
       "endAria": "会話を終える",
       "muteAria": "クララの声をミュート",
@@ -507,7 +506,7 @@
     "transcript": {
       "cap": "今日の会話 · フォーカス {{sound}}",
       "you": "あなた",
-      "improved": "その調子。「{{word}}」の{{sound}}、クリアです。✓"
+      "improved": "「{{word}}」：{{sound}} 二度目でクリア"
     },
     "hint": {
       "idle": "声に出して答えてください — クララが{{sound}}の音を聞いています",

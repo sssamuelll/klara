@@ -495,10 +495,9 @@
       "how": "COMO",
       "playAria": "Ouvir o modelo da Klara",
       "legend": "Sublinho a palavra onde o {{sound}} pede outra tentativa.",
-      "clear": "O {{sound}} em «{{word}}» — claro. Continuemos."
+      "clear": "«{{word}}»: {{sound}} claro"
     },
     "controls": {
-      "exit": "← Sair",
       "micAria": "Falar",
       "endAria": "Terminar a conversa",
       "muteAria": "Silenciar a Klara",
@@ -507,7 +506,7 @@
     "transcript": {
       "cap": "CONVERSA DE HOJE · foco {{sound}}",
       "you": "TU",
-      "improved": "Aí está. O {{sound}} de «{{word}}», claro. ✓"
+      "improved": "«{{word}}»: {{sound}} claro na segunda"
     },
     "hint": {
       "idle": "Responde em voz alta — a Klara ouve como soa o teu {{sound}}",
@@ -523,9 +522,9 @@
       "titlePost": ".",
       "dek": "{{minutes}} min de conversa. O {{sound}} já soa mais perto — estas palavras voltam à Prática.",
       "stat": {
-        "clear": "{{sound}} CLARO",
-        "minutes": "MINUTOS",
-        "toPractice": "PARA A PRÁTICA"
+        "clear": "{{sound}} claro",
+        "minutes": "minutos",
+        "toPractice": "para Prática"
       },
       "returns": "VOLTAM À PRÁTICA",
       "soon": "em breve",

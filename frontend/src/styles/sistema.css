@@ -159,6 +159,16 @@
   gap: 18px;
 }
 
+/* La línea de guía bajo la fila de redondos (el `.kc-hint` de Hablar): la nota
+   se centra bajo lo que comenta, como ya hace `.k-band > .k-note` con el
+   veredicto. El `margin-inline: auto` es lo que centra la caja —la nota mide
+   64ch, no el ancho del dock—; el `text-align`, lo que hay dentro. */
+.k-dock > .k-note,
+.k-dock > .k-error {
+  margin-inline: auto;
+  text-align: center;
+}
+
 /* Banda de respuesta: sustituye al dock cuando Klara dice algo. Dentro, una
    `.k-note` (veredicto, role=status) o una `.k-error` (role=alert), y un
    `.k-wrap` con dos `.k-btn k-btn--block`. El alto mínimo evita que el
@@ -252,6 +262,183 @@
   min-width: 0;
 }
 
+/* ---------- la columna viva y el escenario de presencia ----------
+   Lo que la sesión de Hablar pide y ningún átomo cubre: una columna que sí
+   scrollea dentro de `.k-fill` —el cascarón no scrollea (§7.3), pero una
+   conversación crece sin fin y no se puede recortar— y el medallón de cuatro
+   estados que la preside. Es armazón por lo mismo que `.k-stage`: es la
+   superficie de una pantalla, no una pieza que se componga en otras.
+   reemplaza speak.css:77 `.kc-page` · :83-134 el escenario entero ·
+   :136-157 `.kc-live` + `__presence` + `__column` · :204-213 `.kc-turns`/`.kc-turn` */
+
+/* La columna que scrollea dentro de la zona de sesión. La usan la conversación
+   y el cierre de Hablar (la lista de palabras que vuelven a Práctica). */
+.k-live {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+/* Sin viñeta ni sangrado: el aire entre turnos lo pone el margen de la cinta
+   que abre cada uno, como el filete lo pone `.k-row` (gramática 12). */
+.k-live > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tu turno lleva firma al margen; el de Klara no. Los 2px son los de
+   speak.css:208, y son de atribución, no de marginalia: por eso `--rule` y no
+   el filete de acento de la nota. */
+.k-live__turn[data-who="you"] {
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--rule);
+}
+
+/* Lo dicho es contenido —serif— y mide lo que mide una oración alemana en el
+   sistema: `--t-read`, el mismo escalón del pasaje. Muere el 22px literal de
+   speak.css:212 y su recorte a 19px bajo 720px de ancho, que dentro de un
+   cascarón de 430px dependía del tamaño de la ventana, no del de la columna. */
+.k-live__said {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-read);
+  line-height: 1.4;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+/* La palabra que el apunte comenta: el mismo «de esta estamos hablando» del
+   átomo 14, anclado al CONTENEDOR y no a `.k-word`, igual que el puntaje del
+   pasaje —la palabra sale `<span>` sin clase porque aquí no se toca—.
+   reemplaza speak.css:161 `.kc-live-focus`, que subrayaba en acento: el acento
+   del sistema es uno solo y esta palabra no está mal, está señalada. */
+.k-live__said [data-active="true"] {
+  background-color: var(--paper-3);
+  border-radius: var(--r-xs);
+}
+
+/* El acuse (`.k-chip--static`) cierra el turno; el chip no trae aire propio y
+   aquí no hay `gap` que lo dé. */
+.k-live__turn > .k-chip { margin-top: var(--space-2); }
+
+/* El escenario. Cuatro estados por atributo y ninguna clase de estado
+   (gramática 3). El ángulo y el retardo de cada varilla van en línea —son 44
+   valores distintos—; el radio de la órbita es `--orbit`, para que el anillo
+   encoja con la caja en vez de quedarse clavado en px. */
+.k-presence {
+  --orbit: 78px;
+  position: relative;
+  align-self: center;
+  flex: 0 0 auto;
+  /* La varilla cuelga HACIA DENTRO desde la órbita (su caja arranca en el
+     radio y crece al centro), así que la caja solo tiene que medir el doble
+     de `--orbit`: 164 sobre 78 deja 4px de aire, que es lo que medía
+     speak.css:130. Lo que estaba roto era el radio en línea: la consulta de
+     ancho encogía la caja a 132 y la órbita seguía en 78, o sea el anillo se
+     salía 12px por lado. Por eso es variable. */
+  width: 164px;
+  height: 164px;
+  display: grid;
+  place-items: center;
+}
+
+/* El disco en porcentaje y no en px: encoge con la caja sin una segunda regla
+   (los 30px de speak.css:131 sobre su caja de 164 eran justo un 18 %, y los
+   24px de su caja comprimida de 132 también). */
+.k-presence__disc {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  transition: border-color var(--dur-med), background var(--dur-med);
+}
+/* El 30 % es el único porcentaje de `color-mix` sobre el acento que queda en el
+   sistema (nota de la tabla de tokens); speak.css:92 usaba 45. */
+.k-presence[data-state="listening"] .k-presence__disc {
+  border-color: color-mix(in oklch, var(--accent) 30%, transparent);
+}
+/* Y el 5 % de speak.css:93 pasa al lavado que ya existe. */
+.k-presence[data-state="speaking"] .k-presence__disc { background: var(--accent-wash); }
+
+.k-presence__ring { position: absolute; inset: 0; }
+
+.k-presence__tick {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  transform: rotate(var(--a)) translateY(calc(-1 * var(--orbit)));
+}
+/* La varilla en reposo: media altura, tinta de fondo. Lo que dice el estado es
+   el color, no el movimiento (gramática 4). */
+.k-presence__tick i {
+  display: block;
+  width: 2px;
+  height: 10px;
+  margin-left: -1px;
+  border-radius: var(--r-xs);
+  background: var(--ink-4);
+  transform: scaleY(0.5);
+}
+
+/* Un solo ritmo, el de la marca: hablar y escuchar se distinguen por el color
+   —tinta y acento—, no por la velocidad. Convergen los 1s y 0.7s de
+   speak.css:108-109, que además eran literales sin token (§7.6). */
+.k-presence[data-state="speaking"] .k-presence__tick i {
+  background: var(--ink);
+  animation: k-osc var(--dur-breath) var(--ease-out) infinite;
+}
+.k-presence[data-state="listening"] .k-presence__tick i {
+  background: var(--accent);
+  animation: k-osc var(--dur-breath) var(--ease-out) infinite;
+}
+.k-presence[data-state="thinking"] .k-presence__tick i { opacity: 0.45; }
+
+@keyframes k-osc {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.5); }
+}
+
+/* Los tres puntos de «pensando». No son de la marca —`.klara-mark` no tiene
+   ese estado y sus Notas prohíben `data-speaking` decorativo—: son del
+   escenario, y solo ocupan el sitio de la K mientras dura el turno. */
+.k-presence__think {
+  display: inline-flex;
+  gap: var(--space-2);
+}
+.k-presence__think i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  animation: k-think var(--dur-breath) var(--ease-out) infinite;
+}
+/* Retardos, no duraciones: son los de speak.css:114-115. */
+.k-presence__think i:nth-child(2) { animation-delay: 180ms; }
+.k-presence__think i:nth-child(3) { animation-delay: 360ms; }
+
+@keyframes k-think {
+  0%, 100% { opacity: 0.35; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-5px); }
+}
+
+/* Sin movimiento se queda todo quieto y visible: escuchar sigue siendo acento,
+   hablar sigue siendo tinta, pensar sigue siendo tres puntos y el anillo
+   atenuado (gramática 4). */
+@media (prefers-reduced-motion: reduce) {
+  .k-presence__disc { transition: none; }
+  /* Con el ancestro y el atributo delante a propósito: quien enciende la
+     animación es `.k-presence[data-state="…"] .k-presence__tick i` (0,3,1), y
+     una regla de (0,1,1) no la apaga por estar dentro de la consulta. Medido:
+     el anillo seguía oscilando con `reduce`. */
+  .k-presence[data-state] .k-presence__tick i,
+  .k-presence__think i { animation: none; }
+}
+
 /* ---------- 01-boton ---------- */
 /* ============================================================
    01 · BOTÓN — .k-btn
@@ -272,6 +459,11 @@
   background: var(--ink);
   color: var(--paper);
   font-family: var(--font-sans);
+  /* Explícito: el botón vive dentro de la nota (el «Dilo otra vez» del apunte
+     de Hablar) y `.k-note` es serif itálica. La familia sí se declaraba y la
+     inclinación no, así que el control salía en cursiva —gramática 9, los
+     controles son sans y derechos—. Medido en la migración 5. */
+  font-style: normal;
   font-size: 15px;                 /* literal: la escala salta de --t-mark 14 a --t-body 17 */
   font-weight: 500;
   line-height: 1.2;
@@ -1229,6 +1421,7 @@ li:first-child > .k-row:not(.k-row--boxed),
   background: transparent;
   color: var(--ink-2);
   font-family: var(--font-sans);
+  font-style: normal;              /* mismo motivo que en `.k-btn`: dentro de una nota heredaba cursiva */
   font-size: var(--t-mark);
   cursor: pointer;
   /* Gramática 8: dentro de .k-wrap el chip encoge y parte la palabra alemana en vez de desbordar. */
@@ -1614,6 +1807,10 @@ input.k-chip { cursor: text; }
   padding-top: calc(14px + env(safe-area-inset-top));
 }
 .k-topline--session .k-topline__meta { justify-self: end; }
+/* La pista central también admite un chip en vez de un rótulo (el foco de la
+   sesión de Hablar). Sin esto la rejilla lo estira de lado a lado: un elemento
+   de rejilla se bloquifica y `justify-self` vale `stretch` por defecto. */
+.k-topline--session > .k-chip { justify-self: center; }
 
 /* --- pie: la misma tira abajo, con el filete arriba y la tinta un paso más apagada --- */
 .k-topline--foot {
@@ -2255,6 +2452,13 @@ ul.k-error { list-style: none; }
     margin-top: var(--space-3);
   }
   .k-note { margin-top: var(--space-3); }
+  /* El medallón encoge entero —132 es la caja comprimida de speak.css:199— y
+     ahora el anillo encoge con él: para eso existe `--orbit`. */
+  .k-presence {
+    width: 132px;
+    height: 132px;
+    --orbit: 62px;
+  }
   .k-card__inner { min-height: 288px; }
   .k-field--area .k-field__input { min-height: 96px; }
 }
