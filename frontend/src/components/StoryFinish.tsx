@@ -586,7 +586,7 @@ function ClozeQuestion({
     scorer.result.overallScore >= 60 &&
     matchesLoose(scorer.result.recognizedText, q.answer);
 
-  // Live RMS bars while recording — exactly like SentenceView.
+  // Live RMS bars while recording — el mismo bucle que las otras dos fichas.
   useEffect(() => {
     if (scorer.phase !== "recording" || !scorer.analyser) return;
     const analyser = scorer.analyser;

@@ -57,17 +57,13 @@
    clase, y el ancla del selector de puntaje (átomo 14). `--fscale` lo
    pone el .tsx en línea (EstudiarView.tsx:283). No fija `white-space`:
    un espacio que es el único contenido de su nodo no se colapsa.
-   Acotado al cascarón por la misma razón: sentence-view.css:81 define otro `.k-stage` vivo.
+   Sigue acotado al cascarón, pero ya no por defensa: el `.k-stage` global de
+   sentence-view.css murió con la hoja y con él las tres declaraciones que
+   estaban aquí solo para tapar lo que ese bloque no nombraba (`flex`,
+   `padding`, `text-align`). El ancestro se queda porque dice dónde vive el
+   pasaje: dentro de una sesión, no suelto en una página.
    reemplaza mobile3.css:114 `.m3-oracion` · sentence-view.css:81 `.k-stage` + :96 `.k-stage__de` · finish.css:404 `.qcard__cloze` */
 .k-app .k-stage {
-  /* Acotar el selector protege solo lo que este bloque DECLARA: lo que no
-     nombra sigue cayendo del `.k-stage` global de sentence-view.css:81 (+ :560).
-     De ahí estas tres: sin `flex` el pasaje crecía y empujaba la glosa al
-     fondo; sin `padding` y `text-align` heredaba los 8px y el centrado de
-     SentenceView. Mueren cuando muera esa hoja. */
-  flex: 0 1 auto;
-  padding: 0;
-  text-align: start;
   font-family: var(--font-serif);
   font-size: calc(clamp(25px, 7vw, 30px) * var(--fscale, 1));
   line-height: var(--lh-read);
@@ -2155,8 +2151,9 @@ input.k-chip { cursor: text; }
    (medido). Con `background-origin: content-box` el filete cae en el mismo
    sitio en la palabra-botón (con sus 11px de relleno) y en la palabra que el
    alineador no emparejó, que es un <span> sin relleno. */
-/* Acotado al cascarón: sentence-view.css:132 subraya sus .k-tok[data-score] con box-shadow y sin
-   el ancestro este gradiente se sumaría (doble subrayado en la lectura de escritorio). */
+/* Acotado al cascarón como su bloque padre. Nació para no sumarse al subrayado
+   por `box-shadow` de sentence-view.css:132; esa hoja murió y el ancestro se
+   queda por lo mismo que arriba: el puntaje se pinta dentro de una sesión. */
 .k-app .k-stage [data-score] {
   background-repeat: no-repeat;
   background-origin: content-box;

@@ -12,10 +12,10 @@
  *   - feedback / evaluating state, keyed by sentence index
  *   - keyboard: SPACE play/pause · M hold-to-talk · ←/→ navigate · ESC cancel
  *
- * SentenceView stays presentational and is unchanged: it consumes the flat
+ * EstudiarView stays presentational: it consumes the flat
  * props this hook exposes (recording, evaluating, feedback, rate, the
  * handlers, etc.). The host component (Story / PracticeSession) owns
- * navigation and decides what to render around the SentenceView.
+ * navigation and decides what to render around the EstudiarView.
  *
  * Two integration points are parameterised so the queue source can differ:
  *   - `persistTargets`: a per-item array, indexed identically to `sentences`.
@@ -63,7 +63,7 @@ export interface PracticeSentence {
 const RATES = [0.7, 1] as const;
 export type Rate = (typeof RATES)[number];
 
-// Word-token regex shared with SentenceView; used to extract bad-word
+// Word-token regex shared with EstudiarView; used to extract bad-word
 // strings for the phonetic-hints request and the simulated fallback.
 const WORD_RE = /(\s+)|([.,!?;:„“”»«()¡¿—–\-]+)|([^\s.,!?;:„“”»«()¡¿—–\-]+)/g;
 
@@ -137,7 +137,7 @@ export interface UseSentencePractice {
   total: number;
   rate: Rate;
 
-  // Per-current-sentence derived state (what SentenceView consumes)
+  // Per-current-sentence derived state (what EstudiarView consumes)
   recording: boolean;
   evaluating: boolean;
   feedback: PronScores | undefined;
@@ -158,7 +158,7 @@ export interface UseSentencePractice {
 
   pronError: PronunciationError | null;
 
-  // Handlers (wired straight into SentenceView props)
+  // Handlers (wired straight into EstudiarView props)
   handlePlayPause: () => void;
   handleListenFromFeedback: () => void;
   cycleSpeed: () => void;

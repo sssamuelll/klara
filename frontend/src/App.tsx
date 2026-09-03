@@ -17,6 +17,7 @@ import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
 import Taller from "./routes/Taller";
 import Practice from "./routes/Practice";
+import Pronunciar from "./routes/Pronunciar";
 import Repaso from "./routes/Repaso";
 import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
@@ -241,6 +242,18 @@ function AppShell() {
         element={
           <ProtectedRoute>
             <Repaso />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Pronunciar: la misma superficie suelta que /repaso. Práctica se
+          quedó con el selector y navega aquí; el flujo entero (preparar,
+          sesión, resumen) vive en la ruta porque comparten la cola. */}
+      <Route
+        path="/pronunciar"
+        element={
+          <ProtectedRoute>
+            <Pronunciar />
           </ProtectedRoute>
         }
       />

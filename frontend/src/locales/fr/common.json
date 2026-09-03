@@ -330,8 +330,8 @@
       "title_one": "Une phrase qui mérite d’être redite.",
       "title_other": "{{count}} phrases qui méritent d’être redites.",
       "dek": "Ce n’est pas un examen. Klara les a choisies dans ce que tu as déjà lu — certaines t’ont accroché, d’autres reviennent en révision. Dis-les à voix haute, à ton rythme.",
-      "struggled": "portent des mots qui <em>t’ont accroché</em>",
-      "review": "reviennent en <em>révision espacée</em>",
+      "struggled": "t’ont accroché",
+      "review": "en révision",
       "startBy": "COMMENCER PAR",
       "chip": {
         "all": "Tout · {{count}}",
@@ -357,9 +357,9 @@
       "title_other": "{{count}} phrases, dites.",
       "dek": "Sans hâte et sans série. Ce que tu as dit aujourd'hui, et quand tu le rediras.",
       "stat": {
-        "clear": "CLAIRES",
-        "ok": "PRESQUE",
-        "bad": "À REVOIR"
+        "clear": "claires",
+        "ok": "presque",
+        "bad": "à revoir"
       },
       "returns": {
         "title": "QUAND LES REDIRE"

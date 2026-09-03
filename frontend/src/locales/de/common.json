@@ -330,8 +330,8 @@
       "title_one": "Ein Satz, den es sich zu wiederholen lohnt.",
       "title_other": "{{count}} Sätze, die es sich zu wiederholen lohnt.",
       "dek": "Kein Test. Klara hat sie aus dem ausgewählt, was du schon gelesen hast — bei einigen bist du gestolpert, andere kommen zur Wiederholung zurück. Sprich sie laut aus, in deinem Tempo.",
-      "struggled": "enthalten Wörter, bei denen du <em>gestolpert bist</em>",
-      "review": "kommen zur <em>verteilten Wiederholung</em> zurück",
+      "struggled": "gestolpert",
+      "review": "zur Wiederholung",
       "startBy": "BEGINNEN MIT",
       "chip": {
         "all": "Alles · {{count}}",
@@ -357,9 +357,9 @@
       "title_other": "{{count}} Sätze, gesagt.",
       "dek": "Ohne Eile und ohne Serie. Was du heute gesagt hast und wann du es wieder sagst.",
       "stat": {
-        "clear": "KLAR",
-        "ok": "FAST",
-        "bad": "ZU PRÜFEN"
+        "clear": "klar",
+        "ok": "fast",
+        "bad": "zu prüfen"
       },
       "returns": {
         "title": "WANN ZURÜCK"

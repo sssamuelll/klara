@@ -53,7 +53,7 @@ export default function StoryView() {
   // Per-sentence pronunciation lifecycle (mic / TTS / scoring / hints /
   // keyboard) lives in the shared hook, extracted from this file so the
   // standalone Practice ("Pronunciar") session can reuse the exact same
-  // behaviour. SentenceView stays presentational; navigation + popovers +
+  // behaviour. EstudiarView stays presentational; navigation + popovers +
   // the finish screen stay here (reading-view-specific).
   const practice = useSentencePractice({
     sentences,

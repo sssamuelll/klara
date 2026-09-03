@@ -7,7 +7,6 @@ import "./styles/global.css";
 import "./styles/sistema.css"; // el vocabulario k-*; va justo después de global.css y antes que cualquier hoja de pantalla
 import "./styles/native.css";
 import "./styles/onboarding.css";
-import "./styles/sentence-view.css";
 import "./styles/finish.css";
 import "./styles/path.css";
 import "./styles/perfil-aprendizaje.css";

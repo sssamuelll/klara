@@ -330,8 +330,8 @@
       "title_one": "Uma frase que vale a pena dizer de novo.",
       "title_other": "{{count}} frases que valem a pena dizer de novo.",
       "dek": "Não é um exame. A Klara escolheu-as do que já leste — algumas prenderam-te, outras voltam por revisão. Di-las em voz alta, ao teu ritmo.",
-      "struggled": "trazem palavras que <em>te prenderam</em>",
-      "review": "voltam por <em>revisão espaçada</em>",
+      "struggled": "te prenderam",
+      "review": "por revisão",
       "startBy": "COMEÇAR POR",
       "chip": {
         "all": "Tudo · {{count}}",
@@ -357,9 +357,9 @@
       "title_other": "{{count}} frases, ditas.",
       "dek": "Sem pressa e sem sequência. O que você disse hoje, e quando vai dizer de novo.",
       "stat": {
-        "clear": "CLARAS",
-        "ok": "QUASE",
-        "bad": "A REVER"
+        "clear": "claras",
+        "ok": "quase",
+        "bad": "a rever"
       },
       "returns": {
         "title": "QUANDO VOLTAM"

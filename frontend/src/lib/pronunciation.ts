@@ -27,9 +27,9 @@ const WORD_PUNCT = ".,!?;:„“”»«()¡¿—–\\-";
 const WORD_RE_SRC = `(\\s+)|([${WORD_PUNCT}]+)|([^\\s${WORD_PUNCT}]+)`;
 
 /**
- * Tokenize the reference text the same way SentenceView does. Returns the
+ * Tokenize the reference text the same way EstudiarView does. Returns the
  * index of every word token (skipping spaces and punctuation), so the result
- * lines up with what SentenceView renders.
+ * lines up with what EstudiarView renders.
  */
 export function wordTokenIndices(text: string): number[] {
   const re = new RegExp(WORD_RE_SRC, "g");

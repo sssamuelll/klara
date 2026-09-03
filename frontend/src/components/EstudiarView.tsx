@@ -7,11 +7,12 @@
  * los errores de captura ocupan el mismo slot inferior (`.k-band`) en
  * sustitución del dock.
  *
- * Vive aparte de SentenceView (legacy) porque Practice comparte aquel
- * archivo y su segmento de pronunciación está fuera del alcance de F2.1;
- * el legacy muere cuando Practice se re-vista.
+ * Es el teleprompter de las DOS sesiones de oración: la lectura
+ * (/estudiar/:id) y la pronunciación (/pronunciar). Nació aparte del
+ * SentenceView legacy porque Práctica compartía aquel archivo; con
+ * Práctica re-vestida, el legacy murió y este quedó solo.
  *
- * Se conservan del legacy: tokenize/matchToken/buildBreakdownMap y la
+ * Se conservó del legacy: tokenize/matchToken/buildBreakdownMap y la
  * derivación de señal por token (scoreByTokenIdx), el veredicto
  * (verdictKey) y la pista de la palabra floja (badWordTip). Caen del skin
  * (siguen vivos en el hook/teclado): waveform + tiempos, pill de barras,

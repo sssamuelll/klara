@@ -1,8 +1,8 @@
 /**
  * Drive a row of bar elements from an AnalyserNode's frequency data.
  *
- * Used by the recording pills in SentenceView, Cloze, Shadow, and MC
- * cards. All four had the same RAF loop inlined; sharing it here keeps
+ * Used by the recording pills in the Cloze, Shadow and MC cards of
+ * StoryFinish. All three had the same RAF loop inlined; sharing it here keeps
  * the bucketing math correct when the analyser's fftSize changes.
  *
  * `bars.length` is whatever the caller renders (currently always 16).
