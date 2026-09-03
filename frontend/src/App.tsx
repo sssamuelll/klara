@@ -85,12 +85,14 @@ function RootGate() {
 function AuthShell() {
   return (
     <div className="k-app">
-      <div className="k-page auth-page">
+      <div className="k-page">
         <header className="k-topline">
           <span className="k-topline__mark">
             <span className="wordmark">Klara</span>
           </span>
         </header>
+        {/* El scroll lo pone cada pantalla con su `.k-live`: la página del
+            cascarón no scrollea (§7.3) y la tira de arriba se queda fija. */}
         <Outlet />
       </div>
     </div>

@@ -8,7 +8,6 @@ import "./styles/sistema.css"; // el vocabulario k-*; va justo después de globa
 import "./styles/native.css";
 import "./styles/path.css";
 import "./styles/perfil-aprendizaje.css";
-import "./styles/auth.css";
 import "./styles/landing.css";
 
 const rootEl = document.getElementById("root");

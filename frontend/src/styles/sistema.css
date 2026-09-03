@@ -1835,6 +1835,13 @@ input.k-chip { cursor: text; }
   border-top: 1px solid var(--rule);
   padding-top: var(--space-3);             /* reemplaza el inset superior, que aquí no aplica */
   color: var(--ink-4);
+  /* El aire sobre el filete es del pie, no de quien lo precede: es lo último
+     de la columna, no una fila más. La migración 9 estrena la variante —estaba
+     escrita y sin usar— y sin esto el filete se lee como subrayado del botón de
+     enviar. Sube un escalón sobre los 16px de `auth.css:72` `.auth-links`
+     porque aquel párrafo no dibujaba filete y este sí.
+     reemplaza auth.css:67 `.auth-links` */
+  margin-top: var(--space-5);
 }
 /* §7.2: el enlace del pie es tocable y .k-link (global.css) no declara altura;
    con el contenido al fondo el subrayado sigue pegado a la palabra. */
@@ -2333,6 +2340,20 @@ ul.k-error { list-style: none; }
    reemplaza onboarding.css:592 `.ob-pass__fields` (que era una rejilla solo para eso) */
 .k-field + .k-field { margin-top: 18px; }
 
+/* La junta que cierra el formulario: la fila de acciones. La nube no trae
+   margen —tampoco debe: también vive dentro de una fila— y el campo no trae
+   ninguno abajo, así que sin esto el botón de enviar se pega al último control.
+   Hermano general y no adyacente porque entre el campo y los botones puede
+   colarse un `.k-error` (la portada lo mete dentro del <form>).
+   `:where()` —especificidad 0— a propósito: es un suelo, no un mandato.
+   NO son los 16px de `auth.css:64` `.auth-actions`: aquel valor convivía con
+   campos separados 12px (`.auth-form` tenía `gap: var(--space-3)`) y por eso
+   la jerarquía se leía. Contra los 18px de `.k-field + .k-field` se invierte
+   —el botón queda más cerca del último campo que los campos entre sí—, así que
+   la junta que cierra sube un escalón sobre la que separa.
+   reemplaza auth.css:60 `.auth-actions` */
+:where(.k-field) ~ :where(.k-wrap) { margin-top: var(--space-5); }
+
 /* Marginalia: el escalón mono único en versalitas (gramática 10).
    reemplaza auth.css:33 `.auth-label` (12px) · onboarding.css:604 `.ob-field__label` */
 .k-field__label {
@@ -2411,7 +2432,12 @@ ul.k-error { list-style: none; }
 /* Manuscrito: sin caja, solo el renglón. Cuerpo grande porque lo que se
    escribe ahí es la respuesta, no un dato de formulario. 10px de padding
    vertical es el valor vivo de auth.css:52 y no tiene token.
-   reemplaza auth.css:42 `.auth-input` · pages.css:190 `.snew__input` · onboarding.css:351 `.ob-name__input` · perfil-aprendizaje.css:47 `.ob5-otra` */
+   La migración 9 le quitó a auth: un correo y una contraseña son datos de
+   formulario, o sea justo lo que esta frase excluye, y la misma contraseña
+   se teclea en el onboarding sobre la caja. El mapa del contrato mandaba
+   `--rule` ahí; la doctrina escrita aquí gana, y las dos pantallas que piden
+   lo mismo se ven igual. Queda con un consumidor: el nombre propio.
+   reemplaza pages.css:190 `.snew__input` · onboarding.css:351 `.ob-name__input` · perfil-aprendizaje.css:47 `.ob5-otra` */
 .k-field--rule .k-field__input {
   padding: 10px 0;
   background: transparent;

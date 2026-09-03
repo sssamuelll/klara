@@ -33,10 +33,13 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <main>
-        <h1 className="auth-title">{t("auth.reset.resetTitle")}</h1>
-        <p className="auth-sub">{t("auth.reset.success")}</p>
-        <div className="auth-actions">
+      <main className="k-live">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">{t("auth.reset.resetTitle")}</h1>
+          <p className="k-hero__dek">{t("auth.reset.success")}</p>
+        </header>
+        <hr className="k-hairline" />
+        <div className="k-wrap">
           <Link className="k-btn" to="/login">{t("auth.reset.goLogin")}</Link>
         </div>
       </main>
@@ -44,8 +47,11 @@ export default function ResetPassword() {
   }
 
   return (
-    <main>
-      <h1 className="auth-title">{t("auth.reset.resetTitle")}</h1>
+    <main className="k-live">
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{t("auth.reset.resetTitle")}</h1>
+      </header>
+      <hr className="k-hairline" />
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
@@ -53,14 +59,11 @@ export default function ResetPassword() {
         <div className="k-error" role="alert">{t("auth.reset.error.missingToken")}</div>
       )}
 
-      <form className="auth-form" onSubmit={onSubmit}>
-        <div>
-          <label className="auth-label" htmlFor="reset-password">
-            {t("auth.reset.newPasswordLabel")}
-          </label>
+      <form onSubmit={onSubmit}>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.reset.newPasswordLabel")}</span>
           <input
-            id="reset-password"
-            className="auth-input"
+            className="k-field__input"
             type="password"
             autoComplete="new-password"
             required
@@ -69,15 +72,12 @@ export default function ResetPassword() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting || !token}
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="auth-label" htmlFor="reset-confirm">
-            {t("auth.reset.confirmLabel")}
-          </label>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.reset.confirmLabel")}</span>
           <input
-            id="reset-confirm"
-            className="auth-input"
+            className="k-field__input"
             type="password"
             autoComplete="new-password"
             required
@@ -86,18 +86,18 @@ export default function ResetPassword() {
             onChange={(e) => setConfirm(e.target.value)}
             disabled={submitting || !token}
           />
-        </div>
+        </label>
 
-        <div className="auth-actions">
+        <div className="k-wrap">
           <button type="submit" className="k-btn" disabled={submitting || !token}>
             {t("auth.reset.submit")}
           </button>
         </div>
       </form>
 
-      <p className="auth-links">
-        <Link to="/login">{t("common.back")}</Link>
-      </p>
+      <footer className="k-topline k-topline--foot">
+        <Link className="k-link" to="/login">{t("common.back")}</Link>
+      </footer>
     </main>
   );
 }

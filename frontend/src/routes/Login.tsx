@@ -75,19 +75,19 @@ export default function Login() {
   }
 
   return (
-    <main>
-      <h1 className="auth-title">{t("auth.login.title")}</h1>
+    <main className="k-live">
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{t("auth.login.title")}</h1>
+      </header>
+      <hr className="k-hairline" />
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form className="auth-form" onSubmit={onSubmit}>
-        <div>
-          <label className="auth-label" htmlFor="login-email">
-            {t("auth.login.emailLabel")}
-          </label>
+      <form onSubmit={onSubmit}>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.login.emailLabel")}</span>
           <input
-            id="login-email"
-            className="auth-input"
+            className="k-field__input"
             type="email"
             autoComplete="email"
             required
@@ -95,15 +95,12 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={submitting}
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="auth-label" htmlFor="login-password">
-            {t("auth.login.passwordLabel")}
-          </label>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.login.passwordLabel")}</span>
           <input
-            id="login-password"
-            className="auth-input"
+            className="k-field__input"
             type="password"
             autoComplete="current-password"
             required
@@ -111,9 +108,9 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
           />
-        </div>
+        </label>
 
-        <div className="auth-actions">
+        <div className="k-wrap">
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.login.submit")}
           </button>
@@ -130,9 +127,9 @@ export default function Login() {
         </div>
       </form>
 
-      <p className="auth-links">
-        <Link to="/forgot">{t("auth.login.forgotLink")}</Link>
-      </p>
+      <footer className="k-topline k-topline--foot">
+        <Link className="k-link" to="/forgot">{t("auth.login.forgotLink")}</Link>
+      </footer>
     </main>
   );
 }

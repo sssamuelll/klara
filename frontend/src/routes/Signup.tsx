@@ -93,10 +93,13 @@ export default function Signup() {
   // No token → invitation-only gate.
   if (!inviteToken) {
     return (
-      <main>
-        <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
-        <p className="auth-sub">{t("auth.signup.inviteOnly.body")}</p>
-        <div className="auth-actions">
+      <main className="k-live">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">{t("auth.signup.inviteOnly.title")}</h1>
+          <p className="k-hero__dek">{t("auth.signup.inviteOnly.body")}</p>
+        </header>
+        <hr className="k-hairline" />
+        <div className="k-wrap">
           <Link className="k-btn" to="/login">{t("auth.signup.loginLink")}</Link>
         </div>
       </main>
@@ -105,18 +108,21 @@ export default function Signup() {
 
   if (inviteLoading) {
     return (
-      <main>
-        <p className="auth-sub">{t("common.loading")}</p>
+      <main className="k-live">
+        <p className="k-note" role="status">{t("common.loading")}</p>
       </main>
     );
   }
 
   if (inviteError) {
     return (
-      <main>
-        <h1 className="auth-title">{t("auth.signup.inviteOnly.title")}</h1>
+      <main className="k-live">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">{t("auth.signup.inviteOnly.title")}</h1>
+        </header>
+        <hr className="k-hairline" />
         <div className="k-error" role="alert">{inviteError}</div>
-        <div className="auth-actions">
+        <div className="k-wrap">
           <Link className="k-btn" to="/login">{t("auth.signup.loginLink")}</Link>
         </div>
       </main>
@@ -124,20 +130,20 @@ export default function Signup() {
   }
 
   return (
-    <main>
-      <h1 className="auth-title">{t("auth.signup.invitedTitle")}</h1>
-      <p className="auth-sub">{t("auth.signup.invitedSub")}</p>
+    <main className="k-live">
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{t("auth.signup.invitedTitle")}</h1>
+        <p className="k-hero__dek">{t("auth.signup.invitedSub")}</p>
+      </header>
+      <hr className="k-hairline" />
 
       {error && <div className="k-error" role="alert">{error}</div>}
 
-      <form className="auth-form" onSubmit={onSubmit}>
-        <div>
-          <label className="auth-label" htmlFor="signup-email">
-            {t("auth.signup.emailLabel")}
-          </label>
+      <form onSubmit={onSubmit}>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.signup.emailLabel")}</span>
           <input
-            id="signup-email"
-            className="auth-input"
+            className="k-field__input"
             type="email"
             autoComplete="email"
             required
@@ -145,15 +151,12 @@ export default function Signup() {
             onChange={(e) => setEmail(e.target.value)}
             disabled={submitting || Boolean(invite?.email)}
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="auth-label" htmlFor="signup-password">
-            {t("auth.signup.passwordLabel")}
-          </label>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.signup.passwordLabel")}</span>
           <input
-            id="signup-password"
-            className="auth-input"
+            className="k-field__input"
             type="password"
             autoComplete="new-password"
             required
@@ -162,15 +165,12 @@ export default function Signup() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="auth-label" htmlFor="signup-confirm">
-            {t("auth.signup.confirmLabel")}
-          </label>
+        <label className="k-field">
+          <span className="k-field__label">{t("auth.signup.confirmLabel")}</span>
           <input
-            id="signup-confirm"
-            className="auth-input"
+            className="k-field__input"
             type="password"
             autoComplete="new-password"
             required
@@ -179,18 +179,18 @@ export default function Signup() {
             onChange={(e) => setConfirm(e.target.value)}
             disabled={submitting}
           />
-        </div>
+        </label>
 
-        <div className="auth-actions">
+        <div className="k-wrap">
           <button type="submit" className="k-btn" disabled={submitting}>
             {t("auth.signup.submit")}
           </button>
         </div>
       </form>
 
-      <p className="auth-links">
-        <Link to="/login">{t("auth.signup.loginLink")}</Link>
-      </p>
+      <footer className="k-topline k-topline--foot">
+        <Link className="k-link" to="/login">{t("auth.signup.loginLink")}</Link>
+      </footer>
     </main>
   );
 }

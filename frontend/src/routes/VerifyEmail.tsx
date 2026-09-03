@@ -28,21 +28,27 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <main>
-      <h1 className="auth-title">{t("auth.verify.title")}</h1>
-      {state === "verifying" && (
-        <p className="auth-sub">{t("common.loading")}</p>
-      )}
-      {state === "idle" && (
-        <p className="auth-sub">{t("auth.signup.verifyEmailSent")}</p>
-      )}
+    <main className="k-live">
+      <header className="k-hero k-hero--quiet">
+        <h1 className="k-hero__title">{t("auth.verify.title")}</h1>
+        {/* Los tres estados que no son error son la misma bajada del titular
+            con otro texto; el sistema no los distingue y no debe. */}
+        {state === "verifying" && (
+          <p className="k-hero__dek">{t("common.loading")}</p>
+        )}
+        {state === "idle" && (
+          <p className="k-hero__dek">{t("auth.signup.verifyEmailSent")}</p>
+        )}
+        {state === "ok" && (
+          <p className="k-hero__dek">{t("auth.verify.success")}</p>
+        )}
+      </header>
+      <hr className="k-hairline" />
+
       {state === "ok" && (
-        <>
-          <p className="auth-sub">{t("auth.verify.success")}</p>
-          <div className="auth-actions">
-            <Link className="k-btn" to="/login">{t("auth.reset.goLogin")}</Link>
-          </div>
-        </>
+        <div className="k-wrap">
+          <Link className="k-btn" to="/login">{t("auth.reset.goLogin")}</Link>
+        </div>
       )}
       {state === "fail" && (
         <div className="k-error" role="alert">
@@ -50,9 +56,9 @@ export default function VerifyEmail() {
         </div>
       )}
       {state !== "ok" && (
-        <p className="auth-links">
-          <Link to="/login">{t("common.back")}</Link>
-        </p>
+        <footer className="k-topline k-topline--foot">
+          <Link className="k-link" to="/login">{t("common.back")}</Link>
+        </footer>
       )}
     </main>
   );

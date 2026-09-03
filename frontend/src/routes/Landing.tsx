@@ -54,14 +54,15 @@ export default function Landing() {
         <h2 className="landing__wl-title">{t("waitlist.title")}</h2>
         <p className="landing__wl-body">{t("waitlist.body")}</p>
         {state === "ok" ? (
-          <p className="auth-sub" role="status">{t("waitlist.success")}</p>
+          <p className="landing__wl-body" role="status">{t("waitlist.success")}</p>
         ) : (
-          <form className="auth-form" onSubmit={onJoin}>
-            <div>
-              <label className="auth-label" htmlFor="wl-email">{t("auth.login.emailLabel")}</label>
+          // El formulario ya habla k-* aunque la portada siga en su dialecto:
+          // era el único sitio fuera de /login que se colgaba de auth.css.
+          <form onSubmit={onJoin}>
+            <label className="k-field">
+              <span className="k-field__label">{t("auth.login.emailLabel")}</span>
               <input
-                id="wl-email"
-                className="auth-input"
+                className="k-field__input"
                 type="email"
                 autoComplete="email"
                 placeholder={t("waitlist.placeholder")}
@@ -70,11 +71,11 @@ export default function Landing() {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={state === "sending"}
               />
-            </div>
+            </label>
             {state === "error" && (
               <div className="k-error" role="alert">{t(`waitlist.error.${errorKey}`)}</div>
             )}
-            <div className="auth-actions">
+            <div className="k-wrap">
               <button type="submit" className="k-btn" disabled={state === "sending"}>
                 {t("waitlist.submit")}
               </button>
