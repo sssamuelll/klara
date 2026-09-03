@@ -644,6 +644,13 @@
 .k-btn--ghost:hover { border-color: var(--ink); background: var(--paper-2); }
 .k-btn--text:hover { color: var(--ink); }
 
+/* «Ya está en repaso»: el control se queda en su sitio y lo que cambia es la
+   tinta, que es como el sistema dice «hecho» sin sacar una insignia. Va después
+   del `:hover` a propósito —misma especificidad, gana el último escrito—, así
+   que pasar el cursor por encima de una palabra ya añadida no la despinta.
+   reemplaza pages.css:578 `.wpop__add[data-added="true"]` */
+.k-btn--text[data-added="true"] { color: var(--accent-ink); }
+
 /* El único estado que el teléfono sabe mostrar; sustituye al translateY(0) de global.css:312. */
 .k-btn:active { transform: scale(0.985); }
 
@@ -868,6 +875,18 @@
    de lo que va encima en una página. Aquí encima no hay nada: los 26px de padding
    de la cara ya son la separación, y los dos sumaban 44px hasta el borde. */
 .k-card__head .k-cap { margin-top: 0; }
+/* La misma razón un escalón más arriba: dentro de la ficha plana el hueco entre
+   bandas lo reparte el `gap`, así que ninguna cinta de dentro trae el suyo. Sin
+   esto la línea de frecuencia del popover sumaba sus 18px al hueco y el rótulo
+   de categoría empujaba el pie. Aquí sí va el margen entero, no solo el de
+   arriba: en una columna con `gap` los dos sobran.
+   reemplaza pages.css:567 `.wpop__freq` · :576 `.wpop__pos` (sus márgenes) */
+.k-card--flat > .k-cap,
+.k-card__foot .k-cap { margin: 0; }
+/* El voladizo del control en mono, otra vez: en el pie de la ficha el que no
+   cabe es el vertical (lo horizontal sí se quiere, deja el rótulo a plomo con
+   la banda de arriba). Hermana de `.k-row > .k-btn--text` y de la del armazón. */
+.k-card__foot > .k-btn--text { margin-block: 0; }
 .k-card__body {
   display: flex;
   flex-direction: column;
@@ -993,9 +1012,34 @@
 .k-card--anchored {
   position: absolute;
   z-index: 50;
-  max-width: 320px;
+  /* 320 es el ancho vivo del popover y lo que lo mantiene globo. El `min()` es
+     para el teléfono de 320px, donde 320 no cabe con márgenes: el globo encoge
+     en vez de recortarse contra el `overflow: hidden` del cascarón. Los 16px
+     son los 8 de margen a cada lado que el `.tsx` usa para acotar la posición. */
+  max-width: min(320px, calc(100vw - 16px));
   box-shadow: var(--shadow-pop);
   animation: k-card-in var(--dur-med) var(--ease-page) both;
+  /* Y su propia métrica, que es lo que cierra el candidato 18: la capa
+     flotante no es un átomo nuevo, es la ficha plana con la superficie
+     apretada. Los 26/22 de relleno y los 16 de hueco están pensados para una
+     ficha que ES la pantalla; encima de un pasaje que se está leyendo, esa
+     misma caja se come el texto que el popover viene a explicar. 16 y 12 son
+     los escalones de al lado, y los valores vivos eran 14/16/12 (pages.css:490).
+     El cuerpo NO se aprieta: la palabra sigue siendo `.k-card__word`, porque
+     es la razón por la que el globo existe. */
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+
+/* Y su scroll propio, SOLO cuando el contenido no cabe a ningún lado de la
+   palabra: un lema compuesto de tres renglones más su ejemplo pasa de 550px y
+   en un teléfono no cabe ni arriba ni abajo. El tope de alto lo pone el `.tsx`
+   en línea (lo que quepa a ese lado). Va con atributo y no siempre porque
+   `overflow-y: auto` recorta la COLA, que vive fuera de la caja: en el caso
+   normal el globo no scrollea y la cola se ve. */
+.k-card--anchored[data-scroll="true"] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Se anima `translate` y no `transform`, para no pisar el anclaje inline
@@ -1010,13 +1054,32 @@
 .k-card--anchored .k-card__tail {
   position: absolute;
   bottom: -6px;
-  left: 50%;
+  /* La cola sigue a la palabra aunque el globo se haya acotado a la pantalla:
+     el `.tsx` mide cuánto tuvo que moverse la caja y lo pasa en `--k-tail-x`,
+     que aquí se aplica al revés. Sin esto, un globo empujado desde el canto
+     apuntaba a 68px de donde estaba la palabra. */
+  left: calc(50% + var(--k-tail-x, 0px));
   width: 10px;
   height: 10px;
   transform: translateX(-50%) rotate(45deg);
   background: var(--paper-2);
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
+}
+
+/* Volteado: si encima de la palabra no cabe, el globo baja y la cola sube con
+   él —las dos aristas que se ven son entonces las de arriba—. El `.tsx` lo
+   decide midiendo el alto real después de montar. Hasta la migración 14 el
+   globo iba SIEMPRE encima, y una palabra en el primer renglón del pasaje se
+   quedaba con la mitad del globo fuera del cascarón (que es `overflow: hidden`,
+   o sea recortada y sin scroll que la rescate). */
+.k-card--anchored[data-abajo="true"] .k-card__tail {
+  bottom: auto;
+  top: -6px;
+  border-right: 0;
+  border-bottom: 0;
+  border-left: 1px solid var(--rule);
+  border-top: 1px solid var(--rule);
 }
 
 /* --- sin movimiento (gramática 4) --- */
