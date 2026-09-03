@@ -121,6 +121,15 @@
    `.ob5-acciones` · gender-review.css:46 `.gr__actions` (sus márgenes de arriba) */
 :where(.k-page) > :where(.k-wrap) { margin-top: var(--space-4); }
 
+/* Y la ficha suelta en una página. Hasta la migración 12 la ficha vivía
+   siempre dentro de `.k-fill`, que la centra en el hueco de la sesión, o
+   dentro del quiz del cierre; la sesión de género la pone debajo de una tira
+   en una página corriente, y la ficha no trae margen (tampoco debe: en el
+   volteo la caja es el eje). Mismo escalón que la fila de acciones: en una
+   página el ritmo es de 16px.
+   reemplaza gender-review.css:12 `.gr__head` (su margen inferior) */
+:where(.k-page) > :where(.k-card) { margin-top: var(--space-4); }
+
 /* El control en mono crece su área táctil hacia afuera con margen negativo, y
    en la fila que cierra una página el que no cabe es el vertical: la página
    deja 14px de relleno abajo —10 en viewport corto— y el voladizo pide 12, así
@@ -2015,6 +2024,14 @@ input.k-chip { cursor: text; }
    contra otro hueco: lo único que hay arriba son los 4px del `__dek`.
    reemplaza landing.css:39 `.landing__support` (su margen inferior) */
 :where(.k-hero) + :where(.k-wrap) { margin-top: var(--space-4); }
+
+/* Y la tercera del par, que faltaba: el fallo que sigue al titular. `.k-error`
+   es el único átomo de bloque que no trae aire ninguno —ni arriba ni abajo—,
+   porque nació dentro de un formulario, donde el hueco lo reparte el
+   contenedor. La sesión de género es la primera pantalla que lo pone suelto
+   debajo de un titular, y sin esto el filete de acento se pega al texto.
+   reemplaza gender-review.css:36 `.gr__empty` (su margen superior) */
+:where(.k-hero) + :where(.k-error) { margin-top: var(--space-4); }
 
 /* Hundido al pulsar: el bloque entero es el objetivo táctil (bien por encima de 44px). */
 .k-hero:active { transform: scale(0.985); }

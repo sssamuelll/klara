@@ -1,4 +1,13 @@
-import "../styles/gender-review.css";
+/**
+ * La sesión de género, en el vocabulario k-*. Sus dos consumidores —`/gender`
+ * y el segmento de Práctica— viven en el cascarón viejo de escritorio, así que
+ * la pantalla es una `.k-page` (la de `global.css`) como sus vecinas de ese
+ * mismo cascarón, y no el `.k-app` del teléfono.
+ *
+ * Las cinco fases comparten forma y no comparten tono, que es la doctrina que
+ * fijó Repaso: el vacío es una nota, el fallo de carga es un error, y la carga
+ * es el spinner suelto que ya usan Módulo y Pronunciar.
+ */
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -59,36 +68,51 @@ export default function GenderReviewSession({
 
   if (phase === "loading") {
     return (
-      <main className="gr">
-        <p className="gr__loading">{t("genderReview.title")}</p>
+      <main className="k-page">
+        <span className="k-spinner" role="status" aria-label={t("genderReview.title")} />
       </main>
     );
   }
 
   if (phase === "failed" || phase === "empty") {
     return (
-      <main className="gr">
-        <h1 className="gr__title">{t("genderReview.title")}</h1>
-        <p className="gr__empty">
-          {t(phase === "failed" ? "genderReview.failed" : "genderReview.empty")}
-        </p>
-        <button type="button" className="k-btn" onClick={onExit}>
-          {exitLabel}
-        </button>
+      <main className="k-page">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">{t("genderReview.title")}</h1>
+        </header>
+        {/* Comparten forma y no comparten tono (doctrina de Repaso): no tener
+            géneros que repasar hoy es una nota, no un error. */}
+        {phase === "failed" ? (
+          <p className="k-error" role="alert">{t("genderReview.failed")}</p>
+        ) : (
+          <p className="k-note">{t("genderReview.empty")}</p>
+        )}
+        <div className="k-wrap">
+          <button type="button" className="k-btn k-btn--lg k-btn--block" onClick={onExit}>
+            {exitLabel}
+          </button>
+        </div>
       </main>
     );
   }
 
   if (phase === "summary") {
     return (
-      <main className="gr">
-        <h1 className="gr__title">{t("genderReview.title")}</h1>
-        <p className="gr__summary">{t("genderReview.summary", { correct, total: items.length })}</p>
-        <div className="gr__actions">
-          <button type="button" className="k-btn" onClick={restart}>
+      <main className="k-page">
+        <header className="k-hero k-hero--quiet">
+          <h1 className="k-hero__title">{t("genderReview.title")}</h1>
+          {/* La cifra de la sesión va en el ledger del héroe (candidato 20). Sin
+              `<strong>` porque la clave es una frase interpolada entera y
+              partirla en dos serían seis traducciones por un peso. */}
+          <p className="k-hero__meta">
+            {t("genderReview.summary", { correct, total: items.length })}
+          </p>
+        </header>
+        <div className="k-wrap">
+          <button type="button" className="k-btn k-btn--block" onClick={restart}>
             {t("genderReview.again")}
           </button>
-          <button type="button" className="k-btn k-btn--ghost" onClick={onExit}>
+          <button type="button" className="k-btn k-btn--ghost k-btn--block" onClick={onExit}>
             {exitLabel}
           </button>
         </div>
@@ -99,10 +123,15 @@ export default function GenderReviewSession({
   // phase === "session"
   const item = items[idx];
   return (
-    <main className="gr">
-      <header className="gr__head">
-        <h1 className="gr__title">{t("genderReview.title")}</h1>
-        <span className="gr__progress k-mono">
+    <main className="k-page">
+      {/* La tira base, no `--session`: aquí no hay salida que colocar en una
+          tercera pista, y el relleno con inset de esa variante es para las
+          tiras que cuelgan del cascarón sin página. Durante la sesión el
+          título deja de encabezar y pasa a orientar, como en Lectura, Repaso y
+          el cierre; el titular vuelve en las otras cuatro fases. */}
+      <header className="k-topline">
+        <span className="k-topline__title">{t("genderReview.title")}</span>
+        <span className="k-topline__meta">
           {t("genderReview.progress", { done: idx + 1, total: items.length })}
         </span>
       </header>

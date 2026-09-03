@@ -11,6 +11,13 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "isolatedModules": true,
+    // El gate de CI es `tsc -b && vite build`, y `tsc -b` EMITE: sembraba 108
+    // `.js` (+ `.js.map`) junto a sus fuentes en cada corrida. Como `main.tsx`
+    // importa sin extensión y Vite resuelve `.js` antes que `.tsx`, la corrida
+    // siguiente ensamblaba el árbol viejo — es la trampa 15 del contrato del
+    // sistema, que costó una sonda entera en la migración 9. Aquí el chequeo
+    // de tipos es lo único que se quiere; el bundle lo hace Vite.
+    "noEmit": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
