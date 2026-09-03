@@ -400,7 +400,7 @@
     "listen": "Ouvir",
     "flip": "Virar",
     "flipHint": "ESPAÇO para virar",
-    "rateHint": "1–4 para avaliar · isto agenda a próxima revisão",
+    "rateHint": "1–4 para avaliar",
     "rate": {
       "again": "Outra vez",
       "hard": "Difícil",

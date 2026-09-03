@@ -25,7 +25,6 @@ import { api } from "../api/client";
 import type { PronunciationReviewIn, RescheduledCard, StorySentence } from "../api/types";
 import GenderReviewSession from "../components/GenderReviewSession";
 import KlaraMark from "../components/KlaraMark";
-import RecallReviewSession from "../components/RecallReviewSession";
 import SentenceView from "../components/SentenceView";
 import { useFontScale } from "../lib/preferences";
 import { focusBand } from "../lib/pronunciation";
@@ -101,7 +100,7 @@ export default function Practice() {
   const struggledN = useMemo(() => countByReason(items, "struggled"), [items]);
   const reviewN = total - struggledN;
 
-  const [segment, setSegment] = useState<"cards" | "pronunciation" | "gender" | null>(null);
+  const [segment, setSegment] = useState<"pronunciation" | "gender" | null>(null);
   const [phase, setPhase] = useState<Phase>("setup");
 
   type SendState = "idle" | "sending" | "ok" | "failed";
@@ -197,13 +196,6 @@ export default function Practice() {
     }
   }, [phase, sendState, submitSession]);
 
-  // ---- SEGMENT: cards (recall review — the canonical spaced review) ------
-  if (segment === "cards") {
-    return (
-      <RecallReviewSession onExit={() => setSegment(null)} exitLabel={t("practice.segment.back")} />
-    );
-  }
-
   // ---- SEGMENT: gender (reuses the standalone /gender session) -----------
   if (segment === "gender") {
     return (
@@ -222,7 +214,12 @@ export default function Practice() {
           <h1 className="kp-setup__title">{t("practice.segment.title")}</h1>
         </header>
         <section className="kp-segments">
-          <button className="kp-segment" onClick={() => setSegment("cards")}>
+          {/* Las fichas son su propia superficie de sesión (/repaso), no un
+              segmento dentro del cascarón viejo. */}
+          <button
+            className="kp-segment"
+            onClick={() => navigate("/repaso", { state: { from: "/review" } })}
+          >
             <span className="kp-segment__title">{t("practice.segment.cards.title")}</span>
             <span className="kp-segment__dek">{t("practice.segment.cards.dek")}</span>
             <span className="kp-segment__arrow k-serif">→</span>

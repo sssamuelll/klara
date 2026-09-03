@@ -247,6 +247,16 @@
   font-variant-numeric: tabular-nums;   /* los intervalos del SRS no bailan al cambiar de cifra */
 }
 
+/* El icono del botón: 16px es el cuerpo del rótulo (15px) redondeado al par más
+   cercano, y no se encoge cuando el alemán largo aprieta la caja. El trazo lo
+   pone el `stroke="currentColor"` del svg, así que sigue al estado del botón.
+   reemplaza recall-review.css:214 `.rr-listen__tri` (triángulo por bordes) */
+.k-btn svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
 /* El spinner de global.css se re-tinta: su anillo de --rule desaparecería sobre el sólido. */
 .k-btn .k-spinner {
   border-color: color-mix(in srgb, currentColor 30%, transparent);
@@ -275,6 +285,14 @@
 
 /* Pares de acciones a ancho repartido; el centrado ya viene de la base. */
 .k-btn--block { flex: 1; }
+
+/* Dentro de la nube (gramática 12) el reparto es de a dos por renglón: `flex: 1`
+   deja la base en 0 y cuatro botones nunca envuelven —se encogen por debajo de
+   su rótulo, que va `nowrap`, y se salen—. Con la base a media nube las cuatro
+   calificaciones del SRS caen 2×2 y el par de la banda de lectura sigue
+   ocupando exactamente un renglón (2 × (50% − 4px) + 8px de hueco = 100%).
+   reemplaza recall-review.css:243 `.rr-rate` + :348 (su rejilla comprimida) */
+.k-wrap > .k-btn--block { flex-basis: calc(50% - var(--space-2) / 2); }
 
 /* Control en mono sin caja (volver, salir, revelar): el área táctil crece
    hacia afuera con margen negativo, así el rótulo no mueve la línea. */
@@ -584,28 +602,43 @@
 .k-card__article[data-gender="die"] { color: var(--art-die); }
 .k-card__article[data-gender="das"] { color: var(--art-das); }
 
+/* Dentro de una cara centrada, una respuesta que envuelve dejaba el artículo
+   solo y pegado a la izquierda: el `text-align` de la cara no manda sobre las
+   líneas de un flex. La ficha plana (el popover) se queda a la izquierda. */
+.k-card__face .k-card__answer { justify-content: center; }
+
 .k-card__tx {
   margin: 0;
   font-family: var(--font-serif);
   font-size: var(--t-read);
   color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
 
-/* `align-self: stretch` porque dentro de una cara centrada un <hr> se encogería a cero. */
+/* `align-self: stretch` porque dentro de una cara centrada un <hr> se encogería a cero.
+   `flex-shrink: 0` porque cuando el contenido de la cara pasa de los 340px —una
+   ficha con lema compuesto, traducción larga y ejemplo— el reparto flex encoge
+   a todos, y el único hijo de 1px desaparece: el filete se borraba justo en la
+   ficha que más lo necesitaba. Es la misma cláusula de la gramática 8. */
 .k-card__rule {
   height: 1px;
   margin: var(--space-1) 0;
   border: 0;
   background: var(--rule);
   align-self: stretch;
+  flex-shrink: 0;
 }
 
+/* Gramática 8: el ejemplo es alemán y tiene que sobrevivir a
+   Bundesausbildungsförderungsgesetz. Sin esto el compuesto no partía y se salía
+   de la cara por la derecha; `__word` sí lo traía y `__eg` y `__tx` no. */
 .k-card__eg {
   margin: 0;
   font-family: var(--font-serif);
   font-size: var(--t-read);
   line-height: 1.45;
   color: var(--ink);
+  overflow-wrap: anywhere;
 }
 
 /* --- vacía --- */
@@ -2120,7 +2153,7 @@ li:first-child > .k-row:not(.k-row--boxed),
     padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   }
   /* El dock se pega al pasaje y la banda deja de reservar alto: en 720px el
-     mínimo de 124px se come la oración. */
+     mínimo de 130px se come la oración. */
   .k-dock { padding-top: var(--space-2); }
   .k-band { min-height: 0; }
   .k-row { padding: 7px 0; }

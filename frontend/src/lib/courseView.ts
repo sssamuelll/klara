@@ -34,7 +34,7 @@ export function buildCourseVM(args: {
     { n: "01", id: "leer", to: leerTo, e: "ahora" },
     { n: "02", id: "pronunciar", to: "/review", e: "luego" },
     { n: "03", id: "hablar", to: "/chat", e: "luego" },
-    { n: "04", id: "repasar", to: "/review", e: "luego" },
+    { n: "04", id: "repasar", to: "/repaso", e: "luego" },
   ];
   return {
     id: "aleman",

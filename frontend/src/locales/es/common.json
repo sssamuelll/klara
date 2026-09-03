@@ -400,7 +400,7 @@
     "listen": "Escuchar",
     "flip": "Voltear",
     "flipHint": "ESPACIO voltear",
-    "rateHint": "1–4 calificar · esto agenda el próximo repaso",
+    "rateHint": "1–4 calificar",
     "rate": {
       "again": "Otra vez",
       "hard": "Difícil",

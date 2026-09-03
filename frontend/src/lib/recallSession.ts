@@ -1,7 +1,7 @@
 import type { CardOut, ReviewRating } from "../api/types";
 
 /**
- * Pure state machine for a recall-review session. The component (RecallReviewSession)
+ * Pure state machine for a recall-review session. The component (routes/Repaso)
  * drives this via useReducer and owns all side effects (fetching due cards, POSTing
  * the review with its elapsed time, TTS). Keeping the transitions here makes the
  * session's behaviour unit-testable without a DOM renderer.

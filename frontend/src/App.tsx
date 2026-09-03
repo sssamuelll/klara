@@ -17,6 +17,7 @@ import NewStory from "./routes/NewStory";
 import StoryView from "./routes/Story";
 import Taller from "./routes/Taller";
 import Practice from "./routes/Practice";
+import Repaso from "./routes/Repaso";
 import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
 import Onboarding from "./onboarding/Onboarding";
@@ -240,6 +241,17 @@ function AppShell() {
         }
       />
       <Route path="/story/:id" element={<LegacyStoryRedirect />} />
+
+      {/* Repaso: la misma superficie suelta que /estudiar/:id — pinta su propio
+          .k-app y el armazón de sesión no se puede anidar en .kframe. */}
+      <Route
+        path="/repaso"
+        element={
+          <ProtectedRoute>
+            <Repaso />
+          </ProtectedRoute>
+        }
+      />
 
       {/* El taller (F0): suelta fuera de V4Shell, como /estudiar/:id — el
           taller es su propia superficie, no un panel dentro del shell móvil. */}

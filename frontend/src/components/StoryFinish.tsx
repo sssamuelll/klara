@@ -185,7 +185,7 @@ interface QuizProps {
 function Quiz({ items, story, onComplete }: QuizProps): JSX.Element {
   const [state, dispatch] = useReducer(quizSessionReducer, items, initQuizSession);
 
-  // Timing per item (patrón #115 / RecallReviewSession): shownAt resets each
+  // Timing per item (patrón #115 / Repaso): shownAt resets each
   // time a new item lands on screen.
   const shownAtRef = useRef(performance.now());
   useEffect(() => {

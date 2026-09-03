@@ -400,7 +400,7 @@
     "listen": "Écouter",
     "flip": "Retourner",
     "flipHint": "ESPACE pour retourner",
-    "rateHint": "1–4 pour noter · ça programme la prochaine révision",
+    "rateHint": "1–4 pour noter",
     "rate": {
       "again": "Encore",
       "hard": "Difficile",

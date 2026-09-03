@@ -38,7 +38,7 @@ describe("buildCourseVM", () => {
       ["leer", "/estudiar/abc"],
       ["pronunciar", "/review"],
       ["hablar", "/chat"],
-      ["repasar", "/review"],
+      ["repasar", "/repaso"],
     ]);
     expect(vm.pasos.filter((p) => p.e === "ahora")).toHaveLength(1);
   });
