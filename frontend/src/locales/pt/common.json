@@ -714,7 +714,7 @@
     "plan": "O plano de hoje · {{min}} min",
     "planHecho": "O plano de hoje · feito",
     "fin": "Amanhã, outra história.",
-    "listo": "Pronto por hoje.",
+    "finHecho": "Pronto por hoje. Amanhã, outra história.",
     "seguir": "Continuar lendo",
     "empezar": "Começar",
     "pedir": "Peça uma história à Klara",

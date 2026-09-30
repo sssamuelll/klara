@@ -113,7 +113,7 @@ export default function Hoy() {
             </li>
           ))}
         </ol>
-        <p className="k-route__end">{vm.todoHecho ? `${t("hoy.listo")} ${t("hoy.fin")}` : t("hoy.fin")}</p>
+        <p className="k-route__end">{vm.todoHecho ? t("hoy.finHecho") : t("hoy.fin")}</p>
       </div>
     </main>
   );

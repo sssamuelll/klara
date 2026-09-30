@@ -711,10 +711,10 @@
   "hoy": {
     "estasAqui": "現在地",
     "hecho": "完了",
-    "plan": "今日のプラン · {{min}}分",
+    "plan": "今日のプラン · {{min}} 分",
     "planHecho": "今日のプラン · 完了",
     "fin": "明日はまた新しい物語。",
-    "listo": "今日はここまで。",
+    "finHecho": "今日はここまで。明日はまた新しい物語。",
     "seguir": "続きを読む",
     "empezar": "はじめる",
     "pedir": "Klaraに物語を頼む",

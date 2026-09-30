@@ -714,7 +714,7 @@
     "plan": "Today's plan · {{min}} min",
     "planHecho": "Today's plan · done",
     "fin": "Tomorrow, another story.",
-    "listo": "Done for today.",
+    "finHecho": "Done for today. Tomorrow, another story.",
     "seguir": "Keep reading",
     "empezar": "Start",
     "pedir": "Ask Klara for a story",

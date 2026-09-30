@@ -714,7 +714,7 @@
     "plan": "Le plan du jour · {{min}} min",
     "planHecho": "Le plan du jour · fait",
     "fin": "Demain, une autre histoire.",
-    "listo": "C'est fini pour aujourd'hui.",
+    "finHecho": "C'est fini pour aujourd'hui. Demain, une autre histoire.",
     "seguir": "Continuer la lecture",
     "empezar": "Commencer",
     "pedir": "Demande une histoire à Klara",
