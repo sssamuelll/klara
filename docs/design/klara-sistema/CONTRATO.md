@@ -1226,11 +1226,12 @@ Literales justificados: **16px** de cuerpo es deliberado y viene con su comentar
 **Variantes:** ninguna.
 
 **Estados:** `data-state` en `__stop`. **`pending`**: punto hueco. **`now`**: punto de acento con anillo; la parada lleva `__label` y un `.k-hero` dentro de `__body`. **`done`**: punto lleno; el título baja a `--ink-2` y la meta dice «Hecho». La línea y el tope los dibuja el bloque con `::before` y `::after`.
+**Contacto** (`:hover` y `:active` sobre `__row`): fondo `--paper-2`, el fondo de contacto único del sistema (el de `.k-row`, átomo 4), con radio `var(--r-sm)`; el anillo global de `:focus-visible` no se anula. La parada actual no lleva fila: su contacto es el del héroe (`:active` lo hunde).
 
 **Medidas:** carril de 28px (`--k-route-rail`, local al bloque). El punto mide 14px con borde de 3px; la línea mide 3px, como el borde, para que el punto se lea enhebrado. El tope mide 18×3px. Las filas llevan `min-height: 44px` (§7.2). Título en `--t-h3` serif, meta en `--t-mono` mono y subtítulo en `--t-mark` serif cursiva. Entre paradas, `--space-4`.
-Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px del tope, los 6px de `margin-top` del punto (lo bajan a la línea de base del título), los 12px del arranque de la línea (el centro del primer punto) y el `outline-offset` de 3px del punto actual, que es el de la gramática de foco.
+Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px del tope, los 6px de `margin-top` del punto (lo bajan a la línea de base del título), los 12px del arranque de la línea (el centro del primer punto) y el `outline-offset` de 3px del punto actual, que es el de la gramática de foco. El relleno de contacto no trae literales: sube y baja `var(--space-2)` como dos `box-shadow` sin desenfoque (`0 ±var(--space-2) 0 0`), que no ocupan sitio, no suman al scroll de `.k-live` y dejan el texto donde estaba, contra el rótulo y el héroe; a los lados queda a ras de la columna, alineado con el héroe. Ni un margen negativo (trampa 13) ni un `spread` uniforme valían: el primero desborda `.k-live`, y el segundo sobresale 8px por la izquierda y `.k-live` lo corta a ras por la derecha.
 
-**Tokens:** `--ink`, `--ink-2`, `--ink-3`, `--paper`, `--accent`, `--accent-ink`, `--space-2`, `--space-3`, `--space-4`, `--font-serif`, `--font-mono`, `--t-h3`, `--t-mono`, `--t-mark`, `--tracking-mark`.
+**Tokens:** `--ink`, `--ink-2`, `--ink-3`, `--paper`, `--paper-2`, `--accent`, `--accent-ink`, `--r-sm`, `--space-2`, `--space-3`, `--space-4`, `--font-serif`, `--font-mono`, `--t-h3`, `--t-mono`, `--t-mark`, `--tracking-mark`.
 
 **Markup canónico:**
 ```html

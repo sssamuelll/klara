@@ -2764,56 +2764,6 @@ ul.k-error { list-style: none; }
   .k-field__rule { transition: none; }
 }
 
-/* ---------- 99-compresion ---------- */
-/* ============================================================
-   COMPRESIÓN EN VIEWPORT CORTO — gramática 13. Es §7.3 (cero
-   scroll), no una preferencia. Un solo bloque sustituye a los dos
-   que hay hoy: mobile3.css:87-98 y mobile4.css:51-58.
-
-   Ningún control se comprime: §7.2 no admite excepción por altura de
-   viewport, y por eso muere el chip a 40px de perfil-aprendizaje.css:107.
-   El clamp del titular hace innecesario el recorte a 22px de
-   mobile3.css:93, y `.k-hero__dek` deja de esconderse (mobile4.css:58).
-   ============================================================ */
-
-@media (max-height: 720px) {
-  /* El shorthand resetea el `padding-top` — hay que reponer el inset. Y hay que
-     reponerlo en el MISMO selector de arriba, no en este: `@media` no eleva la
-     especificidad (trampa 12), así que un `padding-top` escrito aquí en (0,2,0)
-     no pisa al de `.k-app > .k-page:first-child` (0,3,0) por muy dentro de la
-     consulta que esté, y la página comprimida se quedaba con los 16px. */
-  .k-app > .k-page { padding: var(--space-3) 22px 10px; }
-  .k-app > .k-page:first-child {
-    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
-  }
-  /* El dock se pega al pasaje y la banda deja de reservar alto: en 720px el
-     mínimo de 130px se come la oración. */
-  .k-dock { padding-top: var(--space-2); }
-  .k-band { min-height: 0; }
-  .k-row { padding: 7px 0; }
-  .k-cap { margin: 10px 0 2px; }
-  /* El margen sí comprime en las dos formas: es el hueco contra lo de arriba.
-     El relleno NO, y ahí estaba la trampa 21: `.k-hero--quiet` lo apaga
-     (`padding: 0`) con la misma especificidad (0,1,0), y esta consulta está
-     escrita 540 líneas después, así que se lo devolvía. En todo teléfono de
-     ≤720px de alto —los de 667 y cualquiera en horizontal— los 31 héroes
-     apagados de la app salían con 12px arriba y 16 a los lados que su variante
-     había apagado. Lo encontró la sonda del mapa midiendo el borde izquierdo de
-     una pieza HIJA del héroe; el rectángulo del héroe no lo delata. */
-  .k-hero { margin-top: var(--space-3); }
-  .k-hero:not(.k-hero--quiet) { padding: var(--space-3) var(--space-4); }
-  .k-note { margin-top: var(--space-3); }
-  /* El medallón encoge entero —132 es la caja comprimida de speak.css:199— y
-     ahora el anillo encoge con él: para eso existe `--orbit`. */
-  .k-presence {
-    width: 132px;
-    height: 132px;
-    --orbit: 62px;
-  }
-  .k-card__inner { min-height: 288px; }
-  .k-field--area .k-field__input { min-height: 96px; }
-}
-
 /* ---------- 18-recorrido ---------- */
 /* ============================================================
    18 · RECORRIDO — .k-route
@@ -2913,10 +2863,27 @@ ul.k-error { list-style: none; }
   width: 100%;
   padding: 0;
   border: 0;
+  border-radius: var(--r-sm);         /* el relleno de contacto y el anillo de foco lo siguen */
   background: none;
   color: var(--ink);
   text-align: left;
   cursor: pointer;
+}
+
+/* Contacto: el mismo fondo único del sistema que `.k-row` (átomo 4). La fila de
+   la parada no trae relleno (`padding: 0`) y no puede traerlo: movería su texto
+   contra el rótulo y el héroe de la parada actual, y un margen negativo dentro
+   de `.k-live` —que scrollea— la desbordaría (trampa 13). El aire de arriba y de
+   abajo sale como dos sombras sin desenfoque, que no ocupan sitio ni suman al
+   scroll. No van alrededor (`0 0 0 var(--space-2)`) porque a los lados `.k-live`
+   las corta a ras por la derecha y sobresaldrían 8px por la izquierda: así el
+   relleno queda alineado con el héroe. El anillo global de `:focus-visible`
+   (global.css:48) no se anula. */
+.k-route__row:hover,
+.k-route__row:active {
+  background: var(--paper-2);
+  box-shadow: 0 calc(-1 * var(--space-2)) 0 0 var(--paper-2),
+              0 var(--space-2) 0 0 var(--paper-2);
 }
 
 .k-route__title {
@@ -3067,4 +3034,54 @@ ul.k-error { list-style: none; }
   font-family: var(--font-serif);
   font-size: var(--t-body);
   overflow-wrap: anywhere;
+}
+
+/* ---------- 99-compresion ---------- */
+/* ============================================================
+   COMPRESIÓN EN VIEWPORT CORTO — gramática 13. Es §7.3 (cero
+   scroll), no una preferencia. Un solo bloque sustituye a los dos
+   que hay hoy: mobile3.css:87-98 y mobile4.css:51-58.
+
+   Ningún control se comprime: §7.2 no admite excepción por altura de
+   viewport, y por eso muere el chip a 40px de perfil-aprendizaje.css:107.
+   El clamp del titular hace innecesario el recorte a 22px de
+   mobile3.css:93, y `.k-hero__dek` deja de esconderse (mobile4.css:58).
+   ============================================================ */
+
+@media (max-height: 720px) {
+  /* El shorthand resetea el `padding-top` — hay que reponer el inset. Y hay que
+     reponerlo en el MISMO selector de arriba, no en este: `@media` no eleva la
+     especificidad (trampa 12), así que un `padding-top` escrito aquí en (0,2,0)
+     no pisa al de `.k-app > .k-page:first-child` (0,3,0) por muy dentro de la
+     consulta que esté, y la página comprimida se quedaba con los 16px. */
+  .k-app > .k-page { padding: var(--space-3) 22px 10px; }
+  .k-app > .k-page:first-child {
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  }
+  /* El dock se pega al pasaje y la banda deja de reservar alto: en 720px el
+     mínimo de 130px se come la oración. */
+  .k-dock { padding-top: var(--space-2); }
+  .k-band { min-height: 0; }
+  .k-row { padding: 7px 0; }
+  .k-cap { margin: 10px 0 2px; }
+  /* El margen sí comprime en las dos formas: es el hueco contra lo de arriba.
+     El relleno NO, y ahí estaba la trampa 21: `.k-hero--quiet` lo apaga
+     (`padding: 0`) con la misma especificidad (0,1,0), y esta consulta está
+     escrita 540 líneas después, así que se lo devolvía. En todo teléfono de
+     ≤720px de alto —los de 667 y cualquiera en horizontal— los 31 héroes
+     apagados de la app salían con 12px arriba y 16 a los lados que su variante
+     había apagado. Lo encontró la sonda del mapa midiendo el borde izquierdo de
+     una pieza HIJA del héroe; el rectángulo del héroe no lo delata. */
+  .k-hero { margin-top: var(--space-3); }
+  .k-hero:not(.k-hero--quiet) { padding: var(--space-3) var(--space-4); }
+  .k-note { margin-top: var(--space-3); }
+  /* El medallón encoge entero —132 es la caja comprimida de speak.css:199— y
+     ahora el anillo encoge con él: para eso existe `--orbit`. */
+  .k-presence {
+    width: 132px;
+    height: 132px;
+    --orbit: 62px;
+  }
+  .k-card__inner { min-height: 288px; }
+  .k-field--area .k-field__input { min-height: 96px; }
 }
