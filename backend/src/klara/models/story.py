@@ -28,6 +28,11 @@ class Story(Base):
     target_language: Mapped[str] = mapped_column(String(8), nullable=False)
     native_language: Mapped[str] = mapped_column(String(8), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    # Portada (spec 2026-09-30 §3.1): una línea en la lengua del estudiante y la
+    # escena en inglés que dibuja la ilustración. Nullable: las historias viejas
+    # los reciben del backfill.
+    subtitle: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    scene: Mapped[str | None] = mapped_column(String(600), nullable=True)
     content: Mapped[dict] = mapped_column(JSONB, nullable=False)
     target_vocab_item_ids: Mapped[list[UUID]] = mapped_column(
         ARRAY(PGUUID(as_uuid=True)),
