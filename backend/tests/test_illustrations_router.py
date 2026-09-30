@@ -31,16 +31,21 @@ async def test_sirve_la_imagen_sin_sesion(client, db_session):
 
 
 @pytest.mark.asyncio
-async def test_mime_que_no_es_imagen_sale_como_octet_stream(client, db_session):
+@pytest.mark.parametrize(
+    ("mime", "data"),
+    [("text/html", b"<script>"), ("image/svg+xml", b"<svg onload=alert(1)>")],
+    ids=["html", "svg"],
+)
+async def test_mime_que_no_es_imagen_sale_como_octet_stream(client, db_session, mime, data):
     db_session.add(
         Illustration(
             hash="d" * 64,
             scene="x",
             style_version=1,
             model="m",
-            mime_type="text/html",
-            image_data=b"<script>",
-            size_bytes=8,
+            mime_type=mime,
+            image_data=data,
+            size_bytes=len(data),
         )
     )
     await db_session.commit()

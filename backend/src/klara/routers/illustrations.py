@@ -15,6 +15,9 @@ from klara.models import Illustration
 router = APIRouter(prefix="/illustrations", tags=["illustrations"])
 
 _HASH = re.compile(r"^[0-9a-f]{64}$")
+# Lista cerrada: los bytes vienen de una API externa y la ruta es pública. `image/*`
+# no basta, porque un image/svg+xml abierto directo ejecuta script en nuestro origen.
+_IMAGE_TYPES = frozenset({"image/png", "image/jpeg", "image/webp"})
 
 
 @router.get("/{hash_}")
@@ -30,9 +33,7 @@ async def get_illustration(hash_: str, db: DBSession) -> Response:
     ).first()
     if row is None:
         raise HTTPException(status_code=404, detail="illustration.not_found")
-    # Los bytes vienen de una API externa y la ruta es pública: solo sale como
-    # imagen lo que se guardó como imagen; cualquier otro tipo, como binario opaco.
-    media = row.mime_type if row.mime_type.startswith("image/") else "application/octet-stream"
+    media = row.mime_type if row.mime_type in _IMAGE_TYPES else "application/octet-stream"
     return Response(
         content=row.image_data,
         media_type=media,
