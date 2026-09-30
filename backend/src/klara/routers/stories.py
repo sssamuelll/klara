@@ -79,6 +79,7 @@ from klara.services.finish_lessons import (
     ensure_quiz_items,
 )
 from klara.services.gender_grading import grade_gender_attempt
+from klara.services.illustration import illustrate_in_background
 from klara.services.story_gen import StoryGenerationError, generate_story
 from klara.services.tts_precache import precache_story
 from klara.services.voice_mc import resolve_option
@@ -235,6 +236,8 @@ async def create_story(
         serialized.title,
         result.story.target_language,
     )
+    if result.story.scene:
+        background.add_task(illustrate_in_background, settings, result.story.scene)
     return serialized
 
 
