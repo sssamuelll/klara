@@ -18,6 +18,7 @@ export default function Hoy() {
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
   const [reclamando, setReclamando] = useState(false);
+  const [falloReclamo, setFalloReclamo] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -33,6 +34,7 @@ export default function Hoy() {
   const tema = user ? languageLabel(user.target_language) : "…";
 
   async function actuar(accion: Accion) {
+    setFalloReclamo(false);
     if (accion.tipo === "ir") {
       navigate(accion.to, { state: { from: "/" } });
       return;
@@ -49,7 +51,7 @@ export default function Hoy() {
         return;
       }
       setReclamando(false);
-      setFallo(true);
+      setFalloReclamo(true);
     }
   }
 
@@ -60,7 +62,7 @@ export default function Hoy() {
           <button
             type="button"
             className="k-btn k-btn--text"
-            aria-label={t("biblioteca.titulo")}
+            aria-label={`${tema}, ${t("biblioteca.titulo")}`}
             onClick={() => navigate("/biblioteca")}
           >
             {tema} <span aria-hidden="true">⌄</span>
@@ -90,6 +92,7 @@ export default function Hoy() {
             </button>
           </p>
         )}
+        {falloReclamo && <p className="k-error" role="alert">{t("module.claimError")}</p>}
         <ol className="k-route">
           {vm.paradas.map((p) => (
             <li
