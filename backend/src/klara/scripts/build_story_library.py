@@ -221,6 +221,8 @@ async def build_library(
                     quiz_items=draft.quiz_items,
                     insight_title=draft.insight_title,
                     insight_body=draft.insight_body,
+                    subtitle=draft.subtitle,
+                    scene=draft.scene,
                     topic=topic,
                     source="seed",
                     content_hash=h,

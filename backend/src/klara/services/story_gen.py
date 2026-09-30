@@ -21,6 +21,18 @@ from klara.services.story_lint import gender_article_violations
 
 log = structlog.get_logger(__name__)
 
+# Portada (spec 2026-09-30 §3.1). Topes de columna: el prompt pide menos
+# (70 y 300 caracteres) y lo que se pase se recorta, no se rechaza.
+SUBTITLE_MAX = 160
+SCENE_MAX = 600
+
+
+def trim_text(value: Any, limit: int) -> str | None:
+    """Colapsa espacios y recorta. Lo que no es texto, o queda vacío, es None."""
+    if not isinstance(value, str):
+        return None
+    return " ".join(value.split())[:limit] or None
+
 
 class StoryGenerationError(RuntimeError):
     """The LLM response could not be parsed into a usable story."""
@@ -47,6 +59,8 @@ class StoryDraft:
     model: str | None
     cost_usd: float | None
     gender_violations: list[str]
+    subtitle: str | None = None
+    scene: str | None = None
 
 
 def _parse_pos(value: str | None) -> PartOfSpeech:
@@ -293,6 +307,8 @@ async def generate_story_draft(
             insight_title = t.strip()[:200]
         if isinstance(b, str) and b.strip():
             insight_body = b.strip()[:2000]
+    subtitle = trim_text(data.get("subtitle"), SUBTITLE_MAX)
+    scene = trim_text(data.get("scene"), SCENE_MAX)
 
     target_words = await _upsert_vocab_items(
         db,
@@ -345,6 +361,8 @@ async def generate_story_draft(
         model=response.model,
         cost_usd=response.cost_usd,
         gender_violations=gender_violations,
+        subtitle=subtitle,
+        scene=scene,
     )
 
 
@@ -398,6 +416,8 @@ async def generate_story(
         quiz_items=draft.quiz_items,
         insight_title=draft.insight_title,
         insight_body=draft.insight_body,
+        subtitle=draft.subtitle,
+        scene=draft.scene,
     )
     db.add(story)
     await db.flush()

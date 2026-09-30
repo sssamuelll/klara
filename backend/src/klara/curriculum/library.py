@@ -125,6 +125,8 @@ async def claim_library_entry(
         quiz_items=entry.quiz_items,
         insight_title=entry.insight_title,
         insight_body=entry.insight_body,
+        subtitle=entry.subtitle,
+        scene=entry.scene,
         module_id=module.id,
         library_source_id=entry.id,
     )
@@ -248,6 +250,8 @@ async def maybe_recycle_to_library(
                     quiz_items=story.quiz_items,
                     insight_title=story.insight_title,
                     insight_body=story.insight_body,
+                    subtitle=story.subtitle,
+                    scene=story.scene,
                     topic=topic,
                     source="pool",
                     source_story_id=story.id,

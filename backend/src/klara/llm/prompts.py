@@ -28,6 +28,8 @@ Reglas absolutas:
 Devuelve SOLO JSON válido con este esquema, sin texto extra ni markdown:
 {{
   "title": "string (en {target_label}, corto)",
+  "subtitle": "una línea en {native_label}, 70 caracteres o menos, que diga de qué va la escena sin contar el final",
+  "scene": "la escena principal descrita EN INGLÉS para un ilustrador, 300 caracteres o menos: lugar, momento del día, objetos y luz. Sin texto, letreros, marcas ni personas reconocibles",
   "sentences": [
     {{
       "target": "frase en {target_label}",
