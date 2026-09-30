@@ -111,7 +111,7 @@ Las claves nuevas van en `common.json` de las seis carpetas de `src/locales` (de
 - `steps.read`: existe una fila de `story_views` del usuario con `finished_at >= since`.
 - `steps.pronounce`: existe un `pronunciation_attempts.attempted_at >= since`.
 - `steps.speak`: existe un `speak_turns.created_at >= since`.
-- `steps.review`: existe un `reviews.reviewed_at >= since`, o `due == 0`.
+- `steps.review`: existe un `reviews.reviewed_at >= since` con `channel = "recall"`, o `due == 0`. El canal importa: la práctica de pronunciación también escribe filas en `reviews` (con `channel = "pronunciation"`, `services/practice_session.py:101`), y sin el filtro pronunciar marcaría Repasar como hecho.
 - `due`: las fichas vencidas, con el mismo predicado que `GET /srs/cards/due` (`next_review_at <= now` o NULL), contadas con `count(*)`. Hoy el frontend las cuenta pidiendo 50.
 - `now`: la primera de `read`, `pronounce`, `speak` y `review` que no está hecha. Es `null` si las cuatro lo están.
 - `story`: se aplica la primera regla que calce.
