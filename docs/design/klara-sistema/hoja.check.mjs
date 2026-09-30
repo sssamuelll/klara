@@ -43,12 +43,14 @@ const ESTADOS = {
   "hoja-inferior": ["entrando", "reposo"],
   "barra-pestanas": ["2", "3", "4", "activo", "con-menu"],
   "linea-superior": ["marca", "sesion", "pie"],
-  "bloque-heroe": ["activo", "deshabilitado", "quieto"],
+  "bloque-heroe": ["activo", "deshabilitado", "quieto", "con-arte"],
   "nota-margen": ["glosa", "correccion", "mono", "sin-filete"],
   "palabra-puntuada": ["bien", "regular", "mal", "activa"],
   "error": ["en-linea"],
   "marca": ["quieta", "hablando"],
   "campo-texto": ["reposo", "foco", "error", "deshabilitado", "area", "manuscrito"],
+  "recorrido": ["pendiente", "ahora", "hecha", "fin", "compuesto-largo"],
+  "estanteria": ["tema", "vencidas", "nuevo", "compuesto-largo"],
 };
 
 // document.fonts.ready resuelve antes de que el layout pida las caras; hay que
@@ -115,7 +117,7 @@ for (const tema of ["light", "dark"]) {
       if (r.atomosSinCard.length) fallo(`átomos sin tarjeta: ${r.atomosSinCard.join(", ")}`);
       if (r.atomosFuera.length) fallo(`tarjetas con data-atom desconocido: ${r.atomosFuera.join(", ")}`);
       if (r.faltan.length) fallo(`estados del brief §5 que faltan: ${r.faltan.join(", ")}`);
-      else ok("los 16 átomos con todos los estados de §5");
+      else ok(`los ${Object.keys(ESTADOS).length} átomos con todos los estados de §5`);
     }
     if (r.scrollX > r.ancho) fallo(`[${tema}/${nombre}] scroll horizontal: ${r.scrollX}px en un viewport de ${r.ancho}px`);
     if (r.chicos.length) fallo(`[${tema}/${nombre}] objetivos < 44px: ${r.chicos.join("; ")}`);

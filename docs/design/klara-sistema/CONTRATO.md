@@ -1,6 +1,6 @@
 ﻿# Contrato del vocabulario — `k-*`
 
-Este documento fija los nombres, los estados y las medidas de los 17 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
+Este documento fija los nombres, los estados y las medidas de los 19 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
 Va dirigido a quien implemente la hoja de estilo y a quien migre cada pantalla: lo que no está aquí no existe, y lo que aquí se llama de una manera se llama así en el `.tsx`.
 Lo implementa `frontend/src/styles/sistema.css`, una hoja nueva que se importa en `frontend/src/main.tsx` justo después de `./styles/global.css` (main.tsx:6) y antes que `native.css` (main.tsx:7).
 Lo muestra `docs/design/klara-sistema/hoja.html`, que carga solo `global.css` + `sistema.css` (hoja.html:17-18): si un átomo necesita `mobile3.css` para verse bien, la hoja lo delata.
@@ -874,7 +874,7 @@ Literales justificados: **17px** y **-0.02em** del wordmark y **7px** de gap son
 
 **Reemplaza:** mobile3.css:56 `.m3-hero`, `:active` (:57), `:disabled` (:58), `.tag` (:59), `.fila` (:60), `h2` (:61), `.dek` (:62), `.arrow` (:63) y su compresión (:92-93) · mobile4.css:58 `.m3-hero .dek{display:none}` · mobile3.css:40 `.m3-saludo` (muerta) y :66 `.m3-mapa-h1` (muerta) · mobile4.css:7 `.m4-saludo`, :32 `.m4-h1` · finish.css:102 `.fin-hero` + `__cap` (:108), `__cap-text` (:119), `__title` (:126), `__meta` (:136), `__sep` (:153) · finish.css:202 `.quiz-hero` + `__title` (:207), `__sub` (:217) · onboarding.css:257 `.ob-welcome` + `__hello` (:272), `__lede` (:290), `__sub` (:324), `__cta` (:331), `__tip` (:339) · onboarding.css:626 `.ob-done` + `__title` (:637), `__name` (:649), `__sub` (:655) · onboarding.css:153 `.ob-prompt` + `__title` (:158, y su `@media max-860` de :170), `__sub` (:172), `__rule` (:180) · landing.css:24 `.landing__tagline`, :34 `.landing__support` · pages.css:36 `.home__feature` y :315 `.story-end` (muertas).
 
-**Elementos:** `.k-hero__tag` — la tira mono de arriba. `.k-hero__title` — el titular serif. `.k-hero__dek` — la bajada en serif itálica. `.k-hero__arrow` — la flecha de afordancia. `.k-hero__meta` — la línea de cifras.
+**Elementos:** `.k-hero__tag` — la tira mono de arriba. `.k-hero__title` — el titular serif. `.k-hero__dek` — la bajada en serif itálica. `.k-hero__arrow` — la flecha de afordancia. `.k-hero__meta` — la línea de cifras. `__art` (la ilustración de la historia: 21:9, cruza las dos columnas, arriba del todo; fondo `--paper-2` mientras carga; spec 2026-09-30 §1.3).
 
 **Variantes:** `.k-hero--quiet` — editorial: solo tipografía, sin superficie ni afordancia; es el titular de una pantalla de lectura y de la landing.
 
@@ -1217,6 +1217,99 @@ Literales justificados: **16px** de cuerpo es deliberado y viene con su comentar
 
 ---
 
+### 18. Recorrido — `.k-route`
+
+**Reemplaza:** nada, es pieza nueva del spec `2026-09-30-hoy-y-biblioteca` (§1.2). Es la lista del plan de la portada del curso (`Portada.tsx`, filas `.k-row` numeradas 01–04) convertida en línea.
+
+**Elementos:** `__stop` (cada parada, un `<li>`), `__dot` (el punto sobre la línea), `__body` (la columna de la parada actual: rótulo y héroe), `__label` («Estás aquí»), `__row` (la parada cerrada, un `<button>`), `__title`, `__meta`, `__sub` y `__end` (la línea de cierre, hermana de la lista).
+
+**Variantes:** ninguna.
+
+**Estados:** `data-state` en `__stop`. **`pending`**: punto hueco. **`now`**: punto de acento con anillo; la parada lleva `__label` y un `.k-hero` dentro de `__body`. **`done`**: punto lleno; el título baja a `--ink-2` y la meta dice «Hecho». La línea y el tope los dibuja el bloque con `::before` y `::after`.
+
+**Medidas:** carril de 28px (`--k-route-rail`, local al bloque). El punto mide 14px con borde de 3px; la línea mide 3px, como el borde, para que el punto se lea enhebrado. El tope mide 18×3px. Las filas llevan `min-height: 44px` (§7.2). Título en `--t-h3` serif, meta en `--t-mono` mono y subtítulo en `--t-mark` serif cursiva. Entre paradas, `--space-4`.
+Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px del tope, los 6px de `margin-top` del punto (lo bajan a la línea de base del título), los 12px del arranque de la línea (el centro del primer punto) y el `outline-offset` de 3px del punto actual, que es el de la gramática de foco.
+
+**Tokens:** `--ink`, `--ink-2`, `--ink-3`, `--paper`, `--accent`, `--accent-ink`, `--space-2`, `--space-3`, `--space-4`, `--font-serif`, `--font-mono`, `--t-h3`, `--t-mono`, `--t-mark`, `--tracking-mark`.
+
+**Markup canónico:**
+```html
+<ol class="k-route">
+  <li class="k-route__stop" data-state="done">
+    <span class="k-route__dot" aria-hidden="true"></span>
+    <button type="button" class="k-route__row">
+      <span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span>
+      <span class="k-route__sub">Die Bäckerei am Samstag</span>
+    </button>
+  </li>
+  <li class="k-route__stop" data-state="now" aria-current="step">
+    <span class="k-route__dot" aria-hidden="true"></span>
+    <div class="k-route__body">
+      <span class="k-route__label">Estás aquí</span>
+      <button type="button" class="k-hero">…</button>
+    </div>
+  </li>
+</ol>
+<p class="k-route__end">Mañana, otra historia.</p>
+```
+
+**Mapa viejo → nuevo:**
+
+| clase o atributo viejo | nuevo |
+|---|---|
+| la lista del plan de `Portada.tsx` (`.k-row` con `__n` 01–04) | `.k-route` en `Hoy.tsx`; la portada se queda con el mapa y Género |
+
+**Notas:** la parada actual no es una fila grande: es el héroe (átomo 12) colgado de la línea. Las filas no son `.k-row` porque `.k-row` dibuja su filete, y aquí la estructura la pone la línea: dos filetes en ángulo recto se leían como una tabla. Todas las paradas se tocan en cualquier orden; el orden sugiere, no obliga. Reduced motion: el átomo no anima (la línea, los puntos y el anillo del punto actual son estáticos), así que no trae bloque de `prefers-reduced-motion`; el héroe colgado lleva el suyo (átomo 12).
+
+---
+
+### 19. Estantería — `.k-shelf` + `.k-cover`
+
+**Reemplaza:** nada, es pieza nueva del spec `2026-09-30-hoy-y-biblioteca` (§1.4). Sustituye la lista de temas del Inicio viejo (`Inicio.tsx`, filas `.k-row` «Deutsch» y «Nuevo tema»).
+
+**Elementos:** en `.k-shelf`, `__caption` (la línea mono bajo cada tapa). En `.k-cover`: `__band` (la franja con el nombre), `__sub` («Edición Nürnberg»), `__plus` y `__name` (los de la tapa nueva).
+
+**Variantes:** `.k-cover--new`, la tapa punteada de «Nuevo tema».
+
+**Estados:** `data-accent` en `__caption` cuando hay fichas vencidas. La tapa se hunde al pulsar, como el héroe.
+
+**Medidas:** tres tapas por fila, 2:3. La repisa es un filete de 2px de `--ink`. El lomo es una franja de 6px de papel al 12%. La trama son dos rayados de 1px cada 3px, de papel al 6% y al 5%. La franja va en `clamp(15px, 4.4vw, 19px)`.
+Literales justificados: la proporción 2:3 (la de un libro), los 2px de la repisa, los 6px del lomo, el rayado de 1px cada 3px y el `clamp` de la franja, que no tiene token porque es la única pieza con un titular dentro de una columna de un tercio.
+
+**Tokens:** `--ink`, `--ink-2`, `--ink-3`, `--paper`, `--accent`, `--accent-ink`, `--on-accent`, `--r-xs`, `--r-sm`, `--space-1` a `--space-5`, `--font-serif`, `--font-mono`, `--t-meta`, `--t-h2`, `--t-body`, `--tracking-mark`, `--dur-fast`, `--ease-out`.
+
+**Markup canónico:**
+```html
+<ul class="k-shelf">
+  <li>
+    <button type="button" class="k-cover">
+      <span class="k-cover__band">Deutsch</span>
+      <span class="k-cover__sub">Edición Nürnberg</span>
+    </button>
+    <div class="k-bar k-bar--fill">…</div>
+    <span class="k-shelf__caption" data-accent="true">A2 · 12 vencen</span>
+  </li>
+  <li>
+    <button type="button" class="k-cover k-cover--new">
+      <span class="k-cover__plus" aria-hidden="true">+</span>
+      <span class="k-cover__name">Nuevo tema</span>
+    </button>
+    <span class="k-shelf__caption">Klara arma el plan</span>
+  </li>
+</ul>
+```
+
+**Mapa viejo → nuevo:**
+
+| clase o atributo viejo | nuevo |
+|---|---|
+| la fila del tema en `Inicio.tsx` (`.k-row` + `.k-bar`) | `.k-cover` + `.k-bar` + `.k-shelf__caption` en `Biblioteca.tsx` |
+| la fila «Nuevo tema» (`.k-row` con `__n` «+») | `.k-cover--new` |
+
+**Notas:** en oscuro la tapa se invierte, como el héroe: tela color papel con letras de pizarra. Es la misma decisión que el panel de Hoy (spec §7.3). El bloque «Sigue donde lo dejaste» del mockup C no entra: con un solo tema repetiría lo que ya dice Hoy. Reduced motion: la tapa se hunde con `var(--dur-fast)`, que `tokens.css` baja a 0ms bajo `prefers-reduced-motion`; sin movimiento se hunde de golpe y no hay nada que apagar en el átomo. `.k-cover` lleva `min-width: 0` porque el 2:3 arrastra: con un compuesto largo el alto crece por el contenido y, sin ese tope, el ancho lo seguiría y la tapa se saldría de su columna.
+
+---
+
 ## Orden de borrado seguro
 
 ### Se puede borrar ya, sin migrar nada
@@ -1334,7 +1427,7 @@ Cada entrada dice qué es, dónde vive hoy y qué migración de pantalla la deci
 
 4. **className fantasma: el `.tsx` pinta clases que ninguna hoja declara.** Verificados con grep: ~~`.k-tool`~~ y ~~`.kac-tool`~~ (0 declaraciones base; el de Hablar murió con la migración 5 y el de SentenceView con la 6, igual que `.kp-stat__of`), `.mono` (Taller.tsx:142 escribe `className="tally mono"` y la clase real es `.k-mono`), ~~`.fin-difficulty`~~ (StoryFinish.tsx:985), ~~`.k-wave__time`~~, ~~`.k-stepnav__btn--prev`~~ (SentenceView.tsx:621), ~~`.ob-isel__opt-label`~~ (ObInlineSelect.tsx:72), `.wpop__freq` (WordPopover.tsx:110), ~~`.story--audio` y `.story__pron-error`~~ (Practice.tsx:458 y 501). La migración 6 se llevó cinco de los diez de un tirón, y no por buscarlos: al borrar el componente y su hoja, sus fantasmas se fueron con ellos. La 7 se llevó el sexto (`.fin-difficulty`: la pregunta de dificultad es una `.k-cap` con tres `.k-btn` en un `.k-wrap`, y el `aria-pressed` que ya tenía) y la 8 el séptimo (`.ob-isel__opt-label` → `.k-row__title`). Quedan dos: `.mono` de Taller y `.wpop__freq`. La auditoría dice «108/108 clases usadas» porque cuenta CSS sin consumidor, no TSX sin CSS. Al migrar cada pantalla, cada uno de esos ganchos se borra del markup o se convierte en el nombre real del átomo; el mapa de arriba dice cuál.
 
-5. **`hoja.check.mjs` conoce los 17 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
+5. **`hoja.check.mjs` conoce los 19 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
 
 6. **`hoja.check.mjs` mide ancho y alto, salvo en elementos `display: inline`.** La comprobación exige `width ≥ 44` y `height ≥ 44` en todo control; para los de `display` computado `inline` —solo `.k-word`— mide únicamente el alto, porque ensanchar la palabra rompe la línea que §6.2 declara «la pantalla». `.k-btn--text` **no** necesita excepción: lleva `min-height: 44px` y `min-width: 44px` con márgenes compensados.
 
