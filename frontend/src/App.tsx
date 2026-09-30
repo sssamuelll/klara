@@ -6,7 +6,7 @@ import NativeChrome from "./components/NativeChrome";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TabBar from "./components/TabBar";
 import Landing from "./routes/Landing";
-import Inicio from "./routes/Inicio";
+import Hoy from "./routes/Hoy";
 import Portada from "./routes/Portada";
 import MapaCurso from "./routes/MapaCurso";
 import Perfil from "./routes/Perfil";
@@ -78,7 +78,7 @@ function RootGate() {
   return (
     <V4Frame>
       <ProtectedRoute>
-        <Inicio />
+        <Hoy />
       </ProtectedRoute>
     </V4Frame>
   );
