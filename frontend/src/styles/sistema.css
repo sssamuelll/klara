@@ -2940,6 +2940,9 @@ ul.k-error { list-style: none; }
   border-bottom: 2px solid var(--ink);   /* la repisa */
 }
 
+/* Junta con `.k-live`: su `> ul` (0,1,1) anula margen y relleno y le gana a `.k-shelf` (0,1,0). */
+.k-live > .k-shelf { margin: var(--space-3) 0 0; padding: 0 0 var(--space-3); }
+
 .k-shelf > li {
   display: grid;
   align-content: start;

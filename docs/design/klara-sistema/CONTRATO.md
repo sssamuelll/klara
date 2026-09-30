@@ -1308,6 +1308,7 @@ Literales justificados: la proporción 2:3 (la de un libro), los 2px de la repis
 | la fila «Nuevo tema» (`.k-row` con `__n` «+») | `.k-cover--new` |
 
 **Notas:** en oscuro la tapa se invierte, como el héroe: tela color papel con letras de pizarra. Es la misma decisión que el panel de Hoy (spec §7.3). El bloque «Sigue donde lo dejaste» del mockup C no entra: con un solo tema repetiría lo que ya dice Hoy. Reduced motion: la tapa se hunde con `var(--dur-fast)`, que `tokens.css` baja a 0ms bajo `prefers-reduced-motion`; sin movimiento se hunde de golpe y no hay nada que apagar en el átomo. `.k-cover` lleva `min-width: 0` porque el 2:3 arrastra: con un compuesto largo el alto crece por el contenido y, sin ese tope, el ancho lo seguiría y la tapa se saldría de su columna.
+**Trampa de `.k-live`:** `.k-live > ul` (0,1,1) pone `margin: 0; padding: 0` a toda lista hija directa de `.k-live` y le gana a `.k-shelf` (0,1,0): dentro de `.k-live` las tapas se pegaban a la regla de «Tus temas» y el pie tocaba la repisa. Por eso el átomo trae la junta `.k-live > .k-shelf` (0,2,0), con el mismo margen y relleno que la base. `.k-route` (átomo 18) se libra solo porque es un `<ol>`, que esa regla no alcanza.
 
 ---
 
