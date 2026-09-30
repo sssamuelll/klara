@@ -42,6 +42,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Portadas de historias (spec 2026-09-30 §3.6). Sin clave no hay imágenes.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      ILLUSTRATION_MODEL: ${ILLUSTRATION_MODEL:-gemini-3.1-flash-image-preview}
       TTS_PROVIDER: ${TTS_PROVIDER:-elevenlabs}
       ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
       ELEVENLABS_VOICE_ID: ${ELEVENLABS_VOICE_ID:-EXAVITQu4vr4xnSDxMaL}

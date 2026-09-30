@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = None
     deepseek_api_key: str | None = None
     openai_api_key: str | None = None
+    # Portadas de historias (spec 2026-09-30 §3.6). Sin clave no se genera nada
+    # y el panel de Hoy queda tipográfico: la ausencia es un modo, no un error.
+    gemini_api_key: SecretStr | None = None
+    illustration_model: str = "gemini-3.1-flash-image-preview"
 
     tts_provider: str = "elevenlabs"
     # ElevenLabs voices are technically multilingual but each has a native
@@ -100,6 +104,14 @@ class Settings(BaseSettings):
         # EMPTY string whenever unset (local dev, anthropic path). An empty
         # string is not valid JSON and would crash Settings(); treat blank as
         # "unset". A real value is JSON-decoded to a dict upstream.
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+    @field_validator("gemini_api_key", mode="before")
+    @classmethod
+    def _blank_gemini_key_is_none(cls, v: object) -> object:
+        # El compose pasa `${GEMINI_API_KEY:-}`: sin clave llega "", no None.
         if isinstance(v, str) and not v.strip():
             return None
         return v
