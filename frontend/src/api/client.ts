@@ -38,6 +38,7 @@ import type {
   TallerBulkOut,
   TallerCardList,
   TallerOverview,
+  TodayOut,
   User,
   UserUpdate,
   WaitlistRow,
@@ -313,6 +314,8 @@ export const api = {
     ),
 
   listModules: () => request<ModulePathItem[]>("/modules"),
+
+  today: (since: string) => request<TodayOut>(`/today?since=${encodeURIComponent(since)}`),
 
   claimModuleStory: (moduleId: string) =>
     request<Story>(`/modules/${moduleId}/story`, { method: "POST" }),
