@@ -1,12 +1,18 @@
 // Arnés visual de Hoy y Biblioteca (plan 2026-09-30, tarea 14).
 //
-//   cd frontend && npm run build && node scripts/capturas-hoy.mjs
+//   cd frontend && npm run build && PLAYWRIGHT_BROWSERS_PATH=D:/caches/ms-playwright node scripts/capturas-hoy.mjs
 //
 // Levanta `vite preview` sobre el dist que haya (no compila), simula la API y
 // fotografía cada escenario en claro y oscuro, a 390×844 y a 390×667. Escribe los
 // PNG y un informe en .hoja-out/hoy/. Sale con 1 si algo desborda en horizontal,
-// si hay controles de menos de 44px, si la imagen rota deja un icono roto o si
-// el doble toque reclama dos veces.
+// si hay controles de menos de 44px, si la imagen rota deja un icono roto, si el
+// doble toque reclama dos veces, si una fuente no cargó o si la página lanza un
+// error de JS. Sale con 2 si falta el Playwright o el dist, o si el puerto 4175
+// ya está ocupado.
+//
+// Necesita PLAYWRIGHT_BROWSERS_PATH (aquí D:/caches/ms-playwright, con barras
+// normales en Git Bash) y tarda unos 2 minutos: son 36 contextos nuevos, cada
+// uno con la caché de fuentes fría.
 //
 // Usa el Playwright del arnés de design-sync (.ds-sync/, gitignored), como hoja.check.mjs.
 
@@ -43,27 +49,45 @@ const historia = (over = {}) => ({ state: "new", id: null, library_entry_id: "e1
   illustration_path: "/illustrations/muestra", ...over });
 const hecha = historia({ state: "done", id: "s1", library_entry_id: null });
 
-// `espera`: el selector que dice que la pantalla ya pintó lo que se fotografía (por defecto, el recorrido).
+// El botón del héroe y no `.k-hero` a secas: el primero de esos en el DOM es el saludo
+// (<header class="k-hero k-hero--quiet">). También es lo que espera y toca el doble toque.
+const HEROE = "button.k-hero";
+
+// `espera`: el selector que dice que los datos ya llegaron y la pantalla pintó lo que se
+// fotografía. Nunca `.k-route`: el recorrido se pinta también mientras carga y cuando falla
+// (con `today` en null todas las paradas salen pendientes), y las medidas pasarían en vacío.
 const ESCENARIOS = {
-  "entrar": { ruta: "/", today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
-  "despues-de-leer": { ruta: "/", today: { now: "pronounce", steps: { ...NINGUNA, read: true }, story: hecha,
+  "entrar": { ruta: "/", espera: HEROE, today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
+  "despues-de-leer": { ruta: "/", espera: HEROE, today: { now: "pronounce", steps: { ...NINGUNA, read: true }, story: hecha,
     sentence: { target: "Der Bäcker öffnet um acht.", native: "El panadero abre a las ocho." }, due: 12, module: null } },
-  "todo-hecho": { ruta: "/", today: { now: null, steps: { read: true, pronounce: true, speak: true, review: true },
+  // Sin parada actual no hay héroe: lo que prueba que llegó `/today` es la primera parada hecha.
+  "todo-hecho": { ruta: "/", espera: '.k-route__stop[data-state="done"]', today: { now: null, steps: { read: true, pronounce: true, speak: true, review: true },
     story: hecha, sentence: null, due: 0, module: null } },
-  "sin-historia": { ruta: "/", today: { now: "read", steps: { ...NINGUNA, review: true },
+  "sin-historia": { ruta: "/", espera: HEROE, today: { now: "read", steps: { ...NINGUNA, review: true },
     story: { state: "request", id: null, library_entry_id: null, module_id: null, title: null, subtitle: null, illustration_path: null },
     sentence: null, due: 0, module: null } },
-  "titulo-largo": { ruta: "/", today: { now: "read", steps: NINGUNA,
+  "titulo-largo": { ruta: "/", espera: HEROE, today: { now: "read", steps: NINGUNA,
     story: historia({ title: "Die Bundesausbildungsförderungsgesetzberatungsstelle am Samstag" }), sentence: null, due: 12, module: null } },
-  "arte-rota": { ruta: "/", arteRota: true, today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
+  // El héroe existe; es la <img> la que se quita al fallar, y de eso se ocupa el chequeo de imagen rota.
+  "arte-rota": { ruta: "/", espera: HEROE, arteRota: true, today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
   "biblioteca": { ruta: "/biblioteca", espera: ".k-shelf", today: null },
   "portada": { ruta: "/curso/aleman", espera: ".k-row", today: null },
-  // El recorrido se pinta también mientras carga y cuando falla: hay que esperar al párrafo del error.
   "error-de-carga": { ruta: "/", espera: ".k-error", todayStatus: 500, today: null },
 };
 
 const arte = readFileSync(ARTE);
-const servidor = spawn("npx", ["vite", "preview", "--port", String(PORT), "--strictPort"], { cwd: FRONT, shell: true });
+
+// Un oyente ajeno en el puerto (un `vite preview` huérfano de otra corrida, por ejemplo) también
+// respondería 200 y se fotografiaría otro servidor: mejor no empezar.
+const responde = () => fetch(BASE, { signal: AbortSignal.timeout(2000) }).catch(() => null);
+if (await responde()) {
+  console.error(`El puerto ${PORT} ya está ocupado (¿un vite preview huérfano?). Ciérralo y vuelve a correr.`);
+  process.exit(2);
+}
+
+// Un solo string con shell:true: con argumentos sueltos Node 24 avisa con DEP0190. Sin stdio
+// heredado ni en pipe, para que el hijo no se bloquee con un pipe que nadie lee.
+const servidor = spawn(`npx vite preview --port ${PORT} --strictPort`, { cwd: FRONT, shell: true, stdio: "ignore" });
 function apagar() {
   if (process.platform === "win32") {
     try { execSync(`taskkill /pid ${servidor.pid} /T /F`, { stdio: "ignore" }); } catch { /* ya murió */ }
@@ -71,25 +95,35 @@ function apagar() {
     servidor.kill();
   }
 }
-for (let i = 0; i < 60; i++) {
-  try { if ((await fetch(BASE)).ok) break; } catch { /* todavía no */ }
-  await new Promise((r) => setTimeout(r, 500));
-}
 
 // Igual que en hoja.check.mjs: `document.fonts.ready` resuelve antes de que el layout pida las caras
-// (llegan de Google Fonts, y cada contexto arranca con la caché fría). Sin esto la captura sale con
-// Georgia/Helvetica y los desbordes se miden con otras métricas.
+// (llegan de Google Fonts, y cada contexto arranca con la caché fría), así que se piden a mano. El
+// `.catch` solo evita que una cara caída tumbe al resto: lo que devuelve la función son las familias
+// que siguen sin cara cargada (o con una en error), para que el arnés lo diga en vez de fotografiar
+// Georgia/Helvetica y medir los desbordes con otras métricas.
+const FUENTES = ["Source Serif 4", "Inter Tight", "JetBrains Mono"];
 async function esperarFuentes(page) {
-  await page.evaluate(() => Promise.all([
-    '17px "Source Serif 4"', 'italic 17px "Source Serif 4"', '600 17px "Source Serif 4"',
-    '500 15px "Inter Tight"', '12px "JetBrains Mono"', '500 12px "JetBrains Mono"',
-  ].map((f) => document.fonts.load(f).catch(() => null))));
+  return page.evaluate(async (familias) => {
+    await Promise.all([
+      '17px "Source Serif 4"', 'italic 17px "Source Serif 4"', '600 17px "Source Serif 4"',
+      '500 15px "Inter Tight"', '12px "JetBrains Mono"', '500 12px "JetBrains Mono"',
+    ].map((f) => document.fonts.load(f).catch(() => null)));
+    // `document.fonts.check()` devuelve true también cuando no hay ninguna @font-face de esa familia
+    // (Google Fonts sin red), así que se miran las caras una a una.
+    const caras = [...document.fonts].map((f) => ({ familia: f.family.replace(/^["']|["']$/g, ""), estado: f.status }));
+    return familias.filter((fam) => {
+      const suyas = caras.filter((c) => c.familia === fam);
+      return !suyas.some((c) => c.estado === "loaded") || suyas.some((c) => c.estado === "error");
+    });
+  }, FUENTES);
 }
 
 async function medir(page) {
   return page.evaluate(() => {
     const desbordes = [];
-    for (const el of [document.documentElement, ...document.querySelectorAll(".k-live, .k-page")]) {
+    // `.k-app` y no `html`: el cascarón tiene overflow:hidden, así que `html` nunca desborda y no
+    // dice nada; `.k-app` sí puede, y es el que lleva la barra de pestañas.
+    for (const el of document.querySelectorAll(".k-app, .k-live, .k-page")) {
       const d = el.scrollWidth - el.clientWidth;
       if (d > 0) desbordes.push({ el: el.className || el.tagName, d });
     }
@@ -104,8 +138,21 @@ async function medir(page) {
 
 const fallos = [];
 const informe = {};
-const browser = await chromium.launch();
+let browser;
+// Todo lo que viene después del spawn va dentro del try: si falla la espera del servidor, el
+// lanzamiento de Chromium o el cierre, el `finally` mata a `vite preview` igualmente. En Windows
+// un hijo con shell:true sobrevive al throw del padre y el siguiente arranque lo toma por suyo.
 try {
+  // `vite preview` tarda en arrancar. Si el hijo muere antes de responder (`--strictPort` con el
+  // puerto ocupado) o no da 200 en 30 s, se corta aquí en vez de seguir contra nada.
+  let listo = false;
+  for (let i = 0; i < 60 && !listo; i++) {
+    if (servidor.exitCode !== null) throw new Error(`vite preview terminó con código ${servidor.exitCode} antes de responder (¿puerto ${PORT} ocupado?).`);
+    listo = (await responde())?.ok === true;
+    if (!listo) await new Promise((r) => setTimeout(r, 500));
+  }
+  if (!listo) throw new Error(`vite preview no respondió 200 en ${BASE} en 30 s.`);
+  browser = await chromium.launch();
   for (const [nombre, esc] of Object.entries(ESCENARIOS)) {
     for (const scheme of ["light", "dark"]) {
       for (const height of [844, 667]) {
@@ -140,10 +187,19 @@ try {
           return route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
         });
         const page = await ctx.newPage();
+        // Lo que no está simulado cae en `200 []` (arriba), así que un error de JS por datos
+        // que no cuadran solo se ve aquí. Ve los del render, los efectos, los manejadores y las
+        // promesas rechazadas; no los que se lancen dentro de un `setTimeout`, porque el reloj de
+        // Playwright (`setFixedTime`, abajo) se los traga.
+        const alError = (e) => fallos.push(`${clave}: error de JS en la página: ${e.message}`);
+        page.on("pageerror", alError);
         await page.clock.setFixedTime(new Date("2026-09-30T17:40:00"));
         await page.goto(BASE + esc.ruta);
-        await page.waitForSelector(esc.espera ?? ".k-route");
-        await esperarFuentes(page);
+        await page.waitForSelector(esc.espera);
+        const sinFuentes = await esperarFuentes(page);
+        // El mismo aviso para las 36 capturas: una sola línea en el informe.
+        const avisoFuentes = `fuentes sin cargar (${sinFuentes.join(", ")}): ¿sin red para Google Fonts? Las capturas salen con las de respaldo y los desbordes se miden con otras métricas`;
+        if (sinFuentes.length && !fallos.includes(avisoFuentes)) fallos.push(avisoFuentes);
         await page.waitForTimeout(500);
         await page.screenshot({ path: join(OUT, `${clave}.png`), animations: "disabled" });
         const m = await medir(page);
@@ -152,8 +208,10 @@ try {
         if (m.chicos.length) fallos.push(`${clave}: controles < 44px ${JSON.stringify(m.chicos)}`);
         if (m.rota) fallos.push(`${clave}: icono de imagen rota`);
         if (nombre === "entrar" && scheme === "light" && height === 844) {
-          // `button.k-hero` y no `.k-hero`: el primero de esos en el DOM es el saludo (<header class="k-hero k-hero--quiet">).
-          await page.locator("button.k-hero").dblclick();
+          // El reclamo navega a /estudiar/s-nueva, que no está simulada (`200 []`) y lanza un error
+          // al pintarse: esa pantalla ya no es la que se prueba.
+          page.off("pageerror", alError);
+          await page.locator(HEROE).dblclick();
           await page.waitForTimeout(600);
           if (reclamos.n !== 1) fallos.push(`doble toque: ${reclamos.n} reclamos (se espera 1)`);
         }
@@ -162,7 +220,7 @@ try {
     }
   }
 } finally {
-  await browser.close();
+  await browser?.close().catch(() => {});
   apagar();
 }
 
