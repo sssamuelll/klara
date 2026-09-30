@@ -719,8 +719,8 @@
     "seguir": "Continuar lendo",
     "empezar": "Começar",
     "pedir": "Peça uma história à Klara",
-    "fichas_one": "{{count}} cartão para revisar",
-    "fichas_other": "{{count}} cartões para revisar",
+    "fichas_one": "{{count}} ficha para revisar",
+    "fichas_other": "{{count}} fichas para revisar",
     "error": "Não foi possível carregar o plano de hoje.",
     "reintentar": "Tentar de novo"
   },

@@ -714,11 +714,11 @@
     "hecho": "完了",
     "plan": "今日のプラン · {{min}}分",
     "planHecho": "今日のプラン · 完了",
-    "fin": "明日はまた新しいお話。",
+    "fin": "明日はまた新しい物語。",
     "listo": "今日はここまで。",
     "seguir": "続きを読む",
     "empezar": "はじめる",
-    "pedir": "クララにお話をたのむ",
+    "pedir": "Klaraに物語を頼む",
     "fichas_one": "復習カード {{count}} 枚",
     "fichas_other": "復習カード {{count}} 枚",
     "error": "今日のプランを読み込めませんでした。",
@@ -739,7 +739,7 @@
     "nuevoDek": "テーマかノートを渡せば、Klaraがプランを作ります",
     "heroTag": "続ける · {{curso}}",
     "temas": "あなたのテーマ",
-    "nuevoPie": "クララがプランを組みます",
+    "nuevoPie": "Klaraがプランを作ります",
     "edicion": "ニュルンベルク版"
   },
   "curso": {

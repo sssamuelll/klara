@@ -717,7 +717,7 @@
     "fin": "Morgen eine neue Geschichte.",
     "listo": "Fertig für heute.",
     "seguir": "Weiterlesen",
-    "empezar": "Starten",
+    "empezar": "Anfangen",
     "pedir": "Bitte Klara um eine Geschichte",
     "fichas_one": "{{count}} Karte zum Wiederholen",
     "fichas_other": "{{count}} Karten zum Wiederholen",
@@ -740,7 +740,7 @@
     "heroTag": "Weiter · {{curso}}",
     "temas": "Deine Themen",
     "nuevoPie": "Klara erstellt den Plan",
-    "edicion": "Nürnberger Ausgabe"
+    "edicion": "Nürnberg-Ausgabe"
   },
   "curso": {
     "planTitulo": "Der Plan für heute · 4 Schritte",
