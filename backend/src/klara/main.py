@@ -33,6 +33,7 @@ from klara.routers import (
     srs,
     stories,
     taller,
+    today,
     tts,
     users,
     waitlist,
@@ -239,6 +240,7 @@ def create_app() -> FastAPI:
     app.include_router(gender.router, prefix="/api/v1")
     app.include_router(tts.router, prefix="/api/v1")
     app.include_router(illustrations.router, prefix="/api/v1")
+    app.include_router(today.router, prefix="/api/v1")
     app.include_router(invitations.router, prefix="/api/v1", tags=["invitations"])
     app.include_router(pronunciation.router, prefix="/api/v1")
     app.include_router(practice.router, prefix="/api/v1")
