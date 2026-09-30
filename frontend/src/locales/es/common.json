@@ -701,11 +701,28 @@
     "email_not_verified": "Confirma tu correo antes de continuar."
   },
   "tabbar": {
+    "hoy": "Hoy",
+    "biblioteca": "Biblioteca",
     "inicio": "Inicio",
     "mas": "Más",
     "perfil": "Perfil",
     "navAria": "Navegación",
     "moreAria": "Más opciones"
+  },
+  "hoy": {
+    "estasAqui": "Estás aquí",
+    "hecho": "Hecho",
+    "plan": "El plan de hoy · {{min}} min",
+    "planHecho": "El plan de hoy · hecho",
+    "fin": "Mañana, otra historia.",
+    "listo": "Listo por hoy.",
+    "seguir": "Seguir leyendo",
+    "empezar": "Empezar",
+    "pedir": "Pídele una historia a Klara",
+    "fichas_one": "{{count}} ficha por repasar",
+    "fichas_other": "{{count}} fichas por repasar",
+    "error": "No se pudo cargar el plan de hoy.",
+    "reintentar": "Reintentar"
   },
   "nuevo": {
     "kicker": "Nuevo tema",
@@ -720,7 +737,10 @@
     "cursoSub": "Edición Nürnberg · {{level}}",
     "nuevoTitulo": "Nuevo tema",
     "nuevoDek": "Un tema o tus apuntes — Klara arma el plan",
-    "heroTag": "Continuar · {{curso}}"
+    "heroTag": "Continuar · {{curso}}",
+    "temas": "Tus temas",
+    "nuevoPie": "Klara arma el plan",
+    "edicion": "Edición Nürnberg"
   },
   "curso": {
     "planTitulo": "El plan de hoy · 4 pasos",

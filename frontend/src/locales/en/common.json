@@ -701,11 +701,28 @@
     "email_not_verified": "Please verify your email before continuing."
   },
   "tabbar": {
+    "hoy": "Today",
+    "biblioteca": "Library",
     "inicio": "Home",
     "mas": "More",
     "perfil": "Profile",
     "navAria": "Navigation",
     "moreAria": "More options"
+  },
+  "hoy": {
+    "estasAqui": "You are here",
+    "hecho": "Done",
+    "plan": "Today's plan · {{min}} min",
+    "planHecho": "Today's plan · done",
+    "fin": "Tomorrow, another story.",
+    "listo": "Done for today.",
+    "seguir": "Keep reading",
+    "empezar": "Start",
+    "pedir": "Ask Klara for a story",
+    "fichas_one": "{{count}} card to review",
+    "fichas_other": "{{count}} cards to review",
+    "error": "Couldn't load today's plan.",
+    "reintentar": "Try again"
   },
   "nuevo": {
     "kicker": "New topic",
@@ -720,7 +737,10 @@
     "cursoSub": "Nürnberg edition · {{level}}",
     "nuevoTitulo": "New topic",
     "nuevoDek": "A topic or your notes — Klara builds the plan",
-    "heroTag": "Continue · {{curso}}"
+    "heroTag": "Continue · {{curso}}",
+    "temas": "Your topics",
+    "nuevoPie": "Klara builds the plan",
+    "edicion": "Nürnberg edition"
   },
   "curso": {
     "planTitulo": "Today's plan · 4 steps",

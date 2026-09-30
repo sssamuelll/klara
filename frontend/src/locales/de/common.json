@@ -701,11 +701,28 @@
     "email_not_verified": "Bitte bestätige deine E-Mail, bevor du fortfährst."
   },
   "tabbar": {
+    "hoy": "Heute",
+    "biblioteca": "Bibliothek",
     "inicio": "Start",
     "mas": "Mehr",
     "perfil": "Profil",
     "navAria": "Navigation",
     "moreAria": "Weitere Optionen"
+  },
+  "hoy": {
+    "estasAqui": "Du bist hier",
+    "hecho": "Erledigt",
+    "plan": "Der Plan für heute · {{min}} Min.",
+    "planHecho": "Der Plan für heute · erledigt",
+    "fin": "Morgen eine neue Geschichte.",
+    "listo": "Fertig für heute.",
+    "seguir": "Weiterlesen",
+    "empezar": "Starten",
+    "pedir": "Bitte Klara um eine Geschichte",
+    "fichas_one": "{{count}} Karte zum Wiederholen",
+    "fichas_other": "{{count}} Karten zum Wiederholen",
+    "error": "Der Plan für heute konnte nicht geladen werden.",
+    "reintentar": "Erneut versuchen"
   },
   "nuevo": {
     "kicker": "Neues Thema",
@@ -720,7 +737,10 @@
     "cursoSub": "Nürnberg-Ausgabe · {{level}}",
     "nuevoTitulo": "Neues Thema",
     "nuevoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan",
-    "heroTag": "Weiter · {{curso}}"
+    "heroTag": "Weiter · {{curso}}",
+    "temas": "Deine Themen",
+    "nuevoPie": "Klara erstellt den Plan",
+    "edicion": "Nürnberger Ausgabe"
   },
   "curso": {
     "planTitulo": "Der Plan für heute · 4 Schritte",
