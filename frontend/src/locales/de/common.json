@@ -703,7 +703,6 @@
   "tabbar": {
     "hoy": "Heute",
     "biblioteca": "Bibliothek",
-    "inicio": "Start",
     "mas": "Mehr",
     "perfil": "Profil",
     "navAria": "Navigation",
@@ -743,8 +742,6 @@
     "edicion": "Nürnberg-Ausgabe"
   },
   "curso": {
-    "planTitulo": "Der Plan für heute · 4 Schritte",
-    "ahora": "● jetzt",
     "mapaFila": "Die Kursübersicht",
     "mapaFilaEstado": "Wo du stehst",
     "generoFila": "Genus",

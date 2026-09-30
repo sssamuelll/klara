@@ -703,7 +703,6 @@
   "tabbar": {
     "hoy": "今日",
     "biblioteca": "ライブラリ",
-    "inicio": "ホーム",
     "mas": "その他",
     "perfil": "プロフィール",
     "navAria": "ナビゲーション",
@@ -743,8 +742,6 @@
     "edicion": "ニュルンベルク版"
   },
   "curso": {
-    "planTitulo": "今日のプラン · 4 ステップ",
-    "ahora": "● いま",
     "mapaFila": "コースの地図",
     "mapaFilaEstado": "現在地",
     "generoFila": "性",

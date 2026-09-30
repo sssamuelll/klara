@@ -703,7 +703,6 @@
   "tabbar": {
     "hoy": "Aujourd'hui",
     "biblioteca": "Bibliothèque",
-    "inicio": "Accueil",
     "mas": "Plus",
     "perfil": "Profil",
     "navAria": "Navigation",
@@ -743,8 +742,6 @@
     "edicion": "Édition Nürnberg"
   },
   "curso": {
-    "planTitulo": "Le plan du jour · 4 étapes",
-    "ahora": "● maintenant",
     "mapaFila": "La carte du cours",
     "mapaFilaEstado": "Où tu en es",
     "generoFila": "Genre",

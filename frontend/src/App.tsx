@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import TabBar from "./components/TabBar";
 import Landing from "./routes/Landing";
 import Hoy from "./routes/Hoy";
+import Biblioteca from "./routes/Biblioteca";
 import Portada from "./routes/Portada";
 import MapaCurso from "./routes/MapaCurso";
 import Perfil from "./routes/Perfil";
@@ -126,6 +127,14 @@ function AppShell() {
       <Route path="/" element={<RootGate />} />
 
       <Route element={<V4Shell />}>
+        <Route
+          path="/biblioteca"
+          element={
+            <ProtectedRoute>
+              <Biblioteca />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/curso/:id"
           element={

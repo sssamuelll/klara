@@ -703,7 +703,6 @@
   "tabbar": {
     "hoy": "Today",
     "biblioteca": "Library",
-    "inicio": "Home",
     "mas": "More",
     "perfil": "Profile",
     "navAria": "Navigation",
@@ -743,8 +742,6 @@
     "edicion": "Nürnberg edition"
   },
   "curso": {
-    "planTitulo": "Today's plan · 4 steps",
-    "ahora": "● now",
     "mapaFila": "The course map",
     "mapaFilaEstado": "Where you are",
     "generoFila": "Gender",
