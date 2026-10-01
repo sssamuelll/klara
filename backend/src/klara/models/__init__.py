@@ -7,6 +7,7 @@ from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating,
 from klara.models.gender import GenderAttempt
 from klara.models.gender_l1_note import GenderL1Note
 from klara.models.gender_lexicon import GenderLexicon
+from klara.models.illustration import Illustration
 from klara.models.invitation import Invitation
 from klara.models.learner_profile import LearnerProfile
 from klara.models.library import StoryLibrary
@@ -32,6 +33,7 @@ __all__ = [
     "GenderAttempt",
     "GenderL1Note",
     "GenderLexicon",
+    "Illustration",
     "Invitation",
     "LearnerProfile",
     "Module",

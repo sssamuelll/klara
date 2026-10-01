@@ -701,11 +701,27 @@
     "email_not_verified": "Confirma o teu email antes de continuar."
   },
   "tabbar": {
-    "inicio": "Início",
+    "hoy": "Hoje",
+    "biblioteca": "Biblioteca",
     "mas": "Mais",
     "perfil": "Perfil",
     "navAria": "Navegação",
     "moreAria": "Mais opções"
+  },
+  "hoy": {
+    "estasAqui": "Você está aqui",
+    "hecho": "Feito",
+    "plan": "O plano de hoje · {{min}} min",
+    "planHecho": "O plano de hoje · feito",
+    "fin": "Amanhã, outra história.",
+    "finHecho": "Pronto por hoje. Amanhã, outra história.",
+    "seguir": "Continuar lendo",
+    "empezar": "Começar",
+    "pedir": "Peça uma história à Klara",
+    "fichas_one": "{{count}} ficha para revisar",
+    "fichas_other": "{{count}} fichas para revisar",
+    "error": "Não foi possível carregar o plano de hoje.",
+    "reintentar": "Tentar de novo"
   },
   "nuevo": {
     "kicker": "Novo tema",
@@ -720,11 +736,12 @@
     "cursoSub": "Edição Nürnberg · {{level}}",
     "nuevoTitulo": "Novo tema",
     "nuevoDek": "Um tema ou suas anotações — a Klara monta o plano",
-    "heroTag": "Continuar · {{curso}}"
+    "heroTag": "Continuar · {{curso}}",
+    "temas": "Seus temas",
+    "nuevoPie": "A Klara monta o plano",
+    "edicion": "Edição Nürnberg"
   },
   "curso": {
-    "planTitulo": "O plano de hoje · 4 passos",
-    "ahora": "● agora",
     "mapaFila": "O mapa do curso",
     "mapaFilaEstado": "Onde você está",
     "generoFila": "Género",

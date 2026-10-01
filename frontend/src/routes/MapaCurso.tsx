@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { moduleRowEstado } from "../lib/courseView";
-import { useCourseData } from "./Inicio";
+import { useCourseData } from "../lib/useCourseData";
 import { languageLabel } from "../lib/languages";
 import { useUser } from "../lib/user";
 

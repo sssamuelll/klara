@@ -9,6 +9,9 @@ and pre-warms the global TTS audio cache. Idempotent: resume is topic-based —
 only curated topics with no active seed entry for the (module, native) pair are
 (re)generated, so a partial run picks up exactly the missing topics. Duplicate
 content hashes are never inserted.
+
+Each new entry with a scene also gets its cover illustration drawn right after
+it is saved (Gemini, paid per image; skipped without GEMINI_API_KEY).
 """
 
 from __future__ import annotations
@@ -17,7 +20,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 
 import structlog
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.config import get_settings
@@ -26,7 +29,8 @@ from klara.curriculum.modules import module_target_lemmas
 from klara.db import dispose_engine, get_sessionmaker, init_engine
 from klara.llm.base import LLMClient
 from klara.llm.litellm_impl import LiteLLMClient
-from klara.models import Module, StoryLibrary
+from klara.models import Illustration, Module, StoryLibrary
+from klara.services.illustration import COST_PER_IMAGE_USD, ensure_illustration
 from klara.services.story_gen import generate_story_draft
 from klara.services.tts_precache import precache_story
 
@@ -117,6 +121,7 @@ async def build_library(
     native: str,
     per_module: int,
     warm_audio: Callable[[dict, list[dict], str | None], Awaitable[None]] | None = None,
+    illustrate: Callable[[AsyncSession, str], Awaitable[str | None]] | None = None,
     max_attempts: int = MAX_ATTEMPTS,
 ) -> int:
     modules = (
@@ -221,6 +226,8 @@ async def build_library(
                     quiz_items=draft.quiz_items,
                     insight_title=draft.insight_title,
                     insight_body=draft.insight_body,
+                    subtitle=draft.subtitle,
+                    scene=draft.scene,
                     topic=topic,
                     source="seed",
                     content_hash=h,
@@ -248,7 +255,31 @@ async def build_library(
                     await warm_audio(draft.content, words, draft.title)
                 except Exception as exc:
                     log.warning("library.build.warm_failed", topic=topic, error=str(exc))
+            if illustrate is not None and draft.scene:
+                try:
+                    # Savepoint, not db.rollback(): a full rollback expires every ORM object
+                    # in the session, and this loop keeps reading `module` afterwards
+                    # (MissingGreenlet on the next topic). The row above is already committed.
+                    async with db.begin_nested():
+                        drawn = await illustrate(db, draft.scene)
+                    if drawn:
+                        await db.commit()
+                except Exception as exc:
+                    log.warning("library.build.illustrate_failed", topic=topic, error=str(exc))
     return inserted
+
+
+async def _count_illustrations(db: AsyncSession) -> int:
+    return (await db.execute(select(func.count()).select_from(Illustration))).scalar_one()
+
+
+def _informe(insertadas: int, nuevas: int) -> str:
+    # Nada fuera de cp1252: un «≈» revienta con UnicodeEncodeError en la consola de Windows,
+    # justo al final de una corrida que ya se pagó.
+    return (
+        f"Insertadas {insertadas} historia(s) en la librería.\n"
+        f"Ilustraciones nuevas: {nuevas} (~ ${nuevas * COST_PER_IMAGE_USD:.2f})."
+    )
 
 
 async def _run() -> None:
@@ -264,13 +295,24 @@ async def _run() -> None:
         async def warm(content: dict, words: list[dict], title: str | None) -> None:
             await precache_story(settings, content, words, title, "de")
 
+        async def illustrate(db: AsyncSession, scene: str) -> str | None:
+            return await ensure_illustration(db, scene, settings=settings)
+
         sessionmaker = get_sessionmaker()
         async with sessionmaker() as db:
+            antes = await _count_illustrations(db)
             # build_library commits per inserted row — nothing left to commit here.
             n = await build_library(
-                db, llm, language="de", native="es", per_module=PER_MODULE, warm_audio=warm
+                db,
+                llm,
+                language="de",
+                native="es",
+                per_module=PER_MODULE,
+                warm_audio=warm,
+                illustrate=illustrate,
             )
-        print(f"Insertadas {n} historia(s) en la librería.")
+            nuevas = await _count_illustrations(db) - antes
+        print(_informe(n, nuevas))
     finally:
         await dispose_engine()
 

@@ -74,7 +74,7 @@ async def _clean_tables():
     async with engine.connect() as conn:
         await conn.execute(
             text(
-                "TRUNCATE audio_cache, access_tokens, invitations, oauth_accounts, reviews, user_cards, "
+                "TRUNCATE audio_cache, access_tokens, illustrations, invitations, oauth_accounts, reviews, user_cards, "
                 "story_views, study_sessions, stories, module_vocab, modules, "
                 "gender_attempts, gender_lexicon, gender_l1_notes, pronunciation_diagnoses, "
                 "waitlist_signups, users "

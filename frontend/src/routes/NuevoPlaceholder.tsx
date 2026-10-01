@@ -7,7 +7,7 @@ export default function NuevoPlaceholder() {
   return (
     <main className="k-page">
       <header className="k-topline">
-        <button type="button" className="k-btn k-btn--text" onClick={() => navigate("/")}>
+        <button type="button" className="k-btn k-btn--text" onClick={() => navigate("/biblioteca")}>
           ← {t("biblioteca.titulo")}
         </button>
         <span className="k-topline__meta">{t("nuevo.kicker")}</span>

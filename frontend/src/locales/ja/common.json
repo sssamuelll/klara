@@ -701,11 +701,27 @@
     "email_not_verified": "続行する前にメールアドレスを確認してください。"
   },
   "tabbar": {
-    "inicio": "ホーム",
+    "hoy": "今日",
+    "biblioteca": "ライブラリ",
     "mas": "その他",
     "perfil": "プロフィール",
     "navAria": "ナビゲーション",
     "moreAria": "その他のオプション"
+  },
+  "hoy": {
+    "estasAqui": "現在地",
+    "hecho": "完了",
+    "plan": "今日のプラン · {{min}} 分",
+    "planHecho": "今日のプラン · 完了",
+    "fin": "明日はまた新しい物語。",
+    "finHecho": "今日はここまで。明日はまた新しい物語。",
+    "seguir": "続きを読む",
+    "empezar": "はじめる",
+    "pedir": "Klaraに物語を頼む",
+    "fichas_one": "復習カード {{count}} 枚",
+    "fichas_other": "復習カード {{count}} 枚",
+    "error": "今日のプランを読み込めませんでした。",
+    "reintentar": "もう一度"
   },
   "nuevo": {
     "kicker": "新しいテーマ",
@@ -720,11 +736,12 @@
     "cursoSub": "ニュルンベルク版 · {{level}}",
     "nuevoTitulo": "新しいテーマ",
     "nuevoDek": "テーマかノートを渡せば、Klaraがプランを作ります",
-    "heroTag": "続ける · {{curso}}"
+    "heroTag": "続ける · {{curso}}",
+    "temas": "あなたのテーマ",
+    "nuevoPie": "Klaraがプランを作ります",
+    "edicion": "ニュルンベルク版"
   },
   "curso": {
-    "planTitulo": "今日のプラン · 4 ステップ",
-    "ahora": "● いま",
     "mapaFila": "コースの地図",
     "mapaFilaEstado": "現在地",
     "generoFila": "性",

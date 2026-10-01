@@ -64,7 +64,7 @@
   <header class="hoja__cabecera">
     <h1 class="hoja__titulo">Klara — <em>hoja de componentes</em></h1>
     <div class="hoja__meta">
-      <span>17 átomos · 2 temas</span>
+      <span>19 átomos · 2 temas</span>
       <button class="hoja__tema" type="button" id="hoja-tema" aria-live="polite">tema: —</button>
     </div>
   </header>
@@ -1019,6 +1019,19 @@
       </div>
     </figure>
 
+    <figure class="hoja-estado" data-estado="con-arte">
+      <figcaption>Con la ilustración de la historia <code>.k-hero__art</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <button type="button" class="k-hero">
+          <span class="k-hero__art" role="img" aria-label="Ilustración de la historia"></span>
+          <span class="k-hero__tag"><span>Leer · 3 min</span><span>Empezar</span></span>
+          <span class="k-hero__title">Die Bäckerei am Samstag</span>
+          <span class="k-hero__arrow" aria-hidden="true">→</span>
+          <span class="k-hero__dek">Una panadería, un sábado a las ocho.</span>
+        </button>
+      </div>
+    </figure>
+
   </div>
 </section>
 
@@ -1245,6 +1258,115 @@
           <span class="k-field__rule" aria-hidden="true"></span>
           <span class="k-field__hint" id="k-field-pw-hint">Mínimo ocho caracteres.</span>
         </label>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="recorrido" data-atom="recorrido">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">18</span><h2 class="hoja-card__titulo">Recorrido <code>.k-route</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>reemplaza</b> la lista del plan de la portada del curso (Portada.tsx, filas 01–04)</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="pendiente">
+      <figcaption>Pendiente <code>data-state="pending"</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="pending">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <button type="button" class="k-route__row"><span class="k-route__title">Hablar</span><span class="k-route__meta">3 min</span><span class="k-route__sub">Una conversación con Klara</span></button>
+          </li>
+        </ol>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="ahora">
+      <figcaption>Ahora <code>data-state="now"</code>, con el héroe colgado</figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="now" aria-current="step">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <div class="k-route__body">
+              <span class="k-route__label">Estás aquí</span>
+              <button type="button" class="k-hero">
+                <span class="k-hero__tag"><span>Pronunciar · 4 min</span><span>Empezar</span></span>
+                <span class="k-hero__title" lang="de">„Der Bäcker öffnet um acht.“</span>
+                <span class="k-hero__arrow" aria-hidden="true">→</span>
+                <span class="k-hero__dek">El panadero abre a las ocho.</span>
+              </button>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="hecha">
+      <figcaption>Hecha <code>data-state="done"</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <button type="button" class="k-route__row"><span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span><span class="k-route__sub" lang="de">Die Bäckerei am Samstag</span></button>
+          </li>
+        </ol>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="fin">
+      <figcaption>Todo hecho, con el cierre <code>.k-route__end</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done"><span class="k-route__dot" aria-hidden="true"></span><button type="button" class="k-route__row"><span class="k-route__title">Hablar</span><span class="k-route__meta">Hecho</span><span class="k-route__sub">Una conversación con Klara</span></button></li>
+          <li class="k-route__stop" data-state="done"><span class="k-route__dot" aria-hidden="true"></span><button type="button" class="k-route__row"><span class="k-route__title">Repasar</span><span class="k-route__meta">Hecho</span><span class="k-route__sub">12 fichas por repasar</span></button></li>
+        </ol>
+        <p class="k-route__end">Listo por hoy. Mañana, otra historia.</p>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="compuesto-largo">
+      <figcaption>Compuesto largo: el título parte palabra</figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done"><span class="k-route__dot" aria-hidden="true"></span><button type="button" class="k-route__row"><span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span><span class="k-route__sub" lang="de">Die Bundesausbildungsförderungsgesetzberatungsstelle</span></button></li>
+        </ol>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="estanteria" data-atom="estanteria">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">19</span><h2 class="hoja-card__titulo">Estantería <code>.k-shelf</code> + <code>.k-cover</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>reemplaza</b> las filas de tema y «Nuevo tema» del Inicio viejo (Inicio.tsx)</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="tema">
+      <figcaption>Tema al día <code>.k-cover</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ul class="k-shelf" role="list"><li>
+          <button type="button" class="k-cover"><span class="k-cover__band" lang="de">Deutsch</span><span class="k-cover__sub">Edición Nürnberg</span></button>
+          <span class="k-shelf__caption">A2 · ● hoy</span>
+        </li></ul>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="vencidas">
+      <figcaption>Con fichas vencidas <code>data-accent</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ul class="k-shelf" role="list"><li>
+          <button type="button" class="k-cover"><span class="k-cover__band" lang="de">Deutsch</span><span class="k-cover__sub">Edición Nürnberg</span></button>
+          <span class="k-shelf__caption" data-accent="true">A2 · 12 vencen</span>
+        </li></ul>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="nuevo">
+      <figcaption>Tema nuevo <code>.k-cover--new</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ul class="k-shelf" role="list"><li>
+          <button type="button" class="k-cover k-cover--new"><span class="k-cover__plus" aria-hidden="true">+</span><span class="k-cover__name">Nuevo tema</span></button>
+          <span class="k-shelf__caption">Klara arma el plan</span>
+        </li></ul>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="compuesto-largo">
+      <figcaption>Compuesto largo: la franja parte palabra</figcaption>
+      <div class="hoja-estado__muestra">
+        <ul class="k-shelf" role="list"><li>
+          <button type="button" class="k-cover"><span class="k-cover__band" lang="de">Bundesausbildungsförderungsgesetz</span><span class="k-cover__sub">Edición Nürnberg</span></button>
+          <span class="k-shelf__caption">B1 · ● hoy</span>
+        </li></ul>
       </div>
     </figure>
   </div>

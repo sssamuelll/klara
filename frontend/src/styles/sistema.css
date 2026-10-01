@@ -2187,6 +2187,15 @@ input.k-chip { cursor: text; }
 /* El nombre propio dentro del titular (era .ob-done__name). */
 .k-hero__title em { font-style: italic; font-weight: 400; }
 
+/* Un titular en el idioma de estudio (la historia de Hoy, su frase) lleva `lang`, y con él
+   el compuesto largo parte con guion y no a media sílaba, como en `.k-field__input`. Solo
+   con `lang`: el saludo y los titulares en el idioma de la interfaz no hifenan. Safari lo
+   pide con prefijo; `overflow-wrap` queda de respaldo donde no hay diccionario. */
+.k-hero__title[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 /* La flecha nunca se encoge ni baja de línea: es la segunda columna de la rejilla. */
 .k-hero__arrow {
   grid-column: 2;
@@ -2227,6 +2236,21 @@ input.k-chip { cursor: text; }
   font-style: normal;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+}
+
+/* La ilustración de la historia (spec 2026-09-30 §1.3): cruza las dos columnas,
+   arriba del todo, en 21:9. El héroe es tinta sólida, así que la imagen trae su
+   propio papel detrás mientras carga. */
+.k-hero__art {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  margin-bottom: var(--space-3);
 }
 
 /* Editorial: apaga la superficie explícitamente, porque el bloque base es tinta
@@ -2747,6 +2771,295 @@ ul.k-error { list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   .k-field__input,
   .k-field__rule { transition: none; }
+}
+
+/* ---------- 18-recorrido ---------- */
+/* ============================================================
+   18 · RECORRIDO — .k-route
+   Pieza nueva (spec 2026-09-30, Hoy): el plan del día como una línea de
+   metro. Una <ol> de paradas: la línea y los puntos los dibuja el átomo; la
+   parada actual cuelga el héroe (12), las demás son una fila propia.
+   ============================================================ */
+
+.k-route {
+  --k-route-rail: 28px;               /* carril: punto de 14px más aire */
+  position: relative;
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0 0 var(--space-3);
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* La línea: una sola, detrás de los puntos. 3px como el borde del punto, para
+   que el punto se lea enhebrado. */
+.k-route::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--k-route-rail) / 2 - 1.5px);
+  top: 12px;
+  bottom: 0;
+  width: 3px;
+  background: var(--ink);
+}
+
+/* El tope: la barra corta de un final de trayecto. */
+.k-route::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--k-route-rail) / 2 - 9px);
+  bottom: 0;
+  width: 18px;
+  height: 3px;
+  background: var(--ink);
+}
+
+.k-route__stop {
+  display: grid;
+  grid-template-columns: var(--k-route-rail) minmax(0, 1fr);
+  column-gap: var(--space-2);
+  min-width: 0;
+}
+
+.k-route__dot {
+  grid-column: 1;
+  justify-self: center;
+  position: relative;                 /* encima de la línea */
+  width: 14px;
+  height: 14px;
+  margin-top: 6px;                    /* a la altura de la línea de base del título */
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+.k-route__stop[data-state="done"] .k-route__dot { background: var(--ink); }
+
+.k-route__stop[data-state="now"] .k-route__dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.k-route__body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.k-route__label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--t-mono);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+/* El héroe dentro de la parada ya no trae su margen de bloque suelto. */
+.k-route__body > .k-hero { margin-top: 0; }
+
+.k-route__row {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-3);
+  min-width: 0;
+  min-height: 44px;                   /* §7.2 */
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);         /* el relleno de contacto y el anillo de foco lo siguen */
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Contacto: el mismo fondo único del sistema que `.k-row` (átomo 4). La fila de
+   la parada no trae relleno (`padding: 0`) y no puede traerlo: movería su texto
+   contra el rótulo y el héroe de la parada actual, y un margen negativo dentro
+   de `.k-live` —que scrollea— la desbordaría (trampa 13). El aire de arriba y de
+   abajo sale como dos sombras sin desenfoque, que no ocupan sitio ni suman al
+   scroll. No van alrededor (`0 0 0 var(--space-2)`) porque a los lados `.k-live`
+   las corta a ras por la derecha y sobresaldrían 8px por la izquierda: así el
+   relleno queda alineado con el héroe. El anillo global de `:focus-visible`
+   (global.css:48) no se anula. */
+.k-route__row:hover,
+.k-route__row:active {
+  background: var(--paper-2);
+  box-shadow: 0 calc(-1 * var(--space-2)) 0 0 var(--paper-2),
+              0 var(--space-2) 0 0 var(--paper-2);
+}
+
+.k-route__title {
+  font-family: var(--font-serif);
+  font-size: var(--t-h3);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.k-route__stop[data-state="done"] .k-route__title { color: var(--ink-2); }
+
+.k-route__meta {
+  font-family: var(--font-mono);
+  font-size: var(--t-mono);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.k-route__sub {
+  grid-column: 1 / -1;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--t-mark);
+  line-height: 1.4;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* Lo que está en el idioma de estudio (el título de la historia en `__sub`) lleva `lang` y
+   parte con guion, como `.k-hero__title[lang]`. */
+.k-route__title[lang],
+.k-route__sub[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.k-route__end {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--t-mark);
+  color: var(--ink-2);
+}
+
+/* ---------- 19-estanteria ---------- */
+/* ============================================================
+   19 · ESTANTERÍA — .k-shelf + .k-cover
+   Pieza nueva (spec 2026-09-30, Biblioteca): los temas como tapas de tela
+   sobre una repisa. La tela es CSS sobre tokens, sin imágenes y sin sombra
+   (las sombras son de las capas flotantes); el lomo es una franja de luz.
+   ============================================================ */
+
+.k-shelf {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0 0 var(--space-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-3);
+  border-bottom: 2px solid var(--ink);   /* la repisa */
+}
+
+/* Junta con `.k-live`: su `> ul` (0,1,1) anula margen y relleno y le gana a `.k-shelf` (0,1,0). */
+.k-live > .k-shelf { margin: var(--space-3) 0 0; padding: 0 0 var(--space-3); }
+
+.k-shelf > li {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.k-shelf__caption {
+  font-family: var(--font-mono);
+  font-size: var(--t-meta);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+
+.k-shelf__caption[data-accent] { color: var(--accent-ink); }
+
+.k-cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  /* Sin `min-width: 0` la proporción arrastra: la franja parte un compuesto largo
+     en varias líneas, el alto crece por el contenido y el ancho lo sigue por el
+     2:3 (Bundesausbildungsförderungsgesetz sacaba la tapa 17px de su columna). */
+  min-width: 0;
+  aspect-ratio: 2 / 3;
+  padding: var(--space-3) var(--space-2);
+  border: 0;
+  border-radius: var(--r-xs) var(--r-sm) var(--r-sm) var(--r-xs);
+  color: var(--paper);
+  text-align: center;
+  cursor: pointer;
+  /* La tela: dos rayados finos cruzados sobre la tinta. */
+  background-color: var(--ink);
+  background-image:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--paper) 6%, transparent) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--paper) 5%, transparent) 0 1px, transparent 1px 3px);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+/* El lomo. */
+.k-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  border-radius: var(--r-xs) 0 0 var(--r-xs);
+  background: color-mix(in srgb, var(--paper) 12%, transparent);
+}
+
+.k-cover:active { transform: scale(0.985); }
+
+.k-cover__band {
+  margin-inline: calc(-1 * var(--space-2));
+  padding: var(--space-2) var(--space-1);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-serif);
+  font-size: clamp(15px, 4.4vw, 19px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* El nombre del tema está en el idioma de estudio: con `lang` parte con guion, como `.k-hero__title[lang]`. */
+.k-cover__band[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.k-cover__sub {
+  font-family: var(--font-mono);
+  font-size: var(--t-meta);
+  letter-spacing: var(--tracking-mark);
+  text-transform: uppercase;
+  opacity: 0.72;
+  overflow-wrap: anywhere;
+}
+
+.k-cover--new {
+  color: var(--ink-2);
+  background: none;
+  border: 1px dashed var(--ink-3);
+}
+
+.k-cover--new::before { content: none; }
+
+.k-cover__plus {
+  font-family: var(--font-serif);
+  font-size: var(--t-h2);
+  line-height: 1;
+}
+
+.k-cover__name {
+  font-family: var(--font-serif);
+  font-size: var(--t-body);
+  overflow-wrap: anywhere;
 }
 
 /* ---------- 99-compresion ---------- */

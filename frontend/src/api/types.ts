@@ -500,3 +500,23 @@ export interface LearnerProfileIn {
   answers: Record<string, unknown>;
   timings: Record<string, number>;
 }
+
+/** GET /today (spec 2026-09-30 §2.3). */
+export type TodayStep = "read" | "pronounce" | "speak" | "review";
+
+export interface TodayOut {
+  now: TodayStep | null;
+  steps: Record<TodayStep, boolean>;
+  story: {
+    state: "done" | "continue" | "new" | "request";
+    id: string | null;
+    library_entry_id: string | null;
+    module_id: string | null;
+    title: string | null;
+    subtitle: string | null;
+    illustration_path: string | null;
+  };
+  sentence: { target: string; native: string } | null;
+  due: number;
+  module: { id: string; title: string; cefr_level: string } | null;
+}

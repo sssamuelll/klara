@@ -17,30 +17,17 @@ describe("buildCourseVM", () => {
   it("deriva progreso de módulos completados", () => {
     const vm = buildCourseVM({
       modules: [mod({ completed: true }), mod({ id: "m2", is_current: true }), mod({ id: "m3" })],
-      due: [], latestStoryId: null,
+      due: [],
     });
     expect(vm.progreso).toBeCloseTo(1 / 3);
     expect(vm.modules?.length).toBe(3);
   });
 
-  it("sin datos: progreso 0, vencen null, pasos completos igual", () => {
-    const vm = buildCourseVM({ modules: null, due: null, latestStoryId: null });
+  it("sin datos: progreso 0, vencen null", () => {
+    const vm = buildCourseVM({ modules: null, due: null });
     expect(vm.progreso).toBe(0);
     expect(vm.vencen).toBeNull();
     expect(vm.modules).toBeNull();
-    expect(vm.pasos).toHaveLength(4);
-    expect(vm.pasos[0]).toMatchObject({ id: "leer", to: "/story/new", e: "ahora" });
-  });
-
-  it("con historia: leer apunta a la historia y es el paso 'ahora'", () => {
-    const vm = buildCourseVM({ modules: [], due: [], latestStoryId: "abc" });
-    expect(vm.pasos.map((p) => [p.id, p.to])).toEqual([
-      ["leer", "/estudiar/abc"],
-      ["pronunciar", "/review"],
-      ["hablar", "/chat"],
-      ["repasar", "/repaso"],
-    ]);
-    expect(vm.pasos.filter((p) => p.e === "ahora")).toHaveLength(1);
   });
 });
 
