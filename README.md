@@ -141,6 +141,7 @@ out-of-band so it never lands in the DSN (issue #81). The highlights:
 | `ELEVENLABS_API_KEY` / `INWORLD_API_KEY` | conditional | Required when that provider is selected; if missing, `/api/v1/tts` returns 503. |
 | `ELEVENLABS_VOICE_ID_{DE,ES,FR,JA,PT,EN}` / `INWORLD_VOICE_ID_…` | optional | Per-language overrides; otherwise the provider's default voice is used. |
 | `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` | for pronunciation | Without these, `/api/v1/pronunciation/score`, `/quiz/resolve-mc`, and `/speak/turn` return 503; the UI hides the mic affordance. |
+| `GEMINI_API_KEY` / `ILLUSTRATION_MODEL` | optional | Story cover illustrations (Gemini image generation, about $0.07 per image, cached by scene). Empty key = no illustrations: the feature stays inert and nothing is drawn or billed. The model defaults to `gemini-3.1-flash-image-preview`. |
 | `INITIAL_OWNER_EMAIL` | first run only | Adopts the legacy user row so the first signup can bypass invites. |
 | `GOOGLE_OAUTH_CLIENT_ID` / `_SECRET` | optional | Enables Google sign-in. The callback URL must match `BACKEND_BASE_URL/api/v1/auth/google/callback`. |
 | `RESEND_API_KEY` / `EMAIL_FROM` | for email | Verification and password-reset links go through Resend. |

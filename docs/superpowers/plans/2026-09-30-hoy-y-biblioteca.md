@@ -4087,7 +4087,7 @@ Mockups y capturas: https://claude.ai/artifact/AauMudVjqVPENieX34qMTH
 - Hoy = el recorrido; Biblioteca = la estantería; tres pestañas.
 - Migración 20260930_0023, aditiva.
 
-Despliegue: ver la sección «Despliegue» del plan (GEMINI_API_KEY en el .env de prod antes de desplegar; después el backfill).
+Despliegue: ver la sección «Despliegue» del plan (primero sin GEMINI_API_KEY; la clave y el backfill, después de aprobar el estilo).
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
@@ -4098,15 +4098,26 @@ EOF
 
 ## Despliegue (lo corre Samuel)
 
+La clave de Gemini entra después de aprobar el estilo y de decidir el tamaño de las imágenes. Desde que la clave está puesta, cada historia nueva se dibuja y se guarda con `STYLE_VERSION = 1`; si el prompt cambia después, esas imágenes se quedan en el estilo viejo y hay que subir la versión y pagar otra vez.
+
 0. **Recarga el saldo de DeepSeek.** El 2026-09-30 la cuenta de reasonix estaba en $0. Si es la misma que usa prod, pedir historias y Hablar ya están fallando, y el backfill de textos también lo necesita.
-1. **La clave de Gemini en prod.** Agrega `GEMINI_API_KEY=<clave>` a `~/klara/.env` en la caja, sin sourcear ese archivo. Sin la clave, todo sale igual, solo que sin imágenes.
-2. **Merge del PR y deploy**, en una terminal aparte (no cabe en el `!`): `bash scripts/deploy-prod.sh`. La migración corre sola al arrancar el contenedor.
-3. **El backfill en seco:**
+1. **Merge del PR y deploy, sin `GEMINI_API_KEY`**, en una terminal aparte (no cabe en el `!`): `bash scripts/deploy-prod.sh`. La migración corre sola al arrancar el contenedor. Sin la clave no se dibuja nada: Hoy sale con el panel tipográfico y todo lo demás igual.
+2. **Aprueba el estilo.** La compuerta de calibración de la tarea 15 sigue abierta: la imagen 3 salió como dibujo de línea y falta que digas si las cuatro se ven como una misma colección. Si hay que tocar `STYLE_PROMPT`, es un cambio de código y se hace ahora, antes de la clave, con `STYLE_VERSION` todavía en 1; después se vuelve a desplegar. Si Flash no logra una colección coherente, el plan B es `ILLUSTRATION_MODEL=gemini-3-pro-image-preview`, a $0,137 por imagen, y se decide aquí.
+3. **Decide el tamaño de las imágenes.** Gemini las devuelve de unos 0,8 MB (un JPEG de 1584×672) para un hueco de unos 350×150 px, y se guardan enteras en Postgres, o sea en cada `pg_dump`. Si las quieres más chicas (recomprimir con Pillow a unos 1200 px, calidad 85, más o menos 0,1 MB), se hace antes de la clave y del backfill: después ya hay 150 filas gordas o más guardadas y se vuelve una migración de recompresión.
+4. **La clave de Gemini en prod.** Agrega `GEMINI_API_KEY=<clave>` a `~/klara/.env` en la caja, sin sourcear ese archivo, y recrea los contenedores para que el backend la reciba. El `IMAGE_TAG` es el del deploy del paso 1: el sha que imprime la línea `Desplegado:` del script, en lugar de `sha-XXXXXXX`. Sin él, el compose de prod levanta `latest`.
+
+   ```bash
+   ssh atrium-aws "cd ~/klara && IMAGE_TAG=sha-XXXXXXX docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d"
+   ```
+
+   Desde aquí cada historia nueva se dibuja.
+5. **El backfill en seco:**
 
    ```bash
    ssh atrium-aws "cd ~/klara && docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend python -m klara.scripts.backfill_portadas --dry-run"
    ```
 
-   Revisa el costo que imprime.
-4. **El backfill real:** el mismo comando sin `--dry-run`. Si algo falla, se puede volver a correr.
-5. **Verificación:** abre Klara en el teléfono. Hoy tiene que mostrar el recorrido con la ilustración en la parada actual, y la Biblioteca, la tapa de Deutsch.
+   Lo primero que imprime es `GEMINI_API_KEY: presente`; si dice `ausente`, la clave no llegó al contenedor. Después revisa el costo.
+6. **El backfill de la biblioteca:** el mismo comando con `--only-library` y sin `--dry-run`. Es lo que Hoy enseña de verdad: la historia nueva de la biblioteca. Si algo falla, se puede volver a correr.
+7. **Decide si pasar por las historias propias.** Es el mismo comando sin `--only-library`. Hoy solo muestra la más reciente sin terminar y la terminada hoy, pero esa pasada dibuja también cada historia propia anterior de cada usuario; el techo que imprimió el paso 5 ya la incluye.
+8. **Verificación:** abre Klara en el teléfono. Hoy tiene que mostrar el recorrido con la ilustración en la parada actual, y la Biblioteca, la tapa de Deutsch.
