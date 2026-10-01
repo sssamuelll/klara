@@ -7,7 +7,8 @@
 // PNG y un informe en .hoja-out/hoy/. Sale con 1 si algo desborda en horizontal,
 // si hay controles de menos de 44px, si la imagen rota deja un icono roto, si el
 // doble toque reclama dos veces, si Hoy no vuelve a pedir /today al volver a la app
-// (o lo pide con la app oculta, o se vacía mientras refresca), si una imagen rota deja
+// (o lo pide con la app oculta, o se vacía mientras refresca, o, si ese pedido falla, pone
+// el banner de error sobre el plan que ya tenía), si una imagen rota deja
 // sin ilustración a la historia siguiente, si el alemán no lleva lang="de" (o el texto
 // de la interfaz sí), si una lista sin viñetas pierde su role="list", si una fuente no
 // cargó o si la página lanza un error de JS. Sale con 2 si falta el Playwright o el
@@ -180,6 +181,7 @@ try {
         const reclamos = { n: 0 };
         const hoyPedidos = []; // el `since` de cada GET /today
         const demora = { ms: 0 }; // cuánto se retrasa la respuesta de /today: para mirar la pantalla mientras refresca
+        const falla = { status: esc.todayStatus ?? 0 }; // con qué estado responde /today (0: bien): para que falle solo un refetch
         const ctx = await browser.newContext({
           viewport: { width: 390, height }, deviceScaleFactor: 2, locale: "es-ES",
           colorScheme: scheme, serviceWorkers: "block",
@@ -194,8 +196,8 @@ try {
           }
           if (p === "/today") hoyPedidos.push(new URL(req.url()).searchParams.get("since"));
           if (p === "/today" && demora.ms) await new Promise((r) => setTimeout(r, demora.ms));
-          if (p === "/today" && esc.todayStatus) {
-            return route.fulfill({ status: esc.todayStatus, contentType: "application/json", body: JSON.stringify({ detail: "boom" }) });
+          if (p === "/today" && falla.status) {
+            return route.fulfill({ status: falla.status, contentType: "application/json", body: JSON.stringify({ detail: "boom" }) });
           }
           let body = [];
           let status = 200;
@@ -265,6 +267,17 @@ try {
           demora.ms = 0;
           if (hoyPedidos.length !== antes + 1) fallos.push(`volver a la app: ${hoyPedidos.length - antes} pedidos de /today (se espera 1)`);
           else if (!(Date.parse(hoyPedidos[antes]) > Date.parse(hoyPedidos[antes - 1]))) fallos.push("volver a la app: /today sigue pidiendo desde la medianoche de ayer");
+          // Y si ese pedido falla con el plan a la vista: el plan se queda tal cual y el banner de
+          // error (que es para cuando no hay plan que enseñar) no se pinta encima.
+          await visibilidad(page, "hidden");
+          falla.status = 500;
+          const llego = page.waitForResponse((r) => r.url().includes("/api/v1/today"), { timeout: 3000 }).then(() => true, () => false);
+          await visibilidad(page, null);
+          if (!(await llego)) fallos.push("volver a la app: el pedido de /today que debia fallar no llego");
+          await page.waitForTimeout(300); // que React procese el rechazo y pinte
+          falla.status = 0;
+          if ((await page.locator(HEROE).count()) !== 1) fallos.push("volver a la app: un pedido de /today que falla vacia Hoy");
+          if ((await page.locator(".k-error").count()) !== 0) fallos.push("volver a la app: un pedido de /today que falla pone el banner de error sobre el plan");
           // El reclamo navega a /estudiar/s-nueva, que no está simulada (`200 []`) y lanza un error
           // al pintarse: esa pantalla ya no es la que se prueba.
           page.off("pageerror", alError);

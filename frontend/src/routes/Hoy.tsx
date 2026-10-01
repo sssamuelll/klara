@@ -100,7 +100,9 @@ export default function Hoy() {
         <h2 className="k-cap k-cap--rule">
           {vm.todoHecho ? t("hoy.planHecho") : t("hoy.plan", { min: vm.minutos })}
         </h2>
-        {fallo && (
+        {/* El error es solo para cuando no hay plan que enseñar: si falla el pedido de al volver a la
+            app con uno a la vista, ese plan se queda tal cual, sin banner. */}
+        {fallo && today === null && (
           <p className="k-error" role="alert">
             {t("hoy.error")}{" "}
             <button type="button" className="k-btn k-btn--text" onClick={() => setIntento((n) => n + 1)}>
