@@ -30,8 +30,22 @@ export default function Hoy() {
     return () => { cancelado = true; };
   }, [intento]);
 
+  // La pantalla sigue montada mientras la app está en segundo plano: al volver se pide el día otra
+  // vez. `medianocheLocal()` se evalúa entonces, así que pasada la medianoche llega el día nuevo, y
+  // `today` se queda a la vista mientras tanto (sin parpadeo de carga).
+  useEffect(() => {
+    const alVolver = () => {
+      if (document.visibilityState === "visible") setIntento((n) => n + 1);
+    };
+    document.addEventListener("visibilitychange", alVolver);
+    return () => document.removeEventListener("visibilitychange", alVolver);
+  }, []);
+
   const vm = buildHoyVM(today);
   const tema = user ? languageLabel(user.target_language) : "…";
+  // El idioma de estudio: el texto que está en él (el título de la historia, la frase, el tema) lo
+  // declara con `lang`, para el lector de pantalla y para que el compuesto largo parta con guion.
+  const idioma = user?.target_language;
 
   async function actuar(accion: Accion) {
     setFalloReclamo(false);
@@ -59,13 +73,15 @@ export default function Hoy() {
     <main className="k-page">
       <header className="k-topline">
         <span className="k-topline__mark">
+          {/* El nombre accesible mezcla idiomas («Deutsch, Tu biblioteca»): el `lang` va solo en el tema, no en el botón. */}
           <button
             type="button"
             className="k-btn k-btn--text"
             aria-label={`${tema}, ${t("biblioteca.titulo")}`}
             onClick={() => navigate("/biblioteca")}
           >
-            {tema} <span aria-hidden="true">⌄</span>
+            <span lang={idioma}>{tema}</span>
+            <Chevron />
           </button>
           <span className="k-topline__meta">{t("biblioteca.cursoSub", { level: user?.level ?? "" })}</span>
         </span>
@@ -93,7 +109,7 @@ export default function Hoy() {
           </p>
         )}
         {falloReclamo && <p className="k-error" role="alert">{t("module.claimError")}</p>}
-        <ol className="k-route">
+        <ol className="k-route" role="list">
           {vm.paradas.map((p) => (
             <li
               key={p.id}
@@ -105,10 +121,10 @@ export default function Hoy() {
               {p.estado === "now" && vm.panel ? (
                 <div className="k-route__body">
                   <span className="k-route__label">{t("hoy.estasAqui")}</span>
-                  <PanelActual panel={vm.panel} ocupado={reclamando} onAccion={actuar} />
+                  <PanelActual panel={vm.panel} ocupado={reclamando} idioma={idioma} onAccion={actuar} />
                 </div>
               ) : (
-                <FilaParada parada={p} onAccion={actuar} />
+                <FilaParada parada={p} idioma={idioma} onAccion={actuar} />
               )}
             </li>
           ))}
@@ -119,21 +135,30 @@ export default function Hoy() {
   );
 }
 
-function FilaParada({ parada, onAccion }: { parada: Parada; onAccion: (a: Accion) => void }) {
+function FilaParada({
+  parada,
+  idioma,
+  onAccion,
+}: {
+  parada: Parada;
+  idioma: string | undefined;
+  onAccion: (a: Accion) => void;
+}) {
   const { t } = useTranslation();
+  // El título de la historia está en el idioma de estudio; lo demás del subtítulo, en el tuyo.
+  const historia = parada.id === "leer" && parada.historia ? parada.historia : null;
   const sub =
-    parada.id === "leer" && parada.historia
-      ? parada.historia
-      : parada.id === "repasar" && parada.vencen
-        ? t("hoy.fichas", { count: parada.vencen })
-        : t(`curso.paso.${parada.id}.dek`);
+    historia ??
+    (parada.id === "repasar" && parada.vencen
+      ? t("hoy.fichas", { count: parada.vencen })
+      : t(`curso.paso.${parada.id}.dek`));
   return (
     <button type="button" className="k-route__row" onClick={() => onAccion(parada.accion)}>
       <span className="k-route__title">{t(`curso.paso.${parada.id}.titulo`)}</span>
       <span className="k-route__meta">
         {parada.estado === "done" ? t("hoy.hecho") : t(`curso.paso.${parada.id}.meta`)}
       </span>
-      <span className="k-route__sub">{sub}</span>
+      <span className="k-route__sub" lang={historia ? idioma : undefined}>{sub}</span>
     </button>
   );
 }
@@ -141,27 +166,35 @@ function FilaParada({ parada, onAccion }: { parada: Parada; onAccion: (a: Accion
 function PanelActual({
   panel,
   ocupado,
+  idioma,
   onAccion,
 }: {
   panel: Panel;
   ocupado: boolean;
+  idioma: string | undefined;
   onAccion: (a: Accion) => void;
 }) {
   const { t } = useTranslation();
-  const [arteRota, setArteRota] = useState(false);
+  const arte = panel.tipo === "leer" ? panel.arte : null;
+  // El src que falló y no un booleano: si el día se refresca con otra historia, su ilustración
+  // trae otro src y se intenta de nuevo; la de una imagen rota no suprime la siguiente.
+  const [arteRota, setArteRota] = useState<string | null>(null);
   const tag = `${t(`curso.paso.${panel.tipo}.titulo`)} · ${t(`curso.paso.${panel.tipo}.meta`)}`;
 
   let titulo = "";
+  let enIdioma = false; // el titular es texto en el idioma de estudio, no de la interfaz
   let dek: string | null = null;
   let cta: string | null = t("hoy.empezar");
   switch (panel.tipo) {
     case "leer":
       titulo = panel.estado === "request" ? t("hoy.pedir") : (panel.titulo ?? t("curso.paso.leer.dek"));
+      enIdioma = panel.estado !== "request" && panel.titulo !== null;
       dek = panel.estado === "request" ? null : panel.subtitulo;
       cta = panel.estado === "continue" ? t("hoy.seguir") : panel.estado === "new" ? t("hoy.empezar") : null;
       break;
     case "pronunciar":
       titulo = panel.frase ? `„${panel.frase.target}“` : t("curso.paso.pronunciar.titulo");
+      enIdioma = panel.frase !== null;
       dek = panel.frase ? panel.frase.native : t("curso.paso.pronunciar.dek");
       break;
     case "hablar":
@@ -176,16 +209,28 @@ function PanelActual({
 
   return (
     <button type="button" className="k-hero" disabled={ocupado} onClick={() => onAccion(panel.accion)}>
-      {panel.tipo === "leer" && panel.arte && !arteRota && (
-        <img className="k-hero__art" src={panel.arte} alt="" onError={() => setArteRota(true)} />
+      {arte && arteRota !== arte && (
+        <img className="k-hero__art" src={arte} alt="" onError={() => setArteRota(arte)} />
       )}
       <span className="k-hero__tag">
         <span>{tag}</span>
         {cta && <span>{cta}</span>}
       </span>
-      <span className="k-hero__title">{titulo}</span>
+      <span className="k-hero__title" lang={enIdioma ? idioma : undefined}>{titulo}</span>
       <span className="k-hero__arrow" aria-hidden="true">→</span>
       {dek && <span className="k-hero__dek">{dek}</span>}
     </button>
+  );
+}
+
+/** El ⌄ del tema. JetBrains Mono no trae U+2304 y caía a una «v» en la línea de base, así que se
+    dibuja: caja de 16px (la de `.k-btn svg`), trazo de 1.5 y currentColor como los iconos de la
+    barra de pestañas, y el dibujo a la altura de las versalitas mono (11px), arrimado a la
+    izquierda de su caja para quedar junto a la palabra. */
+function Chevron() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2 7.8l4.4 4.4 4.4-4.4" />
+    </svg>
   );
 }

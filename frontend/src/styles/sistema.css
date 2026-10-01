@@ -2187,6 +2187,15 @@ input.k-chip { cursor: text; }
 /* El nombre propio dentro del titular (era .ob-done__name). */
 .k-hero__title em { font-style: italic; font-weight: 400; }
 
+/* Un titular en el idioma de estudio (la historia de Hoy, su frase) lleva `lang`, y con él
+   el compuesto largo parte con guion y no a media sílaba, como en `.k-field__input`. Solo
+   con `lang`: el saludo y los titulares en el idioma de la interfaz no hifenan. Safari lo
+   pide con prefijo; `overflow-wrap` queda de respaldo donde no hay diccionario. */
+.k-hero__title[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 /* La flecha nunca se encoge ni baja de línea: es la segunda columna de la rejilla. */
 .k-hero__arrow {
   grid-column: 2;
@@ -2914,6 +2923,14 @@ ul.k-error { list-style: none; }
   overflow-wrap: anywhere;
 }
 
+/* Lo que está en el idioma de estudio (el título de la historia en `__sub`) lleva `lang` y
+   parte con guion, como `.k-hero__title[lang]`. */
+.k-route__title[lang],
+.k-route__sub[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 .k-route__end {
   margin: var(--space-4) 0 0;
   font-family: var(--font-serif);
@@ -3008,6 +3025,12 @@ ul.k-error { list-style: none; }
   font-size: clamp(15px, 4.4vw, 19px);
   line-height: 1.15;
   overflow-wrap: anywhere;
+}
+
+/* El nombre del tema está en el idioma de estudio: con `lang` parte con guion, como `.k-hero__title[lang]`. */
+.k-cover__band[lang] {
+  -webkit-hyphens: auto;
+  hyphens: auto;
 }
 
 .k-cover__sub {

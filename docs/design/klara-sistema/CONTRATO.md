@@ -936,7 +936,7 @@ Literales justificados: **18px 20px**, **25px/22px**, **24px** de la flecha y **
 | `.home__feature` y familia (pages.css:36-92, muertas) | `.k-hero`; es la implementación de escritorio del mismo bloque, se lee y se borra |
 | `.story-end*` (pages.css:310-386, muertas) | `.k-hero k-hero--quiet` + `.k-hero__meta`; se leen y se borran |
 
-**Notas:** el héroe tocable es `<button>` y ocupa 44px de sobra; el `--quiet` es `<header>` con `<h1>` dentro y no es tocable. `--quiet` apaga la superficie explícitamente (`background: none; color: var(--ink)`), porque el bloque base es tinta sólida. Las coreografías de entrada escalonada de onboarding (200/400/500/600/800ms) no son del átomo: son de la pantalla, y hoy incumplen §7.6 porque van en ms literales. Con alemán largo el título parte palabra; la flecha no se encoge.
+**Notas:** el héroe tocable es `<button>` y ocupa 44px de sobra; el `--quiet` es `<header>` con `<h1>` dentro y no es tocable. `--quiet` apaga la superficie explícitamente (`background: none; color: var(--ink)`), porque el bloque base es tinta sólida. Las coreografías de entrada escalonada de onboarding (200/400/500/600/800ms) no son del átomo: son de la pantalla, y hoy incumplen §7.6 porque van en ms literales. Con alemán largo el título parte palabra; la flecha no se encoge. Un título en el idioma de estudio lleva `lang` y con él parte con guion (`.k-hero__title[lang]`, `hyphens: auto` como `.k-field__input`); sin `lang` no hifena, y `overflow-wrap` queda de respaldo.
 
 ---
 
@@ -1235,7 +1235,7 @@ Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px 
 
 **Markup canónico:**
 ```html
-<ol class="k-route">
+<ol class="k-route" role="list">
   <li class="k-route__stop" data-state="done">
     <span class="k-route__dot" aria-hidden="true"></span>
     <button type="button" class="k-route__row">
@@ -1260,7 +1260,7 @@ Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px 
 |---|---|
 | la lista del plan de `Portada.tsx` (`.k-row` con `__n` 01–04) | `.k-route` en `Hoy.tsx`; la portada se queda con el mapa y Género |
 
-**Notas:** la parada actual no es una fila grande: es el héroe (átomo 12) colgado de la línea. Las filas no son `.k-row` porque `.k-row` dibuja su filete, y aquí la estructura la pone la línea: dos filetes en ángulo recto se leían como una tabla. Todas las paradas se tocan en cualquier orden; el orden sugiere, no obliga. Reduced motion: el átomo no anima (la línea, los puntos y el anillo del punto actual son estáticos), así que no trae bloque de `prefers-reduced-motion`; el héroe colgado lleva el suyo (átomo 12).
+**Notas:** la parada actual no es una fila grande: es el héroe (átomo 12) colgado de la línea. Las filas no son `.k-row` porque `.k-row` dibuja su filete, y aquí la estructura la pone la línea: dos filetes en ángulo recto se leían como una tabla. Todas las paradas se tocan en cualquier orden; el orden sugiere, no obliga. Reduced motion: el átomo no anima (la línea, los puntos y el anillo del punto actual son estáticos), así que no trae bloque de `prefers-reduced-motion`; el héroe colgado lleva el suyo (átomo 12). El `<ol>` lleva `role="list"`: con `list-style: none` Safari y VoiceOver le quitan la semántica de lista. Lo que esté en el idioma de estudio (el título de la historia en `__sub`) lleva `lang` y parte con guion (`[lang]` con `hyphens: auto`, como `.k-hero__title[lang]`); el `overflow-wrap` queda de respaldo.
 
 ---
 
@@ -1281,7 +1281,7 @@ Literales justificados: la proporción 2:3 (la de un libro), los 2px de la repis
 
 **Markup canónico:**
 ```html
-<ul class="k-shelf">
+<ul class="k-shelf" role="list">
   <li>
     <button type="button" class="k-cover">
       <span class="k-cover__band">Deutsch</span>
@@ -1307,7 +1307,7 @@ Literales justificados: la proporción 2:3 (la de un libro), los 2px de la repis
 | la fila del tema en `Inicio.tsx` (`.k-row` + `.k-bar`) | `.k-cover` + `.k-bar` + `.k-shelf__caption` en `Biblioteca.tsx` |
 | la fila «Nuevo tema» (`.k-row` con `__n` «+») | `.k-cover--new` |
 
-**Notas:** en oscuro la tapa se invierte, como el héroe: tela color papel con letras de pizarra. Es la misma decisión que el panel de Hoy (spec §7.3). El bloque «Sigue donde lo dejaste» del mockup C no entra: con un solo tema repetiría lo que ya dice Hoy. Reduced motion: la tapa se hunde con `var(--dur-fast)`, que `tokens.css` baja a 0ms bajo `prefers-reduced-motion`; sin movimiento se hunde de golpe y no hay nada que apagar en el átomo. `.k-cover` lleva `min-width: 0` porque el 2:3 arrastra: con un compuesto largo el alto crece por el contenido y, sin ese tope, el ancho lo seguiría y la tapa se saldría de su columna.
+**Notas:** en oscuro la tapa se invierte, como el héroe: tela color papel con letras de pizarra. Es la misma decisión que el panel de Hoy (spec §7.3). El bloque «Sigue donde lo dejaste» del mockup C no entra: con un solo tema repetiría lo que ya dice Hoy. Reduced motion: la tapa se hunde con `var(--dur-fast)`, que `tokens.css` baja a 0ms bajo `prefers-reduced-motion`; sin movimiento se hunde de golpe y no hay nada que apagar en el átomo. `.k-cover` lleva `min-width: 0` porque el 2:3 arrastra: con un compuesto largo el alto crece por el contenido y, sin ese tope, el ancho lo seguiría y la tapa se saldría de su columna. El `<ul>` lleva `role="list"` (con `list-style: none` Safari y VoiceOver le quitan la semántica de lista) y el nombre del tema, que está en el idioma de estudio, lleva `lang`: `.k-cover__band[lang]` parte con guion (`hyphens: auto`, como `.k-hero__title[lang]`) y el `overflow-wrap` queda de respaldo.
 **Trampa de `.k-live`:** `.k-live > ul` (0,1,1) pone `margin: 0; padding: 0` a toda lista hija directa de `.k-live` y le gana a `.k-shelf` (0,1,0): dentro de `.k-live` las tapas se pegaban a la regla de «Tus temas» y el pie tocaba la repisa. Por eso el átomo trae la junta `.k-live > .k-shelf` (0,2,0), con el mismo margen y relleno que la base. `.k-route` (átomo 18) se libra solo porque es un `<ol>`, que esa regla no alcanza.
 
 ---

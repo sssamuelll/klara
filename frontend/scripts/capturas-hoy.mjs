@@ -6,9 +6,12 @@
 // fotografía cada escenario en claro y oscuro, a 390×844 y a 390×667. Escribe los
 // PNG y un informe en .hoja-out/hoy/. Sale con 1 si algo desborda en horizontal,
 // si hay controles de menos de 44px, si la imagen rota deja un icono roto, si el
-// doble toque reclama dos veces, si una fuente no cargó o si la página lanza un
-// error de JS. Sale con 2 si falta el Playwright o el dist, o si el puerto 4175
-// ya está ocupado.
+// doble toque reclama dos veces, si Hoy no vuelve a pedir /today al volver a la app
+// (o lo pide con la app oculta, o se vacía mientras refresca), si una imagen rota deja
+// sin ilustración a la historia siguiente, si el alemán no lleva lang="de" (o el texto
+// de la interfaz sí), si una lista sin viñetas pierde su role="list", si una fuente no
+// cargó o si la página lanza un error de JS. Sale con 2 si falta el Playwright o el
+// dist, o si el puerto 4175 ya está ocupado.
 //
 // Necesita PLAYWRIGHT_BROWSERS_PATH (aquí D:/caches/ms-playwright, con barras
 // normales en Git Bash) y tarda unos 2 minutos: son 36 contextos nuevos, cada
@@ -56,21 +59,28 @@ const HEROE = "button.k-hero";
 // `espera`: el selector que dice que los datos ya llegaron y la pantalla pintó lo que se
 // fotografía. Nunca `.k-route`: el recorrido se pinta también mientras carga y cuando falla
 // (con `today` en null todas las paradas salen pendientes), y las medidas pasarían en vacío.
+// `de` y `nativo`: lo que tiene que llevar `lang="de"` (texto en el idioma de estudio) y lo que
+// no (texto de la interfaz, que hereda el idioma de la página).
 const ESCENARIOS = {
-  "entrar": { ruta: "/", espera: HEROE, today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
-  "despues-de-leer": { ruta: "/", espera: HEROE, today: { now: "pronounce", steps: { ...NINGUNA, read: true }, story: hecha,
+  "entrar": { ruta: "/", espera: HEROE, de: [`${HEROE} .k-hero__title`, ".k-topline button span"],
+    today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
+  "despues-de-leer": { ruta: "/", espera: HEROE, de: [`${HEROE} .k-hero__title`, '.k-route__stop[data-state="done"] .k-route__sub'],
+    today: { now: "pronounce", steps: { ...NINGUNA, read: true }, story: hecha,
     sentence: { target: "Der Bäcker öffnet um acht.", native: "El panadero abre a las ocho." }, due: 12, module: null } },
   // Sin parada actual no hay héroe: lo que prueba que llegó `/today` es la primera parada hecha.
   "todo-hecho": { ruta: "/", espera: '.k-route__stop[data-state="done"]', today: { now: null, steps: { read: true, pronounce: true, speak: true, review: true },
     story: hecha, sentence: null, due: 0, module: null } },
-  "sin-historia": { ruta: "/", espera: HEROE, today: { now: "read", steps: { ...NINGUNA, review: true },
+  "sin-historia": { ruta: "/", espera: HEROE, nativo: [`${HEROE} .k-hero__title`], today: { now: "read", steps: { ...NINGUNA, review: true },
     story: { state: "request", id: null, library_entry_id: null, module_id: null, title: null, subtitle: null, illustration_path: null },
     sentence: null, due: 0, module: null } },
   "titulo-largo": { ruta: "/", espera: HEROE, today: { now: "read", steps: NINGUNA,
     story: historia({ title: "Die Bundesausbildungsförderungsgesetzberatungsstelle am Samstag" }), sentence: null, due: 12, module: null } },
   // El héroe existe; es la <img> la que se quita al fallar, y de eso se ocupa el chequeo de imagen rota.
-  "arte-rota": { ruta: "/", espera: HEROE, arteRota: true, today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null } },
-  "biblioteca": { ruta: "/biblioteca", espera: ".k-shelf", today: null },
+  // `relevo`: lo que responde /today al volver a la app (otra historia, con una ilustración que sí carga).
+  "arte-rota": { ruta: "/", espera: HEROE, arteRota: true,
+    today: { now: "read", steps: NINGUNA, story: historia(), sentence: null, due: 12, module: null },
+    relevo: { now: "read", steps: NINGUNA, story: historia({ illustration_path: "/illustrations/otra" }), sentence: null, due: 12, module: null } },
+  "biblioteca": { ruta: "/biblioteca", espera: ".k-shelf", de: [".k-cover__band"], today: null },
   "portada": { ruta: "/curso/aleman", espera: ".k-row", today: null },
   "error-de-carga": { ruta: "/", espera: ".k-error", todayStatus: 500, today: null },
 };
@@ -132,9 +142,19 @@ async function medir(page) {
       .filter(({ r }) => r.width > 0 && (r.width < 44 || r.height < 44))
       .map(({ el, r }) => ({ txt: el.textContent.trim().slice(0, 40), w: Math.round(r.width), h: Math.round(r.height) }));
     const rota = [...document.querySelectorAll("img.k-hero__art")].some((img) => img.complete && img.naturalWidth === 0);
-    return { desbordes, chicos, rota };
+    // `list-style: none` (las dos listas lo llevan) quita la semántica de lista en Safari/VoiceOver.
+    const sinRolLista = [...document.querySelectorAll("ol.k-route, ul.k-shelf")].filter((el) => el.getAttribute("role") !== "list").length;
+    return { desbordes, chicos, rota, sinRolLista };
   });
 }
+
+// Sale de la app o vuelve a ella: `visibilitychange` con el estado que se diga. `null` quita el
+// estado fingido y vuelve el del navegador, que en la página abierta es «visible».
+const visibilidad = (page, estado) => page.evaluate((e) => {
+  if (e) Object.defineProperty(document, "visibilityState", { configurable: true, get: () => e });
+  else delete document.visibilityState;
+  document.dispatchEvent(new Event("visibilitychange"));
+}, estado);
 
 const fallos = [];
 const informe = {};
@@ -158,6 +178,8 @@ try {
       for (const height of [844, 667]) {
         const clave = `${nombre}-${scheme}-${height}`;
         const reclamos = { n: 0 };
+        const hoyPedidos = []; // el `since` de cada GET /today
+        const demora = { ms: 0 }; // cuánto se retrasa la respuesta de /today: para mirar la pantalla mientras refresca
         const ctx = await browser.newContext({
           viewport: { width: 390, height }, deviceScaleFactor: 2, locale: "es-ES",
           colorScheme: scheme, serviceWorkers: "block",
@@ -166,10 +188,12 @@ try {
           const req = route.request();
           const p = new URL(req.url()).pathname.replace(/^\/api\/v1/, "");
           if (p.startsWith("/illustrations/")) {
-            return esc.arteRota
+            return esc.arteRota && !p.endsWith("/otra")
               ? route.fulfill({ status: 404, body: "" })
               : route.fulfill({ status: 200, contentType: "image/jpeg", body: arte });
           }
+          if (p === "/today") hoyPedidos.push(new URL(req.url()).searchParams.get("since"));
+          if (p === "/today" && demora.ms) await new Promise((r) => setTimeout(r, demora.ms));
           if (p === "/today" && esc.todayStatus) {
             return route.fulfill({ status: esc.todayStatus, contentType: "application/json", body: JSON.stringify({ detail: "boom" }) });
           }
@@ -178,7 +202,7 @@ try {
           if (p === "/me") body = user;
           else if (p === "/modules") body = modules;
           else if (p.startsWith("/srs/cards/due")) body = due;
-          else if (p === "/today") body = esc.today;
+          else if (p === "/today") body = esc.relevo && hoyPedidos.length > 1 ? esc.relevo : esc.today;
           else if (p.startsWith("/modules/") && p.endsWith("/story") && req.method() === "POST") {
             reclamos.n += 1;
             status = 201;
@@ -207,7 +231,40 @@ try {
         if (m.desbordes.length) fallos.push(`${clave}: desborda ${JSON.stringify(m.desbordes)}`);
         if (m.chicos.length) fallos.push(`${clave}: controles < 44px ${JSON.stringify(m.chicos)}`);
         if (m.rota) fallos.push(`${clave}: icono de imagen rota`);
+        if (m.sinRolLista) fallos.push(`${clave}: ${m.sinRolLista} lista(s) sin role="list"`);
+        for (const sel of esc.de ?? []) {
+          if ((await page.locator(sel).first().getAttribute("lang")) !== "de") fallos.push(`${clave}: «${sel}» no lleva lang="de"`);
+        }
+        for (const sel of esc.nativo ?? []) {
+          if ((await page.locator(sel).first().getAttribute("lang")) !== null) fallos.push(`${clave}: «${sel}» es texto de la interfaz y lleva lang`);
+        }
+        if (esc.relevo) {
+          // La imagen de la historia se rompió (404). Al volver a la app con otra historia, la ilustración
+          // de esa se pinta: la imagen rota de la anterior no la suprime.
+          await visibilidad(page, null);
+          const pinta = await page.waitForFunction(() => {
+            const i = document.querySelector("img.k-hero__art");
+            return !!i && i.complete && i.naturalWidth > 0;
+          }, null, { timeout: 3000 }).then(() => true, () => false);
+          if (!pinta) fallos.push(`${clave}: al volver con otra historia no se pinta su ilustración (¿no se vuelve a pedir /today, o la imagen rota quedó pegada?)`);
+        }
         if (nombre === "entrar" && scheme === "light" && height === 844) {
+          // Volver a la app: `visibilitychange` con la página visible pide /today otra vez, y con la
+          // medianoche del día nuevo (el reloj salta al día siguiente); con la página oculta no pide nada.
+          const antes = hoyPedidos.length;
+          await visibilidad(page, "hidden");
+          await page.waitForTimeout(600);
+          if (hoyPedidos.length !== antes) fallos.push("volver a la app: pide /today con la app oculta");
+          await page.clock.setFixedTime(new Date("2026-10-01T08:10:00"));
+          demora.ms = 500;
+          await visibilidad(page, null);
+          await page.waitForTimeout(200);
+          // El pedido sigue en vuelo: Hoy conserva el día que tenía, sin vaciarse ni parpadear.
+          if ((await page.locator(HEROE).count()) !== 1) fallos.push("volver a la app: Hoy se vacía mientras refresca");
+          await page.waitForTimeout(600);
+          demora.ms = 0;
+          if (hoyPedidos.length !== antes + 1) fallos.push(`volver a la app: ${hoyPedidos.length - antes} pedidos de /today (se espera 1)`);
+          else if (!(Date.parse(hoyPedidos[antes]) > Date.parse(hoyPedidos[antes - 1]))) fallos.push("volver a la app: /today sigue pidiendo desde la medianoche de ayer");
           // El reclamo navega a /estudiar/s-nueva, que no está simulada (`200 []`) y lanza un error
           // al pintarse: esa pantalla ya no es la que se prueba.
           page.off("pageerror", alError);
@@ -230,4 +287,4 @@ if (fallos.length) {
   console.error(fallos.join("\n"));
   process.exit(1);
 }
-console.log("Sin desbordes, sin controles chicos, sin imagen rota, un solo reclamo.");
+console.log("Sin desbordes, sin controles chicos, sin imagen rota, un solo reclamo, Hoy se refresca al volver a la app, el alemán lleva lang y las listas su role.");

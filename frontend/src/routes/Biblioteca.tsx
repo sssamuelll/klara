@@ -31,10 +31,10 @@ export default function Biblioteca() {
           <h1 className="k-hero__title">{t("biblioteca.titulo")}</h1>
         </header>
         <h2 className="k-cap k-cap--rule">{t("biblioteca.temas")}</h2>
-        <ul className="k-shelf">
+        <ul className="k-shelf" role="list">
           <li>
             <button type="button" className="k-cover" onClick={() => navigate("/curso/aleman")}>
-              <span className="k-cover__band">{tema}</span>
+              <span className="k-cover__band" lang={user?.target_language}>{tema}</span>
               <span className="k-cover__sub">{t("biblioteca.edicion")}</span>
             </button>
             <div className="k-bar k-bar--fill">
