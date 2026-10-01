@@ -383,6 +383,46 @@ async def test_nueva_de_la_biblioteca_sin_reclamar(client, seed_invite, db_sessi
 
 
 @pytest.mark.asyncio
+async def test_la_ilustracion_de_una_historia_ya_reclamada(client, seed_invite, db_session):
+    """`continue` y `done` salen de `_from_story`, el camino de casi todos los usuarios; hasta
+    ahora solo la rama `new` (de la biblioteca) tenía verificada su `illustration_path`."""
+    cookie = await _login(client, seed_invite)
+    user = await _yo(db_session)
+    escena = "A small bakery at dawn."
+    story = _story(user, scene=escena)
+    db_session.add(story)
+    await db_session.commit()
+
+    # La escena ya está, pero su imagen todavía no (se dibuja en segundo plano): tipográfica.
+    story_hoy = (await _hoy(client, cookie))["story"]
+    assert (story_hoy["state"], story_hoy["illustration_path"]) == ("continue", None)
+
+    h = illustration_hash(escena)
+    db_session.add(
+        Illustration(
+            hash=h,
+            scene=escena,
+            style_version=1,
+            model="m",
+            mime_type="image/jpeg",
+            image_data=b"x",
+            size_bytes=1,
+        )
+    )
+    await db_session.commit()
+    story_hoy = (await _hoy(client, cookie))["story"]
+    assert (story_hoy["state"], story_hoy["illustration_path"]) == (
+        "continue",
+        f"/illustrations/{h}",
+    )
+
+    db_session.add(StoryView(story_id=story.id, user_id=user.id, finished_at=AHORA))
+    await db_session.commit()
+    story_hoy = (await _hoy(client, cookie))["story"]
+    assert (story_hoy["state"], story_hoy["illustration_path"]) == ("done", f"/illustrations/{h}")
+
+
+@pytest.mark.asyncio
 async def test_terminada_ayer_lleva_a_la_siguiente_de_la_biblioteca(
     client, seed_invite, db_session
 ):

@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 
 from klara.llm.base import LLMResponse
 from klara.models import StoryLibrary
-from klara.scripts.build_story_library import TOPICS, build_library
+from klara.scripts.build_story_library import TOPICS, _informe, build_library
 
 
 def _story_json(sentence: str, lemma: str) -> str:
@@ -247,3 +247,11 @@ async def test_identical_content_across_topics_dedups_by_hash(db_session):
     assert n == 1
     count = (await db_session.execute(select(func.count()).select_from(StoryLibrary))).scalar_one()
     assert count == 1
+
+
+def test_el_informe_cabe_en_cp1252_y_cuenta_el_costo():
+    """Un signo fuera de cp1252 (un «≈») reventaría con UnicodeEncodeError al final de una
+    corrida ya pagada, en una consola de Windows."""
+    texto = _informe(3, 2)
+    texto.encode("cp1252")
+    assert "$0.14" in texto  # 2 imágenes a $0.069

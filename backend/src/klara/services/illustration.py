@@ -102,7 +102,8 @@ async def ensure_illustration(
     try:
         raw, mime = await _generate(settings, escena, http)
     except Exception as exc:  # red, HTTP, bloqueo de seguridad o respuesta sin imagen
-        log.warning("illustration.generate_failed", hash=h, error=str(exc))
+        # Con el tipo: un timeout trae str(exc) == "" y el log quedaría sin causa.
+        log.warning("illustration.generate_failed", hash=h, error=f"{type(exc).__name__}: {exc}")
         return None
     finally:
         if client is None:
@@ -138,4 +139,4 @@ async def illustrate_in_background(settings: Settings, scene: str | None) -> Non
             if await ensure_illustration(db, scene, settings=settings):
                 await db.commit()
     except Exception as exc:
-        log.warning("illustration.background_failed", error=str(exc))
+        log.warning("illustration.background_failed", error=f"{type(exc).__name__}: {exc}")

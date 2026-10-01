@@ -3,17 +3,20 @@ imagen por escena distinta. --dry-run no escribe ni llama. Es idempotente."""
 
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 import uuid
 
 import pytest
+from pydantic import SecretStr
 from sqlalchemy import select
 
 from klara.config import get_settings
 from klara.llm.base import LLMResponse
 from klara.models import Illustration, Module, Story, StoryLibrary, User
 from klara.models.enums import CEFRLevel
-from klara.scripts.backfill_portadas import _informe, backfill
+from klara.scripts.backfill_portadas import _informe, _run, backfill, main
 from klara.services.illustration import illustration_hash
 
 CONTENT = {
@@ -363,3 +366,117 @@ def test_el_informe_cabe_en_cp1252_y_cuenta_el_costo():
     real.encode("cp1252")
     assert "$0.21" in en_seco  # 3 imágenes a $0.069
     assert "$0.14" in real  # 2 imágenes a $0.069
+
+
+# Las entradas retiradas (is_active = false) no se sirven nunca: no reciben textos
+# ni imagen. Y la clave de Gemini: sin ella una corrida real no empieza.
+
+
+def _retirada(entry: StoryLibrary, **kw) -> StoryLibrary:
+    return StoryLibrary(
+        module_id=entry.module_id,
+        language="de",
+        native_language="es",
+        level=CEFRLevel.A2,
+        title="Der Kiosk",
+        content=CONTENT,
+        target_vocab_item_ids=[],
+        source="seed",
+        content_hash="6" * 64,
+        is_active=False,
+        **kw,
+    )
+
+
+@pytest.mark.asyncio
+async def test_una_entrada_retirada_no_recibe_textos(db_session):
+    entry, _, _ = await _sembrar(db_session)
+    retirada = _retirada(entry)
+    db_session.add(retirada)
+    await db_session.commit()
+
+    en_seco = await _correr(
+        db_session, TextosLLM([]), Ilustrador(), dry_run=True, only_library=True
+    )
+    assert (en_seco["library_texts"], en_seco["images_max"]) == (1, 1)
+
+    # Con una sola respuesta preparada: si también fuera por la retirada, su llamada
+    # no tendría respuesta y saldría como fallo.
+    llm = TextosLLM([_textos("Una panadería.", "A small bakery at dawn.")])
+    stats = await _correr(db_session, llm, Ilustrador(), only_library=True)
+    assert (llm.llamadas, stats["library_texts"], stats["failed"]) == (1, 1, 0)
+    await db_session.refresh(retirada)
+    assert (retirada.subtitle, retirada.scene) == (None, None)
+
+
+@pytest.mark.asyncio
+async def test_la_escena_de_una_entrada_retirada_no_se_dibuja(db_session):
+    entry, _, _ = await _sembrar(db_session)
+    entry.subtitle, entry.scene = "Una panadería.", "A small bakery at dawn."
+    db_session.add(_retirada(entry, subtitle="Un quiosco.", scene="A kiosk at night."))
+    await db_session.commit()
+
+    en_seco = await _correr(
+        db_session, TextosLLM([]), Ilustrador(), dry_run=True, only_library=True
+    )
+    assert en_seco["images_max"] == 1
+    ilustrador = Ilustrador()
+    await _correr(db_session, TextosLLM([]), ilustrador, only_library=True)
+    assert ilustrador.escenas == ["A small bakery at dawn."]
+
+
+class _AbrioLaBase(Exception):
+    """`init_engine` es lo primero que hace _run tras la comprobación de la clave."""
+
+
+def _con_clave(monkeypatch, clave: str | None) -> None:
+    settings = get_settings().model_copy(
+        update={"gemini_api_key": SecretStr(clave) if clave else None}
+    )
+    monkeypatch.setattr("klara.scripts.backfill_portadas.get_settings", lambda: settings)
+
+    def abrir_la_base(_settings):
+        raise _AbrioLaBase
+
+    monkeypatch.setattr("klara.scripts.backfill_portadas.init_engine", abrir_la_base)
+
+
+def _args(**kw) -> argparse.Namespace:
+    return argparse.Namespace(**{"dry_run": False, "limit": None, "only_library": False, **kw})
+
+
+@pytest.mark.asyncio
+async def test_sin_clave_una_corrida_real_se_niega_antes_de_empezar(monkeypatch, capsys):
+    """Sin GEMINI_API_KEY la fase 1 pagaría los textos y la fase 2 fallaría en cada escena
+    sin decir por qué: se dice aquí, con código de salida distinto de cero."""
+    _con_clave(monkeypatch, None)
+    assert await _run(_args()) == 1  # no llegó a abrir la base: si no, saltaría _AbrioLaBase
+    salida = capsys.readouterr()
+    assert "GEMINI_API_KEY" in salida.err
+    assert salida.out == ""
+    salida.err.encode("cp1252")  # la consola de Windows no admite más
+
+
+def test_sin_clave_el_proceso_sale_con_1(monkeypatch):
+    """Lo que ve quien lo corre en la caja es el código de salida de `main`, no el de `_run`."""
+    _con_clave(monkeypatch, None)
+    monkeypatch.setattr(sys, "argv", ["backfill_portadas"])
+    with pytest.raises(SystemExit) as salida:
+        main()
+    assert salida.value.code == 1
+
+
+@pytest.mark.asyncio
+async def test_con_clave_la_corrida_real_empieza(monkeypatch):
+    _con_clave(monkeypatch, "k")
+    with pytest.raises(_AbrioLaBase):
+        await _run(_args())
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("clave, dice", [("k", "presente"), (None, "ausente")])
+async def test_en_seco_dice_si_la_clave_esta_y_no_se_frena(monkeypatch, capsys, clave, dice):
+    _con_clave(monkeypatch, clave)
+    with pytest.raises(_AbrioLaBase):
+        await _run(_args(dry_run=True))
+    assert f"GEMINI_API_KEY: {dice}" in capsys.readouterr().out

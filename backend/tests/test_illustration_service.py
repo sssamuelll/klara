@@ -184,6 +184,41 @@ async def test_choque_de_insercion_devuelve_el_hash(db_session, db_engine, monke
 
 
 @pytest.mark.asyncio
+async def test_el_fallo_se_loguea_con_su_tipo(db_session):
+    """Un timeout trae str(exc) == "": sin el tipo, el log de la primera corrida pagada queda
+    en `error=''` y no dice qué pasó."""
+    from structlog.testing import capture_logs
+
+    def se_agota(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("")
+
+    cliente = httpx.AsyncClient(transport=httpx.MockTransport(se_agota))
+    with capture_logs() as logs:
+        h = await ilus.ensure_illustration(db_session, ESCENA, settings=_settings(), client=cliente)
+    assert h is None
+    (linea,) = [x for x in logs if x["event"] == "illustration.generate_failed"]
+    assert linea["error"].startswith("ReadTimeout")
+
+
+@pytest.mark.asyncio
+async def test_el_fallo_en_segundo_plano_se_loguea_con_su_tipo(monkeypatch):
+    from structlog.testing import capture_logs
+
+    class SesionQueSeAgota:
+        async def __aenter__(self):
+            raise TimeoutError
+
+        async def __aexit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(ilus, "get_sessionmaker", lambda: SesionQueSeAgota)
+    with capture_logs() as logs:
+        await ilus.illustrate_in_background(_settings(), ESCENA)  # no lanza
+    (linea,) = [x for x in logs if x["event"] == "illustration.background_failed"]
+    assert linea["error"].startswith("TimeoutError")
+
+
+@pytest.mark.asyncio
 async def test_en_segundo_plano_sin_base_no_lanza():
     from klara.db import dispose_engine
 

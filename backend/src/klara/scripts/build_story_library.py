@@ -273,6 +273,15 @@ async def _count_illustrations(db: AsyncSession) -> int:
     return (await db.execute(select(func.count()).select_from(Illustration))).scalar_one()
 
 
+def _informe(insertadas: int, nuevas: int) -> str:
+    # Nada fuera de cp1252: un «≈» revienta con UnicodeEncodeError en la consola de Windows,
+    # justo al final de una corrida que ya se pagó.
+    return (
+        f"Insertadas {insertadas} historia(s) en la librería.\n"
+        f"Ilustraciones nuevas: {nuevas} (~ ${nuevas * COST_PER_IMAGE_USD:.2f})."
+    )
+
+
 async def _run() -> None:
     settings = get_settings()
     init_engine(settings)
@@ -303,8 +312,7 @@ async def _run() -> None:
                 illustrate=illustrate,
             )
             nuevas = await _count_illustrations(db) - antes
-        print(f"Insertadas {n} historia(s) en la librería.")
-        print(f"Ilustraciones nuevas: {nuevas} (≈ ${nuevas * COST_PER_IMAGE_USD:.2f}).")
+        print(_informe(n, nuevas))
     finally:
         await dispose_engine()
 

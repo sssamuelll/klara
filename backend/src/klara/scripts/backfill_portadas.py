@@ -4,6 +4,8 @@ En la caja:
     docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend \
         python -m klara.scripts.backfill_portadas --dry-run
     ... y sin --dry-run para gastar de verdad (--limit N, --only-library).
+Sin --dry-run hace falta GEMINI_API_KEY: si no llega al contenedor, no hace nada y sale con 1.
+Con --dry-run imprime si la clave está.
 
 Fase 1, textos. Las entradas de la biblioteca sin subtítulo o escena se los
 piden a la LLM de historias. Las historias clonadas los copian de su entrada,
@@ -16,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import sys
 from collections.abc import Awaitable, Callable
 from typing import Any
 
@@ -123,11 +126,12 @@ async def backfill(
         "failed": 0,
     }
     sin_textos = or_(StoryLibrary.subtitle.is_(None), StoryLibrary.scene.is_(None))
+    # Una entrada retirada no se sirve nunca: darle textos o imagen es pagar por nada.
     entradas = (
         (
             await db.execute(
                 select(StoryLibrary)
-                .where(sin_textos)
+                .where(StoryLibrary.is_active.is_(True), sin_textos)
                 .order_by(StoryLibrary.created_at)
                 .limit(limit)
             )
@@ -174,7 +178,11 @@ async def backfill(
     escenas = [
         s
         for (s,) in (
-            await db.execute(select(StoryLibrary.scene).where(StoryLibrary.scene.is_not(None)))
+            await db.execute(
+                select(StoryLibrary.scene).where(
+                    StoryLibrary.is_active.is_(True), StoryLibrary.scene.is_not(None)
+                )
+            )
         ).all()
     ]
     if not only_library:
@@ -219,8 +227,21 @@ def _informe(stats: dict[str, int], *, dry_run: bool) -> str:
     )
 
 
-async def _run(args: argparse.Namespace) -> None:
+async def _run(args: argparse.Namespace) -> int:
     settings = get_settings()
+    hay_clave = settings.gemini_api_key is not None
+    if args.dry_run:
+        print(f"GEMINI_API_KEY: {'presente' if hay_clave else 'ausente'}")
+    elif not hay_clave:
+        # Sin clave la fase 1 pagaría los textos y la fase 2 fallaría en cada escena sin decir por
+        # qué, y volver a correr no lo arregla: lo más probable es que el compose no la pase.
+        print(
+            "Falta GEMINI_API_KEY: sin ella no se dibuja nada y los textos se pagarían en vano. "
+            "No se hizo nada. Ponla en el .env y recrea el contenedor del backend; "
+            "con --dry-run se puede estimar sin ella.",
+            file=sys.stderr,
+        )
+        return 1
     init_engine(settings)
     try:
         llm = LiteLLMClient(
@@ -240,6 +261,7 @@ async def _run(args: argparse.Namespace) -> None:
         print(_informe(stats, dry_run=args.dry_run))
     finally:
         await dispose_engine()
+    return 0
 
 
 def main() -> None:
@@ -249,7 +271,7 @@ def main() -> None:
     )
     parser.add_argument("--limit", type=int, default=None, help="tope por fase")
     parser.add_argument("--only-library", action="store_true", help="solo la biblioteca")
-    asyncio.run(_run(parser.parse_args()))
+    sys.exit(asyncio.run(_run(parser.parse_args())))
 
 
 if __name__ == "__main__":
