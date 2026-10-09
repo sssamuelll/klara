@@ -13,15 +13,18 @@ from klara.auth.bearer import bearer_backend
 from klara.auth.oauth_google import make_google_oauth_client
 from klara.auth.schemas import UserCreate, UserRead
 from klara.auth.users import fastapi_users
+from klara.catalogo.cargar import get_catalogo
+from klara.catalogo.modelo import Catalogo
 from klara.config import get_settings
 from klara.db import dispose_engine, get_session, init_engine
 from klara.i18n.messages import DEFAULT_LOCALE, SUPPORTED
 from klara.logging_setup import configure_logging
-from klara.models import User
+from klara.models import User, UserFacet
 from klara.models.enums import CEFRLevel
 from klara.ratelimit import login_rate_limit
 from klara.routers import (
     auth_native,
+    catalogo,
     gender,
     health,
     illustrations,
@@ -38,6 +41,7 @@ from klara.routers import (
     users,
     waitlist,
 )
+from klara.services.sesion import huerfanas
 
 log = structlog.get_logger(__name__)
 
@@ -74,12 +78,29 @@ async def _ensure_legacy_owner_row() -> None:
         return
 
 
+async def _avisar_huerfanas(cat: Catalogo) -> None:
+    """Las facetas cuyo ítem ya no está en el catálogo se avisan y se ignoran;
+    nunca se borran (spec 2026-10-09 §2.1)."""
+    async for db in get_session():
+        claves = set((await db.execute(select(UserFacet.item_key).distinct())).scalars())
+        sobran = huerfanas(claves, cat)
+        if sobran:
+            log.warning("catalogo.huerfanas", total=len(sobran), ejemplos=sobran[:10])
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
     configure_logging(settings)
     init_engine(settings)
     log.info("startup", env=settings.app_env)
+    # Un catálogo roto no arranca (spec 2026-10-09 §2.1): CatalogoInvalido sube.
+    cat = get_catalogo()
+    log.info("startup.catalogo", idiomas=sorted(cat.mapas), lecciones=len(cat.lecciones))
+    try:
+        await _avisar_huerfanas(cat)
+    except Exception as exc:
+        log.warning("startup.huerfanas_skip", error=str(exc))
     try:
         await _ensure_legacy_owner_row()
     except Exception as exc:
@@ -241,6 +262,7 @@ def create_app() -> FastAPI:
     app.include_router(tts.router, prefix="/api/v1")
     app.include_router(illustrations.router, prefix="/api/v1")
     app.include_router(today.router, prefix="/api/v1")
+    app.include_router(catalogo.router, prefix="/api/v1")
     app.include_router(invitations.router, prefix="/api/v1", tags=["invitations"])
     app.include_router(pronunciation.router, prefix="/api/v1")
     app.include_router(practice.router, prefix="/api/v1")
