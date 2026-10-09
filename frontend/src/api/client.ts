@@ -5,6 +5,7 @@ import { authHeaders, clearToken, isNative, setToken } from "../lib/native";
 import type {
   CardOut,
   DiagnoseResponse,
+  EvidenciaIn,
   GenderAttemptIn,
   GenderAttemptOut,
   GenderReviewItem,
@@ -15,6 +16,7 @@ import type {
   L1GenderNotesResponse,
   LearnerProfileIn,
   LearnerProfileOut,
+  MapaResumen,
   MCResolveResponse,
   ModulePathItem,
   PhonemeScore,
@@ -26,7 +28,9 @@ import type {
   QuizAttemptIn,
   QuizResponse,
   ReviewRating,
+  RunIn,
   ScheduleResponse,
+  SesionOut,
   SpeakFinishRequest,
   SpeakFinishResponse,
   SpeakHistoryTurn,
@@ -316,6 +320,22 @@ export const api = {
   listModules: () => request<ModulePathItem[]>("/modules"),
 
   today: (since: string) => request<TodayOut>(`/today?since=${encodeURIComponent(since)}`),
+
+  // --- Klara en tres idiomas (spec 2026-10-09 §4) ---
+  sesion: (idioma: string, repasos = true) =>
+    request<SesionOut>(`/sesiones/${encodeURIComponent(idioma)}?repasos=${repasos}`),
+  leccion: (idioma: string, unidad: string, leccion: string) =>
+    request<SesionOut>(`/lecciones/${[idioma, unidad, leccion].map((p) => encodeURIComponent(p)).join("/")}`),
+  abrirRun: (body: RunIn) =>
+    request<{ id: string }>("/lesson-runs", { method: "POST", body: JSON.stringify(body) }),
+  cerrarRun: (id: string) =>
+    request<{ manana: number }>(`/lesson-runs/${encodeURIComponent(id)}/fin`, { method: "POST" }),
+  evidencias: (evidencias: EvidenciaIn[]) =>
+    request<{ guardadas: number }>("/evidencias", {
+      method: "POST",
+      body: JSON.stringify({ evidencias }),
+    }),
+  mapas: () => request<MapaResumen[]>("/mapas"),
 
   claimModuleStory: (moduleId: string) =>
     request<Story>(`/modules/${moduleId}/story`, { method: "POST" }),

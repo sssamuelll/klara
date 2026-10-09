@@ -162,7 +162,13 @@ export function unlockAudio(): void {
 export function speak(
   text: string,
   language?: string,
-  opts?: { rate?: number; mode?: TTSMode; onDone?: (reason: TTSDoneReason) => void },
+  opts?: {
+    rate?: number;
+    mode?: TTSMode;
+    /** Un archivo del catálogo: suena en vez del TTS en vivo (spec 2026-10-09 §3.1). */
+    src?: string;
+    onDone?: (reason: TTSDoneReason) => void;
+  },
 ): void {
   stop(); // settles any previous utterance's onDone as "interrupted"
   if (!text.trim()) {
@@ -253,7 +259,12 @@ export function speak(
   );
   audio = a;
   set({ text, playing: false, progress: 0, duration: 0 });
-  void ttsSource(text, language, opts?.mode, () => gen !== generation)
+  // Un archivo del catálogo suena por el mismo elemento y con el mismo respaldo
+  // de Web Speech que el TTS; solo cambia de dónde sale el audio.
+  const fuente = opts?.src
+    ? Promise.resolve(opts.src)
+    : ttsSource(text, language, opts?.mode, () => gen !== generation);
+  void fuente
     .then((src) => {
       if (gen !== generation) return;
       a.src = src;
