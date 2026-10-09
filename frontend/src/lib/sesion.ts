@@ -73,7 +73,10 @@ function marcaDe(e: Evidencia): Marca {
   return e.pistas > 0 ? "pista" : "bien";
 }
 
-/** Avanza a `desde` y salta lo que pide una capacidad apagada. */
+/**
+ * Avanza a `desde` y salta lo que pide una capacidad apagada. Limpia `todoBien`,
+ * que era de la actividad que se deja.
+ */
 function avanzar(e: EstadoSesion, desde: number): EstadoSesion {
   let i = desde;
   const saltadas = [...e.saltadas];
@@ -83,7 +86,7 @@ function avanzar(e: EstadoSesion, desde: number): EstadoSesion {
     saltadas.push(e.cola[i].id);
     i++;
   }
-  return { ...e, idx: i, saltadas, fase: i >= e.cola.length ? "fin" : "actividad" };
+  return { ...e, idx: i, saltadas, todoBien: false, fase: i >= e.cola.length ? "fin" : "actividad" };
 }
 
 export function sesionReducer(e: EstadoSesion, a: AccionSesion): EstadoSesion {
@@ -98,8 +101,9 @@ export function sesionReducer(e: EstadoSesion, a: AccionSesion): EstadoSesion {
       return { ...e, fase: "fallo" };
     case "resultado": {
       if (e.fase !== "actividad") return e;
-      if (a.evidencias.length === 0) return avanzar(e, e.idx + 1);
       const act = e.cola[e.idx];
+      // `[]` es el «listo, sigue» de presentar (spec §3.1); en práctica o prueba no cuenta.
+      if (a.evidencias.length === 0) return act.modo === "presentar" ? avanzar(e, e.idx + 1) : e;
       const original = act.id.replace(/~r$/, "");
       let { cola, reintentadas, resumen } = e;
       if (act.modo === "practicar" && a.evidencias.some((ev) => !ev.acierto) && !reintentadas.includes(original)) {
