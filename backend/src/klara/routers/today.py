@@ -1,4 +1,4 @@
-"""GET /today: el lobby en una sola llamada (spec 2026-09-30 §2)."""
+"""GET /today: las líneas de Hoy (spec 2026-10-09 §5.1)."""
 
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
