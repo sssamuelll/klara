@@ -16,7 +16,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from klara.models import StudyCard, UserCard
+from klara.models import StudyCard, UserCard, UserFacet
 from klara.models.enums import CardState, ReviewRating
 from klara.services import srs_engine
 from klara.services.srs_engine import apply_review
@@ -151,4 +151,26 @@ def test_paridad_usercard_studycard(reloj):
         apply_review(taller, rating)
 
     divergentes = [a for a in _NUEVE if getattr(aleman, a) != getattr(taller, a)]
+    assert divergentes == []
+
+
+def test_paridad_usercard_userfacet(reloj):
+    """`UserFacet` (Klara en tres idiomas) recorre FSRS igual que `UserCard`."""
+    user_id = uuid.uuid4()
+    aleman = _sembrada(UserCard, user_id=user_id, vocab_item_id=uuid.uuid4(), ease=2.5)
+    faceta = _sembrada(
+        UserFacet, user_id=user_id, idioma="ja", item_key="ja:kana:あ", faceta="escribir"
+    )
+
+    for dias, rating in (
+        (0, ReviewRating.GOOD),
+        (1, ReviewRating.AGAIN),
+        (3, ReviewRating.HARD),
+        (10, ReviewRating.EASY),
+    ):
+        reloj["ahora"] += timedelta(days=dias)
+        apply_review(aleman, rating)
+        apply_review(faceta, rating)
+
+    divergentes = [a for a in _NUEVE if getattr(aleman, a) != getattr(faceta, a)]
     assert divergentes == []
