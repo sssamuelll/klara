@@ -1173,5 +1173,12 @@
       "invalid": "Diese E-Mail sieht unvollständig aus. Prüfe sie.",
       "network": "Konnte nicht gespeichert werden. Versuche es gleich noch einmal."
     }
+  },
+  "dinamica": {
+    "oirOtraVez": "Nochmal hören",
+    "eleccion": {
+      "comoSuena": "Wie klingt es?",
+      "cualOyes": "Welches hast du gehört?"
+    }
   }
 }

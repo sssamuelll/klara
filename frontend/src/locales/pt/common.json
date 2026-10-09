@@ -1173,5 +1173,12 @@
       "invalid": "Esse email não parece completo. Confirma-o.",
       "network": "Não foi possível guardar. Tenta de novo daqui a pouco."
     }
+  },
+  "dinamica": {
+    "oirOtraVez": "Ouvir de novo",
+    "eleccion": {
+      "comoSuena": "Como soa?",
+      "cualOyes": "Qual você ouviu?"
+    }
   }
 }

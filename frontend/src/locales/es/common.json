@@ -1173,5 +1173,12 @@
       "invalid": "Ese correo no parece completo. Revísalo.",
       "network": "No se pudo guardar. Intenta otra vez en un momento."
     }
+  },
+  "dinamica": {
+    "oirOtraVez": "Oír otra vez",
+    "eleccion": {
+      "comoSuena": "¿Cómo suena?",
+      "cualOyes": "¿Cuál oíste?"
+    }
   }
 }

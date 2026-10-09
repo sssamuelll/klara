@@ -5,9 +5,9 @@
 
 :root {
   /* ---------- Type ---------- */
-  --font-serif: "Source Serif 4", "GT Sectra", "Newsreader", Georgia, serif;
-  --font-sans: "Inter Tight", "Söhne", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-serif: "Source Serif 4", "GT Sectra", "Newsreader", "Noto Serif JP", Georgia, serif;
+  --font-sans: "Inter Tight", "Söhne", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Serif JP", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, "Noto Serif JP", monospace;
 
   /* Editorial type scale — generous, slow */
   --t-mark: 14px;          /* metadata, badges */

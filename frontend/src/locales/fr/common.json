@@ -1173,5 +1173,12 @@
       "invalid": "Cet e-mail n'a pas l'air complet. Vérifie-le.",
       "network": "Impossible d'enregistrer. Réessaie dans un instant."
     }
+  },
+  "dinamica": {
+    "oirOtraVez": "Réécouter",
+    "eleccion": {
+      "comoSuena": "Comment ça se prononce ?",
+      "cualOyes": "Lequel as-tu entendu ?"
+    }
   }
 }

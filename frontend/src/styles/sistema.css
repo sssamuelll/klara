@@ -109,6 +109,9 @@
   gap: var(--space-2);
 }
 
+/* La nube centrada: las opciones de una pregunta (dinámicas, spec 2026-10-09). */
+.k-wrap--centro { justify-content: center; }
+
 /* La fila de acciones que cierra una PÁGINA. Hasta la migración 11 todas las
    nubes de botones vivían dentro de algo que ya traía relleno —el dock de la
    sesión, un `<form>`, el pie de la ficha—, y el cuestionario del perfil y la
@@ -185,6 +188,9 @@
 }
 /* El pasaje ocupa el ancho; el spinner no, y sin esto quedaría a la izquierda. */
 .k-fill > .k-spinner { align-self: center; }
+
+/* El botón redondo de oír, suelto en la sesión: centrado como el spinner. */
+.k-fill > .k-rbtn { align-self: center; }
 
 /* Dock de transporte al pie de la sesión. La safe-area va en el padding, como
    en la hoja vieja: el cascarón no scrollea y nadie más la repone.
@@ -3060,6 +3066,23 @@ ul.k-error { list-style: none; }
   font-family: var(--font-serif);
   font-size: var(--t-body);
   overflow-wrap: anywhere;
+}
+
+/* ---------- 20-glifo ---------- */
+/* ============================================================
+   20 · GLIFO — .k-glifo
+   Pieza nueva (spec 2026-10-09, dinámicas): un carácter solo, a tamaño
+   de cartel, para la pregunta de `eleccion`. El japonés sale de la pila
+   de --font-serif (Noto Serif JP va antes de los genéricos).
+   ============================================================ */
+.k-glifo {
+  flex: 0 0 auto;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--t-display);
+  line-height: 1;
+  text-align: center;
+  color: var(--ink);
 }
 
 /* ---------- 99-compresion ---------- */

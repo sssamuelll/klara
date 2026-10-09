@@ -51,6 +51,7 @@ const ESTADOS = {
   "campo-texto": ["reposo", "foco", "error", "deshabilitado", "area", "manuscrito"],
   "recorrido": ["pendiente", "ahora", "hecha", "fin", "compuesto-largo"],
   "estanteria": ["tema", "vencidas", "nuevo", "compuesto-largo"],
+  "glifo": ["latino", "japones"],
 };
 
 // document.fonts.ready resuelve antes de que el layout pida las caras; hay que
@@ -59,6 +60,7 @@ async function esperarFuentes(page) {
   await page.evaluate(() => Promise.all([
     '17px "Source Serif 4"', 'italic 17px "Source Serif 4"', '600 17px "Source Serif 4"',
     '500 15px "Inter Tight"', '12px "JetBrains Mono"', '500 12px "JetBrains Mono"',
+    '400 17px "Noto Serif JP"',
   ].map((f) => document.fonts.load(f).catch(() => null))));
   await page.waitForTimeout(250);
 }

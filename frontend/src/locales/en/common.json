@@ -1173,5 +1173,12 @@
       "invalid": "That email doesn't look complete. Check it.",
       "network": "Couldn't save it. Try again in a moment."
     }
+  },
+  "dinamica": {
+    "oirOtraVez": "Play again",
+    "eleccion": {
+      "comoSuena": "How does it sound?",
+      "cualOyes": "Which one did you hear?"
+    }
   }
 }
