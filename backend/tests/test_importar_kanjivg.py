@@ -59,3 +59,10 @@ def test_si_no_cuadra_no_toca_nada():
         "ん: KanjiVG trae 2 trazos y la tabla dice 1",
     ]
     assert all(e["trazos"] == [] for e in data["kana"])
+
+
+def test_un_solo_kana_que_no_cuadra_frena_a_todos():
+    data = {"kana": [{"kana": "あ", "trazos": []}, {"kana": "ん", "trazos": []}]}
+    errores = aplicar_trazos(data, lambda k: _svg_con(3 if k == "あ" else 2))  # あ cuadra, ん no
+    assert errores == ["ん: KanjiVG trae 2 trazos y la tabla dice 1"]
+    assert all(e["trazos"] == [] for e in data["kana"])
