@@ -7,12 +7,14 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from klara.catalogo.cargar import get_catalogo
 from klara.dependencies import ChatLLM, CurrentUser, DBSession, LocaleDep, UserManagerDep
 from klara.i18n import SUPPORTED_LANGUAGES, t
 from klara.models import LearnerProfile, OAuthAccount, User
 from klara.schemas.learner_profile import LearnerProfileIn, LearnerProfileOut
 from klara.schemas.user import SetPasswordIn, UserOut, UserUpdate
 from klara.services.learner_synthesis import refresh_derived
+from klara.services.sesion import idiomas_de_estudio
 
 log = structlog.get_logger(__name__)
 
@@ -52,6 +54,7 @@ async def _to_out(db: AsyncSession, user: User) -> UserOut:
         learning_context=user.learning_context,
         auth_methods=methods,
         needs_onboarding=user.onboarding_completed_at is None,
+        study_languages=idiomas_de_estudio(user, get_catalogo()),
     )
 
 
@@ -93,6 +96,11 @@ async def update_me(
     if "learning_context" in data:
         ctx = data["learning_context"]
         user.learning_context = ctx.strip() if isinstance(ctx, str) and ctx.strip() else None
+    if "study_languages" in data:
+        nuevos = data["study_languages"]
+        if nuevos is not None and any(i not in get_catalogo().mapas for i in nuevos):
+            raise HTTPException(status_code=422, detail="study_languages.sin_mapa")
+        user.study_languages = nuevos
 
     await db.commit()
     await db.refresh(user)
