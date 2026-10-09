@@ -349,3 +349,17 @@ def gate_passing_transcode(tmp_path):
         return out
 
     return _fake
+
+
+@pytest.fixture
+def catalogo_mini(tmp_path, monkeypatch):
+    """El catálogo de juguete (tests/catalogo_mini.py), servido por get_catalogo()
+    a todo el que lo pida durante el test, incluida la app de `client`."""
+    from klara.catalogo.cargar import get_catalogo
+    from tests.catalogo_mini import escribir_catalogo_mini
+
+    raiz = escribir_catalogo_mini(tmp_path / "mapas")
+    monkeypatch.setenv("KLARA_MAPAS_DIR", str(raiz))
+    get_catalogo.cache_clear()
+    yield get_catalogo()
+    get_catalogo.cache_clear()
