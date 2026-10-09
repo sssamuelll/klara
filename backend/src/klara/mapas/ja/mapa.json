@@ -1,0 +1,40 @@
+{
+  "idioma": "ja",
+  "escala": ["かな", "N5", "N4", "N3"],
+  "unidades": [
+    {
+      "id": "hiragana",
+      "titulo": "Hiragana",
+      "nivel": "かな",
+      "puedo": ["Puedo leer, oír y escribir los 46 hiragana sin pensarlo."],
+      "sabes": {
+        "vista": "tabla",
+        "filas": [
+          ["ja:kana:あ", "ja:kana:い", "ja:kana:う", "ja:kana:え", "ja:kana:お"],
+          ["ja:kana:か", "ja:kana:き", "ja:kana:く", "ja:kana:け", "ja:kana:こ"],
+          ["ja:kana:さ", "ja:kana:し", "ja:kana:す", "ja:kana:せ", "ja:kana:そ"],
+          ["ja:kana:た", "ja:kana:ち", "ja:kana:つ", "ja:kana:て", "ja:kana:と"],
+          ["ja:kana:な", "ja:kana:に", "ja:kana:ぬ", "ja:kana:ね", "ja:kana:の"],
+          ["ja:kana:は", "ja:kana:ひ", "ja:kana:ふ", "ja:kana:へ", "ja:kana:ほ"],
+          ["ja:kana:ま", "ja:kana:み", "ja:kana:む", "ja:kana:め", "ja:kana:も"],
+          ["ja:kana:や", null, "ja:kana:ゆ", null, "ja:kana:よ"],
+          ["ja:kana:ら", "ja:kana:り", "ja:kana:る", "ja:kana:れ", "ja:kana:ろ"],
+          ["ja:kana:わ", null, null, null, "ja:kana:を"],
+          ["ja:kana:ん", null, null, null, null]
+        ]
+      },
+      "lecciones": [
+        {"id": "a", "titulo": "あ い う え お", "bajada": "la fila de あ: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:あ", "ja:kana:い", "ja:kana:う", "ja:kana:え", "ja:kana:お"]},
+        {"id": "ka", "titulo": "か き く け こ", "bajada": "la fila de か: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:か", "ja:kana:き", "ja:kana:く", "ja:kana:け", "ja:kana:こ"]},
+        {"id": "sa", "titulo": "さ し す せ そ", "bajada": "la fila de さ: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:さ", "ja:kana:し", "ja:kana:す", "ja:kana:せ", "ja:kana:そ"]},
+        {"id": "ta", "titulo": "た ち つ て と", "bajada": "la fila de た: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:た", "ja:kana:ち", "ja:kana:つ", "ja:kana:て", "ja:kana:と"]},
+        {"id": "na", "titulo": "な に ぬ ね の", "bajada": "la fila de な: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:な", "ja:kana:に", "ja:kana:ぬ", "ja:kana:ね", "ja:kana:の"]},
+        {"id": "ha", "titulo": "は ひ ふ へ ほ", "bajada": "la fila de は: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:は", "ja:kana:ひ", "ja:kana:ふ", "ja:kana:へ", "ja:kana:ほ"]},
+        {"id": "ma", "titulo": "ま み む め も", "bajada": "la fila de ま: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:ま", "ja:kana:み", "ja:kana:む", "ja:kana:め", "ja:kana:も"]},
+        {"id": "ya", "titulo": "や ゆ よ", "bajada": "や, ゆ y よ: leerlas, oírlas y escribirlas", "plantilla": "kana", "items": ["ja:kana:や", "ja:kana:ゆ", "ja:kana:よ"]},
+        {"id": "ra", "titulo": "ら り る れ ろ", "bajada": "la fila de ら: leerla, oírla y escribirla", "plantilla": "kana", "items": ["ja:kana:ら", "ja:kana:り", "ja:kana:る", "ja:kana:れ", "ja:kana:ろ"]},
+        {"id": "wa", "titulo": "わ を ん", "bajada": "わ, を y ん: leerlas, oírlas y escribirlas", "plantilla": "kana", "items": ["ja:kana:わ", "ja:kana:を", "ja:kana:ん"]}
+      ]
+    }
+  ]
+}
