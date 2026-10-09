@@ -5,10 +5,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from klara.models import LessonRun, UserFacet
 from klara.models.enums import CardState
 from klara.services.today import ordenar_idiomas
-from tests.ayudas import entrar, usuario_por_email
+from tests.ayudas import crear_usuario, entrar, usuario_por_email
 
 AHORA = datetime.now(UTC).replace(microsecond=0)
 SINCE = AHORA - timedelta(hours=3)
@@ -23,6 +25,10 @@ async def _hoy(client, cookie: str) -> dict:
     return r.json()
 
 
+def _orden(body: dict) -> list[tuple[str, str]]:
+    return [(x["idioma"], x["estado"]) for x in body["lineas"]]
+
+
 async def _con_japones(db):
     u = await usuario_por_email(db, EMAIL)
     u.study_languages = ["ja"]
@@ -31,16 +37,25 @@ async def _con_japones(db):
 
 
 def _corrida(user, **kw) -> LessonRun:
+    fin = kw.get("finished_at", AHORA - timedelta(minutes=30))
     base = dict(
         user_id=user.id,
         idioma="ja",
         leccion_id="ja/hiragana/a",
         origen="hoy",
         repasos=4,
-        started_at=AHORA - timedelta(hours=1),
-        finished_at=AHORA - timedelta(minutes=30),
+        # Empieza antes de terminar, a la hora que termine (o está abierta desde hace un rato).
+        started_at=(fin or AHORA) - timedelta(minutes=30),
+        finished_at=fin,
     )
     return LessonRun(**{**base, **kw})
+
+
+@pytest.fixture
+def de_y_ja(monkeypatch):
+    """catalogo_mini solo trae el mapa de ja: «de» entra como un segundo idioma sin
+    lecciones, y con dos idiomas el orden de las líneas ya depende de las corridas."""
+    monkeypatch.setattr("klara.services.today.idiomas_de_estudio", lambda user, cat: ["de", "ja"])
 
 
 async def test_since_fuera_de_rango_es_422(client, seed_invite, catalogo_mini):
@@ -58,6 +73,19 @@ async def test_since_fuera_de_rango_es_422(client, seed_invite, catalogo_mini):
             "/api/v1/today", params={"since": since.isoformat()}, headers={"Cookie": cookie}
         )
         assert r.status_code == 422, since
+
+
+async def test_since_dentro_del_margen_es_200(client, seed_invite, catalogo_mini):
+    """El reloj del dispositivo puede ir unos segundos adelantado, y en el cambio de hora
+    el día local empieza hace 25 h: el margen de 1 min y el tope de 48 h no se aprietan."""
+    cookie = await entrar(client, seed_invite, EMAIL)
+    # `ahora` fresco por lo mismo que en el 422 de arriba: AHORA envejece durante la suite.
+    ahora = datetime.now(UTC)
+    for since in (ahora + timedelta(seconds=30), ahora - timedelta(hours=47)):
+        r = await client.get(
+            "/api/v1/today", params={"since": since.isoformat()}, headers={"Cookie": cookie}
+        )
+        assert r.status_code == 200, since
 
 
 async def test_sin_sesion_es_401(client, catalogo_mini):
@@ -199,32 +227,61 @@ async def test_varias_corridas_hoy_suman_repasos_y_nombran_la_ultima_leccion(
 
 
 async def test_el_orden_no_cambia_al_terminar_una_linea(
-    client, seed_invite, db_session, catalogo_mini, monkeypatch
+    client, seed_invite, db_session, catalogo_mini, de_y_ja
 ):
-    # catalogo_mini solo trae el mapa de ja: «de» entra como un segundo idioma sin lecciones.
-    monkeypatch.setattr("klara.services.today.idiomas_de_estudio", lambda user, cat: ["de", "ja"])
     cookie = await entrar(client, seed_invite, EMAIL)
     u = await usuario_por_email(db_session, EMAIL)
-    db_session.add(
-        _corrida(
-            u,
-            idioma="de",
-            leccion_id=None,
-            started_at=SINCE - timedelta(days=1, minutes=10),
-            finished_at=SINCE - timedelta(days=1),
-        )
-    )
+    db_session.add(_corrida(u, idioma="de", leccion_id=None, finished_at=SINCE - timedelta(days=1)))
     await db_session.commit()
 
-    async def orden() -> list[tuple[str, str]]:
-        return [(x["idioma"], x["estado"]) for x in (await _hoy(client, cookie))["lineas"]]
-
     # de terminó ayer y ja nunca: ja va primero.
-    assert await orden() == [("ja", "ahora"), ("de", "pendiente")]
+    assert _orden(await _hoy(client, cookie)) == [("ja", "ahora"), ("de", "pendiente")]
     # Terminar ja hoy no la manda al final: solo cuenta lo terminado antes de hoy.
     db_session.add(_corrida(u))
     await db_session.commit()
-    assert await orden() == [("ja", "hecha"), ("de", "ahora")]
+    assert _orden(await _hoy(client, cookie)) == [("ja", "hecha"), ("de", "ahora")]
+
+
+async def test_terminar_justo_en_since_ya_es_de_hoy(
+    client, seed_invite, db_session, catalogo_mini, de_y_ja
+):
+    """`since` es inclusivo: lo terminado a esa hora marca la línea de hoy y no entra en el
+    orden, que solo mira lo terminado antes de hoy."""
+    cookie = await entrar(client, seed_invite, EMAIL)
+    u = await usuario_por_email(db_session, EMAIL)
+    db_session.add_all(
+        [
+            _corrida(u, idioma="de", leccion_id=None, finished_at=SINCE - timedelta(days=1)),
+            _corrida(u, finished_at=SINCE),
+        ]
+    )
+    await db_session.commit()
+    assert _orden(await _hoy(client, cookie)) == [("ja", "hecha"), ("de", "ahora")]
+
+
+async def test_lo_de_otros_usuarios_no_cuenta(
+    client, seed_invite, db_session, catalogo_mini, de_y_ja
+):
+    cookie = await entrar(client, seed_invite, EMAIL)
+    yo = await usuario_por_email(db_session, EMAIL)
+    otro = await crear_usuario(db_session)
+    db_session.add_all(
+        [
+            # Lo mío: de terminó hace dos días y ja nunca.
+            _corrida(yo, idioma="de", leccion_id=None, finished_at=SINCE - timedelta(days=2)),
+            # Lo del otro en ja: una corrida de antes de hoy (movería el orden) y otra de hoy
+            # (marcaría mi línea). Entre las dos hacen las dos lecciones del mapa: si se
+            # colaran, mi línea ya no tendría lección.
+            _corrida(otro, finished_at=SINCE - timedelta(hours=1)),
+            _corrida(otro, leccion_id="ja/hiragana/e"),
+        ]
+    )
+    await db_session.commit()
+    body = await _hoy(client, cookie)
+    assert _orden(body) == [("ja", "ahora"), ("de", "pendiente")]
+    ja = body["lineas"][0]
+    assert ja["hecho"] is None
+    assert ja["leccion"]["id"] == "ja/hiragana/a"
 
 
 def test_ordenar_idiomas():
