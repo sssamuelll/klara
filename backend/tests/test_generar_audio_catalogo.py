@@ -11,6 +11,12 @@ def test_pendientes_son_los_que_no_tienen_archivo(tmp_path):
     assert [k["kana"] for k in pendientes(KANA, tmp_path, solo=None, forzar=False)] == ["い"]
 
 
+def test_un_mp3_vacio_no_cuenta_como_hecho(tmp_path):
+    (tmp_path / "a.mp3").write_bytes(b"")  # lo que deja un corte a medias
+    (tmp_path / "i.mp3").write_bytes(b"ID3")
+    assert [k["kana"] for k in pendientes(KANA, tmp_path, solo=None, forzar=False)] == ["あ"]
+
+
 def test_forzar_los_regenera_todos(tmp_path):
     (tmp_path / "a.mp3").write_bytes(b"ID3")
     assert [k["kana"] for k in pendientes(KANA, tmp_path, solo=None, forzar=True)] == ["あ", "い"]

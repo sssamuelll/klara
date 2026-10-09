@@ -5,6 +5,10 @@ Usa Azure TTS con una voz nativa (ja-JP-NanamiNeural) y guarda el mp3 en
 - si no pasa, prueba una vez más leyendo despacio;
 - si tampoco pasa, igual lo guarda, pero lo lista para que Samuel lo escuche.
 
+Un clip al que Azure no le oye voz cuenta como puntaje 0; los errores de
+autenticación, cuota o región detienen la corrida. El mp3 se escribe solo cuando
+Azure terminó de sintetizarlo, así que un corte no deja archivos vacíos.
+
 Necesita AZURE_SPEECH_KEY y AZURE_SPEECH_REGION en backend/.env, y nunca las
 imprime.
 
@@ -27,17 +31,22 @@ LOCALE = {"ja": "ja-JP"}
 UMBRAL = 70.0
 
 
+def _tiene_audio(ruta: Path) -> bool:
+    """Un archivo vacío (lo que deja un corte a medias) no cuenta como hecho."""
+    return ruta.is_file() and ruta.stat().st_size > 0
+
+
 def pendientes(
     kana: list[dict], audio_dir: Path, *, solo: set[str] | None, forzar: bool
 ) -> list[dict]:
     """Los kana que necesitan audio: los pedidos con --solo, todos con --forzar,
-    o los que no tienen archivo."""
+    o los que no tienen archivo (o lo tienen vacío)."""
     out = []
     for k in kana:
         if solo is not None:
             if k["kana"] in solo:
                 out.append(k)
-        elif forzar or not (audio_dir / k["audio"]).is_file():
+        elif forzar or not _tiene_audio(audio_dir / k["audio"]):
             out.append(k)
     return out
 
@@ -57,14 +66,16 @@ def _sintetizar(
 
     cfg = speechsdk.SpeechConfig(subscription=key, region=region)
     cfg.set_speech_synthesis_output_format(formato)
-    salida = speechsdk.audio.AudioOutputConfig(filename=str(destino))
+    # audio_config=None deja el audio en memoria. Con AudioOutputConfig(filename=...) el SDK
+    # crea el archivo (vacío) al construir el sintetizador, y un corte lo dejaría ahí.
     r = (
-        speechsdk.SpeechSynthesizer(speech_config=cfg, audio_config=salida)
+        speechsdk.SpeechSynthesizer(speech_config=cfg, audio_config=None)
         .speak_ssml_async(ssml(texto, idioma, lento=lento))
         .get()
     )
     if r.reason != speechsdk.ResultReason.SynthesizingAudioCompleted:
         raise RuntimeError(f"Azure no sintetizó {texto!r}: {r.reason}")
+    destino.write_bytes(r.audio_data)
 
 
 def _puntaje(wav: Path, texto: str, idioma: str, *, key: str, region: str) -> float:
@@ -76,7 +87,13 @@ def _puntaje(wav: Path, texto: str, idioma: str, *, key: str, region: str) -> fl
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Con la salida redirigida (un pipe) Windows usa cp1252, y ahí los kana no se pueden imprimir.
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
     import azure.cognitiveservices.speech as speechsdk
+
+    from klara.pronunciation.azure_client import AzureSpeechError
 
     p = argparse.ArgumentParser(description="Audio de los kana con Azure, validado")
     p.add_argument("--solo", help="kana separados por coma, p. ej. あ,か")
@@ -104,8 +121,16 @@ def main(argv: list[str] | None = None) -> int:
             with tempfile.TemporaryDirectory() as tmp:
                 wav = Path(tmp) / "prueba.wav"
                 _sintetizar(texto, "ja", wav, formato.Riff16Khz16BitMonoPcm, lento=lento, **claves)
-                puntos = _puntaje(wav, texto, "ja", **claves)
-            print(f"{texto} ({k['romaji']}){' despacio' if lento else ''}: {puntos:.0f}")
+                nota = ""
+                try:
+                    puntos = _puntaje(wav, texto, "ja", **claves)
+                except AzureSpeechError as e:
+                    # Sin voz que puntuar es una validación fallida (se reintenta despacio y,
+                    # si tampoco, se lista); autenticación, cuota o región no se arreglan solas.
+                    if not e.recoverable:
+                        raise
+                    puntos, nota = 0.0, f" (sin puntaje: {e})"
+            print(f"{texto} ({k['romaji']}){' despacio' if lento else ''}: {puntos:.0f}{nota}")
             if puntos >= UMBRAL:
                 aprobado = lento
                 break
@@ -118,6 +143,11 @@ def main(argv: list[str] | None = None) -> int:
             **claves,
         )
         if aprobado is None:
+            # Al momento, no solo al final: si la corrida se corta, la lista no se pierde.
+            print(
+                f"{texto} ({k['romaji']}): Azure no lo confirmó; escúchalo → {destino.name}",
+                flush=True,
+            )
             escuchar.append(f"{texto} ({k['romaji']}) → {destino.name}")
 
     if escuchar:
