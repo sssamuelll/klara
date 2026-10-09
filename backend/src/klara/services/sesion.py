@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import math
 import random
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
@@ -56,18 +57,33 @@ def huerfanas(claves: set[str], cat: Catalogo) -> list[str]:
     return sorted(claves - set(cat.items))
 
 
+def _ordenable(restan: Counter[str], tomado: str) -> bool:
+    """Si ahora sale una faceta de `tomado`, ¿lo que queda se puede ordenar sin juntar
+    dos del mismo ítem? De las n que quedan, ningún ítem puede tener más de ceil(n/2),
+    y `tomado`, que no puede abrir, no más de floor(n/2)."""
+    n = restan.total() - 1  # las que quedan después de sacar esa
+    return all(
+        (c - 1 <= n // 2) if item == tomado else (c <= (n + 1) // 2) for item, c in restan.items()
+    )
+
+
 def separar_mismo_item(pares: list[tuple[str, str]]) -> list[tuple[str, str]]:
-    """Reordena lo mínimo para que no vayan dos facetas del mismo ítem seguidas,
-    respetando el orden de vencimiento todo lo posible."""
+    """Reordena para que no vayan dos facetas del mismo ítem seguidas, respetando el
+    orden de vencimiento todo lo posible: sale la primera pendiente que no repite el
+    ítem anterior y deja un resto aún ordenable. Si ninguna lo deja (un ítem trae
+    demasiadas para separarlas), sale la primera que no repite, o la primera sin más."""
     pendientes = list(pares)
+    restan = Counter(item for item, _ in pendientes)
     out: list[tuple[str, str]] = []
     while pendientes:
-        for i, par in enumerate(pendientes):
-            if not out or par[0] != out[-1][0]:
-                out.append(pendientes.pop(i))
-                break
-        else:
-            out.append(pendientes.pop(0))  # solo quedan del mismo ítem
+        ultimo = out[-1][0] if out else None
+        otros = [k for k, (item, _) in enumerate(pendientes) if item != ultimo]
+        k = next(
+            (k for k in otros if _ordenable(restan, pendientes[k][0])),
+            otros[0] if otros else 0,
+        )
+        restan[pendientes[k][0]] -= 1
+        out.append(pendientes.pop(k))
     return out
 
 

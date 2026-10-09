@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from itertools import pairwise
 
 from klara.models import LessonRun, UserFacet
 from klara.models.enums import CardState
@@ -26,10 +27,12 @@ from tests.ayudas import crear_usuario
 AHORA = datetime(2026, 10, 9, 12, 0, tzinfo=UTC)
 
 
-def _faceta(user_id, item: str, faceta: str, vence: datetime) -> UserFacet:
+def _faceta(
+    user_id, item: str, faceta: str, vence: datetime, *, idioma: str | None = None
+) -> UserFacet:
     return UserFacet(
         user_id=user_id,
-        idioma=item.split(":")[0],
+        idioma=idioma or item.split(":")[0],
         item_key=item,
         faceta=faceta,
         state=CardState.REVIEWING,
@@ -41,10 +44,12 @@ def _faceta(user_id, item: str, faceta: str, vence: datetime) -> UserFacet:
     )
 
 
-def _corrida(user_id, leccion_id: str, *, origen: str = "hoy", terminada: bool = True) -> LessonRun:
+def _corrida(
+    user_id, leccion_id: str, *, origen: str = "hoy", terminada: bool = True, idioma: str = "ja"
+) -> LessonRun:
     return LessonRun(
         user_id=user_id,
-        idioma="ja",
+        idioma=idioma,
         leccion_id=leccion_id,
         origen=origen,
         finished_at=AHORA - timedelta(hours=1) if terminada else None,
@@ -61,6 +66,35 @@ def test_separar_mismo_item():
 
 def test_separar_cuando_no_se_puede():
     assert separar_mismo_item([("a", "x"), ("a", "y")]) == [("a", "x"), ("a", "y")]
+
+
+def _sin_seguidos(pares: list[tuple[str, str]]) -> bool:
+    return all(a[0] != b[0] for a, b in pairwise(pares))
+
+
+def test_separar_guarda_lugar_para_el_item_repetido():
+    # Si A saliera primero, B-r y B-e quedarían juntas: B-r se adelanta y A queda en medio.
+    pares = [("A", "r"), ("B", "r"), ("B", "e")]
+    assert separar_mismo_item(pares) == [("B", "r"), ("A", "r"), ("B", "e")]
+
+
+def test_separar_no_deja_pares_del_mismo_item_al_final():
+    pares = [("A", "r"), ("A", "e"), ("B", "r"), ("B", "e"), ("C", "r"), ("C", "e")]
+    out = separar_mismo_item(pares)
+    assert sorted(out) == sorted(pares)
+    assert _sin_seguidos(out)
+    assert out[0] == ("A", "r")
+
+
+def test_separar_tres_kana_recien_aprendidos_con_tres_facetas_cada_uno():
+    # Lo que llega de la base: la primera faceta de cada kana y, después, las otras dos.
+    escribir = [(f"ja:kana:{k}", "escribir") for k in "あいう"]
+    resto = [(f"ja:kana:{k}", f) for k in "あいう" for f in ("reconocer", "oir")]
+    pares = escribir + resto
+    out = separar_mismo_item(pares)
+    assert sorted(out) == sorted(pares)
+    assert _sin_seguidos(out)
+    assert out[0] == pares[0]
 
 
 async def test_cuenta_nueva_empieza_por_la_primera_leccion(db_session, catalogo_mini):
@@ -206,7 +240,38 @@ async def test_los_repasos_no_usan_distractores_de_la_leccion_nueva(db_session, 
     repaso = contenido(catalogo_mini, plan, semilla=3)[0]
     assert repaso["repaso"] is True
     vistos = {"ja:kana:あ", "ja:kana:い", "ja:kana:う"}
-    assert {o["item"] for o in repaso["contenido"]["opciones"]} <= vistos
+    # Con solo tres vistos, las opciones son esos tres: ni uno más (la lección nueva) ni uno menos.
+    assert {o["item"] for o in repaso["contenido"]["opciones"]} == vistos
+
+
+async def test_vistos_son_lo_presentado_en_esta_linea_y_de_este_usuario(db_session, catalogo_mini):
+    u = await crear_usuario(db_session)
+    otro = await crear_usuario(db_session)
+    hace_una_hora = AHORA - timedelta(hours=1)
+    db_session.add_all(
+        [
+            # Cuenta: la lección a, hecha, y la fila de え aunque su lección no esté hecha.
+            _corrida(u.id, "ja/hiragana/a"),
+            _faceta(u.id, "ja:kana:い", "escribir", hace_una_hora),
+            _faceta(u.id, "ja:kana:え", "reconocer", AHORA + timedelta(days=1)),
+            # No cuenta: la lección e por el mapa o sin terminar, ni la fila de か (huérfana).
+            _corrida(u.id, "ja/hiragana/e", origen="mapa"),
+            _corrida(u.id, "ja/hiragana/e", terminada=False),
+            _faceta(u.id, "ja:kana:か", "escribir", hace_una_hora),
+            # No cuenta: lo de otro usuario.
+            _corrida(otro.id, "ja/hiragana/e"),
+            _faceta(otro.id, "ja:kana:を", "reconocer", hace_una_hora),
+            # No cuenta: lo del mismo usuario en otro idioma. Las claves son japonesas a
+            # propósito: solo así se nota si falta el filtro por `idioma`.
+            _corrida(u.id, "ja/hiragana/e", idioma="de"),
+            _faceta(u.id, "ja:kana:お", "reconocer", hace_una_hora, idioma="de"),
+        ]
+    )
+    await db_session.commit()
+    plan = await componer(db_session, catalogo_mini, u.id, "ja", AHORA)
+    assert plan.leccion.id == "ja/hiragana/e"
+    assert plan.vistos == {"ja:kana:あ", "ja:kana:い", "ja:kana:う", "ja:kana:え"}
+    assert [(a.dinamica, a.items) for a in plan.repasos] == [("trazo", ("ja:kana:い",))]
 
 
 def test_plan_para_repetir_no_mueve_fsrs(catalogo_mini):
