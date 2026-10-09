@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Klara · sección 4</title>
+<link rel="stylesheet" href="../../../frontend/src/styles/tokens.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="../../../frontend/src/styles/sistema.css">
+<style>
+/* ---------- el tablero del mockup (no es de Klara) ---------- */
+body.b { background: #E6DFD1; }
+.b-head { max-width: 1560px; margin: 0 auto; padding: 40px 32px 12px; }
+.b-kicker, .b-cap, .b-tag {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3);
+}
+.b-head h1 { font-family: var(--font-serif); font-size: 46px; line-height: 1.05; letter-spacing: -0.02em; margin: 8px 0 10px; }
+.b-lede { font-family: var(--font-serif); font-size: 19px; line-height: 1.45; color: var(--ink-2); max-width: 780px; margin: 0; }
+.b-band { max-width: 1560px; margin: 0 auto; padding: 32px 32px 40px; border-top: 1px solid #CFC6B2;
+  display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 32px; }
+@media (max-width: 900px) { .b-band { grid-template-columns: 1fr; } }
+.b-text h2 { font-family: var(--font-serif); font-size: 27px; line-height: 1.15; margin: 4px 0 14px; letter-spacing: -0.01em; }
+.b-text ul { margin: 0; padding-left: 18px; }
+.b-text li { font-size: 14.5px; line-height: 1.5; color: var(--ink-2); margin-bottom: 9px; }
+.b-text li b { color: var(--ink); font-weight: 600; }
+.b-tag { display: inline-block; color: var(--accent-ink); border: 1px solid currentColor; border-radius: 3px; padding: 0 5px; font-size: 10px; margin-left: 4px; vertical-align: 1px; }
+.b-phones { display: flex; flex-wrap: wrap; gap: 30px 26px; align-items: flex-start; }
+.b-phone { width: 330px; flex: 0 0 auto; }
+.b-screen { height: 690px; border: 9px solid #1A1814; border-radius: 34px; overflow: hidden; background: var(--paper); position: relative;
+  box-shadow: 0 18px 40px -18px rgba(26,24,20,.45); }
+.b-screen > .k-app { height: 100%; max-width: none; border: 0; }
+.b-cap { margin: 12px 4px 0; }
+.b-cap b { color: var(--ink); font-weight: 500; }
+.b-card { width: 330px; background: var(--paper); border-radius: 14px; padding: 20px; box-shadow: 0 18px 40px -22px rgba(26,24,20,.4); }
+.b-card h3 { font-family: var(--font-serif); font-size: 20px; margin: 0 0 6px; }
+.b-card p { font-size: 14px; line-height: 1.45; color: var(--ink-2); margin: 8px 0 0; }
+
+/* ---------- piezas nuevas (irían a sistema.css) ---------- */
+.m-modo { margin: 0 0 var(--space-3); font-family: var(--font-mono); font-size: var(--t-mono); letter-spacing: var(--tracking-mark);
+  text-transform: uppercase; color: var(--ink-3); text-align: center; flex: 0 0 auto; }
+.m-modo[data-modo="presentar"] { color: var(--accent-ink); }
+.m-modo[data-modo="comprobar"] { color: var(--ink); }
+
+/* lienzo de trazo */
+.m-lienzo { position: relative; width: 100%; max-width: 262px; aspect-ratio: 1; margin: 0 auto; flex: 0 0 auto;
+  background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--r-md); touch-action: none; user-select: none; }
+.m-lienzo svg { width: 100%; height: 100%; display: block; }
+.m-guia line { stroke: var(--ink-4); stroke-width: .45; stroke-dasharray: 2 2.2; opacity: .55; }
+.m-fantasma path { stroke: var(--paper-3); stroke-width: 7.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.m-tinta path, path.m-tinta { stroke: var(--ink); stroke-width: 5.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+path.m-mano { stroke: var(--ink-2); stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+path.m-mano[data-mal] { stroke: var(--accent); transition: opacity .5s ease .25s; }
+path.m-mano[data-fuera] { opacity: 0; }
+path.m-error { stroke: var(--accent); stroke-width: 4.5; fill: none; stroke-linecap: round; stroke-dasharray: 3 3; opacity: .55; }
+path.m-pista { stroke: var(--accent-ink); stroke-width: 5.6; fill: none; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: m-dibuja 1.1s ease-in-out .2s forwards; }
+.m-num { font-family: var(--font-mono); font-size: 5.2px; fill: var(--ink-3); }
+.m-inicio { fill: var(--accent); }
+.m-inicio-aro { fill: none; stroke: var(--accent); stroke-width: .8; transform-box: fill-box; transform-origin: center; animation: m-aro 1.4s ease-out infinite; }
+@keyframes m-aro { from { transform: scale(.6); opacity: .9; } to { transform: scale(2.2); opacity: 0; } }
+@keyframes m-dibuja { to { stroke-dashoffset: 0; } }
+.m-orden path { stroke: var(--ink); stroke-width: 5.6; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: 5.2s ease-in-out infinite; }
+.m-orden path:nth-child(1) { animation-name: m-o1; }
+.m-orden path:nth-child(2) { animation-name: m-o2; }
+.m-orden path:nth-child(3) { animation-name: m-o3; }
+@keyframes m-o1 { 0% { stroke-dashoffset: 1; opacity: 1 } 14% { stroke-dashoffset: 0 } 88% { stroke-dashoffset: 0; opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
+@keyframes m-o2 { 0%, 18% { stroke-dashoffset: 1; opacity: 1 } 36% { stroke-dashoffset: 0 } 88% { stroke-dashoffset: 0; opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
+@keyframes m-o3 { 0%, 40% { stroke-dashoffset: 1; opacity: 1 } 72% { stroke-dashoffset: 0 } 88% { stroke-dashoffset: 0; opacity: 1 } 100% { stroke-dashoffset: 0; opacity: 0 } }
+.m-orden[data-una] path { animation-iteration-count: 1; }
+
+.m-son { display: flex; align-items: center; justify-content: center; gap: var(--space-4); margin-top: var(--space-4); flex: 0 0 auto; }
+.m-son__rom { font-family: var(--font-serif); font-size: 34px; line-height: 1; font-style: italic; }
+.m-pide { text-align: center; font-family: var(--font-serif); font-size: 20px; margin: 0 0 var(--space-3); flex: 0 0 auto; }
+
+/* frase con hueco */
+.m-frase { margin: 0; font-family: var(--font-serif); font-size: 27px; line-height: 1.35; text-align: center; letter-spacing: -0.005em; }
+.m-hueco { display: inline-block; min-width: 2.4em; border-bottom: 2px solid var(--ink); padding: 0 .1em; line-height: 1.15; }
+.m-hueco s { color: var(--accent); text-decoration-thickness: 2px; margin-right: .2em; font-size: .8em; }
+.m-hueco b { color: var(--score-good-ink); font-weight: 600; }
+.m-frase .m-nombre { box-shadow: inset 0 -.18em 0 color-mix(in srgb, var(--art-die) 28%, transparent); }
+.m-traduccion { text-align: center; font-family: var(--font-serif); font-style: italic; color: var(--ink-3); font-size: 15px; margin: 6px 0 0; }
+.m-opciones { justify-content: center; margin-top: var(--space-5); }
+.m-veredicto { margin-top: var(--space-4); border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; }
+.m-veredicto p { margin: 0 0 4px; font-family: var(--font-serif); font-size: 15px; line-height: 1.4; color: var(--ink-2); }
+.m-ok, .m-bien { color: var(--score-good-ink); font-weight: 600; }
+.m-no { color: var(--accent); font-weight: 600; }
+
+/* par mínimo */
+.m-play { width: 92px; height: 92px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; background: var(--ink); color: var(--paper); flex: 0 0 auto; }
+.m-play svg { width: 34px; height: 34px; }
+.m-pregunta { text-align: center; font-family: var(--font-serif); font-size: 21px; margin: var(--space-4) 0 var(--space-3); }
+.m-pares { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.m-par { display: grid; gap: 2px; justify-items: center; padding: 16px 8px 10px; border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--paper); }
+.m-par__w { font-family: var(--font-serif); font-size: 26px; line-height: 1.1; }
+.m-par__ipa { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+.m-par__oir { margin-top: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 6px; width: 100%; text-align: center; }
+.m-par[data-estado="bien"] { border-color: var(--score-good); box-shadow: inset 0 0 0 1px var(--score-good); }
+.m-par[data-estado="bien"] .m-par__w { color: var(--score-good-ink); }
+
+/* tablero de parejas */
+.m-tablero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: var(--space-4); }
+.m-ficha { height: 52px; display: grid; place-items: center; border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--paper); font-size: 24px; font-family: var(--font-serif); }
+.m-ficha[data-rom] { font-family: var(--font-mono); font-size: 17px; letter-spacing: .02em; }
+.m-ficha[data-estado="hecha"] { opacity: .28; border-style: dashed; }
+.m-ficha[data-estado="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.m-ficha[data-estado="mal"] { border-color: var(--accent); color: var(--accent); animation: m-sacude .4s ease 1; }
+@keyframes m-sacude { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+
+/* lo que sabes */
+.m-sabes { display: grid; grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr)); gap: 6px; margin-top: var(--space-3); }
+.m-sabes__c { display: grid; justify-items: center; gap: 4px; padding: 6px 0 7px; border-radius: var(--r-sm); background: var(--paper-2); }
+.m-sabes__c[data-vacia] { background: none; }
+.m-sabes__g { font-size: 21px; line-height: 1.1; color: var(--ink); }
+.m-sabes__c[data-nueva] .m-sabes__g { color: var(--ink-4); }
+.m-f { display: flex; gap: 2px; }
+.m-f i { width: 9px; height: 3px; border-radius: 1px; background: var(--rule); }
+.m-f i[data-n="1"] { background: linear-gradient(90deg, var(--ink-3) 50%, var(--rule) 50%); }
+.m-f i[data-n="2"] { background: var(--ink); }
+.m-f--fila { gap: 3px; }
+.m-f--fila i { width: 14px; height: 4px; }
+
+/* lo que cambió (fin de línea) */
+.m-cambio { width: 100%; border-collapse: collapse; margin-top: var(--space-4); font-size: 13px; }
+.m-cambio th { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); text-align: center; padding: 0 0 6px; }
+.m-cambio td { text-align: center; padding: 6px 0; border-top: 1px solid var(--rule); color: var(--score-good-ink); }
+.m-cambio td:first-child { font-size: 20px; color: var(--ink); text-align: left; }
+.m-cambio td[data-mal] { color: var(--accent); }
+.m-cambio td[data-medio] { color: var(--ink-3); }
+
+.m-mas { display: grid; gap: 0; margin-top: var(--space-2); }
+
+/* diagrama */
+.m-diag { width: 100%; aspect-ratio: 1; background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--r-md); }
+.m-diag .esp { stroke: var(--ink-3); stroke-width: 1.2; fill: none; }
+.m-diag .usr { stroke: var(--accent); stroke-width: 1.2; fill: none; }
+.m-diag .par { stroke: var(--ink-4); stroke-width: .35; }
+.m-diag .pe { fill: var(--ink-2); }
+.m-diag .pu { fill: var(--accent); }
+.m-checks { margin: 12px 0 0; padding: 0; list-style: none; font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+.m-checks li { padding: 5px 0; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 8px; }
+.m-checks b { color: var(--score-good-ink); font-weight: 500; }
+</style>
+</head>
+<body class="b">
+
+<header class="b-head">
+  <p class="b-kicker">Klara · núcleo + una rebanada por idioma · aprobado el 2026-10-09 · spec: docs/superpowers/specs/2026-10-09-klara-tres-idiomas-design.md</p>
+  <h1>Lo que ves</h1>
+  <p class="b-lede">Hoy con tres líneas, el mapa de cada idioma, el reproductor de lecciones y el trazo. Está hecho con el CSS real de Klara (tokens.css y sistema.css). Lo que no existe todavía va marcado como <span class="b-tag">nuevo</span>. El lienzo de la última fila funciona: dibuja あ con el mouse.</p>
+</header>
+
+<!-- ======================= 1 · HOY ======================= -->
+<section class="b-band">
+  <div class="b-text">
+    <p class="b-kicker">1 · Hoy</p>
+    <h2>Una línea por idioma</h2>
+    <ul>
+      <li><b>Cada línea dura unos 15–20 min.</b> Primero van tus repasos de ese idioma y después la lección que sigue en su mapa. Con un toque corre todo seguido.</li>
+      <li><b>Va primero el idioma que llevas más tiempo sin terminar.</b> Si hay empate, manda el orden de tus idiomas. Así, en un día corto no es siempre el mismo el que se queda fuera. <span class="b-tag">ajusta la sección 1</span></li>
+      <li><b>Los repasos tienen tope:</b> unos 25 por línea, unos 8 min. Lo que sobra queda para mañana, y FSRS aguanta el atraso. Si no hay repasos, la línea es solo la lección. Si terminaste el mapa, es solo repaso.</li>
+      <li>Puedes tocar cualquier línea; el «estás aquí» solo sugiere.</li>
+      <li><b>Biblioteca tiene una tapa por idioma</b>, y cada tapa abre su mapa. Las historias, Pronunciar y Hablar salen de Hoy y quedan al final del mapa de alemán, hasta su spec.</li>
+    </ul>
+  </div>
+  <div class="b-phones">
+
+    <!-- Hoy, por la mañana -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <main class="k-page">
+          <header class="k-topline">
+            <span class="k-topline__mark"><span class="klara-mark" style="width:14px;height:14px;font-size:14px;font-style:italic"><span class="glyph">K</span></span><span class="wordmark">Klara</span></span>
+            <span class="k-topline__meta">jue 9 oct</span>
+          </header>
+          <div class="k-live">
+            <header class="k-hero k-hero--quiet"><h1 class="k-hero__title">Buenos días, <em>Samuel</em>.</h1></header>
+            <h2 class="k-cap k-cap--rule">Tu plan de hoy · 52 min</h2>
+            <ol class="k-route" role="list">
+              <li class="k-route__stop" data-state="now">
+                <span class="k-route__dot"></span>
+                <div class="k-route__body">
+                  <span class="k-route__label">Estás aquí</span>
+                  <button class="k-hero" type="button">
+                    <span class="k-hero__tag"><span>日本語 · 18 min</span><span>Empezar</span></span>
+                    <span class="k-hero__title" lang="ja">か き く け こ</span>
+                    <span class="k-hero__arrow" aria-hidden="true">→</span>
+                    <span class="k-hero__dek">6 repasos y luego la fila de か: leerla, oírla y escribirla.</span>
+                  </button>
+                </div>
+              </li>
+              <li class="k-route__stop">
+                <span class="k-route__dot"></span>
+                <button class="k-route__row" type="button">
+                  <span class="k-route__title" lang="de">Deutsch</span>
+                  <span class="k-route__meta">17 min</span>
+                  <span class="k-route__sub">14 repasos · der, die, das: en el café</span>
+                </button>
+              </li>
+              <li class="k-route__stop">
+                <span class="k-route__dot"></span>
+                <button class="k-route__row" type="button">
+                  <span class="k-route__title" lang="en">English</span>
+                  <span class="k-route__meta">17 min</span>
+                  <span class="k-route__sub">9 repasos · ship o sheep: la /ɪ/ corta y la /iː/ larga</span>
+                </button>
+              </li>
+            </ol>
+            <p class="k-route__end">Eso es todo por hoy.</p>
+          </div>
+        </main>
+        <nav class="k-tabs k-tabs--3">
+          <button class="k-tabs__tab" data-active="true"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v17"/><circle cx="8" cy="9" r="2.5" fill="currentColor" stroke="none"/><path d="M13 9h7M13 15h5"/></svg></span><span class="k-tabs__lbl">Hoy</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v14M10 4.5v14"/><path d="M13.8 5.6 18 18.4"/><path d="M3.5 20.5h17"/></svg></span><span class="k-tabs__lbl">Biblioteca</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg></span><span class="k-tabs__lbl">Más</span></button>
+        </nav>
+      </div></div>
+      <p class="b-cap"><b>Hoy</b> · por la mañana</p>
+    </div>
+
+    <!-- Hoy, después de japonés -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <main class="k-page">
+          <header class="k-topline">
+            <span class="k-topline__mark"><span class="klara-mark" style="width:14px;height:14px;font-size:14px;font-style:italic"><span class="glyph">K</span></span><span class="wordmark">Klara</span></span>
+            <span class="k-topline__meta">jue 9 oct</span>
+          </header>
+          <div class="k-live">
+            <header class="k-hero k-hero--quiet"><h1 class="k-hero__title">Buenas tardes, <em>Samuel</em>.</h1></header>
+            <h2 class="k-cap k-cap--rule">Te quedan · 34 min</h2>
+            <ol class="k-route" role="list">
+              <li class="k-route__stop" data-state="done">
+                <span class="k-route__dot"></span>
+                <button class="k-route__row" type="button">
+                  <span class="k-route__title" lang="ja">日本語</span>
+                  <span class="k-route__meta">Hecho</span>
+                  <span class="k-route__sub">6 repasos · か き く け こ, nuevas</span>
+                </button>
+              </li>
+              <li class="k-route__stop" data-state="now">
+                <span class="k-route__dot"></span>
+                <div class="k-route__body">
+                  <span class="k-route__label">Estás aquí</span>
+                  <button class="k-hero" type="button">
+                    <span class="k-hero__tag"><span>Deutsch · 17 min</span><span>Empezar</span></span>
+                    <span class="k-hero__title" lang="de">der Kaffee, die Tasse</span>
+                    <span class="k-hero__arrow" aria-hidden="true">→</span>
+                    <span class="k-hero__dek">14 repasos y luego: lo que pides en un café, cada cosa con su artículo.</span>
+                  </button>
+                </div>
+              </li>
+              <li class="k-route__stop">
+                <span class="k-route__dot"></span>
+                <button class="k-route__row" type="button">
+                  <span class="k-route__title" lang="en">English</span>
+                  <span class="k-route__meta">17 min</span>
+                  <span class="k-route__sub">9 repasos · ship o sheep: la /ɪ/ corta y la /iː/ larga</span>
+                </button>
+              </li>
+            </ol>
+            <p class="k-route__end">Eso es todo por hoy.</p>
+          </div>
+        </main>
+        <nav class="k-tabs k-tabs--3">
+          <button class="k-tabs__tab" data-active="true"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v17"/><circle cx="8" cy="9" r="2.5" fill="currentColor" stroke="none"/><path d="M13 9h7M13 15h5"/></svg></span><span class="k-tabs__lbl">Hoy</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v14M10 4.5v14"/><path d="M13.8 5.6 18 18.4"/><path d="M3.5 20.5h17"/></svg></span><span class="k-tabs__lbl">Biblioteca</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg></span><span class="k-tabs__lbl">Más</span></button>
+        </nav>
+      </div></div>
+      <p class="b-cap"><b>Hoy</b> · después del japonés</p>
+    </div>
+
+    <!-- Biblioteca -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <main class="k-page">
+          <header class="k-topline">
+            <span class="k-topline__mark"><span class="klara-mark" style="width:14px;height:14px;font-size:14px;font-style:italic"><span class="glyph">K</span></span><span class="wordmark">Klara</span></span>
+            <span class="k-topline__meta">jue 9 oct</span>
+          </header>
+          <div class="k-live">
+            <header class="k-hero k-hero--quiet"><h1 class="k-hero__title">Tu biblioteca</h1></header>
+            <h2 class="k-cap k-cap--rule">Idiomas</h2>
+            <ul class="k-shelf" role="list">
+              <li>
+                <button class="k-cover" type="button"><span class="k-cover__band" lang="de">Deutsch</span><span class="k-cover__sub">A1</span></button>
+                <div class="k-bar k-bar--fill"><div class="k-bar__track"><i class="k-bar__fill" style="width:14%"></i></div></div>
+                <span class="k-shelf__caption" data-accent="true">14 vencen</span>
+              </li>
+              <li>
+                <button class="k-cover" type="button"><span class="k-cover__band" lang="ja">日本語</span><span class="k-cover__sub" lang="ja">かな</span></button>
+                <div class="k-bar k-bar--fill"><div class="k-bar__track"><i class="k-bar__fill" style="width:9%"></i></div></div>
+                <span class="k-shelf__caption">Al día</span>
+              </li>
+              <li>
+                <button class="k-cover" type="button"><span class="k-cover__band" lang="en">English</span><span class="k-cover__sub">B2</span></button>
+                <div class="k-bar k-bar--fill"><div class="k-bar__track"><i class="k-bar__fill" style="width:6%"></i></div></div>
+                <span class="k-shelf__caption" data-accent="true">9 vencen</span>
+              </li>
+            </ul>
+            <h2 class="k-cap k-cap--rule">Tus temas</h2>
+            <ul class="k-shelf" role="list">
+              <li>
+                <button class="k-cover k-cover--new" type="button"><span class="k-cover__plus">+</span><span class="k-cover__name">Tema nuevo</span></button>
+                <span class="k-shelf__caption">El taller</span>
+              </li>
+            </ul>
+          </div>
+        </main>
+        <nav class="k-tabs k-tabs--3">
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v17"/><circle cx="8" cy="9" r="2.5" fill="currentColor" stroke="none"/><path d="M13 9h7M13 15h5"/></svg></span><span class="k-tabs__lbl">Hoy</span></button>
+          <button class="k-tabs__tab" data-active="true"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v14M10 4.5v14"/><path d="M13.8 5.6 18 18.4"/><path d="M3.5 20.5h17"/></svg></span><span class="k-tabs__lbl">Biblioteca</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg></span><span class="k-tabs__lbl">Más</span></button>
+        </nav>
+      </div></div>
+      <p class="b-cap"><b>Biblioteca</b> · una tapa por idioma</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================= 2 · MAPA ======================= -->
+<section class="b-band">
+  <div class="b-text">
+    <p class="b-kicker">2 · El mapa</p>
+    <h2>Cada idioma, su mapa</h2>
+    <ul>
+      <li><b>Ruta nueva <code>/mapa/:idioma</code></b> <span class="b-tag">nuevo</span>. Arriba va la escala de ese idioma: かな → N5 → N4 → N3, A1 → A2 → B1, B2 → C1.</li>
+      <li><b>Cada unidad muestra su «puedo…»</b>, y debajo sus lecciones: las hechas, la actual y las que siguen. Una lección hecha se puede repetir en modo práctica.</li>
+      <li><b>«Lo que sabes»</b> <span class="b-tag">nuevo</span> muestra cada ítem con una rayita por faceta. Llena: lo sabes (intervalo de 21 días o más). A medias: lo estás aprendiendo. Vacía: no lo has visto. Es la prueba visible de que la app sabe qué dominas, faceta por faceta.</li>
+      <li><b>La forma la decide el tipo de ítem:</b> los kana van en tabla de 5 columnas, los sustantivos en lista con el artículo en su color, y las reglas y los contrastes, en lista. Es un solo componente.</li>
+    </ul>
+  </div>
+  <div class="b-phones">
+
+    <!-- Mapa de japonés -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <main class="k-page">
+          <header class="k-topline">
+            <button class="k-btn k-btn--text" type="button">← Biblioteca</button>
+            <span class="k-topline__meta"><span lang="ja">日本語</span> · mapa</span>
+          </header>
+          <div class="k-live">
+            <header class="k-hero k-hero--quiet"><h1 class="k-hero__title">Empiezas por los <em>kana</em>.</h1></header>
+            <div class="k-bar k-bar--milestones">
+              <span class="k-cap" style="left:11%">Estás aquí</span>
+              <div class="k-bar__track"><i class="k-bar__fill" style="width:11%"></i></div>
+              <span class="k-bar__dot" style="left:11%"></span>
+              <span class="k-bar__stop" data-past="true" style="left:0%" lang="ja">かな</span>
+              <span class="k-bar__stop" data-past="false" style="left:33.3%">N5</span>
+              <span class="k-bar__stop" data-past="false" style="left:66.6%">N4</span>
+              <span class="k-bar__stop" data-past="false" style="left:100%">N3</span>
+            </div>
+            <h2 class="k-cap k-cap--rule">Unidad 1 · Hiragana</h2>
+            <p class="k-note">Puedo leer, oír y escribir los 46 hiragana sin pensarlo.</p>
+            <ul class="m-mas">
+              <li><button class="k-row" data-state="mastered" type="button"><span class="k-row__n">01</span><span class="k-row__title" lang="ja">あ い う え お</span><span class="k-row__meta">✓</span></button></li>
+              <li><button class="k-row" data-state="now" type="button"><span class="k-row__n">02</span><span class="k-row__title" lang="ja">か き く け こ</span><span class="k-row__meta">Hoy</span></button></li>
+              <li><button class="k-row" data-state="pending" type="button"><span class="k-row__n">03</span><span class="k-row__title" lang="ja">さ し す せ そ</span><span class="k-row__meta">—</span></button></li>
+              <li><button class="k-row" data-state="locked" type="button"><span class="k-row__n">04</span><span class="k-row__title" lang="ja">た ち つ て と</span><span class="k-row__meta">—</span></button></li>
+              <li><button class="k-row" data-state="locked" type="button"><span class="k-row__n">…</span><span class="k-row__title">7 lecciones más, hasta ん</span><span class="k-row__meta"></span></button></li>
+            </ul>
+            <h2 class="k-cap k-cap--rule">Lo que sabes</h2>
+            <div class="m-sabes" id="tabla-kana" style="--cols:5"></div>
+            <p class="k-note">Cada casilla: reconocer · oír · escribir.</p>
+          </div>
+        </main>
+        <nav class="k-tabs k-tabs--3">
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v17"/><circle cx="8" cy="9" r="2.5" fill="currentColor" stroke="none"/><path d="M13 9h7M13 15h5"/></svg></span><span class="k-tabs__lbl">Hoy</span></button>
+          <button class="k-tabs__tab" data-active="true"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v14M10 4.5v14"/><path d="M13.8 5.6 18 18.4"/><path d="M3.5 20.5h17"/></svg></span><span class="k-tabs__lbl">Biblioteca</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg></span><span class="k-tabs__lbl">Más</span></button>
+        </nav>
+      </div></div>
+      <p class="b-cap"><b>Mapa de japonés</b> · se desplaza</p>
+    </div>
+
+    <!-- Mapa de alemán -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <main class="k-page">
+          <header class="k-topline">
+            <button class="k-btn k-btn--text" type="button">← Biblioteca</button>
+            <span class="k-topline__meta"><span lang="de">Deutsch</span> · mapa</span>
+          </header>
+          <div class="k-live">
+            <header class="k-hero k-hero--quiet"><h1 class="k-hero__title">Vas en <em>A1</em>.</h1></header>
+            <div class="k-bar k-bar--milestones">
+              <span class="k-cap" style="left:10%">Estás aquí</span>
+              <div class="k-bar__track"><i class="k-bar__fill" style="width:10%"></i></div>
+              <span class="k-bar__dot" style="left:10%"></span>
+              <span class="k-bar__stop" data-past="true" style="left:0%">A1</span>
+              <span class="k-bar__stop" data-past="false" style="left:50%">A2</span>
+              <span class="k-bar__stop" data-past="false" style="left:100%">B1</span>
+            </div>
+            <h2 class="k-cap k-cap--rule">Unidad 1 · der, die, das</h2>
+            <p class="k-note">Puedo decir el artículo de 40 sustantivos comunes y usarlo en acusativo y en dativo.</p>
+            <ul class="m-mas">
+              <li><button class="k-row" data-state="mastered" type="button"><span class="k-row__n">01</span><span class="k-row__title">La familia</span><span class="k-row__meta">✓</span></button></li>
+              <li><button class="k-row" data-state="now" type="button"><span class="k-row__n">02</span><span class="k-row__title">En el café</span><span class="k-row__meta">Hoy</span></button></li>
+              <li><button class="k-row" data-state="pending" type="button"><span class="k-row__n">03</span><span class="k-row__title">La casa</span><span class="k-row__meta">—</span></button></li>
+              <li><button class="k-row" data-state="locked" type="button"><span class="k-row__n">04</span><span class="k-row__title">El día y la ciudad</span><span class="k-row__meta">—</span></button></li>
+              <li><button class="k-row" data-state="locked" type="button"><span class="k-row__n">05</span><span class="k-row__title">Akkusativ: den</span><span class="k-row__meta">—</span></button></li>
+              <li><button class="k-row" data-state="locked" type="button"><span class="k-row__n">06</span><span class="k-row__title">Dativ: dem y der</span><span class="k-row__meta">—</span></button></li>
+            </ul>
+            <h2 class="k-cap k-cap--rule">Lo que sabes</h2>
+            <ul class="m-mas">
+              <li><div class="k-row k-row--quiet"><span class="k-row__n" data-gender="die">die</span><span class="k-row__title" lang="de">Mutter</span><span class="m-f m-f--fila"><i data-n="2"></i><i data-n="2"></i></span></div></li>
+              <li><div class="k-row k-row--quiet"><span class="k-row__n" data-gender="der">der</span><span class="k-row__title" lang="de">Vater</span><span class="m-f m-f--fila"><i data-n="2"></i><i data-n="2"></i></span></div></li>
+              <li><div class="k-row k-row--quiet"><span class="k-row__n" data-gender="das">das</span><span class="k-row__title" lang="de">Kind</span><span class="m-f m-f--fila"><i data-n="2"></i><i data-n="1"></i></span></div></li>
+              <li><div class="k-row k-row--quiet"><span class="k-row__n" data-gender="die">die</span><span class="k-row__title" lang="de">Tasse</span><span class="m-f m-f--fila"><i data-n="1"></i><i data-n="1"></i></span></div></li>
+              <li><div class="k-row k-row--quiet"><span class="k-row__n" data-gender="der">der</span><span class="k-row__title" lang="de">Kaffee</span><span class="m-f m-f--fila"><i data-n="0"></i><i data-n="0"></i></span></div></li>
+              <li><div class="k-row k-row--quiet"><span class="k-row__n">regla</span><span class="k-row__title">Dativo</span><span class="m-f m-f--fila"><i data-n="1"></i></span></div></li>
+            </ul>
+            <p class="k-note">Sustantivos: artículo · significado. Reglas: aplicarla.</p>
+            <h2 class="k-cap k-cap--rule">También en alemán</h2>
+            <ul class="m-mas">
+              <li><button class="k-row" type="button"><span class="k-row__title">Historias, Pronunciar y Hablar</span><span class="k-row__meta">→</span></button></li>
+            </ul>
+          </div>
+        </main>
+        <nav class="k-tabs k-tabs--3">
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3.5v17"/><circle cx="8" cy="9" r="2.5" fill="currentColor" stroke="none"/><path d="M13 9h7M13 15h5"/></svg></span><span class="k-tabs__lbl">Hoy</span></button>
+          <button class="k-tabs__tab" data-active="true"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5v14M10 4.5v14"/><path d="M13.8 5.6 18 18.4"/><path d="M3.5 20.5h17"/></svg></span><span class="k-tabs__lbl">Biblioteca</span></button>
+          <button class="k-tabs__tab" data-active="false"><span class="k-tabs__ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.25" fill="currentColor" stroke="none"/></svg></span><span class="k-tabs__lbl">Más</span></button>
+        </nav>
+      </div></div>
+      <p class="b-cap"><b>Mapa de alemán</b> · se desplaza</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================= 3 · REPRODUCTOR ======================= -->
+<section class="b-band">
+  <div class="b-text">
+    <p class="b-kicker">3 · El reproductor</p>
+    <h2>Un solo marco, dinámicas muy distintas</h2>
+    <ul>
+      <li><b>Todas usan el mismo marco, el de Repaso:</b> salir, título y cuenta arriba; segmentos de progreso; la dinámica en el centro; el dock abajo.</li>
+      <li><b>La etiqueta de arriba dice el modo:</b> Nuevo, Práctica, Prueba o Repaso. Solo Prueba y Repaso mueven FSRS.</li>
+      <li><b>Si aciertas, avanza solo en 0,7 s.</b> Si fallas, se queda con la corrección hasta que toques Seguir. Lo que fallas en práctica vuelve al final de la lección.</li>
+      <li><b>Pista:</b> es un botón de texto en las dinámicas que la tienen. Si la usas, el acierto cuenta como «difícil».</li>
+      <li><b>«Ahora no puedo escuchar / hablar»</b> salta esas actividades por el resto de la sesión, y quedan como segmentos saltados (ese estado ya existe en la barra).</li>
+      <li><b>En escritorio:</b> las teclas 1–5 eligen opción y Enter sigue.</li>
+      <li><b>Al final:</b> lo que aprendiste por faceta, lo que quedó por reforzar y lo que toca mañana. «Otra lección» si te sobra tiempo.</li>
+      <li><b>Si un envío falla,</b> se reintenta una vez. Al final te dice cuántas respuestas no se guardaron, como Repaso hoy.</li>
+    </ul>
+  </div>
+  <div class="b-phones">
+
+    <!-- presentar あ -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title"><span lang="ja">日本語</span> · fila あ</span><span class="k-topline__meta">07/24</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="24" data-done="6"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="presentar">Nuevo</p>
+          <div class="m-lienzo">
+            <svg viewBox="0 0 109 109">
+              <g class="m-guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+              <g class="m-fantasma" data-trazos></g>
+              <g class="m-orden" data-trazos data-pathlength></g>
+              <text class="m-num" x="21" y="33">1</text><text class="m-num" x="44" y="17">2</text><text class="m-num" x="71" y="43">3</text>
+            </svg>
+          </div>
+          <div class="m-son"><span class="m-son__rom">a</span><button class="k-btn k-btn--ghost" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/></svg> Oír</button></div>
+          <p class="k-note">Una «a» con un remolino abajo: suena «a», como en «agua».</p>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center">Mira el orden: tres trazos</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--lg k-btn--block" type="button">Ahora tú <span class="k-btn__arrow">→</span></button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>presentar</b> · el kana se dibuja solo, con su sonido</p>
+    </div>
+
+    <!-- articulo -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title"><span lang="de">Deutsch</span> · lección 2</span><span class="k-topline__meta">19/28</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="28" data-done="18"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="comprobar">Prueba</p>
+          <p class="m-frase" lang="de">Ich helfe <span class="m-hueco"><s>die</s><b>der</b></span> <span class="m-nombre">Frau</span>.</p>
+          <p class="m-traduccion">Ayudo a la mujer.</p>
+          <div class="k-wrap m-opciones">
+            <button class="k-chip" type="button" data-tone="good"><span class="k-chip__dot"></span>der</button>
+            <button class="k-chip" type="button" data-tone="bad"><span class="k-chip__dot"></span>die</button>
+            <button class="k-chip" type="button">das</button>
+            <button class="k-chip" type="button">dem</button>
+            <button class="k-chip" type="button">den</button>
+          </div>
+          <div class="m-veredicto">
+            <p><span class="m-ok">✓</span> <i lang="de">Frau</i> es femenino.</p>
+            <p><span class="m-no">✗</span> <i lang="de">helfen</i> pide dativo: <b lang="de">der Frau</b>.</p>
+          </div>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center">Género bien · caso no</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--lg k-btn--block" type="button">Seguir <span class="k-btn__arrow">→</span></button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>articulo</b> · elegiste die: dos evidencias</p>
+    </div>
+
+    <!-- par mínimo -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title"><span lang="en">English</span> · lección 2</span><span class="k-topline__meta">05/18</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="18" data-done="4"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="practicar">Práctica · oír</p>
+          <button class="m-play" type="button" aria-label="Oír otra vez"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg></button>
+          <p class="m-pregunta">¿Cuál dijo?</p>
+          <div class="m-pares">
+            <button class="m-par" data-estado="bien" type="button"><span class="m-par__w" lang="en">sheep</span><span class="m-par__ipa">/ʃiːp/</span><span class="m-par__oir">oír</span></button>
+            <button class="m-par" type="button"><span class="m-par__w" lang="en">ship</span><span class="m-par__ipa">/ʃɪp/</span><span class="m-par__oir">oír</span></button>
+          </div>
+          <p class="k-note">La /iː/ es larga y tensa, con la boca en sonrisa. La /ɪ/ es corta y floja, y no es la «i» del español.</p>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center"><span class="m-bien">Bien</span>&nbsp;· sigue sola</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--text" type="button">Más lento</button><button class="k-btn k-btn--text" type="button">Ahora no puedo escuchar</button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>par-minimo</b> · después compara las dos</p>
+    </div>
+
+    <!-- emparejar -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title"><span lang="ja">日本語</span> · fila か</span><span class="k-topline__meta">14/24</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="24" data-done="13"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="practicar">Juego · 0:21</p>
+          <div class="k-bar k-bar--fill"><div class="k-bar__track"><i class="k-bar__fill" style="width:58%"></i></div></div>
+          <div class="m-tablero">
+            <div class="m-ficha" lang="ja" data-estado="hecha">か</div><div class="m-ficha" data-rom data-estado="hecha">ka</div>
+            <div class="m-ficha" lang="ja" data-estado="elegida">き</div><div class="m-ficha" data-rom data-estado="mal">ku</div>
+            <div class="m-ficha" lang="ja">く</div><div class="m-ficha" data-rom>ke</div>
+            <div class="m-ficha" lang="ja">け</div><div class="m-ficha" data-rom>ki</div>
+            <div class="m-ficha" lang="ja" data-estado="hecha">こ</div><div class="m-ficha" data-rom data-estado="hecha">ko</div>
+          </div>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center">2 de 5 · <span lang="ja">き</span> no es ku</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--text" type="button">Ahora no puedo escuchar</button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>emparejar</b> · cada pareja es una evidencia</p>
+    </div>
+
+    <!-- fin de línea -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title" lang="ja">日本語</span><span class="k-topline__meta"></span></header>
+        <div class="k-fill" style="justify-content:flex-start;padding-top:12px">
+          <header class="k-hero k-hero--quiet">
+            <span class="k-hero__tag"><span><span lang="ja">日本語</span> · 19 min</span><span>Hecho</span></span>
+            <h1 class="k-hero__title" lang="ja">か き く け こ</h1>
+            <p class="k-hero__dek">Cinco kana nuevas y seis repasos.</p>
+          </header>
+          <table class="m-cambio">
+            <thead><tr><th></th><th>reconocer</th><th>oír</th><th>escribir</th></tr></thead>
+            <tbody>
+              <tr><td lang="ja">か</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td lang="ja">き</td><td>✓</td><td>✓</td><td data-medio>pista</td></tr>
+              <tr><td lang="ja">く</td><td>✓</td><td>✓</td><td>✓</td></tr>
+              <tr><td lang="ja">け</td><td>✓</td><td data-mal>✗</td><td data-mal>✗</td></tr>
+              <tr><td lang="ja">こ</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            </tbody>
+          </table>
+          <p class="k-note"><span lang="ja">け</span> se te resistió: vuelve mañana, junto con 9 repasos de japonés.</p>
+        </div>
+        <div class="k-dock">
+          <div class="k-wrap"><button class="k-btn k-btn--ghost k-btn--block" type="button">Otra lección</button><button class="k-btn k-btn--block" type="button">A Hoy <span class="k-btn__arrow">→</span></button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>fin de la línea</b> · lo que cambió, por faceta</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================= 4 · TRAZO ======================= -->
+<section class="b-band">
+  <div class="b-text">
+    <p class="b-kicker">4 · Trazo</p>
+    <h2>Escribir con el dedo</h2>
+    <ul>
+      <li><b>Prueba el del medio:</b> dibuja あ con el mouse encima de la guía.</li>
+      <li><b>Cada trazo se evalúa al soltar el dedo.</b> Se remuestrea a 24 puntos y se compara con el trazo de KanjiVG que toca. Mira la forma (distancia media), la dirección (si va al revés, la distancia se dispara) y el largo. Los umbrales son perillas que se ajustan con datos.</li>
+      <li><b>Si el trazo vale, se reemplaza por el limpio,</b> para que lo último que veas sea la forma correcta. Si no vale, se borra y cuenta como fallo. Al segundo fallo te enseña el trazo.</li>
+      <li><b>En Práctica hay plantilla gris. En Prueba y Repaso el lienzo está vacío.</b> Un trazo fallado se muestra y lo repasas encima, y cuenta como pista. La nota: 0 pistas es bien, 1–2 es difícil, más es otra vez.</li>
+      <li>Usa Pointer Events: el mismo código sirve para dedo, lápiz y mouse. El lienzo lleva <code>touch-action: none</code>, así la página no se mueve mientras dibujas.</li>
+      <li><b>Piezas nuevas en sistema.css:</b> el lienzo, la tabla de lo que sabes, la frase con hueco, las tarjetas de par mínimo y el tablero de parejas. Lo demás ya existe.</li>
+    </ul>
+  </div>
+  <div class="b-phones">
+
+    <!-- práctica, interactivo -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title"><span lang="ja">日本語</span> · fila あ</span><span class="k-topline__meta">08/24</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="24" data-done="7"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="practicar">Práctica · escribir</p>
+          <div class="m-lienzo" id="practica">
+            <svg viewBox="0 0 109 109">
+              <g class="m-guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+              <g class="m-fantasma" data-trazos></g>
+              <g class="m-tinta" id="hechos"></g>
+              <g id="pistas"></g>
+              <path class="m-mano" id="mano" d=""/>
+              <circle class="m-inicio-aro" id="aro" r="3"/>
+              <circle class="m-inicio" id="inicio" r="2.2"/>
+              <g class="m-orden" id="orden" data-una hidden></g>
+            </svg>
+          </div>
+          <p class="k-note" id="nota">Trazo 1 de 3: empieza en el punto.</p>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center" id="estado">Dibuja encima de la guía</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--text" type="button" id="ver">Ver el orden</button><button class="k-btn k-btn--text" type="button" id="otra">Otra vez</button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>Práctica</b> · funciona: dibuja con el mouse</p>
+    </div>
+
+    <!-- prueba con corrección -->
+    <div class="b-phone">
+      <div class="b-screen"><div class="k-app">
+        <header class="k-topline k-topline--session"><button class="k-btn k-btn--text k-topline__exit" type="button">Salir</button><span class="k-topline__title">Repaso · <span lang="ja">日本語</span></span><span class="k-topline__meta">03/06</span></header>
+        <div class="k-bar k-bar--segs"><div class="k-bar__track" data-segs="6" data-done="2"></div></div>
+        <div class="k-fill">
+          <p class="m-modo" data-modo="comprobar">Repaso · escribir</p>
+          <p class="m-pide">Escribe la que suena: <i>a</i></p>
+          <div class="m-lienzo">
+            <svg viewBox="0 0 109 109">
+              <g class="m-guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+              <g class="m-tinta" data-trazos="0,1"></g>
+              <path class="m-error" d="M38,60 C52,52 80,53 84,70 C87,85 72,92 60,90"/>
+              <g data-trazos="2" data-pista></g>
+            </svg>
+          </div>
+          <p class="k-note">El tercero va así. Repásalo encima para seguir; cuenta como pista.</p>
+        </div>
+        <div class="k-dock">
+          <div class="k-dock__status"><p class="k-cap k-cap--center">1 pista</p></div>
+          <div class="k-wrap"><button class="k-btn k-btn--text" type="button">Ahora no puedo escribir</button></div>
+        </div>
+      </div></div>
+      <p class="b-cap"><b>Repaso</b> · sin plantilla; el error se corrige</p>
+    </div>
+
+    <!-- cómo se evalúa -->
+    <div class="b-card">
+      <p class="b-kicker">Cómo se evalúa un trazo</p>
+      <h3>24 puntos contra 24 puntos</h3>
+      <svg class="m-diag" id="diag" viewBox="14 36 82 64"></svg>
+      <ul class="m-checks" id="checks"></ul>
+      <p>Gris: el trazo 3 de KanjiVG. Rojo: el tuyo. Cada par de puntos se compara con su pareja. Es una función pura, <code>evaluarTrazo(puntos, esperado)</code>, con tests de vitest que usan trazos sintéticos: el bueno, el invertido, el corto y el de otro trazo.</p>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(() => {
+  // Trazos de あ en la caja de 109 de KanjiVG. Aproximados a mano para el mockup; los reales salen de KanjiVG.
+  const A = [
+    "M27,34 C40,35 61,31 80,28",
+    "M50,17 C46,40 47,64 57,88",
+    "M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92",
+  ];
+  const NS = "http://www.w3.org/2000/svg";
+  const camino = (d, attrs = {}) => {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d);
+    for (const [k, v] of Object.entries(attrs)) p.setAttribute(k, v);
+    return p;
+  };
+
+  // Rellena los grupos marcados con data-trazos (todos, o la lista "0,1").
+  document.querySelectorAll("g[data-trazos]").forEach((g) => {
+    const cuales = g.dataset.trazos ? g.dataset.trazos.split(",").map(Number) : [0, 1, 2];
+    for (const i of cuales) {
+      const attrs = {};
+      if (g.hasAttribute("data-pathlength")) attrs.pathLength = "1";
+      if (g.hasAttribute("data-pista")) { attrs.class = "m-pista"; attrs.pathLength = "1"; }
+      g.appendChild(camino(A[i], attrs));
+    }
+  });
+
+  // Segmentos de progreso.
+  document.querySelectorAll(".k-bar__track[data-segs]").forEach((t) => {
+    const n = +t.dataset.segs, hechos = +t.dataset.done;
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement("span");
+      s.className = "k-bar__seg";
+      if (i < hechos) s.dataset.state = "done";
+      else if (i === hechos) s.dataset.state = "now";
+      t.appendChild(s);
+    }
+  });
+
+  // Tabla de kana: reconocer · oír · escribir (0 no visto, 1 aprendiendo, 2 sabido).
+  const filas = ["あいうえお", "かきくけこ", "さしすせそ", "たちつてと", "なにぬねの", "はひふへほ", "まみむめも", "や ゆ よ", "らりるれろ", "わ   を", "ん    "];
+  const estado = (r) => (r === 0 ? [2, 2, 1] : r === 1 ? [1, 1, 1] : null);
+  const tabla = document.getElementById("tabla-kana");
+  filas.forEach((fila, r) => {
+    [...fila.padEnd(5, " ")].forEach((k) => {
+      const c = document.createElement("div");
+      c.className = "m-sabes__c";
+      if (k === " ") { c.dataset.vacia = ""; tabla.appendChild(c); return; }
+      const e = estado(r);
+      if (!e) c.dataset.nueva = "";
+      c.innerHTML = `<span class="m-sabes__g" lang="ja">${k}</span><span class="m-f">${(e || [0, 0, 0]).map((n) => `<i data-n="${n}"></i>`).join("")}</span>`;
+      tabla.appendChild(c);
+    });
+  });
+
+  // ---------- evaluarTrazo: remuestreo por largo de arco + distancia media ----------
+  const N = 24;
+  const remuestrear = (pts, n) => {
+    const d = [0];
+    for (let i = 1; i < pts.length; i++) d.push(d[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const L = d[d.length - 1];
+    if (pts.length < 2 || L < 4) return null;
+    const out = [];
+    let j = 0;
+    for (let k = 0; k < n; k++) {
+      const t = (L * k) / (n - 1);
+      while (j < d.length - 2 && d[j + 1] < t) j++;
+      const u = (t - d[j]) / (d[j + 1] - d[j] || 1);
+      out.push([pts[j][0] + (pts[j + 1][0] - pts[j][0]) * u, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * u]);
+    }
+    return { pts: out, largo: L };
+  };
+  const muestrear = (d, n) => {
+    const p = camino(d);
+    const svg = document.createElementNS(NS, "svg");
+    svg.style.position = "absolute"; svg.style.width = "0"; svg.appendChild(p); document.body.appendChild(svg);
+    const L = p.getTotalLength();
+    const pts = Array.from({ length: n }, (_, i) => { const q = p.getPointAtLength((L * i) / (n - 1)); return [q.x, q.y]; });
+    svg.remove();
+    return { pts, largo: L };
+  };
+  const ESP = A.map((d) => muestrear(d, N));
+  const evaluarTrazo = (puntos, esperado) => {
+    const r = remuestrear(puntos, N);
+    if (!r) return { ok: false, motivo: "corto" };
+    const media = r.pts.reduce((s, p, i) => s + Math.hypot(p[0] - esperado.pts[i][0], p[1] - esperado.pts[i][1]), 0) / N;
+    const largo = r.largo / esperado.largo;
+    return { ok: media < 12 && largo > 0.55 && largo < 1.7, media, largo, pts: r.pts };
+  };
+
+  // ---------- lienzo de práctica ----------
+  const svg = document.querySelector("#practica svg");
+  const mano = document.getElementById("mano");
+  const hechos = document.getElementById("hechos");
+  const pistas = document.getElementById("pistas");
+  const aro = document.getElementById("aro"), inicio = document.getElementById("inicio");
+  const nota = document.getElementById("nota"), estadoEl = document.getElementById("estado");
+  const orden = document.getElementById("orden");
+  let actual = 0, fallos = 0, totalPistas = 0, puntos = null;
+
+  const ponerInicio = () => {
+    const visible = actual < 3;
+    aro.style.display = inicio.style.display = visible ? "" : "none";
+    if (!visible) return;
+    const [x, y] = ESP[actual].pts[0];
+    for (const c of [aro, inicio]) { c.setAttribute("cx", x); c.setAttribute("cy", y); }
+  };
+  const coord = (e) => {
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return [p.x, p.y];
+  };
+  const dibujar = (pts) => "M" + pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L");
+  const fmt = (x) => x.toFixed(1).replace(".", ",");
+
+  svg.addEventListener("pointerdown", (e) => {
+    if (actual >= 3) return;
+    svg.setPointerCapture(e.pointerId);
+    pistas.replaceChildren();
+    mano.removeAttribute("data-mal"); mano.removeAttribute("data-fuera");
+    puntos = [coord(e)];
+    mano.setAttribute("d", dibujar(puntos));
+  });
+  svg.addEventListener("pointermove", (e) => {
+    if (!puntos) return;
+    puntos.push(coord(e));
+    mano.setAttribute("d", dibujar(puntos));
+  });
+  const soltar = () => {
+    if (!puntos) return;
+    const r = evaluarTrazo(puntos, ESP[actual]);
+    puntos = null;
+    if (r.ok) {
+      hechos.appendChild(camino(A[actual]));
+      mano.setAttribute("d", "");
+      actual++; fallos = 0;
+      estadoEl.textContent = `✓ media ${fmt(r.media)} · largo ${fmt(r.largo)}`;
+      nota.textContent = actual < 3 ? `Trazo ${actual + 1} de 3.` : totalPistas ? `Listo: あ con ${totalPistas} ${totalPistas === 1 ? "pista" : "pistas"}.` : "Listo: あ sin pistas.";
+    } else {
+      mano.setAttribute("data-mal", "");
+      requestAnimationFrame(() => mano.setAttribute("data-fuera", ""));
+      fallos++;
+      estadoEl.textContent = r.motivo === "corto" ? "Muy corto" : `✗ media ${fmt(r.media)} · largo ${fmt(r.largo)}`;
+      if (fallos >= 2) {
+        totalPistas++;
+        pistas.appendChild(camino(A[actual], { class: "m-pista", pathLength: "1" }));
+        nota.textContent = `El ${actual + 1} va así. Síguelo.`;
+      } else {
+        nota.textContent = "Ese no. Empieza en el punto y sigue la guía.";
+      }
+    }
+    ponerInicio();
+  };
+  svg.addEventListener("pointerup", soltar);
+  svg.addEventListener("pointercancel", soltar);
+
+  document.getElementById("otra").addEventListener("click", () => {
+    actual = 0; fallos = 0; totalPistas = 0;
+    hechos.replaceChildren(); pistas.replaceChildren(); mano.setAttribute("d", "");
+    nota.textContent = "Trazo 1 de 3: empieza en el punto.";
+    estadoEl.textContent = "Dibuja encima de la guía";
+    ponerInicio();
+  });
+  document.getElementById("ver").addEventListener("click", () => {
+    orden.replaceChildren(...A.map((d) => camino(d, { pathLength: "1" })));
+    orden.hidden = false;
+    clearTimeout(orden._t);
+    orden._t = setTimeout(() => { orden.hidden = true; }, 5200);
+  });
+  ponerInicio();
+
+  // ---------- diagrama: el trazo 3 contra uno hecho a mano ----------
+  const diag = document.getElementById("diag");
+  const usuario = "M70,47 C63,67 47,79 38,85 C22,87 24,63 44,59 C61,55 78,60 83,72 C86,85 73,91 62,91";
+  const u = muestrear(usuario, N), esp = ESP[2];
+  diag.appendChild(camino(A[2], { class: "esp" }));
+  diag.appendChild(camino(usuario, { class: "usr" }));
+  esp.pts.forEach((p, i) => {
+    const l = document.createElementNS(NS, "line");
+    l.setAttribute("class", "par");
+    l.setAttribute("x1", p[0]); l.setAttribute("y1", p[1]); l.setAttribute("x2", u.pts[i][0]); l.setAttribute("y2", u.pts[i][1]);
+    diag.appendChild(l);
+  });
+  for (const [pts, cls] of [[esp.pts, "pe"], [u.pts, "pu"]]) {
+    pts.forEach((p) => {
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("class", cls); c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", ".9");
+      diag.appendChild(c);
+    });
+  }
+  const r = evaluarTrazo(u.pts, esp);
+  const inv = evaluarTrazo([...u.pts].reverse(), esp);
+  document.getElementById("checks").innerHTML =
+    `<li><span>forma: distancia media</span><b>${fmt(r.media)} &lt; 12 ✓</b></li>` +
+    `<li><span>largo / el de referencia</span><b>${fmt(r.largo)} ✓</b></li>` +
+    `<li><span>el mismo trazo, al revés</span><span style="color:var(--accent)">${fmt(inv.media)} ✗</span></li>`;
+})();
+</script>
+</body>
+</html>

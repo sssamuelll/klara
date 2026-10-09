@@ -1,0 +1,27 @@
+/* Base de global.css (fuentes + reset) para los mockups; el resto viene de klara-tokens.css y klara-sistema.css. */
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+JP:wght@400;600&display=swap");
+
+* { box-sizing: border-box; }
+:root { color-scheme: light; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-read);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button, input, textarea { font: inherit; color: inherit; }
+button { background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+.klara-mark { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-serif); line-height: 1; }
+.wordmark { font-family: var(--font-serif); font-style: italic; }
+
+/* Lo nuevo que pediría el japonés: una familia para `lang="ja"`. */
+:lang(ja) { font-family: "Noto Serif JP", var(--font-serif); }
