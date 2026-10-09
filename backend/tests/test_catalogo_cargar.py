@@ -147,6 +147,17 @@ def test_junta_todos_los_errores(tmp_path):
     assert any("u.mp3" in e for e in errores)
 
 
+def test_un_json_ilegible_no_tapa_los_demas_errores(tmp_path):
+    # UTF-16 no es UTF-8: leerlo lanza UnicodeDecodeError, que antes se escapaba
+    # y se llevaba por delante el error del audio que ya estaba juntado.
+    raiz = escribir_catalogo_mini(tmp_path / "mapas", sin_audio=("i.mp3",))
+    (raiz / "ja" / "mapa.json").write_bytes("{}".encode("utf-16"))
+    with pytest.raises(CatalogoInvalido) as e:
+        cargar_catalogo(raiz)
+    assert any("falta el audio i.mp3" in err for err in e.value.errores)
+    assert any("mapa.json" in err for err in e.value.errores)
+
+
 def test_get_catalogo_usa_klara_mapas_dir(catalogo_mini):
     assert list(catalogo_mini.mapas) == ["ja"]
     assert len(catalogo_mini.items) == 6

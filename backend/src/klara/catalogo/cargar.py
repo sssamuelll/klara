@@ -9,7 +9,7 @@ from collections.abc import Callable
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from klara.catalogo.dinamicas import DINAMICAS, ejercita
 from klara.catalogo.facetas import faceta_valida, partes, tipo_de
@@ -36,7 +36,8 @@ class CatalogoInvalido(Exception):
 def _leer[M: BaseModel](path: Path, modelo: type[M], errores: list[str]) -> M | None:
     try:
         return modelo.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    except (OSError, json.JSONDecodeError, ValidationError) as e:
+    # ValueError: JSONDecodeError, UnicodeDecodeError y el ValidationError de pydantic.
+    except (OSError, ValueError) as e:
         errores.append(f"{path.parent.name}/{path.name}: {e}")
         return None
 
