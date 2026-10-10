@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import Eleccion from "./Eleccion";
+import Emparejar from "./Emparejar";
 import Trazo from "./Trazo";
 import type { PropsDinamica } from "./tipos";
 
@@ -9,4 +10,5 @@ import type { PropsDinamica } from "./tipos";
 export const DINAMICAS: Record<string, ComponentType<PropsDinamica<any>>> = {
   eleccion: Eleccion,
   trazo: Trazo,
+  emparejar: Emparejar,
 };

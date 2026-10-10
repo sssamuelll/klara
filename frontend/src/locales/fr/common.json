@@ -1191,6 +1191,13 @@
       "escribe": "Écris celui que tu entends",
       "listo": "Terminé.",
       "lienzo": "Zone d'écriture"
+    },
+    "emparejar": {
+      "instruccion": "Touche une carte puis sa paire.",
+      "cuenta": "{{n}} sur {{total}}",
+      "hecha": "associée",
+      "mal": "ce n'est pas sa paire",
+      "tiempo": "Temps restant"
     }
   },
   "sesion": {

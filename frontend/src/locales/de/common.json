@@ -1191,6 +1191,13 @@
       "escribe": "Schreib, was du hörst",
       "listo": "Fertig.",
       "lienzo": "Schreibfläche"
+    },
+    "emparejar": {
+      "instruccion": "Tippe eine Karte und ihr Gegenstück an.",
+      "cuenta": "{{n}} von {{total}}",
+      "hecha": "zugeordnet",
+      "mal": "passt nicht",
+      "tiempo": "Verbleibende Zeit"
     }
   },
   "sesion": {

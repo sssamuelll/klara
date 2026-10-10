@@ -1191,6 +1191,13 @@
       "escribe": "聞こえた文字を書こう",
       "listo": "できた。",
       "lienzo": "書く場所"
+    },
+    "emparejar": {
+      "instruccion": "カードとそのペアをタップしよう。",
+      "cuenta": "{{total}}組中{{n}}組",
+      "hecha": "ペア成立",
+      "mal": "ペアではない",
+      "tiempo": "残り時間"
     }
   },
   "sesion": {

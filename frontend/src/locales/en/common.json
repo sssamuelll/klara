@@ -1191,6 +1191,13 @@
       "escribe": "Write the one you hear",
       "listo": "Done.",
       "lienzo": "Writing canvas"
+    },
+    "emparejar": {
+      "instruccion": "Tap a tile and its match.",
+      "cuenta": "{{n}} of {{total}}",
+      "hecha": "matched",
+      "mal": "not a match",
+      "tiempo": "Time left"
     }
   },
   "sesion": {

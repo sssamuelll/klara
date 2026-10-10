@@ -3247,6 +3247,78 @@ ul.k-error { list-style: none; }
   font-style: normal;
 }
 
+/* ---------- 22-tablero ---------- */
+/* ============================================================
+   22 · TABLERO — .k-tablero + .k-tablero__ficha
+   Pieza nueva (spec 2026-10-09 §3.2): el tablero de parejas de
+   `emparejar`. Dos columnas; la ficha elegida se marca, la hecha se
+   apaga y la que falló se sacude una vez.
+   ============================================================ */
+.k-tablero {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-4);
+}
+.k-tablero__ficha {
+  /* Contiene al glifo del veredicto y a su `.k-sr`, que van en absoluto. */
+  position: relative;
+  min-height: 52px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+  /* Los 16px de cada lado son el sitio del glifo del veredicto, en la esquina de arriba a la derecha: un
+     compuesto largo parte dentro de ellos y no pasa por debajo del ✓. Los 8px de arriba y de abajo, para que
+     las líneas que parten no toquen el borde. */
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--t-read);
+  line-height: 1;
+  cursor: pointer;
+  /* Gramática 8: una palabra larga parte en vez de desbordar la columna. */
+  overflow-wrap: anywhere;
+  transition: opacity var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+/* La ficha que ya no se toca (cerrada, o con el tiempo agotado) pierde el cursor de mano. */
+.k-tablero__ficha:disabled { cursor: default; }
+/* El kana, a tamaño de lectura grande como en `.k-chip--glifo` (átomo 8). Va en su propio `<span lang>`, no en
+   el botón: el span declara su familia y es el que recoge Noto Serif JP de `:lang(ja)` (átomo 20), y la palabra
+   del veredicto, que no es japonés, no se lee con voz japonesa. */
+.k-tablero__ficha [lang="ja"] {
+  font-family: var(--font-serif);
+  font-size: var(--t-read-lg);
+}
+.k-tablero__ficha[data-estado="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.k-tablero__ficha[data-estado="hecha"] { opacity: 0.45; border-style: dashed; }
+.k-tablero__ficha[data-estado="mal"] {
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  animation: k-tablero-sacude var(--dur-slow) var(--ease-out);
+}
+/* El veredicto sin color y sin movimiento: el glifo del chip (átomo 8), en la esquina para que el rótulo no se mueva. */
+.k-tablero__ficha .k-chip__mark {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+}
+@keyframes k-tablero-sacude {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+/* La cuenta de debajo es una `.k-cap--center`, que solo centra la caja: a 320px parte en dos líneas (es, de, fr,
+   pt) y la segunda se quedaba a la izquierda. */
+.k-tablero + .k-cap { text-align: center; }
+/* Gramática 4: sin movimiento la ficha fallada conserva su ✗, su borde y su tinta. */
+@media (prefers-reduced-motion: reduce) {
+  .k-tablero__ficha { transition: none; }
+  .k-tablero__ficha[data-estado="mal"] { animation: none; }
+}
+
 /* ---------- 99-compresion ---------- */
 /* ============================================================
    COMPRESIÓN EN VIEWPORT CORTO — gramática 13. Es §7.3 (cero

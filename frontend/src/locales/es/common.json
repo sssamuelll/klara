@@ -1191,6 +1191,13 @@
       "escribe": "Escribe la que suena",
       "listo": "Listo.",
       "lienzo": "Lienzo para escribir"
+    },
+    "emparejar": {
+      "instruccion": "Toca una ficha y su pareja.",
+      "cuenta": "{{n}} de {{total}}",
+      "hecha": "emparejada",
+      "mal": "no es su pareja",
+      "tiempo": "Tiempo que queda"
     }
   },
   "sesion": {

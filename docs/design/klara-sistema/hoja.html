@@ -66,7 +66,7 @@
   <header class="hoja__cabecera">
     <h1 class="hoja__titulo">Klara — <em>hoja de componentes</em></h1>
     <div class="hoja__meta">
-      <span>21 átomos · 2 temas</span>
+      <span>22 átomos · 2 temas</span>
       <button class="hoja__tema" type="button" id="hoja-tema" aria-live="polite">tema: —</button>
     </div>
   </header>
@@ -1487,6 +1487,44 @@
           <path class="k-trazo__pista" d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92" pathLength="1"/>
         </svg></div>
       </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="tablero" data-atom="tablero">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">22</span><h2 class="hoja-card__titulo">Tablero <code>.k-tablero</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>nuevo</b> — la dinámica <code>emparejar</code> (spec 2026-10-09 §3.2)</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="reposo">
+      <figcaption>Reposo</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="ja">か</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>ki</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="elegida">
+      <figcaption>Elegida <code>data-estado="elegida"</code></figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" data-estado="elegida" aria-pressed="true"><span lang="ja">き</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>ka</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="hecha">
+      <figcaption>Hecha <code>data-estado="hecha"</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «emparejada» es solo para el lector de pantalla)</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" data-estado="hecha" aria-pressed="false" disabled><span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button><button type="button" class="k-tablero__ficha" data-estado="hecha" aria-pressed="false" disabled><span>ka</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="mal">
+      <figcaption>Mal <code>data-estado="mal"</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «no es su pareja» es solo para el lector de pantalla)</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="ja">き</span></button><button type="button" class="k-tablero__ficha" data-estado="mal" aria-pressed="false"><span>ku</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> no es su pareja</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="compuesto-largo">
+      <figcaption>Compuesto largo: la palabra parte dentro de la ficha, con o sin glifo</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="de">Bundesausbildungsförderungsgesetz</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>das</span></button>
+        <button type="button" class="k-tablero__ficha" data-estado="hecha" aria-pressed="false" disabled><span lang="de">Bundesausbildungsförderungsgesetz</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button><button type="button" class="k-tablero__ficha" data-estado="hecha" aria-pressed="false" disabled><span>das</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button>
+      </div></div>
     </figure>
   </div>
 </section>

@@ -1191,6 +1191,13 @@
       "escribe": "Escreva a que você ouve",
       "listo": "Pronto.",
       "lienzo": "Área para escrever"
+    },
+    "emparejar": {
+      "instruccion": "Toque uma peça e o seu par.",
+      "cuenta": "{{n}} de {{total}}",
+      "hecha": "combinada",
+      "mal": "não é o par",
+      "tiempo": "Tempo restante"
     }
   },
   "sesion": {

@@ -1,6 +1,6 @@
 ﻿# Contrato del vocabulario — `k-*`
 
-Este documento fija los nombres, los estados y las medidas de los 21 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
+Este documento fija los nombres, los estados y las medidas de los 22 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
 Va dirigido a quien implemente la hoja de estilo y a quien migre cada pantalla: lo que no está aquí no existe, y lo que aquí se llama de una manera se llama así en el `.tsx`.
 Lo implementa `frontend/src/styles/sistema.css`, una hoja nueva que se importa en `frontend/src/main.tsx` justo después de `./styles/global.css` (main.tsx:6) y antes que `native.css` (main.tsx:7).
 Lo muestra `docs/design/klara-sistema/hoja.html`, que carga solo `global.css` + `sistema.css` (hoja.html:17-18): si un átomo necesita `mobile3.css` para verse bien, la hoja lo delata.
@@ -633,7 +633,7 @@ Literales justificados: **11px**, **5px** del punto, **6px** de gap y **4px 10px
 
 **Reemplaza:** global.css:371 `.k-chip`, `:hover` (:384), `[data-selected="true"]` (:388) · taller.css:175 `.taller .chip`, `.x` (:189), `.add` (:192), `.chip-input` (:197) · pages.css:668 `.kp-chip`, `:hover` (:679), `[data-selected="true"]` (:680) · perfil-aprendizaje.css:65 `.ob5-cloud .k-chip` y su compresión (:107) · perfil-aprendizaje.css:56 `.ob5-tri button` con `.si`/`.no[data-on]` (:58-59) · finish.css:497 `.qcard__leg` + `[data-tone]` (:515-517) · finish.css:826 `.fin-sched__tag` · sentence-view.css:467 `.k-feedback__pill` + `[data-tone]` (:485-487) · sentence-view.css:307 `.k-hint kbd` · speak.css:263 `.kc-foco` + sus cuatro hijos (:272-275) · speak.css:214 `.kc-turn__fix` + `[data-tone="clear"]` (:192) · taller.css:288 `.taller .kbd` · mobile4.css:39 `.m4-chips .k-chip`.
 
-**Elementos:** `.k-chip__dot` — punto de 6px que lleva el tono. `.k-chip__x` — la cruz de eliminar. `.k-chip__mark` — el glifo del veredicto (✓ / ✗), a `var(--t-mark)`: lo que el tono dice sin color.
+**Elementos:** `.k-chip__dot` — punto de 6px que lleva el tono. `.k-chip__x` — la cruz de eliminar. `.k-chip__mark` — el glifo del veredicto (✓ / ✗), a `var(--t-mark)`: lo que el tono dice sin color. Lo reutiliza también `.k-tablero__ficha` (átomo 22).
 
 **Variantes:** `.k-chip--static` — informativo, no tocable (leyenda): sin `cursor: pointer`, sin `:hover`, sin mínimo táctil.
 `.k-chip--glifo` — el rótulo es un kana (las opciones de `eleccion` al oír, átomo 20): lo que se aprende, a `var(--t-read-lg)` y no a los 14px de una etiqueta, porque lo que separa さ de ち es el trazo. El kana va en un `<span lang>` dentro del botón, con `var(--font-serif)`.
@@ -1422,6 +1422,54 @@ Literales justificados: **272px** es el lado más grande con el que el lienzo, s
 
 ---
 
+### 22. Tablero — `.k-tablero`
+
+**Reemplaza:** nada, es pieza nueva del spec `2026-10-09-klara-tres-idiomas` (§3.2, las dinámicas). Es el tablero de `emparejar` (`frontend/src/dinamicas/Emparejar.tsx`): dos columnas de fichas, barajadas por separado, y un reloj; se toca una ficha de un lado y su pareja del otro. El slug de la hoja y de `hoja.check.mjs` es `tablero`.
+
+**Elementos:** `.k-tablero` es un `<div>` con una rejilla de dos columnas; cada fila lleva una ficha de la columna izquierda y una de la derecha, y como las dos columnas se barajan aparte, **una fila no es una pareja**. `.k-tablero__ficha` es un `<button type="button">` con el rótulo dentro de un `<span>` (el kana lleva `lang`) y, solo en `hecha` y `mal`, el glifo del veredicto —`.k-chip__mark` del átomo 8, `aria-hidden`— y su palabra en un `.k-sr` (`00-base`). La barra del reloj (`.k-bar k-bar--fill`, átomo 5) y la cuenta (`.k-cap k-cap--center`, átomo 6) son hermanas del tablero y no suyas; lo único que el tablero les pone es la junta `.k-tablero + .k-cap`.
+
+**Variantes:** ninguna.
+
+**Estados:** por `data-estado` —el nombre que usan `Emparejar.tsx` y `estadoFicha` (`lib/dinamicas/emparejar.ts`), y no el `data-state` de la gramática 3; el átomo 21 usa `data-modo`— más los atributos nativos del botón, que son los que lee el lector de pantalla:
+- **reposo**: fondo `--paper`, borde 1px `--rule`, tinta `--ink`; `aria-pressed="false"`.
+- `[data-estado="elegida"]` (`aria-pressed="true"`): borde `--ink` y un anillo interior de 1px `--ink`, o sea 2px de borde en total: lo dice el grosor y no solo el tono.
+- `[data-estado="hecha"]` (`disabled`): `opacity: 0.45` —la del `:disabled` de los átomos 1 y 8—, borde discontinuo y sin cursor de mano, con el glifo ✓ y la palabra «emparejada».
+- `[data-estado="mal"]`: borde `--accent`, tinta `--accent-ink`, una sacudida de `--dur-slow` (4px a cada lado, una vez) y el glifo ✗ con la palabra «no es su pareja». Dura hasta el siguiente toque.
+- `:disabled` sin estado: el tablero terminó con el tiempo agotado y esta ficha no se cerró. Queda como en reposo, sin cursor de mano.
+
+**Medidas:** `.k-tablero`: `display: grid`, `grid-template-columns: 1fr 1fr`, `gap: var(--space-3) var(--space-4)`, `margin-top: var(--space-4)`, `flex: 0 0 auto`. Con cinco filas mide 308px. `.k-tablero__ficha`: `min-height: 52px`, `min-width: 44px` (§7.2 mide ancho y alto), `padding: var(--space-2) var(--space-4)`, borde 1px, radio `var(--r-md)`, `var(--font-serif)` a `var(--t-read)` con `line-height: 1`, `overflow-wrap: anywhere` (gramática 8). El kana (`[lang="ja"]`) sube a `var(--t-read-lg)`, como en `.k-chip--glifo`. El glifo va en absoluto a `var(--space-1)` de la esquina de arriba a la derecha; `.k-sr` también, y por eso la ficha es `position: relative`.
+Literales justificados: **52px** es el alto con el que cinco filas —la fila de kana más larga— caben en la zona de sesión de un teléfono de 320×568: 308px de tablero y 19px de sobra con las fuentes reales; a 320px de ancho, con la cuenta en dos líneas, deja de caber por debajo de los 562px de alto, y los controles no se comprimen (§7.2). **44px** de ancho es el mínimo táctil: a 320px cada ficha mide 124×52. **4px** de la sacudida: menos que el hueco entre fichas (12 y 16px), así que no pisa a la vecina. **0.45** es el de `:disabled`; con ese valor el rótulo y el ✓ de una ficha hecha dan 2,8:1 en claro y 3,8:1 en oscuro (con 0.3: 1,9:1 y 2,4:1).
+
+**Tokens:** `--paper`, `--rule`, `--ink`, `--accent`, `--accent-ink`, `--r-md`, `--space-1`, `--space-2`, `--space-3`, `--space-4`, `--font-serif`, `--t-read`, `--t-read-lg`, `--dur-fast`, `--dur-slow`, `--ease-out`; y por el glifo, `--t-mark` (átomo 8).
+
+**Markup canónico:**
+```html
+<div class="k-tablero">
+  <button type="button" class="k-tablero__ficha" data-estado="elegida" aria-pressed="true"><span lang="ja">き</span></button>
+  <button type="button" class="k-tablero__ficha" aria-pressed="false"><span>ka</span></button>
+  <button type="button" class="k-tablero__ficha" data-estado="hecha" aria-pressed="false" disabled>
+    <span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span>
+  </button>
+  <button type="button" class="k-tablero__ficha" data-estado="mal" aria-pressed="false">
+    <span>ku</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> no es su pareja</span>
+  </button>
+</div>
+<p class="k-cap k-cap--center">1 de 5 · Toca una ficha y su pareja.</p>
+```
+
+**Mapa viejo → nuevo:** nada, pieza nueva.
+
+**Trampas:**
+- **El `lang` va en el texto y no en el botón**, como en el chip (átomo 8). Con `lang="ja"` en el `<button>` el lector diría «emparejada» con voz japonesa y el ✓ caería al glifo de Noto; el kana va en su `<span lang="ja">`, y `.k-tablero__ficha [lang="ja"]` declara su propia `font-family` porque un `<span lang>` que no la declara hereda la que el botón ya resolvió y se queda sin Noto Serif JP (átomo 20). Medido en Chromium con `CSS.getPlatformFontsForNode`: el kana lo dibuja Noto Serif JP (web) a 26px y el romaji, Source Serif 4 a 22px.
+- **El veredicto no es solo color ni solo sacudida.** El borde de acento es color y la sacudida es movimiento, que con movimiento reducido no hay (`--dur-slow` vale 0 y el bloque `prefers-reduced-motion` pone además `animation: none`, gramática 4): sin el glifo ni la palabra, la ficha fallada era una ficha con otro matiz de borde. La «hecha» lleva su ✓ y su palabra; la «elegida», el grosor del borde y `aria-pressed`. Es el mismo contrato que el veredicto de `eleccion` (átomos 8 y 20).
+- **El glifo va en la esquina, y el relleno le deja sitio.** En el flujo, debajo del rótulo, el rótulo sube al aparecer el glifo. En la esquina no mueve nada, pero con 8px de relleno lateral la última letra de la primera línea de un compuesto largo («Bundesausbildungsförderungsgesetz») quedaba debajo del ✓ (visto en la captura de la hoja); con 16px de cada lado el compuesto parte antes de llegar, en cuatro líneas dentro de la ficha a 390px, y los 8px de arriba y de abajo evitan que esas líneas toquen el borde.
+- **La cuenta de debajo parte en dos líneas a 320px** (en español, alemán, francés y portugués; en inglés y japonés cabe en una). `.k-cap--center` solo centra la caja, y la segunda línea se quedaba a la izquierda: la junta `.k-tablero + .k-cap { text-align: center }`.
+- **La fila no es la pareja.** Las dos columnas se barajan aparte y el DOM alterna izquierda y derecha por fila: la tabulación recorre el tablero fila a fila, y nada en una fila dice que sus dos fichas estén emparentadas.
+
+**Notas:** la pareja se cierra en dos toques: la primera ficha queda elegida; la segunda, del otro lado, cierra la pareja o falla; tocar otra del mismo lado cambia la elegida. Una ficha hecha ya no se toca (`disabled`). El veredicto de cada ficha está en la propia ficha (glifo y palabra): nada lo anuncia mientras se juega; el resultado del tablero entero lo anuncia el dock del reproductor al terminar. Reduced motion: la ficha fallada no se sacude y conserva su ✗, su borde y su tinta; las transiciones se apagan. Con alemán largo la ficha no desborda: parte la palabra. La hoja de componentes muestra reposo, elegida, hecha, mal y un compuesto largo, con y sin glifo.
+
+---
+
 ## Orden de borrado seguro
 
 ### Se puede borrar ya, sin migrar nada
@@ -1539,7 +1587,7 @@ Cada entrada dice qué es, dónde vive hoy y qué migración de pantalla la deci
 
 4. **className fantasma: el `.tsx` pinta clases que ninguna hoja declara.** Verificados con grep: ~~`.k-tool`~~ y ~~`.kac-tool`~~ (0 declaraciones base; el de Hablar murió con la migración 5 y el de SentenceView con la 6, igual que `.kp-stat__of`), `.mono` (Taller.tsx:142 escribe `className="tally mono"` y la clase real es `.k-mono`), ~~`.fin-difficulty`~~ (StoryFinish.tsx:985), ~~`.k-wave__time`~~, ~~`.k-stepnav__btn--prev`~~ (SentenceView.tsx:621), ~~`.ob-isel__opt-label`~~ (ObInlineSelect.tsx:72), `.wpop__freq` (WordPopover.tsx:110), ~~`.story--audio` y `.story__pron-error`~~ (Practice.tsx:458 y 501). La migración 6 se llevó cinco de los diez de un tirón, y no por buscarlos: al borrar el componente y su hoja, sus fantasmas se fueron con ellos. La 7 se llevó el sexto (`.fin-difficulty`: la pregunta de dificultad es una `.k-cap` con tres `.k-btn` en un `.k-wrap`, y el `aria-pressed` que ya tenía) y la 8 el séptimo (`.ob-isel__opt-label` → `.k-row__title`). Quedan dos: `.mono` de Taller y `.wpop__freq`. La auditoría dice «108/108 clases usadas» porque cuenta CSS sin consumidor, no TSX sin CSS. Al migrar cada pantalla, cada uno de esos ganchos se borra del markup o se convierte en el nombre real del átomo; el mapa de arriba dice cuál.
 
-5. **`hoja.check.mjs` conoce los 21 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`; el del 21, `lienzo-trazo`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
+5. **`hoja.check.mjs` conoce los 22 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`; el del 21, `lienzo-trazo`; el del 22, `tablero`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
 
 6. **`hoja.check.mjs` mide ancho y alto, salvo en elementos `display: inline`.** La comprobación exige `width ≥ 44` y `height ≥ 44` en todo control; para los de `display` computado `inline` —solo `.k-word`— mide únicamente el alto, porque ensanchar la palabra rompe la línea que §6.2 declara «la pantalla». `.k-btn--text` **no** necesita excepción: lleva `min-height: 44px` y `min-width: 44px` con márgenes compensados.
 
