@@ -1,0 +1,16 @@
+/* La hoja de Klara. Todo sobre los tokens --nbc-* del tema `klara`. */
+html { color-scheme: dark; }
+body { margin: 0; }
+.kl { min-height: 100vh; background: var(--nbc-bg); color: var(--nbc-fg); font-family: var(--nbc-font-sans); }
+.kl-mast { display: flex; align-items: baseline; gap: .6rem; padding: 18px 24px 14px; border-bottom: var(--nbc-border-width) var(--nbc-border-style) var(--nbc-border-color); }
+.kl-brand { display: inline-flex; align-items: baseline; gap: .5rem; color: inherit; text-decoration: none; }
+.kl-k { font: italic 600 30px/1 var(--nbc-font-display); color: var(--nbc-accent); }
+.kl-word { font: 500 17px/1 var(--nbc-font-sans); }
+.kl-nav { margin-left: auto; display: flex; gap: 1.1rem; font: 500 12px/1 var(--nbc-font-mono); letter-spacing: .04em; }
+.kl-nav a { color: var(--nbc-fg-muted); text-decoration: none; }
+.kl-nav a:hover { color: var(--nbc-fg); }
+.kl-nav__here { color: var(--nbc-fg); }
+.kl-hero { padding: 48px 24px 28px; }
+.kl-hero__title { margin: 0; font: 600 54px/1.06 var(--nbc-font-display); letter-spacing: -.01em; max-width: 14ch; }
+.kl-hero__dot { color: var(--nbc-accent); }
+.kl-hero__dek { margin: 14px 0 0; font: 400 19px/1.45 var(--nbc-font-sans); color: var(--nbc-fg-muted); max-width: 44ch; }

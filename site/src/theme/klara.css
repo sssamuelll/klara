@@ -1,0 +1,6 @@
+/* Klara sobre el contrato de neobrutalistcomponents. Valores en la Tarea 2. */
+@layer nbc.theme {
+  [data-theme="klara"] {
+    --nbc-scheme: dark;
+  }
+}

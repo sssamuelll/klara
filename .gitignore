@@ -56,3 +56,9 @@ ds-bundle/
 .design-sync/.probe*.mjs
 .design-sync/.serve.log
 .hoja-out/
+
+# sitio público (site/)
+site/node_modules/
+site/dist/
+site/dist-ssr/
+site/art/shots/*.png
