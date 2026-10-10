@@ -3158,9 +3158,8 @@ ul.k-error { list-style: none; }
 .k-trazo path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 /* La plantilla es lo que el dedo sigue, así que tiene que distinguirse del lienzo: `--ink-4` al 50 % da
    1,53:1 en claro y 1,46:1 en oscuro, y la tinta (9,6:1 y 9,1:1) sigue mandando encima. `--paper-3`, que era
-   lo que había, da 1,09:1 y 1,12:1: no se veía. El `--rule` de delante es el respaldo sin `color-mix`. */
+   lo que había, da 1,09:1 y 1,12:1: no se veía. */
 .k-trazo__ref path {
-  stroke: var(--rule);
   stroke: color-mix(in srgb, var(--ink-4) 50%, var(--paper-2));
   stroke-width: 7.5;
   visibility: hidden;

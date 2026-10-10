@@ -15,17 +15,23 @@ export type Punto = [number, number];
 export const N = 24;
 // Perillas: se afinan con los `media` y `largo` reales que quedan en el detalle, y con `rechazos`: lo que
 // midieron los intentos que no valieron.
-// ponytail: con `decimar` (PASO_MIN) un pulso de ≤ 0,5 px casi no rechaza trazos buenos (≤ 0,2 % a 60 y a
-// 120 Hz, con lienzo de 272 o de 180 px); con ±1 px y un dedo lento (120 Hz, ≤ 40 u/s) todavía rechaza del 18
-// al 95 %, y un dedo apoyado con ruido de 1 px (σ) aún se juzga como trazo (85 de 104). Si `rechazos` lo
-// muestra: subir PASO_MIN o medir el largo sobre puntos suavizados.
+// ponytail: PASO_MIN = 3 (5 px en un lienzo de 180, 7,5 en uno de 272). Con 1, un dedo lento con ±1 px de pulso
+// rechazaba hasta el 100 % de los trazos buenos y un dedo apoyado salía como trazo fallado. Con 3, ninguna de las
+// 108 celdas lentas (180–272 px, 60 y 120 Hz, 15–40 u/s, ±0,5–1 px, ruido blanco y temblor) rechaza más de un
+// 0,2 %, el trazo al revés no vale en 27 000 intentos y un dedo apoyado se juzga trazo en ≤ 4,3 % de los casos
+// hasta medio segundo y en ≤ 9,4 % a 1 s (peor: 180 px, 120 Hz, ±1 px de ruido blanco). El precio: un garabato
+// de ±1 u pegado a la guía cuenta como el trazo. Si `rechazos` muestra más pulso: subir PASO_MIN o suavizar.
 export const UMBRAL_MEDIA = 12;
 export const LARGO_MIN = 0.55;
 export const LARGO_MAX = 1.7;
 /** Menos que esto es un toque, no un trazo: se ignora. */
 export const TOQUE_MIN = 4;
-/** Entre dos puntos, menos que esto es el pulso del dedo, no el trazo: no suma largo ni cuenta para el toque. */
-export const PASO_MIN = 1;
+/**
+ * Entre dos puntos, menos que esto es el pulso del dedo, no el trazo: no suma largo ni cuenta para el toque.
+ * Son 5 px en un lienzo de 180 y 7,5 en uno de 272: más de 3,5 σ de la diferencia entre dos eventos con 1 px
+ * de pulso. Con 1 unidad, un dedo lento y tembloroso sumaba largo de más y salía «Ese no».
+ */
+export const PASO_MIN = 3;
 
 export interface Esperado {
   pts: Punto[];
@@ -212,13 +218,14 @@ export function partirKana(texto: string): { texto: string; ja: boolean }[] {
     .filter((p) => p.texto !== "");
 }
 
-/** Del inicio de un trazo al centro de su número. */
-const NUM_DIST = 7;
-/** Lo más cerca que puede quedar un número de la tinta (medido a su eje) o de otro número. */
+/** Del inicio de un trazo al centro de su número: primero cerca y, si ahí no hay sitio, una vuelta más lejos. */
+const NUM_DISTS = [7, 10];
+/** Lo más cerca que puede quedar un número de la tinta (medido a su eje) o de otro número. Con un dígito de 5,6 u
+ *  pegado a tinta de 5,6, 5,5 no bastaba en ほ#4 y の#1 (4,6 y 5,3): por eso hay una segunda vuelta, a 10. */
 const NUM_LIBRE = 5.5;
 /** Lo más cerca del borde de la caja de 109 que puede quedar el centro de un número. */
 const NUM_BORDE = 5;
-/** Dónde probar, girando desde «detrás del inicio»: primero atrás, luego a los lados. */
+/** Dónde probar en cada vuelta, girando desde «detrás del inicio»: primero atrás, luego a los lados. */
 const NUM_GIROS = [0, 50, -50, 100, -100, 150, -150, 180].map((g) => (g * Math.PI) / 180);
 
 function distanciaASegmento(p: Punto, a: Punto, b: Punto): number {
@@ -229,8 +236,8 @@ function distanciaASegmento(p: Punto, a: Punto, b: Punto): number {
 
 /**
  * Dónde va el número de cada trazo al presentar (KanjiVG no lo trae): junto al inicio, detrás del trazo si
- * ahí hay sitio y, si no, hacia un lado; sin tocar la tinta de ningún trazo ni otro número, y dentro de la
- * caja. `null` para un trazo sin muestras.
+ * ahí hay sitio y, si no, hacia un lado; si en ninguno cabe, una vuelta más lejos. Sin tocar la tinta de ningún
+ * trazo ni otro número, y dentro de la caja. `null` para un trazo sin muestras.
  */
 export function lugaresNumeros(esperados: Esperado[]): (Punto | null)[] {
   const tramos = esperados.flatMap((e) => e.pts.slice(1).map((q, i): [Punto, Punto] => [e.pts[i], q]));
@@ -247,16 +254,18 @@ export function lugaresNumeros(esperados: Esperado[]): (Punto | null)[] {
       );
     let mejor: Punto = [x0, y0];
     let mejorHolgura = -1;
-    for (const giro of NUM_GIROS) {
-      const p: Punto = [dentro(x0 + Math.cos(atras + giro) * NUM_DIST), dentro(y0 + Math.sin(atras + giro) * NUM_DIST)];
-      const h = holgura(p);
-      if (h >= NUM_LIBRE) {
-        mejor = p;
-        break;
-      }
-      if (h > mejorHolgura) {
-        mejor = p;
-        mejorHolgura = h;
+    buscar: for (const dist of NUM_DISTS) {
+      for (const giro of NUM_GIROS) {
+        const p: Punto = [dentro(x0 + Math.cos(atras + giro) * dist), dentro(y0 + Math.sin(atras + giro) * dist)];
+        const h = holgura(p);
+        if (h >= NUM_LIBRE) {
+          mejor = p;
+          break buscar;
+        }
+        if (h > mejorHolgura) {
+          mejor = p;
+          mejorHolgura = h;
+        }
       }
     }
     puestos.push(mejor);

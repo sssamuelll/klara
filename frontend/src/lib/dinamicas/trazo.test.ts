@@ -35,6 +35,58 @@ const FU1: Esperado = {
   largo: 28.27,
 };
 
+// Dos kana reales (KanjiVG, muestreados a N puntos como lo hace Trazo.tsx) donde el número de un trazo no cabía
+// a 7 unidades de su inicio: el 4 de ほ nace pegado al borde del 2, y el 1 de の rodea su propio inicio.
+const HO: Esperado[] = [
+  {
+    pts: [
+      [24.51, 18.75], [26.09, 22.04], [26.07, 25.7], [25.36, 29.31], [24.67, 32.93], [24.02, 36.56],
+      [23.4, 40.19], [22.84, 43.83], [22.33, 47.48], [21.89, 51.14], [21.53, 54.81], [21.25, 58.48],
+      [21.08, 62.16], [21.0, 65.84], [21.05, 69.53], [21.23, 73.21], [21.54, 76.88], [22.02, 80.53],
+      [22.61, 84.17], [23.36, 87.77], [24.49, 85.52], [25.26, 81.91], [26.28, 78.38], [27.75, 75],
+    ],
+    largo: 84.75,
+  },
+  {
+    pts: [
+      [53.08, 21.13], [54.26, 21.82], [55.53, 22.32], [56.87, 22.6], [58.24, 22.63], [59.6, 22.47],
+      [60.95, 22.25], [62.3, 22.03], [63.65, 21.8], [65.0, 21.56], [66.35, 21.32], [67.69, 21.06],
+      [69.04, 20.8], [70.38, 20.53], [71.72, 20.25], [73.06, 19.95], [74.39, 19.64], [75.72, 19.31],
+      [77.04, 18.96], [78.36, 18.6], [79.69, 18.28], [81.04, 18.02], [82.39, 17.83], [83.76, 17.75],
+    ],
+    largo: 31.49,
+  },
+  {
+    pts: [
+      [53.83, 44.3], [55.22, 45.08], [56.7, 45.65], [58.27, 45.95], [59.86, 45.99], [61.44, 45.8],
+      [63.01, 45.56], [64.59, 45.32], [66.16, 45.07], [67.73, 44.82], [69.31, 44.57], [70.88, 44.3],
+      [72.45, 44.03], [74.01, 43.75], [75.58, 43.45], [77.14, 43.14], [78.7, 42.8], [80.25, 42.44],
+      [81.79, 42.05], [83.33, 41.64], [84.89, 41.3], [86.46, 41.03], [88.04, 40.83], [89.63, 40.75],
+    ],
+    largo: 36.64,
+  },
+  {
+    pts: [
+      [72.51, 23], [74.12, 28.82], [74.38, 34.97], [74.71, 41.12], [75.03, 47.27], [75.35, 53.42],
+      [75.65, 59.57], [75.91, 65.72], [76.11, 71.88], [75.55, 77.98], [72.33, 83.15], [67.16, 86.43],
+      [61.22, 87.98], [55.08, 88.02], [49.22, 86.27], [46.29, 81.3], [49.89, 76.65], [55.82, 75.15],
+      [61.97, 75.18], [68.05, 76.17], [73.87, 78.12], [79.14, 81.3], [84.2, 84.81], [89.13, 88.5],
+    ],
+    largo: 141.63,
+  },
+];
+const NO: Esperado[] = [
+  {
+    pts: [
+      [53.82, 28.62], [53.94, 38.86], [51.17, 49.01], [47.81, 58.98], [43.79, 68.7], [38.35, 77.68],
+      [29.27, 80.47], [22.65, 72.42], [18.38, 62.84], [19.14, 52.47], [24.09, 43.23], [31.34, 35.64],
+      [40.06, 29.79], [49.82, 25.91], [60.22, 24.49], [70.57, 26.12], [79.96, 30.78], [87.29, 38.25],
+      [91.5, 47.83], [92.21, 58.28], [89.51, 68.4], [83.7, 77.11], [75.36, 83.45], [65.45, 86.88],
+    ],
+    largo: 242.02,
+  },
+];
+
 /** Un dedo sobre el trazo: `n` eventos repartidos por su largo, con pulso de ±`amp` unidades
  *  (1 px son 0,4 u en un lienzo de 272 px). El pulso es siempre el mismo. */
 const pulso = (semilla = 1) => {
@@ -231,10 +283,23 @@ describe("el pulso del dedo", () => {
   });
 });
 
+describe("el dedo lento del lienzo chico (1 px = 0,6 u a 180 px)", () => {
+  it("un trazo bueno muy lento (240 eventos) con ±1 u de pulso vale", () => {
+    expect(evaluarTrazo(dedo(FU1, 240, 1), FU1).ok).toBe(true);
+    expect(evaluarTrazo(dedo(FU1, 240, 1).reverse(), FU1).ok).toBe(false);
+  });
+
+  it("un dedo apoyado medio segundo (60 eventos) con ±1 u es un toque", () => {
+    const [x0, y0] = FU1.pts[0];
+    const r = pulso();
+    expect(evaluarTrazo(Array.from({ length: 60 }, (): Punto => [x0 + r(), y0 + r()]), FU1).toque).toBe(true);
+  });
+});
+
 describe("decimar", () => {
   it("descarta lo que no se aleja 1 unidad del último que se queda, y guarda el primero y el último", () => {
     const pts: Punto[] = [[0, 0], [0.3, 0], [0.6, 0.1], [1.2, 0], [1.4, 0.2], [3, 0], [3.2, 0.1]];
-    expect(decimar(pts)).toEqual([[0, 0], [1.2, 0], [3.2, 0.1]]);
+    expect(decimar(pts, 1)).toEqual([[0, 0], [1.2, 0], [3.2, 0.1]]);
   });
 
   it("un dedo quieto se queda en dos puntos casi iguales", () => {
@@ -323,6 +388,31 @@ describe("lugaresNumeros", () => {
     const es = [trazo(50, 50, 90, 50), trazo(50, 56, 90, 56)];
     const [a, b] = lugaresNumeros(es);
     expect(dist(a!, b!)).toBeGreaterThanOrEqual(5);
+  });
+
+  it("con trazos reales, el número que no cabe a 7 u se va a 10, encima de su inicio, y no toca la tinta", () => {
+    for (const es of [HO, NO]) {
+      const lugares = lugaresNumeros(es);
+      lugares.forEach((p, i) => {
+        // la tinta es de 5,6 u y el dígito, de 5,6: a 5,5 del eje de cualquier trazo ya no se tocan
+        expect(libre(p!, es), `número ${i + 1}`).toBeGreaterThanOrEqual(5.5);
+        // y cada número está más cerca de su inicio que del de cualquier otro trazo
+        es.forEach((otro, j) => {
+          if (j !== i) expect(dist(p!, es[i].pts[0])).toBeLessThanOrEqual(dist(p!, otro.pts[0]));
+        });
+      });
+    }
+    const cuatro = lugaresNumeros(HO)[3]!;
+    expect(dist(cuatro, HO[3].pts[0])).toBeCloseTo(10);
+    expect(cuatro[1]).toBeLessThan(HO[3].pts[0][1]);
+    const uno = lugaresNumeros(NO)[0]!;
+    expect(dist(uno, NO[0].pts[0])).toBeCloseTo(10);
+    expect(uno[1]).toBeLessThan(NO[0].pts[0][1]);
+  });
+
+  it("los que sí caben se quedan a 7 u: la segunda vuelta es solo para los que no", () => {
+    const lugares = lugaresNumeros(HO);
+    for (const i of [0, 1, 2]) expect(dist(lugares[i]!, HO[i].pts[0])).toBeCloseTo(7);
   });
 
   it("un trazo sin puntos no tiene número, y no estorba", () => {
