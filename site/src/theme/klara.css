@@ -1,0 +1,70 @@
+/* ============================================================
+   KLARA — papel y tinta, de noche.
+   Un tema sobre el contrato de neobrutalistcomponents (spec § 5).
+   Nativo oscuro; el día queda definido en cada light-dark().
+   Las familias «Variable» son las que registran los paquetes
+   @fontsource-variable; las otras, el fallback si alguien
+   instala las fuentes de sistema.
+   ============================================================ */
+@layer nbc.theme {
+  [data-theme="klara"] {
+    --nbc-scheme: dark;
+
+    --nbc-font-sans: 'Inter Tight Variable', 'Inter Tight', system-ui, sans-serif;
+    --nbc-font-display: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
+    --nbc-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+    --nbc-weight-body: 400;
+    --nbc-weight-label: 500;
+    --nbc-weight-display: 600;
+    --nbc-label-transform: uppercase;
+    --nbc-label-spacing: 0.12em;
+    --nbc-display-transform: none;
+    --nbc-display-spacing: -0.01em;
+
+    --nbc-bg: light-dark(#F4EFE6, #16181C);
+    --nbc-fg: light-dark(#1A1814, #ECE6D6);
+    --nbc-fg-muted: light-dark(#6E6859, #B8B2A4);
+    --nbc-surface: light-dark(#EFE9DD, #1C1F24);
+    --nbc-surface-alt: light-dark(#E7E0D0, #242830);
+    --nbc-border-color: light-dark(#6E6859, #807B70);
+
+    --nbc-primary: light-dark(#1A1814, #ECE6D6);
+    --nbc-primary-fg: light-dark(#F4EFE6, #16181C);
+    --nbc-accent: light-dark(#CB4644, #E06A5E);
+    --nbc-accent-fg: light-dark(#F4EFE6, #16181C);
+    --nbc-info: light-dark(#CB4644, #E06A5E);
+    --nbc-info-fg: light-dark(#F4EFE6, #16181C);
+    --nbc-success: light-dark(#2E6B3F, #7FBF8E);
+    --nbc-success-fg: light-dark(#F4EFE6, #16181C);
+    --nbc-warning: light-dark(#B8862B, #E0B25A);
+    --nbc-warning-fg: #1A1814;
+    --nbc-danger: light-dark(#CB4644, #E06A5E);
+    --nbc-danger-fg: light-dark(#F4EFE6, #16181C);
+    --nbc-focus: light-dark(#CB4644, #E06A5E);
+
+    --nbc-primary-fill: var(--nbc-primary);
+    --nbc-danger-fill: var(--nbc-danger);
+    --nbc-surface-fill: var(--nbc-surface);
+    --nbc-texture: none;
+
+    --nbc-border-width: 1px;
+    --nbc-border-style: solid;
+    --nbc-radius: 8px;
+    --nbc-radius-control: 4px;
+    --nbc-radius-button: 999px;
+    --nbc-radius-small: 4px;
+
+    --nbc-shadow: none;
+    --nbc-shadow-lg: none;
+    --nbc-shadow-press: none;
+    --nbc-press: 0px;
+    --nbc-press-active: 0px;
+    --nbc-rotate: 0deg;
+    --nbc-focus-width: 2px;
+    --nbc-focus-offset: 2px;
+
+    --nbc-duration: 140ms;
+    --nbc-duration-slow: 260ms;
+    --nbc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
