@@ -20,7 +20,7 @@ El mismo día Klara pasó a ser un repo público. La página es la cara pública
 | D4 | Look | **La revista de noche:** la estructura editorial de la dirección A en la paleta oscura de Klara (dirección C). Siempre oscura. | día y noche por ajuste del sistema; banda nocturna con cuerpo claro |
 | D5 | Librería | **neobrutalistcomponents 1.2.0** con un tema propio `klara` sobre su contrato de tokens, por la vía oficial *bring your own theme*. | copiar CSS de la librería; usar un tema existente (Swiss es el más cercano pero no es papel y tinta) |
 | D6 | Runtime en el navegador | **Ninguno.** React se usa en el build para producir HTML estático; la página se sirve sin JavaScript. | SPA renderizada en el cliente (un `curl` o un rastreador no ve nada; un runtime para una página sin interacción) |
-| D7 | Fuentes | **Autoalojadas** en `site/public/fonts/` (Source Serif 4, Inter Tight, JetBrains Mono; las tres OFL). | Google Fonts (una petición a Google por visita desde un sitio administrado desde Alemania; la sentencia del LG München de 2022 lo hace evitable) |
+| D7 | Fuentes | **Autoalojadas** (Source Serif 4, Inter Tight, JetBrains Mono; las tres OFL). Implementado con los paquetes `@fontsource-variable/*` (woff2 en `dist/assets/`), no con `public/fonts/`: mismo resultado. | Google Fonts (una petición a Google por visita desde un sitio administrado desde Alemania; la sentencia del LG München de 2022 lo hace evitable) |
 | D8 | Ilustración | **Una, generada con el mismo `STYLE_PROMPT` de la app** (`backend/src/klara/services/illustration.py`): la sala de lectura con el tranvía, elegida el 2026-10-10. Optimizada a WebP. | capturar Hoy como hero (trae datos de Samuel); ilustración de otro estilo |
 | D9 | Pantallas | **Capturas reales** de la instancia de Samuel: Leer, Hablar, Repasar. Ajustes nunca. | maquetas hechas con tokens (fueron solo para elegir el look) |
 | D10 | Publicación | **GitHub Actions**: un workflow que construye `site/` y despliega a Pages en cada push a `main` que toque `site/**`. Actions se enciende en el repo; CI y CodeQL siguen apagados. | rama `gh-pages` empujada a mano (válida si Samuel la prefiere; cambia solo § 8) |
@@ -197,9 +197,8 @@ site/
     entry-server.tsx      export { render(lang) }
     page.css              estilos de la página sobre los tokens --nbc-*
     theme/klara.css       el tema (§ 5)
-    theme/fonts.css       @font-face locales
+    styles.ts             importa las fuentes (@fontsource-variable), la librería, el tema y page.css
   public/
-    fonts/*.woff2         Source Serif 4 (var, roman + italic), Inter Tight (var), JetBrains Mono (400, 500)
     hero.webp             la ilustración (≈ 2000 px de ancho, menos de 300 KB) [VERIFICAR peso]
     og.jpg                1200×630
     shots/*.webp          § 6

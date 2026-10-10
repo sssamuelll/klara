@@ -2,6 +2,8 @@
 
 A personal language-learning app built around an LLM tutor named **Klara**.
 
+Site: <https://sssamuelll.github.io/klara/> (English) · <https://sssamuelll.github.io/klara/es/> (Spanish). Source in `site/`.
+
 Klara supports six languages — `de`, `en`, `fr`, `ja`, `pt`, `es` — as either the
 target (what you're learning) or native (what the UI talks back in). Each user
 picks their own pair in Settings; the app's source-of-truth is the user row.
