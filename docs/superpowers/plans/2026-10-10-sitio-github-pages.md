@@ -1378,3 +1378,10 @@ En `D:\Desktop\plan\PLAN.md`, bajo Klara en la sección 6, añadir la línea `- 
 **Tipos.** `Lang`, `PageCopy`, `Screen`, `copy`, `Page`, `REPO`, `render` se nombran igual en todas las tareas. `assetBase` es `'./' | '../'` en ambas definiciones de `PageCopy` (Tarea 1 y Tarea 3; la segunda sustituye a la primera entera).
 
 **Review Focus.** Los cinco puntos tienen su prueba: 1 → Tarea 1 Step 10; 2 → Tarea 3 Step 6; 3 → Tarea 3 Step 1 (resolución relativa a la carpeta del HTML); 4 → Tarea 3 Step 1 (`alt`); 5 → Tarea 2 Step 1.
+
+## Enmienda del 2026-10-10 (spec § 13)
+
+Durante la revisión visual de la Tarea 3, Samuel pidió incluir lo nuevo de Klara y eligió el marco B. Cambios sobre las tareas:
+
+- **Tarea 3 (reabierta):** `copy.ts` gana `screens.items[0] = today`, el párrafo del «por qué» con alemán, japonés e inglés, y una sección `maps` (cap, badge, intro, tres fichas); `Page.tsx` pinta la cuarta tarjeta y la sección de mapas; `page.css` pasa la rejilla a 2×2, dibuja el marco B (`.kl-phone`) y las fichas (`.kl-maps`); `images.py` añade `today` a `SHOTS`; `check.mjs` exige «Three languages, three maps» / «Tres idiomas, tres mapas», «In the works» / «En construcción» y `shots/today.webp` ≤ 120 KB. Mismo ciclo: la prueba primero, en rojo, luego el código.
+- **Tarea 4:** `shots.mjs` captura también Hoy (`/`) como `today`, antes que Leer.

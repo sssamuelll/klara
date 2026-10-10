@@ -263,3 +263,14 @@ Revisión visual: capturas de `dist/` a 390 y 1280 px de ancho con el navegador,
 - **Peso.** La ilustración original pesa 3,8 MB en PNG; en WebP a 2000 px queda en el orden de 200 a 300 KB [VERIFICAR]. La comprobación pone el techo.
 - **Actions encendido.** Solo corre `pages.yml`; los otros tres siguen apagados por nombre. Si Samuel no quiere Actions, la rama a mano del § 8 cuesta lo mismo.
 - **La librería evoluciona.** `^1.2.0` fija la mayor; un cambio de contrato en 2.x no entra solo.
+
+## 13. Enmienda del 2026-10-10 (revisión visual de la tarea 3)
+
+Samuel, al ver la hoja construida: «hay que incluir lo nuevo en Klara también, no solo vender el alemán», y eligió el marco de teléfono propio recortado por abajo (B) sobre devices.css (A) y el marco entero (C).
+
+- **Cuarta pantalla: Hoy.** El recorrido ilustrado del día (en `main` desde `2eb1ace`) entra como primera tarjeta, antes de Leer, Hablar y Repasar. Captura real como las otras (`site/public/shots/today.webp`, ruta `/`). La rejilla pasa a 2×2 desde 720 px.
+- **Sección nueva: «Three languages, three maps» / «Tres idiomas, tres mapas».** Va después de las pantallas. Cuenta lo que está en la rama `feat/tres-idiomas-nucleo` (spec `2026-10-09-klara-tres-idiomas-design.md`): cada idioma con su mapa, lecciones hechas de dinámicas, y Klara que lleva la cuenta de lo que se domina faceta por faceta. Tres fichas dibujadas con tokens, sin capturas: hiragana (trazar el kana con el dedo), der, die, das (el artículo según el caso), ship y sheep (los sonidos que el español no tiene). Lleva un `Badge` «In the works» / «En construcción» porque no está en `main`; la página no promete fecha.
+- **Por qué existe:** la primera frase pasa a «I'm learning German and Japanese, and improving my English.» / «Estoy aprendiendo alemán y japonés, y mejorando mi inglés.», que es el objetivo declarado del spec de tres idiomas.
+- **Marco de teléfono (D13):** propio, bisel fino, isla dinámica y botón lateral en CSS; el teléfono asoma por el borde inferior de la tarjeta y se recorta. Rechazados: devices.css (una dependencia más para lo mismo) y el marco entero con sombra.
+
+Lo que no cambia: nada de la rama de tres idiomas se captura ni se promete como existente; el copy **(app)** sigue intacto; las pruebas del § 9 se amplían con los textos nuevos y `shots/today.webp`.
