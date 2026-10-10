@@ -634,7 +634,9 @@
       "gateHint": "Tu es le propriétaire du compte. Crée un mot de passe de secours pour ne pas dépendre seulement de Google.",
       "savedToast": "Mot de passe enregistré"
     },
-    "studyLangsHint": "Chacune est une ligne dans Aujourd’hui."
+    "studyLangsHint": "Chacune est une ligne dans Aujourd’hui.",
+    "studyLangsError": "Impossible de charger les langues.",
+    "studyLangsRetry": "Réessayer"
   },
   "auth": {
     "login": {

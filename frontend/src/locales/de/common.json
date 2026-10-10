@@ -634,7 +634,9 @@
       "gateHint": "Du bist der Eigentümer. Lege ein Backup-Passwort an, damit du nicht nur von Google abhängst.",
       "savedToast": "Passwort gespeichert"
     },
-    "studyLangsHint": "Jede ist eine Linie in Heute."
+    "studyLangsHint": "Jede ist eine Linie in Heute.",
+    "studyLangsError": "Die Sprachen konnten nicht geladen werden.",
+    "studyLangsRetry": "Erneut versuchen"
   },
   "auth": {
     "login": {

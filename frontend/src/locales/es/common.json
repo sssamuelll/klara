@@ -634,7 +634,9 @@
       "gateHint": "Eres el owner. Crea una contraseña de respaldo para no depender solo de Google.",
       "savedToast": "Contraseña guardada"
     },
-    "studyLangsHint": "Cada uno es una línea en Hoy."
+    "studyLangsHint": "Cada uno es una línea en Hoy.",
+    "studyLangsError": "No se pudieron cargar los idiomas.",
+    "studyLangsRetry": "Reintentar"
   },
   "auth": {
     "login": {

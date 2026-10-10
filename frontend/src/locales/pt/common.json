@@ -634,7 +634,9 @@
       "gateHint": "És o proprietário. Cria uma palavra-passe de reserva para não depender só do Google.",
       "savedToast": "Palavra-passe guardada"
     },
-    "studyLangsHint": "Cada um é uma linha em Hoje."
+    "studyLangsHint": "Cada um é uma linha em Hoje.",
+    "studyLangsError": "Não foi possível carregar as línguas.",
+    "studyLangsRetry": "Tentar de novo"
   },
   "auth": {
     "login": {

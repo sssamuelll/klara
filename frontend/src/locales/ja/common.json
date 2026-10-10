@@ -634,7 +634,9 @@
       "gateHint": "あなたはオーナーです。Googleだけに頼らないよう、予備のパスワードを設定してください。",
       "savedToast": "パスワードを保存しました"
     },
-    "studyLangsHint": "それぞれが「今日」の1ラインになります。"
+    "studyLangsHint": "それぞれが「今日」の1ラインになります。",
+    "studyLangsError": "言語を読み込めませんでした。",
+    "studyLangsRetry": "もう一度"
   },
   "auth": {
     "login": {
