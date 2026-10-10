@@ -580,7 +580,7 @@
       "targetLang": "Língua que queres aprender",
       "context": "Contexto (opcional)",
       "contextPlaceholder": "ex.: uso no trabalho, viajo muito, gosto de cozinhar…",
-      "studyLangs": "Idiomas que você estuda"
+      "studyLangs": "Línguas que estudas"
     },
     "sameLangWarn": "Escolhe uma língua diferente da materna.",
     "saved": "Guardado ✓",
@@ -634,7 +634,7 @@
       "gateHint": "És o proprietário. Cria uma palavra-passe de reserva para não depender só do Google.",
       "savedToast": "Palavra-passe guardada"
     },
-    "studyLangsHint": "Cada um é uma linha em Hoje.",
+    "studyLangsHint": "O Hoje propõe-te uma sessão por cada língua que marcares.",
     "studyLangsError": "Não foi possível carregar as línguas.",
     "studyLangsRetry": "Tentar de novo"
   },
@@ -715,25 +715,25 @@
   "hoy": {
     "estasAqui": "Você está aqui",
     "hecho": "Feito",
-    "plan": "O plano de hoje · {{min}} min",
-    "planHecho": "O plano de hoje · feito",
+    "plan": "O teu plano de hoje · {{min}} min",
+    "planHecho": "O teu plano de hoje · feito",
     "planAlDia": "O teu plano de hoje · em dia",
     "fin": "É tudo por hoje.",
     "finHecho": "Pronto por hoje.",
     "finAlDia": "Nada pendente para hoje.",
     "empezar": "Começar",
-    "error": "Não foi possível carregar o plano de hoje.",
+    "error": "Não foi possível carregar o teu plano de hoje.",
     "reintentar": "Tentar de novo",
-    "quedan": "Faltam · {{min}} min",
+    "quedan": "Faltam-te {{min}} min",
     "minutos": "{{min}} min",
     "repasos_one": "{{count}} revisão",
     "repasos_other": "{{count}} revisões",
     "luego": "{{repasos}} e depois {{bajada}}.",
-    "soloRepasos": "Só revisões: você terminou o mapa.",
-    "sinIdiomas": "Escolha nos Ajustes os idiomas que você estuda.",
-    "irAjustes": "Ir para Ajustes",
+    "soloRepasos": "Como terminaste o mapa, hoje é só rever.",
+    "sinIdiomas": "As tuas línguas ainda não têm mapa. Escolhe nos Ajustes uma que já tenha.",
+    "irAjustes": "Ir aos Ajustes",
     "alDia": "Em dia",
-    "alDiaSub": "Você terminou o mapa e não há revisões por enquanto."
+    "alDiaSub": "Terminaste o mapa e, por agora, não há revisões."
   },
   "nuevo": {
     "kicker": "Novo tema",
@@ -1168,23 +1168,23 @@
     "oirOtraVez": "Ouvir de novo",
     "eleccion": {
       "comoSuena": "Como soa?",
-      "cualOyes": "Qual você ouviu?",
+      "cualOyes": "Qual ouviste?",
       "correcta": "correta",
-      "tuRespuesta": "sua resposta"
+      "tuRespuesta": "a tua resposta"
     },
     "trazo": {
       "verElOrden": "Ver a ordem",
-      "trazoN": "Traço {{n}} de {{total}}.",
-      "empieza": "Comece no ponto.",
-      "eseNo": "Não é esse. Comece no ponto e siga o guia.",
-      "asiVa": "O traço {{n}} é assim. Siga-o.",
+      "trazoN": "Traço {{n}} de {{total}}",
+      "empieza": "Começa no ponto.",
+      "eseNo": "Assim não. Começa no ponto e segue o guia.",
+      "asiVa": "O traço {{n}} faz-se assim. Segue-o.",
       "pasar": "Passar à seguinte",
-      "escribe": "Escreva a que você ouve",
+      "escribe": "Escreve a que ouves",
       "listo": "Pronto.",
       "lienzo": "Área para escrever"
     },
     "emparejar": {
-      "instruccion": "Toque uma peça e o seu par.",
+      "instruccion": "Toca numa peça e no seu par.",
       "cuenta": "{{n}} de {{total}}",
       "hecha": "combinada",
       "mal": "não é o par",
@@ -1194,23 +1194,23 @@
     }
   },
   "sesion": {
-    "cargando": "Preparando a sessão…",
+    "cargando": "A preparar a sessão…",
     "fallo": "Não foi possível preparar a sessão.",
     "reintentar": "Tentar de novo",
-    "vacia": "Hoje não há revisões nem lições novas neste idioma.",
-    "aHoy": "Para Hoje",
+    "vacia": "Hoje não há revisões nem lições novas nesta língua.",
+    "aHoy": "Voltar a Hoje",
     "repaso": "Revisão",
-    "desconocida": "Esta atividade ainda não pode ser exibida.",
+    "desconocida": "Esta atividade ainda não pode ser mostrada.",
     "modo": {
       "presentar": "Novo",
       "practicar": "Prática",
       "comprobar": "Teste",
       "repaso": "Revisão"
     },
-    "ahoraTu": "Sua vez",
+    "ahoraTu": "A tua vez",
     "seguir": "Continuar",
     "bien": "Certo",
-    "mira": "Veja a correção",
+    "mira": "Vê a correção",
     "noPuedo": {
       "escuchar": "Agora não posso ouvir",
       "hablar": "Agora não posso falar",
@@ -1220,13 +1220,13 @@
       "reconocer": "reconhecer",
       "oir": "ouvir",
       "escribir": "escrever",
-      "genero": "gênero",
+      "genero": "género",
       "aplicar": "aplicar",
       "pronunciar": "pronunciar"
     },
     "marca": {
       "bien": "✓",
-      "pista": "com dica",
+      "pista": "com pista",
       "mal": "✗"
     },
     "fin": {
@@ -1236,8 +1236,8 @@
       "reforzar": "Para reforçar: {{items}}.",
       "manana_one": "Amanhã: {{count}} revisão.",
       "manana_other": "Amanhã: {{count}} revisões.",
-      "noGuardadas_one": "{{count}} resposta não foi salva.",
-      "noGuardadas_other": "{{count}} respostas não foram salvas.",
+      "noGuardadas_one": "{{count}} resposta não foi guardada.",
+      "noGuardadas_other": "{{count}} respostas não foram guardadas.",
       "noCerrada": "Não foi possível guardar o fim da lição.",
       "otra": "Outra lição"
     }

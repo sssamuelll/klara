@@ -138,7 +138,8 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
   if (estado.terminado) nota = t("dinamica.trazo.listo");
   else if (mal && estado.mostrando) nota = t("dinamica.trazo.asiVa", { n });
   else if (mal) nota = t("dinamica.trazo.eseNo");
-  else if (modo === "practicar" && estado.actual === 0) nota = `${t("dinamica.trazo.trazoN", { n, total })} ${t("dinamica.trazo.empieza")}`;
+  // «Trazo 1 de 3» es rótulo, sin punto: lo une a la frase el separador de la app, como la cuenta del tablero.
+  else if (modo === "practicar" && estado.actual === 0) nota = `${t("dinamica.trazo.trazoN", { n, total })} · ${t("dinamica.trazo.empieza")}`;
   else nota = t("dinamica.trazo.trazoN", { n, total });
 
   const inicioTrazo = esperados?.[estado.actual]?.pts[0];

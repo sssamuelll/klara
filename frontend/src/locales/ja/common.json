@@ -634,7 +634,7 @@
       "gateHint": "あなたはオーナーです。Googleだけに頼らないよう、予備のパスワードを設定してください。",
       "savedToast": "パスワードを保存しました"
     },
-    "studyLangsHint": "それぞれが「今日」の1ラインになります。",
+    "studyLangsHint": "チェックした言語ごとに、「今日」がセッションを1つ提案します。",
     "studyLangsError": "言語を読み込めませんでした。",
     "studyLangsRetry": "もう一度"
   },
@@ -715,22 +715,22 @@
   "hoy": {
     "estasAqui": "現在地",
     "hecho": "完了",
-    "plan": "今日のプラン · {{min}} 分",
+    "plan": "今日のプラン · {{min}}分",
     "planHecho": "今日のプラン · 完了",
     "planAlDia": "今日のプラン · 予定なし",
-    "fin": "今日はここまで。",
-    "finHecho": "今日は完了。",
+    "fin": "今日はここまでです。",
+    "finHecho": "今日の分は完了しました。",
     "finAlDia": "今日の予定はありません。",
     "empezar": "はじめる",
     "error": "今日のプランを読み込めませんでした。",
     "reintentar": "もう一度",
-    "quedan": "残り · {{min}}分",
+    "quedan": "残り{{min}}分",
     "minutos": "{{min}}分",
     "repasos_one": "{{count}}件の復習",
     "repasos_other": "{{count}}件の復習",
     "luego": "{{repasos}}、そのあと{{bajada}}。",
-    "soloRepasos": "復習のみ：マップは完了しました。",
-    "sinIdiomas": "設定で学ぶ言語を選んでください。",
+    "soloRepasos": "マップは完了したので、今日は復習だけです。",
+    "sinIdiomas": "学んでいる言語にはまだマップがありません。設定で、マップのある言語を選んでください。",
     "irAjustes": "設定へ",
     "alDia": "予定なし",
     "alDiaSub": "マップは完了しました。今は復習もありません。"
@@ -1167,30 +1167,30 @@
   "dinamica": {
     "oirOtraVez": "もう一度聞く",
     "eleccion": {
-      "comoSuena": "どう読む？",
-      "cualOyes": "どれが聞こえた？",
+      "comoSuena": "どう読みますか？",
+      "cualOyes": "どれが聞こえましたか？",
       "correcta": "正解",
       "tuRespuesta": "あなたの答え"
     },
     "trazo": {
       "verElOrden": "書き順を見る",
-      "trazoN": "{{total}}画中{{n}}画目。",
-      "empieza": "点から書き始めよう。",
-      "eseNo": "違います。点から始めて、お手本をなぞろう。",
-      "asiVa": "{{n}}画目はこう書きます。なぞってみよう。",
+      "trazoN": "{{total}}画中{{n}}画目",
+      "empieza": "点から書き始めてください。",
+      "eseNo": "そうではありません。点から始めて、お手本をなぞってください。",
+      "asiVa": "{{n}}画目はこう書きます。なぞってみてください。",
       "pasar": "次へ進む",
-      "escribe": "聞こえた文字を書こう",
-      "listo": "できた。",
+      "escribe": "聞こえた文字を書いてください",
+      "listo": "できました。",
       "lienzo": "書く場所"
     },
     "emparejar": {
-      "instruccion": "カードとそのペアをタップしよう。",
+      "instruccion": "カードとそのペアをタップしてください。",
       "cuenta": "{{total}}組中{{n}}組",
       "hecha": "ペア成立",
-      "mal": "ペアではない",
+      "mal": "ペアではありません",
       "tiempo": "残り時間",
-      "sinTiempo": "時間切れ。",
-      "noEs": "<1>{{izq}}</1>は {{der}} ではない"
+      "sinTiempo": "時間切れです。",
+      "noEs": "「<1>{{izq}}</1>」は「{{der}}」ではありません"
     }
   },
   "sesion": {
@@ -1198,7 +1198,7 @@
     "fallo": "セッションを準備できませんでした。",
     "reintentar": "再試行",
     "vacia": "今日はこの言語の復習も新しいレッスンもありません。",
-    "aHoy": "今日へ",
+    "aHoy": "今日に戻る",
     "repaso": "復習",
     "desconocida": "このアクティビティはまだ表示できません。",
     "modo": {
@@ -1207,7 +1207,7 @@
       "comprobar": "テスト",
       "repaso": "復習"
     },
-    "ahoraTu": "やってみよう",
+    "ahoraTu": "あなたの番",
     "seguir": "次へ",
     "bien": "正解",
     "mira": "訂正を見てください",
