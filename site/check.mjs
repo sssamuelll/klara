@@ -73,8 +73,8 @@ for (const f of (await import('node:fs')).readdirSync(cssDir)) {
 
 // ---- Textos, enlaces, alt, hreflang, pesos -----------------------------------
 const mustHaveMore = {
-  'index.html': ['Why it exists', 'See the code', 'Run it yourself', 'Invitation only', 'mailto:samueldarioballesteros@gmail.com'],
-  'es/index.html': ['Por qué existe', 'Ver el código', 'Móntala tú', 'Por invitación', 'mailto:samueldarioballesteros@gmail.com'],
+  'index.html': ['Why it exists', 'Three languages, three maps', 'In the works', 'See the code', 'Run it yourself', 'Invitation only', 'mailto:samueldarioballesteros@gmail.com'],
+  'es/index.html': ['Por qué existe', 'Tres idiomas, tres mapas', 'En construcción', 'Ver el código', 'Móntala tú', 'Por invitación', 'mailto:samueldarioballesteros@gmail.com'],
 };
 const external = new Set();
 for (const { file } of pages) {
@@ -94,7 +94,7 @@ for (const { file } of pages) {
     try { await stat(resolved); } catch { fail(`${file}: ${url} no existe en dist`); }
   }
 }
-const limits = { 'hero.webp': 300 * 1024, 'shots/read.webp': 120 * 1024, 'shots/speak.webp': 120 * 1024, 'shots/review.webp': 120 * 1024, 'og.jpg': 200 * 1024 };
+const limits = { 'hero.webp': 300 * 1024, 'shots/today.webp': 120 * 1024, 'shots/read.webp': 120 * 1024, 'shots/speak.webp': 120 * 1024, 'shots/review.webp': 120 * 1024, 'og.jpg': 200 * 1024 };
 for (const [f, max] of Object.entries(limits)) {
   const s = await stat(path.join(dist, f)).catch(() => null);
   if (!s) fail(`${f}: no existe`);

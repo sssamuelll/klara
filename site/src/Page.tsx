@@ -57,7 +57,9 @@ export function Page({ lang }: { lang: Lang }) {
                 <Card key={s.key} className="kl-screen">
                   <Card.Content>
                     <div className="kl-phone">
-                      <img src={asset(`shots/${s.key}.webp`)} alt={s.alt} width="390" height="760" loading="lazy" decoding="async" />
+                      <div className="kl-phone__shell">
+                        <img src={asset(`shots/${s.key}.webp`)} alt={s.alt} width="390" height="760" loading="lazy" decoding="async" />
+                      </div>
                     </div>
                   </Card.Content>
                   <Card.Header>
@@ -65,6 +67,23 @@ export function Page({ lang }: { lang: Lang }) {
                     <Card.Description>{s.body}</Card.Description>
                   </Card.Header>
                 </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="kl-maps" aria-labelledby="maps">
+            <div className="kl-maps__head">
+              <h2 className="kl-cap" id="maps">{t.maps.cap}</h2>
+              <Badge variant="accent" size="sm">{t.maps.badge}</Badge>
+            </div>
+            <p className="kl-maps__intro">{t.maps.intro}</p>
+            <div className="kl-maps__grid">
+              {t.maps.tiles.map((m) => (
+                <div className="kl-map" key={m.key}>
+                  <div className={m.mono ? 'kl-map__glyph kl-map__glyph--mono' : 'kl-map__glyph'} lang={m.key} aria-hidden="true">{m.glyph}</div>
+                  <h3 className="kl-map__title">{m.title}</h3>
+                  <p className="kl-map__body">{m.body}</p>
+                </div>
               ))}
             </div>
           </section>

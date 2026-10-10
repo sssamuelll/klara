@@ -1,7 +1,7 @@
 /* ============================================================
-   La hoja de Klara (spec § 4 y § 5). Todo sobre los tokens
-   --nbc-* del tema `klara`. Una columna de 1040 px; a partir
-   de 720 px las tres pantallas van en fila.
+   La hoja de Klara (spec § 4, § 5 y § 13). Todo sobre los tokens
+   --nbc-* del tema `klara`. Una columna de 1040 px; desde 720 px
+   las pantallas van en 2×2 y los mapas en tres columnas.
    ============================================================ */
 html { color-scheme: dark; }
 body { margin: 0; }
@@ -55,10 +55,27 @@ body { margin: 0; }
 .kl-screens__grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
 .kl-screen { overflow: hidden; }
 /* El contenido de la tarjeta no se estira: el título va pegado al teléfono y
-   las tres tarjetas alinean sus títulos aunque el texto tenga distinto largo. */
-.kl-screen .nbc-card__content { flex: 0 0 auto; }
-.kl-phone { width: 196px; margin: 0 auto; padding: 7px; background: #000; border: var(--nbc-border-width) var(--nbc-border-style) var(--nbc-border-color); border-radius: 26px; }
-.kl-phone img { display: block; width: 100%; height: auto; aspect-ratio: 390 / 760; border-radius: 19px; object-fit: cover; }
+   las tarjetas alinean sus títulos aunque el texto tenga distinto largo. */
+.kl-screen .nbc-card__content { flex: 0 0 auto; padding-bottom: 0; }
+/* Marco propio (spec D13): bisel fino, isla dinámica y botón lateral en CSS;
+   el teléfono asoma por el borde inferior y se recorta. */
+.kl-phone { width: 232px; height: 380px; margin: 4px auto 0; overflow: hidden; position: relative; }
+.kl-phone__shell { width: 232px; height: 470px; border-radius: 38px; background: #0b0b0c; padding: 8px; box-shadow: inset 0 0 0 1.5px #3a3a3e, 0 24px 40px -24px rgba(0, 0, 0, .9); position: relative; }
+.kl-phone__shell::before { content: ""; position: absolute; left: 50%; top: 18px; width: 72px; height: 22px; margin-left: -36px; background: #0b0b0c; border-radius: 12px; z-index: 2; }
+.kl-phone__shell::after { content: ""; position: absolute; right: -3px; top: 110px; width: 3px; height: 56px; background: #3a3a3e; border-radius: 2px; }
+.kl-phone img { display: block; width: 100%; height: auto; aspect-ratio: 390 / 760; border-radius: 30px; background: var(--nbc-surface); }
+
+/* tres idiomas, tres mapas */
+.kl-maps { padding: 40px 24px 8px; }
+.kl-maps__head { display: flex; align-items: center; gap: 12px; }
+.kl-maps__head .kl-cap { flex: 1; }
+.kl-maps__intro { margin: 16px 0 0; font: 400 20px/1.5 var(--nbc-font-display); max-width: 58ch; }
+.kl-maps__grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 20px; }
+.kl-map { background: var(--nbc-surface); border: var(--nbc-border-width) var(--nbc-border-style) var(--nbc-border-color); border-radius: var(--nbc-radius); padding: 22px 20px 20px; }
+.kl-map__glyph { font: 400 46px/1 var(--nbc-font-display), 'Noto Serif JP', 'Yu Mincho', serif; color: var(--nbc-accent); letter-spacing: -.01em; min-height: 46px; }
+.kl-map__glyph--mono { font: 500 18px/1 var(--nbc-font-mono); letter-spacing: .06em; padding-top: 14px; }
+.kl-map__title { margin: 16px 0 4px; font: 600 20px/1.2 var(--nbc-font-display); }
+.kl-map__body { margin: 0; color: var(--nbc-fg-muted); font-size: 14.5px; }
 
 /* cómo está hecha */
 .kl-made { padding: 40px 24px 48px; }
@@ -77,14 +94,15 @@ body { margin: 0; }
 .kl-foot a:hover, .kl-foot a:focus-visible { color: var(--nbc-fg); }
 
 @media (min-width: 720px) {
-  .kl-mast, .kl-hero, .kl-why, .kl-screens, .kl-made, .kl-foot { padding-left: 40px; padding-right: 40px; }
+  .kl-mast, .kl-hero, .kl-why, .kl-screens, .kl-maps, .kl-made, .kl-foot { padding-left: 40px; padding-right: 40px; }
   .kl-art { margin-left: 40px; margin-right: 40px; }
-  .kl-screens__grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .kl-screens__grid { grid-template-columns: repeat(2, 1fr); gap: 28px; }
+  .kl-maps__grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
 }
 @media (max-width: 480px) {
   .kl-hero__title { font-size: 36px; }
   .kl-hero__dek { font-size: 17px; }
-  .kl-why__p { font-size: 18px; }
+  .kl-why__p, .kl-maps__intro { font-size: 18px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .kl-nav a, .kl-foot a { transition: color var(--nbc-duration) var(--nbc-ease); }

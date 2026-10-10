@@ -12,7 +12,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ART, PUB = ROOT / "art", ROOT / "public"
-SHOTS = ["read", "speak", "review"]
+SHOTS = ["today", "read", "speak", "review"]
 SHOT_W, SHOT_H = 390, 760          # CSS px; el PNG viene a 2x
 FILL = (0x1C, 0x1F, 0x24)          # --nbc-surface de noche
 
