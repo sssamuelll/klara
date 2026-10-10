@@ -95,16 +95,16 @@ path.m-pista { stroke: var(--accent-ink); stroke-width: 5.6; fill: none; stroke-
 .m-par__w { font-family: var(--font-serif); font-size: 26px; line-height: 1.1; }
 .m-par__ipa { font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
 .m-par__oir { margin-top: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 6px; width: 100%; text-align: center; }
-.m-par[data-estado="bien"] { border-color: var(--score-good); box-shadow: inset 0 0 0 1px var(--score-good); }
-.m-par[data-estado="bien"] .m-par__w { color: var(--score-good-ink); }
+.m-par[data-state="bien"] { border-color: var(--score-good); box-shadow: inset 0 0 0 1px var(--score-good); }
+.m-par[data-state="bien"] .m-par__w { color: var(--score-good-ink); }
 
 /* tablero de parejas */
 .m-tablero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin-top: var(--space-4); }
 .m-ficha { height: 52px; display: grid; place-items: center; border: 1px solid var(--rule); border-radius: var(--r-md); background: var(--paper); font-size: 24px; font-family: var(--font-serif); }
 .m-ficha[data-rom] { font-family: var(--font-mono); font-size: 17px; letter-spacing: .02em; }
-.m-ficha[data-estado="hecha"] { opacity: .28; border-style: dashed; }
-.m-ficha[data-estado="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.m-ficha[data-estado="mal"] { border-color: var(--accent); color: var(--accent); animation: m-sacude .4s ease 1; }
+.m-ficha[data-state="hecha"] { opacity: .28; border-style: dashed; }
+.m-ficha[data-state="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.m-ficha[data-state="mal"] { border-color: var(--accent); color: var(--accent); animation: m-sacude .4s ease 1; }
 @keyframes m-sacude { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
 
 /* lo que sabes */
@@ -515,7 +515,7 @@ path.m-pista { stroke: var(--accent-ink); stroke-width: 5.6; fill: none; stroke-
           <button class="m-play" type="button" aria-label="Oír otra vez"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13L7.5 14.5H4Z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg></button>
           <p class="m-pregunta">¿Cuál dijo?</p>
           <div class="m-pares">
-            <button class="m-par" data-estado="bien" type="button"><span class="m-par__w" lang="en">sheep</span><span class="m-par__ipa">/ʃiːp/</span><span class="m-par__oir">oír</span></button>
+            <button class="m-par" data-state="bien" type="button"><span class="m-par__w" lang="en">sheep</span><span class="m-par__ipa">/ʃiːp/</span><span class="m-par__oir">oír</span></button>
             <button class="m-par" type="button"><span class="m-par__w" lang="en">ship</span><span class="m-par__ipa">/ʃɪp/</span><span class="m-par__oir">oír</span></button>
           </div>
           <p class="k-note">La /iː/ es larga y tensa, con la boca en sonrisa. La /ɪ/ es corta y floja, y no es la «i» del español.</p>
@@ -537,11 +537,11 @@ path.m-pista { stroke: var(--accent-ink); stroke-width: 5.6; fill: none; stroke-
           <p class="m-modo" data-modo="practicar">Juego · 0:21</p>
           <div class="k-bar k-bar--fill"><div class="k-bar__track"><i class="k-bar__fill" style="width:58%"></i></div></div>
           <div class="m-tablero">
-            <div class="m-ficha" lang="ja" data-estado="hecha">か</div><div class="m-ficha" data-rom data-estado="hecha">ka</div>
-            <div class="m-ficha" lang="ja" data-estado="elegida">き</div><div class="m-ficha" data-rom data-estado="mal">ku</div>
+            <div class="m-ficha" lang="ja" data-state="hecha">か</div><div class="m-ficha" data-rom data-state="hecha">ka</div>
+            <div class="m-ficha" lang="ja" data-state="elegida">き</div><div class="m-ficha" data-rom data-state="mal">ku</div>
             <div class="m-ficha" lang="ja">く</div><div class="m-ficha" data-rom>ke</div>
             <div class="m-ficha" lang="ja">け</div><div class="m-ficha" data-rom>ki</div>
-            <div class="m-ficha" lang="ja" data-estado="hecha">こ</div><div class="m-ficha" data-rom data-estado="hecha">ko</div>
+            <div class="m-ficha" lang="ja" data-state="hecha">こ</div><div class="m-ficha" data-rom data-state="hecha">ko</div>
           </div>
         </div>
         <div class="k-dock">

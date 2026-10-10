@@ -28,6 +28,16 @@ Cada uno está decidido aquí; la ejecución no los reabre.
 8. **«Mañana» son las facetas que vencen en las próximas 24 horas.** El servidor no conoce la zona horaria del teléfono.
 9. **`CAP_REPASOS` vive en `klara/catalogo/dinamicas.py`,** para que `schemas/` lo use sin depender de `services/`.
 
+## Notas de ejecución
+
+Cada decisión de la ejecución está en el registro `.superpowers/sdd/2026-10-09-tres-idiomas-1-nucleo-japones/progress.md`, con un informe por tarea al lado. Los bloques de tareas de abajo se quedan como se escribieron; esto es lo que el código hace distinto de su texto (la spec ya lo dice):
+
+- **El ajuste 7 se revirtió.** Las pilas de `:root` quedan como estaban: Noto Serif JP entra solo bajo `:lang(ja)` (`tokens.css`) y se carga con un `<link>` aparte y no bloqueante (pesos 400..600), fuera del `@import` de las familias latinas. Con el ajuste, los símbolos de toda la app (→ ● ★ ✓) y la interfaz en japonés cambiaban de fuente, y la carga bloqueaba el primer pintado. Todo texto japonés va en un elemento que declara su propia `font-family`.
+- **El juez del trazo** (tareas 17 y ola final): descarta el pulso del dedo (`PASO_MIN = 3`) antes de remuestrear y medir; exige `media < mediaAlReves` además del umbral; `acierto = pistas ≤ 2 && pistas < número de trazos`; guarda en `detalle` lo que midieron los intentos rechazados; trazos numerados al presentar, punto de inicio que late (quieto con movimiento reducido) y «Ver el orden»; y la salida «Pasar a la siguiente».
+- **La copy** se revisó al final (ola final): «Tu plan de hoy», «Volver a Hoy», «Así no…», el estado al día de Hoy; pt pasa a tu / pt-PT y ja al registro que ya tenía la interfaz.
+- **`data-state`, no `data-estado`,** en los estados enumerados (gramática 3): el tablero de `emparejar` y el mockup.
+- **Las claves de Azure de la tarea 7** van en `backend/azure.env` (ignorado por git), no en `backend/.env`: el backend carga `.env` también en los tests, y con una clave real alguno abriría Azure de verdad. Solo el generador de audio la carga.
+
 ## Antes de empezar
 
 - **Rama:** se sale de `spec/tres-idiomas` hacia `feat/tres-idiomas-nucleo` (lo hace la tarea 1).

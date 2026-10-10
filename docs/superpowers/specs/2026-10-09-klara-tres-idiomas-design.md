@@ -161,12 +161,13 @@ Las agrega la migración `20261009_0024`, que solo suma tablas y no toca las exi
 - `nota`: null fuera de `comprobar`.
 - `detalle` JSONB, y `created_at`.
 - No tiene FK a `user_facets`, porque la evidencia de práctica llega antes de que exista la fila.
-- `detalle` guarda un resumen, no los datos crudos. En un trazo, por ejemplo, guarda la `media` y el `largo` de cada trazo, que sirven para afinar los umbrales, pero no los puntos.
+- `detalle` guarda un resumen, no los datos crudos. En un trazo, por ejemplo, guarda la `media` y el `largo` de cada trazo y lo que midieron los intentos rechazados, que sirven para afinar los umbrales, pero no los puntos (5.5). Tiene un tope de 16 KB, y sin detalle la columna queda en NULL de SQL.
 
 **`lesson_runs`**: una fila por cada vez que corre el reproductor.
 - `id`, `user_id`, `idioma`.
 - `leccion_id`: null si la sesión fue solo de repasos.
 - `origen`: `hoy` o `mapa`.
+- `repasos`: cuántas actividades de repaso traía la sesión (de 0 a `CAP_REPASOS`; lo manda el teléfono al abrir la corrida). Es lo único de la sesión que guarda la corrida, y es para Hoy: la fila hecha dice lo que hiciste («6 repasos · か き く け こ») sumando las corridas del día, sin contar evidencias.
 - `started_at` y `finished_at` (este último es null mientras la corrida no termina).
 - De esta tabla salen dos cosas:
   - Una lección está hecha si tiene una corrida terminada con `origen = hoy`. De ahí se calcula la posición en el mapa.
@@ -278,7 +279,7 @@ La evidencia de caso va al ítem del caso correcto de ese hueco (`de:caso:acusat
    Cada actividad viene con su contenido generado, incluidos los trazos y las URLs de audio. Hoy usa la misma función para estimar los minutos, así que los que promete son los de la sesión.
 2. **Abrir la corrida.** `POST /api/v1/lesson-runs` con `{ idioma, leccion_id, origen }`.
 3. **Responder.** Cada respuesta se manda en `POST /api/v1/evidencias`: la lista de evidencias de esa respuesta, cada una con su `id` (uuid), `run_id`, `dinamica` y `modo`. El servidor:
-   1. valida ítem, faceta, dinámica y modo contra el catálogo, y devuelve 422 si algo no cuadra;
+   1. valida ítem, faceta, dinámica y modo contra el catálogo, y devuelve 422 si algo no cuadra. Un `ms` de más de una hora no se rechaza: se recorta a una hora (una actividad que quedó abierta con el teléfono en segundo plano no pierde la respuesta, y en `comprobar` la nota sale `hard`);
    2. inserta en `facet_reviews` con `ON CONFLICT (id) DO NOTHING`;
    3. si el modo es `comprobar`, calcula la nota, crea la fila de `user_facets` si falta y llama a `apply_review`.
 4. **Cerrar.** `POST /api/v1/lesson-runs/{id}/fin` marca la corrida como terminada y devuelve cuántos repasos de ese idioma vencen mañana.
@@ -290,7 +291,7 @@ La evidencia de caso va al ítem del caso correcto de ese hueco (`de:caso:acusat
 | Método | Ruta | Qué hace |
 |---|---|---|
 | GET | `/api/v1/today?since=` | las líneas de Hoy (5.1); reemplaza la respuesta actual |
-| GET | `/api/v1/mapas` | un resumen por idioma de estudio, para Biblioteca |
+| GET | `/api/v1/mapas` | un resumen de cada idioma que tiene mapa, con `estudias` (si está entre tus idiomas de estudio), el nivel, el progreso y `vencen`: Ajustes ofrece esos idiomas y Biblioteca se queda con los que estudias |
 | GET | `/api/v1/mapas/{idioma}` | el mapa con su estado y «lo que sabes» |
 | GET | `/api/v1/sesiones/{idioma}` | la sesión de una línea |
 | GET | `/api/v1/lecciones/{idioma}/{unidad}/{leccion}` | una lección para repetirla en práctica |
@@ -309,7 +310,7 @@ Todas se ven en `docs/design/tres-idiomas/pantallas.html`. Las arman los átomos
 `routes/Hoy.tsx` y `lib/hoyView.ts` se reescriben, y `hoyView` lleva sus tests.
 
 - La línea de arriba es la de Biblioteca: «Klara» y la fecha.
-- Después va el saludo (`home.greeting.conNombre`) y un rótulo. Antes de empezar dice «Tu plan de hoy · N min»; cuando ya hiciste algo, «Te quedan · N min»; al terminar todo, «Tu plan de hoy · hecho».
+- Después va el saludo (`home.greeting.conNombre`) y un rótulo. Antes de empezar dice «Tu plan de hoy · N min»; cuando ya hiciste algo, «Te quedan N min»; al terminar todo, «Tu plan de hoy · hecho», y la línea del final del recorrido, «Listo por hoy.». Si no queda nada que hacer y hoy no hiciste nada (todas las líneas al día), no está «hecho»: dice «Tu plan de hoy · al día» y, al final, «Nada pendiente por hoy.».
 - **El recorrido** (`k-route`) tiene una parada por idioma de estudio. Las paradas de antes (leer, pronunciar, hablar, repasar) salen de Hoy; esas pantallas siguen funcionando y se abren desde el mapa de alemán (5.3).
 
 ```ts
@@ -328,8 +329,9 @@ interface Linea {
 - **Panel de la línea actual** (`k-hero`):
   - Rótulo: «<idioma> · N min» y «Empezar».
   - Titular: el título de la lección, con `lang` del idioma. Si no hay lección, «N repasos».
-  - Bajada: «N repasos y luego <bajada>.». Sin repasos va solo la `bajada`. Sin lección dice «Solo repasos: terminaste el mapa.».
-- **Fila hecha:** el nombre del idioma, «Hecho» y «N repasos · <título de la lección>».
+  - Bajada: «N repasos y luego <bajada>.». Sin repasos va solo la `bajada`. Sin lección dice «Como terminaste el mapa, hoy solo toca repasar.».
+- **Fila hecha:** el nombre del idioma, «Hecho» y «N repasos · <título de la lección>». El título va en el idioma de estudio, con su `lang`; sin repasos (el primer día) va solo el título, sin «0 repasos».
+- **Línea al día:** el mapa terminado y ningún repaso vencido; el servidor la marca `ahora` con 0 min. Es una fila sin botón (una sesión vacía no tiene nada que abrir), con «Al día» y «Terminaste el mapa y no hay repasos por ahora.». No se queda con el panel: el «estás aquí» pasa a la siguiente línea con algo que hacer, y si ninguna lo tiene, el día está al día (el rótulo de arriba).
 - **Fila pendiente:** el nombre del idioma, los minutos y «N repasos · <bajada>».
 - **Sin idiomas con mapa:** una nota que lleva a Ajustes.
 - **Error:** como hoy, con `k-error` y «Reintentar».
@@ -375,7 +377,7 @@ La pantalla es `routes/Sesion.tsx`, y su reducer, `lib/sesion.ts`, se prueba con
   - `k-fill`, con la dinámica;
   - `k-dock`, con el estado y las acciones.
 - **El rótulo del modo** es un `k-cap k-cap--center` que dice «Nuevo», «Práctica», «Prueba» o «Repaso». «Repaso» es una prueba que llega por la cola de repasos.
-- **Avance.** Si aciertas todo, la sesión sigue sola después de `AUTO_AVANCE_MS` (700). Si algo falla, la corrección se queda en pantalla hasta que tocas «Seguir».
+- **Avance.** Si aciertas todo, la sesión sigue sola después de `AUTO_AVANCE_MS` (700). Si algo falla, la corrección se queda en pantalla hasta que tocas «Seguir». Una actividad recién entrada no acepta toques ni teclas en sus primeros 350 ms (`ENTRADA_MIN_MS`): el segundo toque de un doble toque, o el pulgar que seguía tocando cuando la anterior avanzó sola, caería sobre ella (en `comprobar`, moviendo FSRS).
 - **Una actividad de práctica que fallas** vuelve una sola vez, tres actividades después.
 - **Saltar.** «Ahora no puedo escuchar», «Ahora no puedo hablar» y «Ahora no puedo escribir» apagan esa capacidad por el resto de la sesión. Las actividades que la necesitan quedan `skipped` y no dejan evidencia. Si no hay permiso de micrófono o Azure está caído, pasa lo mismo que con «hablar».
 - **Teclado** (en escritorio): 1–5 eligen una opción; Enter o Espacio siguen.
@@ -385,7 +387,9 @@ La pantalla es `routes/Sesion.tsx`, y su reducer, `lib/sesion.ts`, se prueba con
   - una nota con lo que quedó por reforzar;
   - los repasos de mañana (los devuelve `…/fin`).
 
-  Abajo van «Otra lección», si queda alguna, y «A Hoy».
+  Abajo van «Otra lección», si queda alguna, y «Volver a Hoy».
+- **El cierre de la corrida** se reintenta una vez, y el reproductor guarda su id hasta que el servidor lo confirma. Si falla, el final lo dice (`k-error`: «No se pudo guardar el final de la lección.») con «Reintentar»; «Volver a Hoy» lo vuelve a pedir sin esperarlo, y «Otra lección» lo espera. Sin el cierre la lección no queda hecha: mañana volverían la misma lección y su prueba.
+- **Una dinámica que el frontend no conoce** (un frontend viejo en caché, con un catálogo nuevo) se avisa y se salta con «Seguir»: queda `skipped` y no deja evidencia.
 - **Si cierras a mitad**, la corrida queda sin `finished_at`. La próxima vez la sesión se compone de nuevo, y lo que ya se registró se queda.
 
 ### 5.5 Trazo
@@ -394,19 +398,22 @@ La pantalla es `routes/Sesion.tsx`, y su reducer, `lib/sesion.ts`, se prueba con
   - Usa la caja de 109 × 109 de KanjiVG, con la guía 田 punteada.
   - Funciona con Pointer Events, así que el mismo código atiende el dedo, el lápiz y el mouse.
   - Lleva `touch-action: none` y `user-select: none`.
-- **En presentar,** el kana se dibuja solo, trazo por trazo y numerado, con su audio y su mnemotecnia. «Ver el orden» repite la animación.
-- **En practicar,** la plantilla va en gris, con un punto que late donde empieza el trazo que toca.
+- **En presentar,** el kana se dibuja solo, trazo por trazo, con el número de cada trazo junto a su inicio, su audio y su mnemotecnia. «Ver el orden» repite la animación.
+- **En practicar,** la plantilla va en gris, con un punto en el inicio del trazo que toca y un aro que late a su alrededor (quieto con movimiento reducido).
 - **En comprobar,** el lienzo está vacío y la consigna es el sonido («Escribe la que suena»), con audio.
 - **La evaluación** ocurre al soltar el dedo, en `evaluarTrazo(puntos, esperado)` (`lib/dinamicas/trazo.ts`):
-  1. Se remuestrea el trazo a `N = 24` puntos por largo de arco.
-  2. Se muestrea igual el trazo de KanjiVG que toca.
-  3. Se calculan dos números: `media`, la distancia media entre puntos pareados, y `largo`, el cociente entre el largo del trazo y el de referencia.
-  4. El trazo vale si `media < UMBRAL_MEDIA` (12) y `0,55 < largo < 1,7`.
+  1. Se descarta el pulso del dedo (`decimar`): de los puntos se quedan los que se alejan `PASO_MIN` (3 u) del último que se quedó, y siempre el primero y el último. Sin esto, un dedo lento y tembloroso sumaba largo de más, y uno apoyado en el punto parecía un trazo.
+  2. Se remuestrea lo que queda a `N = 24` puntos por largo de arco.
+  3. Se muestrea igual el trazo de KanjiVG que toca.
+  4. Se calculan `media`, la distancia media entre puntos pareados; `mediaAlReves`, la misma contra el trazo de referencia al revés; y `largo`, el cociente entre el largo del trazo (ya sin el pulso) y el de referencia.
+  5. El trazo vale si `media < UMBRAL_MEDIA` (12), `media < mediaAlReves` y `0,55 < largo < 1,7`.
 
-  La dirección no necesita su propio chequeo, porque un trazo al revés dispara la media. Un toque de menos de 4 unidades se ignora. Las tres constantes son perillas: se afinan con los `media` y `largo` reales que quedan en `detalle`.
+  La dirección sí se mira: en un trazo corto, al revés la media también queda bajo el umbral (≈ largo / 2), y 9 de los 104 trazos reales valían al revés; con `media < mediaAlReves`, ninguno. Un toque de menos de 4 unidades se ignora. Las constantes son perillas: se afinan con lo que queda en `detalle`.
 - **Si el trazo vale,** se reemplaza por el trazo limpio de KanjiVG, para que lo último que veas sea la forma correcta. Si no vale, se borra.
 - **La pista.** En práctica, al segundo fallo en el mismo trazo se anima el correcto, y eso cuenta 1 pista. En prueba basta el primer fallo: se muestra el correcto, lo repasas encima y también cuenta 1 pista.
-- **La evidencia** es una por kana, con `acierto = pistas ≤ 2`. Con la nota de la sección 1, eso da `good` con 0 pistas, `hard` con 1 o 2, y `again` con más.
+- **La salida.** En práctica y en prueba, con la pista a la vista y dos fallos más en ese mismo trazo, debajo de la nota aparece «Pasar a la siguiente» (dentro de la dinámica, no en el dock). Cierra el kana con su única evidencia, `acierto = false` y las pistas que llevaba, y dibuja el kana entero, que es la corrección.
+- **La evidencia** es una por kana, con `acierto = pistas ≤ 2 && pistas < número de trazos`. La pista llega una sola vez por trazo, así que en un kana de uno o dos trazos `pistas ≤ 2` se cumpliría siempre: si necesitaste la pista en todos sus trazos, no lo sabías. Con la nota de la sección 1, eso da `good` con 0 pistas, `hard` con 1 o 2 (y algún trazo sin pista), y `again` con más.
+- **El detalle** guarda, por cada trazo aceptado, `n`, `media`, `largo`, `fallos` y `rechazos`: lo que midieron (`media` y `largo`, con un decimal) los últimos 5 intentos que no valieron en ese trazo. Un kana dejado con «Pasar a la siguiente» lleva además `pasado: { n, fallos, rechazos }`, el trazo que no salió.
 - **Ya está probado en el mockup.** Con un mouse simulado, el lienzo rechaza el trazo al revés y el que no corresponde, y muestra la pista al segundo fallo.
 
 ### 5.6 Ajustes
@@ -431,7 +438,7 @@ Tres cosas usan lo que ya existe en vez de una pieza nueva:
 - La corrección es una `k-note`.
 - Los chips de `articulo` son `k-chip` con `data-tone`.
 
-Para el japonés se agrega el token `--font-ja` (Noto Serif JP, de Google Fonts, como las otras familias), aplicado a `:lang(ja)`.
+Para el japonés, bajo `:lang(ja)` las pilas `--font-serif`, `--font-sans` y `--font-mono` suman Noto Serif JP (`tokens.css`; no hay un token propio). La fuente sale de Google Fonts por un `<link>` aparte y no bloqueante, fuera del `@import` de las otras familias, así el resto de la app no la espera. Un texto japonés va en un elemento que declara su propia `font-family`: un `<span lang="ja">` suelto hereda la familia que su padre ya resolvió y se queda sin Noto.
 
 ## 6. Las rebanadas
 
@@ -443,7 +450,7 @@ Para el japonés se agrega el token `--font-ja` (Noto Serif JP, de Google Fonts,
   2. Una `eleccion` en practicar, mezclando reconocer y oír. Los distractores salen primero de las confusiones (さ/ち, ぬ/め, る/ろ, わ/ね/れ…) y después de lo que ya viste.
   3. Un `emparejar` con la fila.
   4. La prueba: un `trazo` en comprobar por cada kana, y luego una `eleccion` en comprobar de reconocer y otra de oír por cada kana.
-- **El romaji** va en Hepburn. Solo aparece en esta unidad y solo como nombre del sonido. Las excepciones (し shi, ち chi, つ tsu, ふ fu, ん n, を o) se explican al presentarlas.
+- **El romaji** va en Hepburn. Solo aparece en esta unidad y solo como nombre del sonido. Las excepciones (し shi, ち chi, つ tsu, ふ fu, ん n) se explican al presentarlas. を se muestra como «wo» y suena «o», como お: con «o», la pregunta «を → ?» ofrecería dos opciones iguales junto a お.
 - Cada lección dura unos 10 min.
 
 ### 6.2 Alemán: der, die, das
@@ -506,7 +513,7 @@ Para el japonés se agrega el token `--font-ja` (Noto Serif JP, de Google Fonts,
 | Contenido | Fuente | Validación |
 |---|---|---|
 | Trazos de los kana | KanjiVG (CC BY-SA 3.0). `scripts/importar_kanjivg.py` los extrae una vez a `kana.json`. | El número de trazos de cada kana coincide con la tabla estándar. |
-| Audio de kana y de pares | TTS generado una vez como archivo, con la voz por idioma que ya está configurada (`elevenlabs_voice_id_ja`, `elevenlabs_voice_id_en`). | Azure tiene que reconocer el audio como lo que debía decir; si no, no entra. Lo que falla dos veces lo escucha Samuel. |
+| Audio de kana y de pares | Azure TTS, generado una vez como archivo. Los kana, con la voz nativa `ja-JP-NanamiNeural` (`scripts/generar_audio_catalogo.py`). | Azure puntúa la pronunciación de cada audio y tiene que dar ≥ 70. Si no llega, se genera otra vez despacio (−25 %), y se queda esa toma si pasa. Lo que no pasa en ninguna de las dos se guarda igual y sale en una lista para que Samuel lo escuche. |
 | Sustantivos y su género | `scripts/load_de_modules.py`, más los que se sumen. | El género coincide con `gender_lexicon`. El cruce se hace al preparar el contenido y queda en el JSON como `genero_fuente: "oracle"`. |
 | Frases, mnemotecnias y explicaciones | Las escribe un LLM al preparar la rebanada, en español. | Reglas: el artículo cuadra con el género y el caso, el regente está en la tabla de rección, y la longitud está dentro del límite. |
 | Audio de las frases en alemán | TTS en vivo, con caché. | Ya funciona en las historias. |
@@ -520,6 +527,7 @@ El contenido va solo en español, que es la lengua de Samuel. Por los 6 idiomas 
 | Un mapa o un inventario roto | El servidor no arranca y los tests fallan. |
 | Un estado sin su ítem | Se lista en el log al arrancar y se ignora; nunca se borra. |
 | Una evidencia que no cuadra (ítem, faceta, dinámica o modo) | El servidor responde 422 y el reproductor la cuenta como no guardada. |
+| Una evidencia con `ms` de más de una hora | Se recorta a una hora y cuenta (en `comprobar`, nota `hard`). |
 | Una evidencia repetida | `ON CONFLICT DO NOTHING`: no cuenta dos veces. |
 | Un envío que falla | Se reintenta una vez; si vuelve a fallar, entra en el aviso del final. |
 | No hay micrófono, Azure o TTS | Esas actividades quedan `skipped` y la sesión sigue. |
@@ -598,7 +606,7 @@ Cada paso deja algo que Samuel puede usar, así el uso diario empieza antes de t
 
 ## Riesgos y perillas
 
-- **Los umbrales son suposiciones.** `UMBRAL_MEDIA`, el rango de `largo` y `UMBRAL_FONEMA` no se pueden saber hasta tener trazos y audio reales. Quedan como constantes con nombre, y `detalle` guarda los datos para afinarlas.
+- **Los umbrales son suposiciones.** `UMBRAL_MEDIA`, el rango de `largo`, `PASO_MIN` y `UMBRAL_FONEMA` no se pueden saber hasta tener trazos y audio reales. Quedan como constantes con nombre, y `detalle` guarda los datos para afinarlas.
 - **El TTS de un kana suelto puede sonar raro,** porque no tiene contexto. Por eso pasa por Azure, y lo que falla dos veces lo escucha Samuel.
 - **La carga de repasos crece con las facetas** (3 por kana). Si se pasa del tope a menudo, se bajan las lecciones nuevas antes que subir el tope.
 - **Los trazos del mockup son aproximados.** Los reales salen de KanjiVG, y su atribución es obligatoria (CC BY-SA 3.0).
