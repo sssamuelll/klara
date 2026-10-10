@@ -733,7 +733,7 @@
     "estadoHoy": "● aujourd'hui",
     "estadoDue_one": "{{count}} à revoir",
     "estadoDue_other": "{{count}} à revoir",
-    "cursoSub": "Édition Nürnberg · {{level}}",
+    "cursoSub": "Édition Allemagne · {{level}}",
     "nuevoTitulo": "Nouveau sujet",
     "nuevoDek": "Un sujet ou tes notes — Klara construit le plan",
     "heroTag": "Continuer · {{curso}}",
@@ -785,7 +785,7 @@
     "temaOscuro": "Sombre",
     "editar": "Modifier le profil et les invitations",
     "salir": "Se déconnecter",
-    "pie": "Klara — Édition Nürnberg",
+    "pie": "Klara — Édition Allemagne",
     "aprendizaje": {
       "kicker": "Profil d'apprentissage",
       "entrada": {
