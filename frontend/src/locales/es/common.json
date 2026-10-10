@@ -733,13 +733,13 @@
     "estadoHoy": "● hoy",
     "estadoDue_one": "{{count}} vence",
     "estadoDue_other": "{{count}} vencen",
-    "cursoSub": "Edición Nürnberg · {{level}}",
+    "cursoSub": "Edición Alemania · {{level}}",
     "nuevoTitulo": "Nuevo tema",
     "nuevoDek": "Un tema o tus apuntes — Klara arma el plan",
     "heroTag": "Continuar · {{curso}}",
     "temas": "Tus temas",
     "nuevoPie": "Klara arma el plan",
-    "edicion": "Edición Nürnberg"
+    "edicion": "Edición Alemania"
   },
   "curso": {
     "mapaFila": "El mapa del curso",
@@ -785,7 +785,7 @@
     "temaOscuro": "Oscuro",
     "editar": "Editar perfil e invitaciones",
     "salir": "Cerrar sesión",
-    "pie": "Klara — Edición Nürnberg",
+    "pie": "Klara — Edición Alemania",
     "aprendizaje": {
       "kicker": "Perfil de aprendizaje",
       "entrada": {

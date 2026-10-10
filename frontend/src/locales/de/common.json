@@ -733,13 +733,13 @@
     "estadoHoy": "● heute",
     "estadoDue_one": "{{count}} fällig",
     "estadoDue_other": "{{count}} fällig",
-    "cursoSub": "Nürnberg-Ausgabe · {{level}}",
+    "cursoSub": "Deutschland-Ausgabe · {{level}}",
     "nuevoTitulo": "Neues Thema",
     "nuevoDek": "Ein Thema oder deine Notizen — Klara erstellt den Plan",
     "heroTag": "Weiter · {{curso}}",
     "temas": "Deine Themen",
     "nuevoPie": "Klara erstellt den Plan",
-    "edicion": "Nürnberg-Ausgabe"
+    "edicion": "Deutschland-Ausgabe"
   },
   "curso": {
     "mapaFila": "Die Kursübersicht",
@@ -785,7 +785,7 @@
     "temaOscuro": "Dunkel",
     "editar": "Profil und Einladungen bearbeiten",
     "salir": "Abmelden",
-    "pie": "Klara — Nürnberg-Ausgabe",
+    "pie": "Klara — Deutschland-Ausgabe",
     "aprendizaje": {
       "kicker": "Lernprofil",
       "entrada": {

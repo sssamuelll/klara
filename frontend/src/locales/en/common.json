@@ -733,13 +733,13 @@
     "estadoHoy": "● today",
     "estadoDue_one": "{{count}} due",
     "estadoDue_other": "{{count}} due",
-    "cursoSub": "Nürnberg edition · {{level}}",
+    "cursoSub": "Germany edition · {{level}}",
     "nuevoTitulo": "New topic",
     "nuevoDek": "A topic or your notes — Klara builds the plan",
     "heroTag": "Continue · {{curso}}",
     "temas": "Your topics",
     "nuevoPie": "Klara builds the plan",
-    "edicion": "Nürnberg edition"
+    "edicion": "Germany edition"
   },
   "curso": {
     "mapaFila": "The course map",
@@ -785,7 +785,7 @@
     "temaOscuro": "Dark",
     "editar": "Edit profile and invitations",
     "salir": "Log out",
-    "pie": "Klara — Nürnberg edition",
+    "pie": "Klara — Germany edition",
     "aprendizaje": {
       "kicker": "Learning profile",
       "entrada": {

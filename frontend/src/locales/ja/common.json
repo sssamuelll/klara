@@ -733,13 +733,13 @@
     "estadoHoy": "● 今日",
     "estadoDue_one": "期限 {{count}} 件",
     "estadoDue_other": "期限 {{count}} 件",
-    "cursoSub": "ニュルンベルク版 · {{level}}",
+    "cursoSub": "ドイツ版 · {{level}}",
     "nuevoTitulo": "新しいテーマ",
     "nuevoDek": "テーマかノートを渡せば、Klaraがプランを作ります",
     "heroTag": "続ける · {{curso}}",
     "temas": "あなたのテーマ",
     "nuevoPie": "Klaraがプランを作ります",
-    "edicion": "ニュルンベルク版"
+    "edicion": "ドイツ版"
   },
   "curso": {
     "mapaFila": "コースの地図",
@@ -785,7 +785,7 @@
     "temaOscuro": "ダーク",
     "editar": "プロフィールと招待の編集",
     "salir": "ログアウト",
-    "pie": "Klara — ニュルンベルク版",
+    "pie": "Klara — ドイツ版",
     "aprendizaje": {
       "kicker": "学習プロフィール",
       "entrada": {
