@@ -93,14 +93,27 @@ export default function Eleccion({ contenido, capacidades, onResultado }: PropsD
             <button
               key={o.item}
               type="button"
-              className="k-chip"
+              className={o.lang === "ja" ? "k-chip k-chip--glifo" : "k-chip"}
               data-tone={tono}
+              // «Esta» es la buena: tinta sólida (como la opción buena del quiz). El tono
+              // solo no basta: punto de color + glifo + palabra, nunca solo color.
+              data-selected={tono === "good" ? "true" : undefined}
               disabled={elegida !== null && tono === undefined}
-              lang={o.lang ?? undefined}
               onClick={() => elegir(o.item)}
             >
               {tono && <span className="k-chip__dot" aria-hidden="true" />}
-              {o.texto}
+              <span lang={o.lang ?? undefined}>{o.texto}</span>
+              {tono && (
+                <>
+                  <span className="k-chip__mark" aria-hidden="true">
+                    {tono === "good" ? "✓" : "✗"}
+                  </span>
+                  <span className="k-sr">
+                    {" "}
+                    {t(tono === "good" ? "dinamica.eleccion.correcta" : "dinamica.eleccion.tuRespuesta")}
+                  </span>
+                </>
+              )}
             </button>
           );
         })}

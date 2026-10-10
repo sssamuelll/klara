@@ -1178,7 +1178,9 @@
     "oirOtraVez": "Nochmal hören",
     "eleccion": {
       "comoSuena": "Wie klingt es?",
-      "cualOyes": "Welches hast du gehört?"
+      "cualOyes": "Welches hast du gehört?",
+      "correcta": "richtig",
+      "tuRespuesta": "deine Antwort"
     }
   }
 }

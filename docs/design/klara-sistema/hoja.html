@@ -15,7 +15,9 @@
   })();
 </script>
 <!-- Las fuentes van enlazadas aparte porque hoja.inline.html descarta los @import remotos de global.css. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+JP:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<!-- El japonés va en su propio enlace, como en frontend/index.html (allí sin bloquear el primer pintado; aquí sí, la hoja es una captura). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400..600&display=swap">
 <!-- La misma cascada que la app: global.css (fuentes, tokens, resets) + sistema.css. Nada de mobile3/4:
      si un átomo necesita esas hojas para verse bien, la hoja lo delata. -->
 <link rel="stylesheet" href="../../../frontend/src/styles/global.css">
@@ -751,6 +753,42 @@
         </div>
       </figure>
 
+      <figure class="hoja-estado" data-estado="veredicto">
+        <figcaption>veredicto <code>data-selected</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «correcta» / «tu respuesta» es solo para el lector de pantalla)</figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip" data-tone="good" data-selected="true"><span class="k-chip__dot" aria-hidden="true"></span><span>ka</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> correcta</span></button>
+            <button type="button" class="k-chip" data-tone="bad"><span class="k-chip__dot" aria-hidden="true"></span><span>ya</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> tu respuesta</span></button>
+            <button type="button" class="k-chip" disabled><span>ke</span></button>
+            <button type="button" class="k-chip" disabled><span>sa</span></button>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="hoja-estado" data-estado="glifo">
+        <figcaption>rótulo en kana <code>.k-chip--glifo</code></figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">か</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">や</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">け</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">さ</span></button>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="hoja-estado" data-estado="glifo-veredicto">
+        <figcaption>kana, ya respondido: la marca va detrás del kana</figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip k-chip--glifo" data-tone="good" data-selected="true"><span class="k-chip__dot" aria-hidden="true"></span><span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> correcta</span></button>
+            <button type="button" class="k-chip k-chip--glifo" data-tone="bad"><span class="k-chip__dot" aria-hidden="true"></span><span lang="ja">や</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> tu respuesta</span></button>
+            <button type="button" class="k-chip k-chip--glifo" disabled><span lang="ja">け</span></button>
+            <button type="button" class="k-chip k-chip--glifo" disabled><span lang="ja">さ</span></button>
+          </div>
+        </div>
+      </figure>
+
     </div>
   </section>
 
@@ -1373,7 +1411,7 @@
 </section>
 
 <section class="hoja-card" id="glifo" data-atom="glifo">
-  <div class="hoja-card__cabeza"><span class="hoja-card__n">20</span><h2 class="hoja-card__titulo">Glifo <code>.k-glifo</code></h2></div>
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">20</span><h2 class="hoja-card__titulo">Glifo <code>.k-glifo</code> + <code>.k-wrap--centro</code></h2></div>
   <p class="hoja-card__reemplaza"><b>nuevo</b> — la pregunta de <code>eleccion</code> (spec 2026-10-09)</p>
   <div class="hoja-card__estados">
     <figure class="hoja-estado" data-estado="latino">
@@ -1383,6 +1421,16 @@
     <figure class="hoja-estado" data-estado="japones">
       <figcaption>Japonés, con <code>lang="ja"</code></figcaption>
       <div class="hoja-estado__muestra"><p class="k-glifo" lang="ja">か</p></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="nube-centrada">
+      <figcaption>Nube centrada <code>.k-wrap--centro</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-wrap k-wrap--centro">
+          <button type="button" class="k-chip"><span>ka</span></button>
+          <button type="button" class="k-chip"><span>ya</span></button>
+          <button type="button" class="k-chip"><span>ke</span></button>
+        </div>
+      </div>
     </figure>
   </div>
 </section>

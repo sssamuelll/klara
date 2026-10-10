@@ -1178,7 +1178,9 @@
     "oirOtraVez": "Réécouter",
     "eleccion": {
       "comoSuena": "Comment ça se prononce ?",
-      "cualOyes": "Lequel as-tu entendu ?"
+      "cualOyes": "Lequel as-tu entendu ?",
+      "correcta": "bonne réponse",
+      "tuRespuesta": "ta réponse"
     }
   }
 }

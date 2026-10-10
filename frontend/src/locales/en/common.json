@@ -1178,7 +1178,9 @@
     "oirOtraVez": "Play again",
     "eleccion": {
       "comoSuena": "How does it sound?",
-      "cualOyes": "Which one did you hear?"
+      "cualOyes": "Which one did you hear?",
+      "correcta": "correct",
+      "tuRespuesta": "your answer"
     }
   }
 }

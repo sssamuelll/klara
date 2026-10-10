@@ -1178,7 +1178,9 @@
     "oirOtraVez": "もう一度聞く",
     "eleccion": {
       "comoSuena": "どう読む？",
-      "cualOyes": "どれが聞こえた？"
+      "cualOyes": "どれが聞こえた？",
+      "correcta": "正解",
+      "tuRespuesta": "あなたの答え"
     }
   }
 }

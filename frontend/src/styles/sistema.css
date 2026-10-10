@@ -528,6 +528,23 @@
   .k-presence__think i { animation: none; }
 }
 
+/* Texto solo para el lector de pantalla: sigue en el árbol de accesibilidad y no
+   se ve ni ocupa sitio. Para lo que el color y el glifo dicen y el lector no
+   oye: la palabra «correcta» detrás del ✓ de una opción (`.k-chip__mark`).
+   Fuera de flujo, así que no cuenta para el `gap` ni para la altura de quien lo
+   lleva. `clip-path` y no `clip`, que está obsoleto. */
+.k-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- 01-boton ---------- */
 /* ============================================================
    01 · BOTÓN — .k-btn
@@ -1706,6 +1723,32 @@ input.k-chip { cursor: text; }
 .k-chip[data-tone="good"] .k-chip__dot { background: var(--score-good); }
 .k-chip[data-tone="ok"] .k-chip__dot { background: var(--score-ok); }
 .k-chip[data-tone="bad"] .k-chip__dot { background: var(--score-bad); }
+
+/* El glifo del veredicto (✓ / ✗): el punto da el tono y esto lo dice sin color
+   —«punto de color + glifo, nunca solo color», como el quiz de StoryFinish—. Al
+   cuerpo de una etiqueta aunque el chip sea `--glifo`; la palabra que lo
+   acompaña va en `.k-sr`. */
+.k-chip__mark {
+  font-size: var(--t-mark);
+  line-height: 1;
+}
+
+/* El chip cuyo rótulo es un kana —las opciones de `eleccion` al oír—: lo que se
+   aprende, a tamaño de lectura grande y no a los 14px de una etiqueta (さ/ち,
+   ぬ/め, る/ろ se distinguen por el trazo). El kana va en su propio `<span lang>`
+   y no en el botón: `:lang(ja)` (tokens.css) le da Noto Serif JP a ese span, y
+   la palabra del veredicto, que no es japonés, no se lee con voz japonesa.
+   La pila serif, y no la sans: en Apple `-apple-system` ya resuelve el kana con
+   Hiragino antes de llegar a Noto, y la pila serif no tiene nada así delante.
+   El `gap` baja a `--space-1`: con el punto y el glifo del veredicto el chip
+   crece, y a 360px —el ancho más común en Android— cuatro opciones tienen que
+   seguir en una fila, o la nube salta de alto justo cuando hay que mirarla. */
+.k-chip--glifo {
+  gap: var(--space-1);
+  font-size: var(--t-read-lg);
+  line-height: var(--lh-tight);
+}
+.k-chip--glifo [lang] { font-family: var(--font-serif); }
 
 /* La cruz va en currentColor atenuada: así funciona igual en reposo y en seleccionado. */
 .k-chip__x {

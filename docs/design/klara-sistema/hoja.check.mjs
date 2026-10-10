@@ -39,7 +39,7 @@ const ESTADOS = {
   "barra-progreso": ["segmentos", "saltado", "continua", "hitos"],
   "cinta-seccion": ["sola", "con-contador", "con-regla", "centrada"],
   "marca-nivel": ["A0", "A1", "A2", "B1", "B2", "C1", "C2", "sin-caja"],
-  "chip": ["reposo", "seleccionado", "deshabilitado", "estatico"],
+  "chip": ["reposo", "seleccionado", "deshabilitado", "estatico", "veredicto", "glifo", "glifo-veredicto"],
   "hoja-inferior": ["entrando", "reposo"],
   "barra-pestanas": ["2", "3", "4", "activo", "con-menu"],
   "linea-superior": ["marca", "sesion", "pie"],
@@ -51,17 +51,21 @@ const ESTADOS = {
   "campo-texto": ["reposo", "foco", "error", "deshabilitado", "area", "manuscrito"],
   "recorrido": ["pendiente", "ahora", "hecha", "fin", "compuesto-largo"],
   "estanteria": ["tema", "vencidas", "nuevo", "compuesto-largo"],
-  "glifo": ["latino", "japones"],
+  "glifo": ["latino", "japones", "nube-centrada"],
 };
 
 // document.fonts.ready resuelve antes de que el layout pida las caras; hay que
 // pedirlas a mano o la captura sale con Georgia/Helvetica.
 async function esperarFuentes(page) {
   await page.evaluate(() => Promise.all([
-    '17px "Source Serif 4"', 'italic 17px "Source Serif 4"', '600 17px "Source Serif 4"',
-    '500 15px "Inter Tight"', '12px "JetBrains Mono"', '500 12px "JetBrains Mono"',
-    '400 17px "Noto Serif JP"',
-  ].map((f) => document.fonts.load(f).catch(() => null))));
+    ...[
+      '17px "Source Serif 4"', 'italic 17px "Source Serif 4"', '600 17px "Source Serif 4"',
+      '500 15px "Inter Tight"', '12px "JetBrains Mono"', '500 12px "JetBrains Mono"',
+    ].map((f) => document.fonts.load(f)),
+    // El japonés se pide con su texto: `load` sin texto solo trae el trozo que cubre el espacio,
+    // y si Google reparte los trozos de otra manera la か llega tarde a la captura.
+    document.fonts.load('400 17px "Noto Serif JP"', "かやけさ"),
+  ].map((p) => p.catch(() => null))));
   await page.waitForTimeout(250);
 }
 

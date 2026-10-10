@@ -1178,7 +1178,9 @@
     "oirOtraVez": "Ouvir de novo",
     "eleccion": {
       "comoSuena": "Como soa?",
-      "cualOyes": "Qual você ouviu?"
+      "cualOyes": "Qual você ouviu?",
+      "correcta": "correta",
+      "tuRespuesta": "sua resposta"
     }
   }
 }
