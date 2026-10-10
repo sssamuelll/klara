@@ -4,6 +4,7 @@ from klara.models.audio import AudioCache
 from klara.models.audio_quality_measurement import AudioQualityMeasurement
 from klara.models.base import Base
 from klara.models.enums import CardState, CEFRLevel, PartOfSpeech, ReviewRating, SessionType
+from klara.models.facetas import FacetReview, LessonRun, UserFacet
 from klara.models.gender import GenderAttempt
 from klara.models.gender_l1_note import GenderL1Note
 from klara.models.gender_lexicon import GenderLexicon
@@ -30,12 +31,14 @@ __all__ = [
     "Base",
     "CEFRLevel",
     "CardState",
+    "FacetReview",
     "GenderAttempt",
     "GenderL1Note",
     "GenderLexicon",
     "Illustration",
     "Invitation",
     "LearnerProfile",
+    "LessonRun",
     "Module",
     "OAuthAccount",
     "PartOfSpeech",
@@ -54,6 +57,7 @@ __all__ = [
     "StudySession",
     "User",
     "UserCard",
+    "UserFacet",
     "VocabItem",
     "WaitlistSignup",
     "module_vocab",

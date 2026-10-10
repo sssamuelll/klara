@@ -101,6 +101,22 @@
   --shadow-pop: 0 1px 1px rgba(26, 24, 20, 0.06), 0 12px 32px -8px rgba(26, 24, 20, 0.18), 0 0 0 1px rgba(26, 24, 20, 0.08);
 }
 
+/* ---------- El japonés ---------- */
+/* Noto Serif JP solo donde el texto dice que es japonés (`lang="ja"`; spec
+   2026-10-09 §5.7). En las tres pilas globales, antes de los genéricos, también
+   se llevaba los símbolos que Inter, Source Serif y JetBrains no traen —→ ← ● ✓
+   ★ ⌘ y los de cajas—, y los pintaba con los suyos, más grandes y de otra mano,
+   en toda la interfaz. Las mismas listas de arriba, con la fuente japonesa
+   antes de los genéricos. Va después de `:root`: misma especificidad, gana el
+   último. Lo recoge quien declara `font-family: var(--font-*)` estando en
+   `:lang(ja)`: `.k-glifo[lang="ja"]`, `.k-chip--glifo [lang]`. La fuente se
+   carga aparte, sin bloquear (`index.html`). */
+:lang(ja) {
+  --font-serif: "Source Serif 4", "GT Sectra", "Newsreader", "Noto Serif JP", Georgia, serif;
+  --font-sans: "Inter Tight", "Söhne", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Noto Serif JP", sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, "Noto Serif JP", monospace;
+}
+
 /* ---------- Dark — night U-Bahn ---------- */
 :root[data-theme="dark"] {
   --paper: #16181C;          /* slate-ink, not pure black */

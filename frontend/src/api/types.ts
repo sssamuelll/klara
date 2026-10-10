@@ -154,6 +154,7 @@ export interface User {
   learning_context: string | null;
   auth_methods: AuthMethod[];
   needs_onboarding: boolean;
+  study_languages: string[];
 }
 
 export type InvitationState = "active" | "expired" | "used" | "revoked";
@@ -375,6 +376,7 @@ export interface UserUpdate {
   native_language?: LanguageCode;
   target_language?: LanguageCode;
   learning_context?: string | null;
+  study_languages?: string[] | null;
 }
 
 export interface PronunciationReviewIn {
@@ -501,22 +503,78 @@ export interface LearnerProfileIn {
   timings: Record<string, number>;
 }
 
-/** GET /today (spec 2026-09-30 §2.3). */
-export type TodayStep = "read" | "pronounce" | "speak" | "review";
-
+/** GET /today (spec 2026-10-09 §5.1): una línea por idioma de estudio. */
 export interface TodayOut {
-  now: TodayStep | null;
-  steps: Record<TodayStep, boolean>;
-  story: {
-    state: "done" | "continue" | "new" | "request";
-    id: string | null;
-    library_entry_id: string | null;
-    module_id: string | null;
-    title: string | null;
-    subtitle: string | null;
-    illustration_path: string | null;
-  };
-  sentence: { target: string; native: string } | null;
-  due: number;
-  module: { id: string; title: string; cefr_level: string } | null;
+  lineas: Linea[];
+}
+
+// --- Klara en tres idiomas (spec 2026-10-09) ---
+
+export type Modo = "presentar" | "practicar" | "comprobar";
+export type Faceta = "reconocer" | "oir" | "escribir" | "genero" | "aplicar" | "pronunciar";
+
+/** Lo que devuelve una dinámica por cada respuesta (spec §3.1). */
+export interface Evidencia {
+  item: string;
+  faceta: Faceta;
+  acierto: boolean;
+  pistas: number;
+  ms: number;
+  detalle?: Record<string, unknown>;
+}
+
+/** Lo que viaja a POST /evidencias: la evidencia, su id, su corrida y de dónde salió. */
+export interface EvidenciaIn extends Evidencia {
+  id: string;
+  run_id: string;
+  dinamica: string;
+  modo: Modo;
+}
+
+export interface ActividadOut {
+  id: string;
+  dinamica: string;
+  modo: Modo;
+  items: string[];
+  faceta: Faceta;
+  /** Viene de la cola de repasos (se rotula «Repaso», no «Prueba»). */
+  repaso: boolean;
+  contenido: unknown;
+}
+
+export interface LeccionRef {
+  id: string;
+  titulo: string;
+  bajada: string;
+}
+
+export interface SesionOut {
+  idioma: string;
+  leccion: LeccionRef | null;
+  actividades: ActividadOut[];
+}
+
+export interface RunIn {
+  idioma: string;
+  leccion_id: string | null;
+  origen: "hoy" | "mapa";
+  repasos: number;
+}
+
+export interface MapaResumen {
+  idioma: string;
+  estudias: boolean;
+  nivel: string;
+  progreso: number;
+  vencen: number;
+}
+
+/** Una línea de Hoy (spec §5.1). */
+export interface Linea {
+  idioma: string;
+  estado: "hecha" | "ahora" | "pendiente";
+  minutos: number;
+  repasos: number;
+  leccion: LeccionRef | null;
+  hecho: { repasos: number; leccion: string | null } | null;
 }

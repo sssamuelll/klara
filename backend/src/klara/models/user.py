@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +37,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     native_language: Mapped[str] = mapped_column(String(8), default="es", nullable=False)
     target_language: Mapped[str] = mapped_column(String(8), default="de", nullable=False)
     learning_context: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Los idiomas de las líneas de Hoy (spec 2026-10-09 §2.2). Null vale
+    # [target_language]; el orden desempata cuál va primero.
+    study_languages: Mapped[list[str] | None] = mapped_column(ARRAY(String(5)), nullable=True)
     current_module_id: Mapped[UUID | None] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("modules.id", ondelete="SET NULL"),

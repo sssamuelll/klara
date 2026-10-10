@@ -579,7 +579,8 @@
       "nativeLang": "Língua materna (a que falas)",
       "targetLang": "Língua que queres aprender",
       "context": "Contexto (opcional)",
-      "contextPlaceholder": "ex.: uso no trabalho, viajo muito, gosto de cozinhar…"
+      "contextPlaceholder": "ex.: uso no trabalho, viajo muito, gosto de cozinhar…",
+      "studyLangs": "Línguas que estudas"
     },
     "sameLangWarn": "Escolhe uma língua diferente da materna.",
     "saved": "Guardado ✓",
@@ -632,7 +633,10 @@
       "hint": "Entraste apenas com Google. Se quiseres, adiciona uma palavra-passe para poder entrar também por email.",
       "gateHint": "És o proprietário. Cria uma palavra-passe de reserva para não depender só do Google.",
       "savedToast": "Palavra-passe guardada"
-    }
+    },
+    "studyLangsHint": "O Hoje propõe-te uma sessão por cada língua que marcares.",
+    "studyLangsError": "Não foi possível carregar as línguas.",
+    "studyLangsRetry": "Tentar de novo"
   },
   "auth": {
     "login": {
@@ -709,19 +713,27 @@
     "moreAria": "Mais opções"
   },
   "hoy": {
-    "estasAqui": "Você está aqui",
+    "estasAqui": "Estás aqui",
     "hecho": "Feito",
-    "plan": "O plano de hoje · {{min}} min",
-    "planHecho": "O plano de hoje · feito",
-    "fin": "Amanhã, outra história.",
-    "finHecho": "Pronto por hoje. Amanhã, outra história.",
-    "seguir": "Continuar lendo",
+    "plan": "O teu plano de hoje · {{min}} min",
+    "planHecho": "O teu plano de hoje · feito",
+    "planAlDia": "O teu plano de hoje · em dia",
+    "fin": "É tudo por hoje.",
+    "finHecho": "Pronto por hoje.",
+    "finAlDia": "Nada pendente para hoje.",
     "empezar": "Começar",
-    "pedir": "Peça uma história à Klara",
-    "fichas_one": "{{count}} ficha para revisar",
-    "fichas_other": "{{count}} fichas para revisar",
-    "error": "Não foi possível carregar o plano de hoje.",
-    "reintentar": "Tentar de novo"
+    "error": "Não foi possível carregar o teu plano de hoje.",
+    "reintentar": "Tentar de novo",
+    "quedan": "Faltam-te {{min}} min",
+    "minutos": "{{min}} min",
+    "repasos_one": "{{count}} revisão",
+    "repasos_other": "{{count}} revisões",
+    "luego": "{{repasos}} e depois {{bajada}}.",
+    "soloRepasos": "Como terminaste o mapa, hoje é só rever.",
+    "sinIdiomas": "As tuas línguas ainda não têm mapa. Escolhe nos Ajustes uma que já tenha.",
+    "irAjustes": "Ir aos Ajustes",
+    "alDia": "Em dia",
+    "alDiaSub": "Terminaste o mapa e, por agora, não há revisões."
   },
   "nuevo": {
     "kicker": "Novo tema",
@@ -745,29 +757,7 @@
     "mapaFila": "O mapa do curso",
     "mapaFilaEstado": "Onde você está",
     "generoFila": "Género",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "Ler",
-        "dek": "A história de hoje",
-        "meta": "3 min"
-      },
-      "pronunciar": {
-        "titulo": "Pronunciar",
-        "dek": "Frases das suas histórias, em voz alta",
-        "meta": "4 min"
-      },
-      "hablar": {
-        "titulo": "Falar",
-        "dek": "Uma conversa com a Klara",
-        "meta": "3 min"
-      },
-      "repasar": {
-        "titulo": "Rever",
-        "dek": "Suas fichas de hoje",
-        "meta": "5 min"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "O mapa",
@@ -1172,6 +1162,85 @@
     "error": {
       "invalid": "Esse email não parece completo. Confirma-o.",
       "network": "Não foi possível guardar. Tenta de novo daqui a pouco."
+    }
+  },
+  "dinamica": {
+    "oirOtraVez": "Ouvir de novo",
+    "eleccion": {
+      "comoSuena": "Como soa?",
+      "cualOyes": "Qual ouviste?",
+      "correcta": "correta",
+      "tuRespuesta": "a tua resposta"
+    },
+    "trazo": {
+      "verElOrden": "Ver a ordem",
+      "trazoN": "Traço {{n}} de {{total}}",
+      "empieza": "Começa no ponto.",
+      "eseNo": "Assim não. Começa no ponto e segue o guia.",
+      "asiVa": "O traço {{n}} faz-se assim. Segue-o.",
+      "pasar": "Passar à seguinte",
+      "escribe": "Escreve a que ouves",
+      "listo": "Pronto.",
+      "asiSeEscribe": "É assim que se escreve.",
+      "lienzo": "Área para escrever"
+    },
+    "emparejar": {
+      "instruccion": "Toca numa peça e no seu par.",
+      "cuenta": "{{n}} de {{total}}",
+      "hecha": "combinada",
+      "mal": "não é o par",
+      "tiempo": "Tempo restante",
+      "sinTiempo": "O tempo acabou.",
+      "noEs": "<1>{{izq}}</1> não é {{der}}"
+    }
+  },
+  "sesion": {
+    "cargando": "A preparar a sessão…",
+    "fallo": "Não foi possível preparar a sessão.",
+    "reintentar": "Tentar de novo",
+    "vacia": "Hoje não há revisões nem lições novas nesta língua.",
+    "aHoy": "Voltar a Hoje",
+    "repaso": "Revisão",
+    "desconocida": "Esta atividade ainda não pode ser mostrada.",
+    "modo": {
+      "presentar": "Novo",
+      "practicar": "Prática",
+      "comprobar": "Teste",
+      "repaso": "Revisão"
+    },
+    "ahoraTu": "A tua vez",
+    "seguir": "Continuar",
+    "bien": "Certo",
+    "mira": "Vê a correção",
+    "noPuedo": {
+      "escuchar": "Agora não posso ouvir",
+      "hablar": "Agora não posso falar",
+      "escribir": "Agora não posso escrever"
+    },
+    "faceta": {
+      "reconocer": "reconhecer",
+      "oir": "ouvir",
+      "escribir": "escrever",
+      "genero": "género",
+      "aplicar": "aplicar",
+      "pronunciar": "pronunciar"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "com pista",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "Feito",
+      "resumen_one": "{{count}} atividade",
+      "resumen_other": "{{count}} atividades",
+      "reforzar": "Para reforçar: {{items}}.",
+      "manana_one": "Amanhã: {{count}} revisão.",
+      "manana_other": "Amanhã: {{count}} revisões.",
+      "noGuardadas_one": "{{count}} resposta não foi guardada.",
+      "noGuardadas_other": "{{count}} respostas não foram guardadas.",
+      "noCerrada": "Não foi possível guardar o fim da lição.",
+      "otra": "Outra lição"
     }
   }
 }

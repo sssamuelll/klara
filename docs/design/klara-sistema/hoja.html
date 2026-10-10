@@ -16,6 +16,8 @@
 </script>
 <!-- Las fuentes van enlazadas aparte porque hoja.inline.html descarta los @import remotos de global.css. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..900;1,8..60,300..900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<!-- El japonés va en su propio enlace, como en frontend/index.html (allí sin bloquear el primer pintado; aquí sí, la hoja es una captura). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400..600&display=swap">
 <!-- La misma cascada que la app: global.css (fuentes, tokens, resets) + sistema.css. Nada de mobile3/4:
      si un átomo necesita esas hojas para verse bien, la hoja lo delata. -->
 <link rel="stylesheet" href="../../../frontend/src/styles/global.css">
@@ -64,7 +66,7 @@
   <header class="hoja__cabecera">
     <h1 class="hoja__titulo">Klara — <em>hoja de componentes</em></h1>
     <div class="hoja__meta">
-      <span>19 átomos · 2 temas</span>
+      <span>22 átomos · 2 temas</span>
       <button class="hoja__tema" type="button" id="hoja-tema" aria-live="polite">tema: —</button>
     </div>
   </header>
@@ -751,6 +753,42 @@
         </div>
       </figure>
 
+      <figure class="hoja-estado" data-estado="veredicto">
+        <figcaption>veredicto <code>data-selected</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «correcta» / «tu respuesta» es solo para el lector de pantalla)</figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip" data-tone="good" data-selected="true"><span class="k-chip__dot" aria-hidden="true"></span><span>ka</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> correcta</span></button>
+            <button type="button" class="k-chip" data-tone="bad"><span class="k-chip__dot" aria-hidden="true"></span><span>ya</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> tu respuesta</span></button>
+            <button type="button" class="k-chip" disabled><span>ke</span></button>
+            <button type="button" class="k-chip" disabled><span>sa</span></button>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="hoja-estado" data-estado="glifo">
+        <figcaption>rótulo en kana <code>.k-chip--glifo</code></figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">か</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">や</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">け</span></button>
+            <button type="button" class="k-chip k-chip--glifo"><span lang="ja">さ</span></button>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="hoja-estado" data-estado="glifo-veredicto">
+        <figcaption>kana, ya respondido: la marca va detrás del kana</figcaption>
+        <div class="hoja-estado__muestra">
+          <div class="k-wrap">
+            <button type="button" class="k-chip k-chip--glifo" data-tone="good" data-selected="true"><span class="k-chip__dot" aria-hidden="true"></span><span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> correcta</span></button>
+            <button type="button" class="k-chip k-chip--glifo" data-tone="bad"><span class="k-chip__dot" aria-hidden="true"></span><span lang="ja">や</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> tu respuesta</span></button>
+            <button type="button" class="k-chip k-chip--glifo" disabled><span lang="ja">け</span></button>
+            <button type="button" class="k-chip k-chip--glifo" disabled><span lang="ja">さ</span></button>
+          </div>
+        </div>
+      </figure>
+
     </div>
   </section>
 
@@ -1308,6 +1346,17 @@
         </ol>
       </div>
     </figure>
+    <figure class="hoja-estado" data-estado="quieta">
+      <figcaption>Quieta <code>.k-route__row--quiet</code>: la línea al día, un <code>&lt;div&gt;</code> sin mano ni contacto</figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <div class="k-route__row k-route__row--quiet"><span class="k-route__title" lang="ja">日本語</span><span class="k-route__meta">Al día</span><span class="k-route__sub">Terminaste el mapa y no hay repasos por ahora.</span></div>
+          </li>
+        </ol>
+      </div>
+    </figure>
     <figure class="hoja-estado" data-estado="fin">
       <figcaption>Todo hecho, con el cierre <code>.k-route__end</code></figcaption>
       <div class="hoja-estado__muestra">
@@ -1323,6 +1372,29 @@
       <div class="hoja-estado__muestra">
         <ol class="k-route" role="list">
           <li class="k-route__stop" data-state="done"><span class="k-route__dot" aria-hidden="true"></span><button type="button" class="k-route__row"><span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span><span class="k-route__sub" lang="de">Die Bundesausbildungsförderungsgesetzberatungsstelle</span></button></li>
+        </ol>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="japones">
+      <figcaption>Japonés dentro del héroe y de la fila: el nombre del idioma en la tira y el kana de la bajada, cada uno en su <code>&lt;span lang&gt;</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <button type="button" class="k-route__row"><span class="k-route__title" lang="ja">日本語</span><span class="k-route__meta">Hecho</span><span class="k-route__sub">6 repasos · <span lang="ja">か</span> <span lang="ja">き</span> <span lang="ja">く</span> <span lang="ja">け</span> <span lang="ja">こ</span></span></button>
+          </li>
+          <li class="k-route__stop" data-state="now" aria-current="step">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <div class="k-route__body">
+              <span class="k-route__label">Estás aquí</span>
+              <button type="button" class="k-hero">
+                <span class="k-hero__tag"><span><span lang="ja">日本語</span> · 18 min</span><span>Empezar</span></span>
+                <span class="k-hero__title" lang="ja">か き く け こ</span>
+                <span class="k-hero__arrow" aria-hidden="true">→</span>
+                <span class="k-hero__dek">6 repasos y luego la fila de <span lang="ja">か</span>: leerla, oírla y escribirla.</span>
+              </button>
+            </div>
+          </li>
         </ol>
       </div>
     </figure>
@@ -1368,6 +1440,135 @@
           <span class="k-shelf__caption">B1 · ● hoy</span>
         </li></ul>
       </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="glifo" data-atom="glifo">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">20</span><h2 class="hoja-card__titulo">Glifo <code>.k-glifo</code> + <code>.k-wrap--centro</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>nuevo</b> — la pregunta de <code>eleccion</code> (spec 2026-10-09)</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="latino">
+      <figcaption>Latino</figcaption>
+      <div class="hoja-estado__muestra"><p class="k-glifo">ß</p></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="japones">
+      <figcaption>Japonés, con <code>lang="ja"</code></figcaption>
+      <div class="hoja-estado__muestra"><p class="k-glifo" lang="ja">か</p></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="nube-centrada">
+      <figcaption>Nube centrada <code>.k-wrap--centro</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-wrap k-wrap--centro">
+          <button type="button" class="k-chip"><span>ka</span></button>
+          <button type="button" class="k-chip"><span>ya</span></button>
+          <button type="button" class="k-chip"><span>ke</span></button>
+        </div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="lienzo-trazo" data-atom="lienzo-trazo">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">21</span><h2 class="hoja-card__titulo">Lienzo de trazo <code>.k-trazo</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>nuevo</b> — la dinámica <code>trazo</code> (spec 2026-10-09 §5.5). Trazos de muestra aproximados.</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="presentar">
+      <figcaption>Presentar: los trazos se dibujan en orden, cada uno con su número</figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-trazo" data-modo="presentar"><svg viewBox="0 0 109 109" role="img" aria-label="あ" lang="ja">
+          <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+          <g class="k-trazo__orden">
+            <path d="M27,34 C40,35 61,31 80,28" pathLength="1" style="--i:0"/>
+            <path d="M50,17 C46,40 47,64 57,88" pathLength="1" style="--i:1"/>
+            <path d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92" pathLength="1" style="--i:2"/>
+            <text class="k-trazo__num" x="20" y="33.6" dy=".35em" text-anchor="middle" style="--i:0">1</text>
+            <text class="k-trazo__num" x="51.1" y="10.1" dy=".35em" text-anchor="middle" style="--i:1">2</text>
+            <text class="k-trazo__num" x="70.4" y="38.4" dy=".35em" text-anchor="middle" style="--i:2">3</text>
+          </g>
+        </svg></div>
+        <p class="k-trazo__son">a</p>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="practicar">
+      <figcaption>Práctica: plantilla gris y el punto donde empieza, con su aro que late</figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-trazo" data-modo="practicar"><svg viewBox="0 0 109 109" role="img" aria-label="あ" lang="ja">
+          <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+          <g class="k-trazo__ref"><path d="M27,34 C40,35 61,31 80,28"/><path d="M50,17 C46,40 47,64 57,88"/><path d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92"/></g>
+          <g class="k-trazo__tinta"><path d="M27,34 C40,35 61,31 80,28"/><path d="M50,17 C46,40 47,64 57,88"/></g>
+          <circle class="k-trazo__aro" cx="68" cy="45" r="3"/>
+          <circle class="k-trazo__inicio" cx="68" cy="45" r="2.4"/>
+        </svg></div>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="comprobar">
+      <figcaption>Prueba: sin plantilla, con el dedo a medio trazo</figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-trazo" data-modo="comprobar"><svg viewBox="0 0 109 109" role="img" aria-label="Lienzo para escribir">
+          <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+          <g class="k-trazo__tinta"><path d="M27,34 C40,35 61,31 80,28"/></g>
+          <path class="k-trazo__mano" d="M50,18 L48,40 L49,62"/>
+        </svg></div>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="corregido">
+      <figcaption>Corregido: el trazo que falló, enseñado en tinta de acento</figcaption>
+      <div class="hoja-estado__muestra">
+        <div class="k-trazo" data-modo="comprobar"><svg viewBox="0 0 109 109" role="img" aria-label="Lienzo para escribir">
+          <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+          <g class="k-trazo__tinta"><path d="M27,34 C40,35 61,31 80,28"/><path d="M50,17 C46,40 47,64 57,88"/></g>
+          <path class="k-trazo__pista" d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92" pathLength="1"/>
+        </svg></div>
+      </div>
+    </figure>
+  </div>
+</section>
+
+<section class="hoja-card" id="tablero" data-atom="tablero">
+  <div class="hoja-card__cabeza"><span class="hoja-card__n">22</span><h2 class="hoja-card__titulo">Tablero <code>.k-tablero</code></h2></div>
+  <p class="hoja-card__reemplaza"><b>nuevo</b> — la dinámica <code>emparejar</code> (spec 2026-10-09 §3.2)</p>
+  <div class="hoja-card__estados">
+    <figure class="hoja-estado" data-estado="reposo">
+      <figcaption>Reposo</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="ja">か</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>ki</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="elegida">
+      <figcaption>Elegida <code>data-state="elegida"</code></figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" data-state="elegida" aria-pressed="true"><span lang="ja">き</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>ka</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="hecha">
+      <figcaption>Hecha <code>data-state="hecha"</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «emparejada» es solo para el lector de pantalla)</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button><button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span>ka</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button>
+      </div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="mal">
+      <figcaption>Mal <code>data-state="mal"</code> + <code>.k-chip__mark</code> + <code>.k-sr</code> (la palabra «no es su pareja» es solo para el lector de pantalla); debajo, la zona de estado dice el fallo</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="ja">き</span></button><button type="button" class="k-tablero__ficha" data-state="mal" aria-pressed="false"><span>ku</span><span class="k-chip__mark" aria-hidden="true">✗</span><span class="k-sr"> no es su pareja</span></button>
+      </div>
+      <div class="k-tablero__estado"><p class="k-cap k-cap--center"><span><span role="status">2 de 5 · <span lang="ja">き</span> no es ku</span></span></p></div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="corregido">
+      <figcaption>Corregido: al acabar con fallos la cuenta cede su sitio a la corrección (<code>.k-note[data-state="fix"]</code>, átomo 13), con las parejas que no acertaron</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span lang="ja">か</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button><button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span>ka</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button>
+        <button type="button" class="k-tablero__ficha" aria-pressed="false" disabled><span lang="ja">き</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false" disabled><span>ku</span></button>
+        <button type="button" class="k-tablero__ficha" aria-pressed="false" disabled><span lang="ja">く</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false" disabled><span>ki</span></button>
+      </div>
+      <div class="k-tablero__estado"><p class="k-note" data-state="fix"><span><span role="status">Se acabó el tiempo. <span class="k-note__right"><span class="k-tablero__par"><span lang="ja">き</span> ki</span><span aria-hidden="true"> · </span><span class="k-sr">, </span><span class="k-tablero__par"><span lang="ja">く</span> ku</span></span></span></span></p></div></div>
+    </figure>
+    <figure class="hoja-estado" data-estado="compuesto-largo">
+      <figcaption>Compuesto largo: la palabra parte dentro de la ficha, con o sin glifo</figcaption>
+      <div class="hoja-estado__muestra"><div class="k-tablero">
+        <button type="button" class="k-tablero__ficha" aria-pressed="false"><span lang="de">Bundesausbildungsförderungsgesetz</span></button><button type="button" class="k-tablero__ficha" aria-pressed="false"><span>das</span></button>
+        <button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span lang="de">Bundesausbildungsförderungsgesetz</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button><button type="button" class="k-tablero__ficha" data-state="hecha" aria-pressed="false" disabled><span>das</span><span class="k-chip__mark" aria-hidden="true">✓</span><span class="k-sr"> emparejada</span></button>
+      </div></div>
     </figure>
   </div>
 </section>

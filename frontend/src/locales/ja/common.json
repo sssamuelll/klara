@@ -579,7 +579,8 @@
       "nativeLang": "母語(あなたが話す言語)",
       "targetLang": "学びたい言語",
       "context": "コンテキスト(任意)",
-      "contextPlaceholder": "例:仕事で使う、よく旅行する、料理が好き…"
+      "contextPlaceholder": "例:仕事で使う、よく旅行する、料理が好き…",
+      "studyLangs": "学んでいる言語"
     },
     "sameLangWarn": "母語とは違う言語を選んでください。",
     "saved": "保存しました ✓",
@@ -632,7 +633,10 @@
       "hint": "Google だけでログインしています。メールでもログインできるよう、パスワードを追加できます。",
       "gateHint": "あなたはオーナーです。Googleだけに頼らないよう、予備のパスワードを設定してください。",
       "savedToast": "パスワードを保存しました"
-    }
+    },
+    "studyLangsHint": "チェックした言語ごとに、「今日」がセッションを1つ提案します。",
+    "studyLangsError": "言語を読み込めませんでした。",
+    "studyLangsRetry": "もう一度"
   },
   "auth": {
     "login": {
@@ -711,17 +715,25 @@
   "hoy": {
     "estasAqui": "現在地",
     "hecho": "完了",
-    "plan": "今日のプラン · {{min}} 分",
+    "plan": "今日のプラン · {{min}}分",
     "planHecho": "今日のプラン · 完了",
-    "fin": "明日はまた新しい物語。",
-    "finHecho": "今日はここまで。明日はまた新しい物語。",
-    "seguir": "続きを読む",
+    "planAlDia": "今日のプラン · 予定なし",
+    "fin": "今日はここまでです。",
+    "finHecho": "今日の分は完了しました。",
+    "finAlDia": "今日の予定はありません。",
     "empezar": "はじめる",
-    "pedir": "Klaraに物語を頼む",
-    "fichas_one": "復習カード {{count}} 枚",
-    "fichas_other": "復習カード {{count}} 枚",
     "error": "今日のプランを読み込めませんでした。",
-    "reintentar": "もう一度"
+    "reintentar": "もう一度",
+    "quedan": "残り{{min}}分",
+    "minutos": "{{min}}分",
+    "repasos_one": "{{count}}件の復習",
+    "repasos_other": "{{count}}件の復習",
+    "luego": "{{repasos}}、そのあと{{bajada}}。",
+    "soloRepasos": "マップは完了したので、今日は復習だけです。",
+    "sinIdiomas": "学んでいる言語にはまだマップがありません。設定で、マップのある言語を選んでください。",
+    "irAjustes": "設定へ",
+    "alDia": "予定なし",
+    "alDiaSub": "マップは完了しました。今は復習もありません。"
   },
   "nuevo": {
     "kicker": "新しいテーマ",
@@ -745,29 +757,7 @@
     "mapaFila": "コースの地図",
     "mapaFilaEstado": "現在地",
     "generoFila": "性",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "読む",
-        "dek": "今日の物語",
-        "meta": "3 分"
-      },
-      "pronunciar": {
-        "titulo": "発音する",
-        "dek": "あなたの物語の文を、声に出して",
-        "meta": "4 分"
-      },
-      "hablar": {
-        "titulo": "話す",
-        "dek": "Klaraとの会話",
-        "meta": "3 分"
-      },
-      "repasar": {
-        "titulo": "復習する",
-        "dek": "今日のカード",
-        "meta": "5 分"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "地図",
@@ -1172,6 +1162,85 @@
     "error": {
       "invalid": "このメールアドレスは不完全なようです。確認してください。",
       "network": "保存できませんでした。少し待ってからもう一度お試しください。"
+    }
+  },
+  "dinamica": {
+    "oirOtraVez": "もう一度聞く",
+    "eleccion": {
+      "comoSuena": "どう読みますか？",
+      "cualOyes": "どれが聞こえましたか？",
+      "correcta": "正解",
+      "tuRespuesta": "あなたの答え"
+    },
+    "trazo": {
+      "verElOrden": "書き順を見る",
+      "trazoN": "{{total}}画中{{n}}画目",
+      "empieza": "点から書き始めてください。",
+      "eseNo": "そうではありません。点から始めて、お手本をなぞってください。",
+      "asiVa": "{{n}}画目はこう書きます。なぞってみてください。",
+      "pasar": "次へ進む",
+      "escribe": "聞こえた文字を書いてください",
+      "listo": "できました。",
+      "asiSeEscribe": "このように書きます。",
+      "lienzo": "書く場所"
+    },
+    "emparejar": {
+      "instruccion": "カードとそのペアをタップしてください。",
+      "cuenta": "{{total}}組中{{n}}組",
+      "hecha": "ペア成立",
+      "mal": "ペアではありません",
+      "tiempo": "残り時間",
+      "sinTiempo": "時間切れです。",
+      "noEs": "「<1>{{izq}}</1>」は「{{der}}」ではありません"
+    }
+  },
+  "sesion": {
+    "cargando": "セッションを準備中…",
+    "fallo": "セッションを準備できませんでした。",
+    "reintentar": "もう一度",
+    "vacia": "今日はこの言語の復習も新しいレッスンもありません。",
+    "aHoy": "今日に戻る",
+    "repaso": "復習",
+    "desconocida": "このアクティビティはまだ表示できません。",
+    "modo": {
+      "presentar": "新規",
+      "practicar": "練習",
+      "comprobar": "テスト",
+      "repaso": "復習"
+    },
+    "ahoraTu": "あなたの番",
+    "seguir": "次へ",
+    "bien": "正解",
+    "mira": "訂正を見てください",
+    "noPuedo": {
+      "escuchar": "今は聞けない",
+      "hablar": "今は話せない",
+      "escribir": "今は書けない"
+    },
+    "faceta": {
+      "reconocer": "認識",
+      "oir": "聞き取り",
+      "escribir": "書き",
+      "genero": "性",
+      "aplicar": "適用",
+      "pronunciar": "発音"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "ヒントあり",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "完了",
+      "resumen_one": "{{count}}件のアクティビティ",
+      "resumen_other": "{{count}}件のアクティビティ",
+      "reforzar": "要復習：{{items}}。",
+      "manana_one": "明日の復習：{{count}}件。",
+      "manana_other": "明日の復習：{{count}}件。",
+      "noGuardadas_one": "{{count}}件の回答が保存されませんでした。",
+      "noGuardadas_other": "{{count}}件の回答が保存されませんでした。",
+      "noCerrada": "レッスンの完了を保存できませんでした。",
+      "otra": "もう1レッスン"
     }
   }
 }

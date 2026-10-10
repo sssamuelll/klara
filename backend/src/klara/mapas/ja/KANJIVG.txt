@@ -1,0 +1,7 @@
+Los trazos del campo "trazos" de kana.json salen de KanjiVG
+(https://kanjivg.tagaini.net), de Ulrich Apel y colaboradores, con licencia
+Creative Commons Attribution-Share Alike 3.0
+(https://creativecommons.org/licenses/by-sa/3.0/).
+
+Los paths se copian sin cambios: scripts/importar_kanjivg.py solo los extrae
+del SVG de cada carácter. Ese campo se comparte bajo la misma licencia.

@@ -25,6 +25,8 @@ class UserOut(BaseModel):
     learning_context: str | None = None
     auth_methods: list[str] = Field(default_factory=list)
     needs_onboarding: bool = False
+    # Los idiomas de las líneas de Hoy, ya resueltos: nunca null (spec 2026-10-09 §2.2).
+    study_languages: list[str] = Field(default_factory=list)
 
 
 LEARNING_CONTEXT_MAX_LEN = 500
@@ -36,11 +38,23 @@ class UserUpdate(BaseModel):
     native_language: str | None = None
     target_language: str | None = None
     learning_context: str | None = Field(default=None, max_length=LEARNING_CONTEXT_MAX_LEN)
+    study_languages: list[str] | None = Field(default=None, min_length=1, max_length=3)
 
     @field_validator("native_language", "target_language")
     @classmethod
     def _check_language(cls, v: str | None) -> str | None:
         return _validate_lang(v)
+
+    @field_validator("study_languages")
+    @classmethod
+    def _check_study_languages(cls, v: list[str] | None) -> list[str] | None:
+        if v is None:
+            return None
+        if len(set(v)) != len(v):
+            raise ValueError("study_languages no puede repetir idiomas")
+        for code in v:
+            _validate_lang(code)
+        return v
 
     @model_validator(mode="after")
     def _check_distinct(self) -> "UserUpdate":

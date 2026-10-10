@@ -1,45 +1,25 @@
-"""La respuesta de GET /today (spec 2026-09-30 §2.3)."""
+"""La respuesta de GET /today (spec 2026-10-09 §5.1): una línea por idioma."""
 
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseModel
 
-Step = Literal["read", "pronounce", "speak", "review"]
+from klara.schemas.catalogo import LeccionRef
 
 
-class TodaySteps(BaseModel):
-    read: bool
-    pronounce: bool
-    speak: bool
-    review: bool
+class HechoHoy(BaseModel):
+    repasos: int
+    leccion: str | None
 
 
-class TodayStory(BaseModel):
-    state: Literal["done", "continue", "new", "request"]
-    id: UUID | None = None
-    library_entry_id: UUID | None = None
-    module_id: UUID | None = None
-    title: str | None = None
-    subtitle: str | None = None
-    illustration_path: str | None = None
-
-
-class TodaySentence(BaseModel):
-    target: str
-    native: str
-
-
-class TodayModule(BaseModel):
-    id: UUID
-    title: str
-    cefr_level: str
+class Linea(BaseModel):
+    idioma: str
+    estado: Literal["hecha", "ahora", "pendiente"]
+    minutos: int
+    repasos: int
+    leccion: LeccionRef | None
+    hecho: HechoHoy | None
 
 
 class TodayOut(BaseModel):
-    now: Step | None
-    steps: TodaySteps
-    story: TodayStory
-    sentence: TodaySentence | None
-    due: int
-    module: TodayModule | None
+    lineas: list[Linea]

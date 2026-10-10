@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ApiError, api } from "../api/client";
 import type { CEFRLevel, LanguageCode } from "../api/types";
+import { alternarIdioma, estudioParaGuardar, type MapasCargados } from "../lib/idiomasEstudio";
 import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
 import { useAuth } from "../lib/auth";
 import { patchUser, useUser } from "../lib/user";
@@ -20,6 +22,9 @@ export default function Settings() {
   const [nativeLang, setNativeLang] = useState<LanguageCode>("es");
   const [targetLang, setTargetLang] = useState<LanguageCode>("de");
   const [context, setContext] = useState("");
+  const [mapas, setMapas] = useState<MapasCargados>(null);
+  const [intento, setIntento] = useState(0);
+  const [estudio, setEstudio] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -32,7 +37,26 @@ export default function Settings() {
     setNativeLang(user.native_language);
     setTargetLang(user.target_language);
     setContext(user.learning_context ?? "");
+    setEstudio(user.study_languages);
   }, [user]);
+
+  // Los idiomas que se pueden estudiar son los que tienen mapa (spec 2026-10-09 §5.6). Si no llegan, el
+  // campo lo dice y deja reintentar: es la salida de Hoy para quien no tiene idioma elegido.
+  useEffect(() => {
+    let cancelado = false;
+    setMapas(null);
+    api.mapas().then(
+      (m) => {
+        if (!cancelado) setMapas(m);
+      },
+      () => {
+        if (!cancelado) setMapas("fallo");
+      },
+    );
+    return () => {
+      cancelado = true;
+    };
+  }, [intento]);
 
   useEffect(() => {
     if (!recentlySetPw) return;
@@ -41,6 +65,8 @@ export default function Settings() {
   }, [recentlySetPw]);
 
   const sameLang = nativeLang === targetLang;
+  // Con los mapas ya a la vista y ninguno, no hay nada que elegir: el campo no se pinta.
+  const sinMapas = Array.isArray(mapas) && mapas.length === 0;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,10 +84,13 @@ export default function Settings() {
         native_language: nativeLang,
         target_language: targetLang,
         learning_context: context.trim() ? context.trim() : null,
+        study_languages: estudioParaGuardar(user?.study_languages ?? [], estudio, mapas),
       });
       setSaved(true);
     } catch (e2) {
-      setError(e2 instanceof Error ? e2.message : t("common.unknownError"));
+      // 422 `study_languages.sin_mapa`: el `detail` es un código, no un mensaje para el aprendiz.
+      const sinMapa = e2 instanceof ApiError && e2.message.includes("study_languages.sin_mapa");
+      setError(e2 instanceof Error && !sinMapa ? e2.message : t("common.unknownError"));
     } finally {
       setSaving(false);
     }
@@ -163,6 +192,57 @@ export default function Settings() {
           </select>
           {sameLang && <span className="k-field__hint">{t("settings.sameLangWarn")}</span>}
         </label>
+
+        {!sinMapas && (
+          <div className="k-field">
+            <span className="k-field__label" id="ajustes-estudio">
+              {t("settings.field.studyLangs")}
+            </span>
+            {mapas === "fallo" ? (
+              // Un `div` y no un `p`: el párrafo trae 1em (11px) de margen arriba y abajo, que en la columna del
+              // campo no se funden y empujan lo de debajo 22px de más. Con su `key`, un nodo nuevo y no el `div`
+              // del hueco de carga con otro rol: así el lector lo anuncia.
+              <div key="fallo" className="k-error" role="alert">
+                {t("settings.studyLangsError")}{" "}
+                <button type="button" className="k-btn k-btn--text" onClick={() => setIntento((n) => n + 1)}>
+                  {t("settings.studyLangsRetry")}
+                </button>
+              </div>
+            ) : mapas === null ? (
+              // El alto de una fila de chips, siempre reservado: lo de debajo no da un salto cuando llegan los
+              // mapas. Invisible con `visibility` (conserva su caja; no hay átomo para un hueco), y con un espacio
+              // duro dentro: un chip sin texto mide 44px y uno con texto, 45.
+              <div className="k-wrap" aria-hidden="true">
+                <span className="k-chip" style={{ visibility: "hidden" }}>{"\u00a0"}</span>
+              </div>
+            ) : (
+              <div className="k-wrap" role="group" aria-labelledby="ajustes-estudio" aria-describedby="ajustes-estudio-pista">
+                {mapas.map((m) => {
+                  const marcado = estudio.includes(m.idioma);
+                  // El último marcado no se puede quitar (el servidor pide al menos uno). `aria-disabled` lo dice
+                  // sin apagar el chip: con `disabled` quedaría a 0.45, como uno que no se puede tocar.
+                  const ultimo = marcado && estudio.length === 1;
+                  return (
+                    <button
+                      key={m.idioma}
+                      type="button"
+                      className="k-chip"
+                      aria-pressed={marcado}
+                      aria-disabled={ultimo || undefined}
+                      data-selected={marcado}
+                      lang={m.idioma}
+                      disabled={saving}
+                      onClick={() => setEstudio((a) => alternarIdioma(a, m.idioma, mapas.map((x) => x.idioma)))}
+                    >
+                      {languageLabel(m.idioma)}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <span className="k-field__hint" id="ajustes-estudio-pista">{t("settings.studyLangsHint")}</span>
+          </div>
+        )}
 
         <label className="k-field k-field--area">
           <span className="k-field__label">{t("settings.field.context")}</span>

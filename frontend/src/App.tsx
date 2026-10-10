@@ -20,6 +20,7 @@ import Taller from "./routes/Taller";
 import Practice from "./routes/Practice";
 import Pronunciar from "./routes/Pronunciar";
 import Repaso from "./routes/Repaso";
+import Sesion from "./routes/Sesion";
 import Speak from "./routes/Speak";
 import Settings from "./routes/Settings";
 import Onboarding from "./onboarding/Onboarding";
@@ -259,6 +260,25 @@ function AppShell() {
         element={
           <ProtectedRoute>
             <Repaso />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* El reproductor (spec 2026-10-09 §5.4): suelto, como /repaso. La línea de
+          Hoy y la lección repetida desde el mapa usan el mismo componente. */}
+      <Route
+        path="/sesion/:idioma"
+        element={
+          <ProtectedRoute>
+            <Sesion />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leccion/:idioma/:unidad/:leccion"
+        element={
+          <ProtectedRoute>
+            <Sesion />
           </ProtectedRoute>
         }
       />
