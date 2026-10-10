@@ -18,6 +18,9 @@ for (const { file, lang } of pages) {
   html = html
     .replace(/<script type="module"[^>]*><\/script>\s*/g, '')
     .replace(/<link rel="modulepreload"[^>]*>\s*/g, '')
+    // `crossorigin` solo hace falta con módulos; sin scripts sobra, y bajo
+    // file:// (revisión local, tests) bloquea la hoja de estilos.
+    .replace(/(<link rel="stylesheet") crossorigin/g, '$1')
     .replace('<!--app-->', render(lang));
   if (html.includes('<!--app-->') || /<script/i.test(html)) {
     throw new Error(`prerender: ${file} still has the placeholder or a script`);

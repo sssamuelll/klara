@@ -71,6 +71,40 @@ for (const f of (await import('node:fs')).readdirSync(cssDir)) {
   if (/fonts\.g(oogleapis|static)\.com/.test(css)) fail(`assets/${f}: referencia a Google Fonts`);
 }
 
+// ---- Textos, enlaces, alt, hreflang, pesos -----------------------------------
+const mustHaveMore = {
+  'index.html': ['Why it exists', 'See the code', 'Run it yourself', 'Invitation only', 'mailto:samueldarioballesteros@gmail.com'],
+  'es/index.html': ['Por qué existe', 'Ver el código', 'Móntala tú', 'Por invitación', 'mailto:samueldarioballesteros@gmail.com'],
+};
+const external = new Set();
+for (const { file } of pages) {
+  const html = await readFile(path.join(dist, file), 'utf8').catch(() => '');
+  for (const s of mustHaveMore[file]) if (!html.includes(s)) fail(`${file}: falta «${s}»`);
+  for (const l of ['en', 'es', 'x-default']) {
+    if (!new RegExp(`hreflang="${l}"`).test(html)) fail(`${file}: falta hreflang ${l}`);
+  }
+  for (const m of html.matchAll(/<img\b[^>]*>/g)) {
+    if (!/\balt=/.test(m[0])) fail(`${file}: <img> sin alt: ${m[0].slice(0, 80)}`);
+  }
+  for (const m of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
+    const url = m[1];
+    if (/^(https?:|mailto:|#)/.test(url)) { if (/^https?:/.test(url)) external.add(url); continue; }
+    const target = path.join(dist, path.dirname(file), url.split('#')[0].split('?')[0]);
+    const resolved = url.endsWith('/') ? path.join(target, 'index.html') : target;
+    try { await stat(resolved); } catch { fail(`${file}: ${url} no existe en dist`); }
+  }
+}
+const limits = { 'hero.webp': 300 * 1024, 'shots/read.webp': 120 * 1024, 'shots/speak.webp': 120 * 1024, 'shots/review.webp': 120 * 1024, 'og.jpg': 200 * 1024 };
+for (const [f, max] of Object.entries(limits)) {
+  const s = await stat(path.join(dist, f)).catch(() => null);
+  if (!s) fail(`${f}: no existe`);
+  else if (s.size > max) fail(`${f}: pesa ${Math.round(s.size / 1024)} KB, máximo ${Math.round(max / 1024)} KB`);
+}
+for (const url of external) {
+  const res = await fetch(url, { method: 'HEAD', redirect: 'follow' }).catch(() => null);
+  console.log(`  ${res ? res.status : 'sin respuesta'}  ${url}`);
+}
+
 if (errors.length) {
   for (const e of errors) console.error('✗', e);
   process.exit(1);
