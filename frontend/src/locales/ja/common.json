@@ -1181,6 +1181,7 @@
       "pasar": "次へ進む",
       "escribe": "聞こえた文字を書いてください",
       "listo": "できました。",
+      "asiSeEscribe": "このように書きます。",
       "lienzo": "書く場所"
     },
     "emparejar": {
@@ -1196,7 +1197,7 @@
   "sesion": {
     "cargando": "セッションを準備中…",
     "fallo": "セッションを準備できませんでした。",
-    "reintentar": "再試行",
+    "reintentar": "もう一度",
     "vacia": "今日はこの言語の復習も新しいレッスンもありません。",
     "aHoy": "今日に戻る",
     "repaso": "復習",

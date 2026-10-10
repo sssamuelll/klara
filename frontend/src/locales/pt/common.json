@@ -713,7 +713,7 @@
     "moreAria": "Mais opções"
   },
   "hoy": {
-    "estasAqui": "Você está aqui",
+    "estasAqui": "Estás aqui",
     "hecho": "Feito",
     "plan": "O teu plano de hoje · {{min}} min",
     "planHecho": "O teu plano de hoje · feito",
@@ -1181,6 +1181,7 @@
       "pasar": "Passar à seguinte",
       "escribe": "Escreve a que ouves",
       "listo": "Pronto.",
+      "asiSeEscribe": "É assim que se escreve.",
       "lienzo": "Área para escrever"
     },
     "emparejar": {

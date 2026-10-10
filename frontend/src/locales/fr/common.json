@@ -717,7 +717,7 @@
     "hecho": "Fait",
     "plan": "Ton plan du jour · {{min}} min",
     "planHecho": "Ton plan du jour · fait",
-    "planAlDia": "Ton plan du jour · à jour",
+    "planAlDia": "Ton plan du jour · rien en attente",
     "fin": "C’est tout pour aujourd’hui.",
     "finHecho": "Fini pour aujourd’hui.",
     "finAlDia": "Rien en attente pour aujourd’hui.",
@@ -1181,6 +1181,7 @@
       "pasar": "Passer à la suivante",
       "escribe": "Écris celui que tu entends",
       "listo": "Terminé.",
+      "asiSeEscribe": "Voilà comment ça s'écrit.",
       "lienzo": "Zone d'écriture"
     },
     "emparejar": {

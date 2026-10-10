@@ -135,7 +135,8 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
 
   const n = estado.actual + 1;
   let nota: string;
-  if (estado.terminado) nota = t("dinamica.trazo.listo");
+  // Dejado con «Pasar a la siguiente» no es un «Listo.»: el kana entero que queda dibujado es la corrección.
+  if (estado.terminado) nota = estado.pasado ? t("dinamica.trazo.asiSeEscribe") : t("dinamica.trazo.listo");
   else if (mal && estado.mostrando) nota = t("dinamica.trazo.asiVa", { n });
   else if (mal) nota = t("dinamica.trazo.eseNo");
   // «Trazo 1 de 3» es rótulo, sin punto: lo une a la frase el separador de la app, como la cuenta del tablero.

@@ -3274,6 +3274,18 @@ ul.k-error { list-style: none; }
 .k-trazo ~ .k-wrap {
   margin-top: var(--space-3);
   min-height: calc(44px - 2 * var(--space-3));
+  gap: var(--space-5) var(--space-4);
+}
+/* Los controles en mono de estas filas no vuelan a los lados: su área táctil es su rótulo, que ya pasa de 44px de
+   ancho (de alto conserva sus 44 con el voladizo de arriba y abajo). Con el voladizo lateral de 12px y los 8px de la
+   nube, en la prueba «Oír otra vez» y «Pasar a la siguiente» se pisaban 16px —un toque de más dejaba el kana— y al
+   presentar «Ver el orden» se metía 4px en el fantasma de «Oír otra vez». Sin él y con 16px entre controles, las
+   áreas quedan a 16px y la fila de la prueba cabe en una línea a 320px en los seis idiomas (con 24px el español y el
+   alemán partían, y partir movería el lienzo). Si una fila partiera igual, sus líneas van a 24px: lo que necesita el
+   voladizo vertical para no pisarse. */
+.k-trazo ~ .k-wrap > .k-btn--text {
+  margin-inline: 0;
+  padding-inline: 0;
 }
 /* Junta con la nota al margen (átomo 13): la mnemotecnia es español con algún
    kana dentro («Es さ en el espejo»), y cada kana va en su <span lang="ja">. Un
@@ -3355,7 +3367,8 @@ ul.k-error { list-style: none; }
 }
 
 /* La zona de estado: un párrafo con una sola región viva dentro (`<span role="status">`) para lo que el tablero
-   dice; la instrucción, que no cambia, va fuera de ella. Mientras se juega es la cuenta (`.k-cap`) y, tras un
+   dice; la instrucción, que no cambia, va fuera de ella, y las dos en un solo `<span>` (la cinta es flex: dos hijos
+   serían dos columnas). Mientras se juega es la cuenta (`.k-cap`) y, tras un
    fallo, «き no es ku» en lugar de la instrucción; al acabar con fallos, el mismo párrafo pasa a la corrección
    (`.k-note` en su estado `fix`, átomo 13). Cada una tiene su alto, y el tablero, centrado en la zona
    de sesión, saltaría al cambiar de una a otra: la zona reserva el de dos renglones de nota (15px a 1,45) y pone

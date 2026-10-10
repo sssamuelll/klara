@@ -732,7 +732,7 @@
     "soloRepasos": "You finished the map, so today it's just reviews.",
     "sinIdiomas": "Your languages don't have a map yet. Pick one in Settings that does.",
     "irAjustes": "Go to Settings",
-    "alDia": "Up to date",
+    "alDia": "All caught up",
     "alDiaSub": "You finished the map and there are no reviews for now."
   },
   "nuevo": {
@@ -1178,9 +1178,10 @@
       "empieza": "Start at the dot.",
       "eseNo": "Not like that. Start at the dot and follow the guide.",
       "asiVa": "Stroke {{n}} goes like this. Trace it.",
-      "pasar": "Move on to the next",
+      "pasar": "Skip to the next one",
       "escribe": "Write the one you hear",
       "listo": "Done.",
+      "asiSeEscribe": "This is how it's written.",
       "lienzo": "Writing canvas"
     },
     "emparejar": {
