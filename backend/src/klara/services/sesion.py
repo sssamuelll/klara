@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from klara.catalogo.dinamicas import CAP_REPASOS, DINAMICA_DE_REPASO, DINAMICAS
@@ -123,37 +123,29 @@ async def items_vistos(
     return frozenset(de_lecciones | {i for i in con_fila.scalars() if i in cat.items})
 
 
-async def contar_vencidas(db: AsyncSession, user_id: UUID, idioma: str, hasta: datetime) -> int:
-    return (
-        await db.execute(
-            select(func.count())
-            .select_from(UserFacet)
-            .where(
-                UserFacet.user_id == user_id,
-                UserFacet.idioma == idioma,
-                UserFacet.next_review_at <= hasta,
-            )
-        )
-    ).scalar_one()
+async def contar_vencidas(
+    db: AsyncSession, cat: Catalogo, user_id: UUID, idioma: str, hasta: datetime
+) -> int:
+    """Las que la sesión repasaría, sin tope: «mañana» y `vencen` no prometen huérfanas."""
+    return len(await _vencidas(db, cat, user_id, idioma, hasta))
 
 
 async def _vencidas(
-    db: AsyncSession, cat: Catalogo, user_id: UUID, idioma: str, ahora: datetime
+    db: AsyncSession, cat: Catalogo, user_id: UUID, idioma: str, hasta: datetime
 ) -> list[tuple[str, str]]:
     filas = await db.execute(
         select(UserFacet.item_key, UserFacet.faceta)
         .where(
             UserFacet.user_id == user_id,
             UserFacet.idioma == idioma,
-            UserFacet.next_review_at <= ahora,
+            UserFacet.next_review_at <= hasta,
         )
         .order_by(UserFacet.next_review_at, UserFacet.item_key, UserFacet.faceta)
     )
-    # Las huérfanas (ítem fuera del catálogo) se ignoran (spec §2.1).
-    vencidas = [
+    # Las huérfanas (ítem fuera del catálogo) y las facetas sin dinámica de repaso se ignoran (spec §2.1).
+    return [
         (i, f) for i, f in filas.all() if i in cat.items and (tipo_de(i), f) in DINAMICA_DE_REPASO
     ]
-    return vencidas[:CAP_REPASOS]
 
 
 async def componer(
@@ -165,7 +157,7 @@ async def componer(
     *,
     con_repasos: bool = True,
 ) -> Plan:
-    pares = await _vencidas(db, cat, user_id, idioma, ahora) if con_repasos else []
+    pares = (await _vencidas(db, cat, user_id, idioma, ahora))[:CAP_REPASOS] if con_repasos else []
     repasos = tuple(
         Actividad(
             dinamica=DINAMICA_DE_REPASO[(tipo_de(i), f)], modo="comprobar", items=(i,), faceta=f

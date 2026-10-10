@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from sqlalchemy import select
 
 from klara.models import LessonRun, UserFacet
@@ -18,8 +19,38 @@ async def _cabeceras(client, seed_invite) -> dict:
     return {"Cookie": await entrar(client, seed_invite, EMAIL)}
 
 
-async def test_la_sesion_pide_cuenta(client, catalogo_mini):
-    assert (await client.get("/api/v1/sesiones/ja")).status_code == 401
+def _evidencia(run_id: str) -> dict:
+    return {
+        "id": str(uuid.uuid4()),
+        "run_id": run_id,
+        "dinamica": "eleccion",
+        "modo": "comprobar",
+        "item": "ja:kana:あ",
+        "faceta": "reconocer",
+        "acierto": True,
+        "pistas": 0,
+        "ms": 1200,
+    }
+
+
+_RUN = "00000000-0000-4000-8000-000000000000"  # fijo: el id del test no cambia entre corridas
+
+
+# Con cuerpos válidos: el 401 tiene que salir de la cuenta, no de la validación.
+@pytest.mark.parametrize(
+    ("metodo", "ruta", "cuerpo"),
+    [
+        ("GET", "/api/v1/sesiones/ja", None),
+        ("GET", "/api/v1/lecciones/ja/hiragana/a", None),
+        ("POST", "/api/v1/lesson-runs", {"idioma": "ja", "origen": "hoy"}),
+        ("POST", f"/api/v1/lesson-runs/{_RUN}/fin", None),
+        ("POST", "/api/v1/evidencias", {"evidencias": [_evidencia(_RUN)]}),
+        ("GET", "/api/v1/mapas", None),
+    ],
+)
+async def test_las_rutas_del_catalogo_piden_cuenta(client, catalogo_mini, metodo, ruta, cuerpo):
+    r = await client.request(metodo, ruta, json=cuerpo)
+    assert r.status_code == 401, r.text
 
 
 async def test_sesion_de_una_cuenta_nueva(client, seed_invite, catalogo_mini):
@@ -120,17 +151,7 @@ async def test_evidencias(client, seed_invite, catalogo_mini):
     run_id = (
         await client.post("/api/v1/lesson-runs", json={"idioma": "ja", "origen": "hoy"}, headers=h)
     ).json()["id"]
-    ev = {
-        "id": str(uuid.uuid4()),
-        "run_id": run_id,
-        "dinamica": "eleccion",
-        "modo": "comprobar",
-        "item": "ja:kana:あ",
-        "faceta": "reconocer",
-        "acierto": True,
-        "pistas": 0,
-        "ms": 1200,
-    }
+    ev = _evidencia(run_id)
     r = await client.post("/api/v1/evidencias", json={"evidencias": [ev]}, headers=h)
     assert r.status_code == 200, r.text
     assert r.json() == {"guardadas": 1}
@@ -150,6 +171,12 @@ async def test_audio_sin_cuenta(client, catalogo_mini):
     assert r.content == b"ID3"
     for ruta in ("/api/v1/audio/ja/zz.mp3", "/api/v1/audio/ja/a.wav", "/api/v1/audio/de/a.mp3"):
         assert (await client.get(ruta)).status_code == 404, ruta
+
+
+# Ni salir de la carpeta del audio ni abrir a.mp3 con otras mayúsculas (Windows no las distingue).
+@pytest.mark.parametrize("archivo", ["..%5Ca.mp3", "%2e%2e%2fx.mp3", "A.mp3", "a.MP3"])
+async def test_audio_solo_con_el_nombre_exacto(client, catalogo_mini, archivo):
+    assert (await client.get(f"/api/v1/audio/ja/{archivo}")).status_code == 404
 
 
 async def test_mapas(client, seed_invite, db_session, catalogo_mini):

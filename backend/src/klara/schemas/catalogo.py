@@ -1,13 +1,20 @@
 """Lo que entra y sale de las rutas del catálogo (spec 2026-10-09 §4)."""
 
+import json
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from klara.catalogo.dinamicas import CAP_REPASOS
 
 Modo = Literal["presentar", "practicar", "comprobar"]
+
+# Una actividad abierta más de una hora (el teléfono en segundo plano) cuenta como
+# una hora: rechazarla perdía la respuesta, y la nota sale `hard` igual.
+MS_MAX = 3_600_000
+# El detalle es un resumen: el de un trazo con todos sus rechazos no llega a 1 KB.
+DETALLE_MAX_BYTES = 16 * 1024
 
 
 class EvidenciaIn(BaseModel):
@@ -20,8 +27,21 @@ class EvidenciaIn(BaseModel):
     faceta: str
     acierto: bool
     pistas: int = Field(ge=0, le=50)
-    ms: int = Field(ge=0, le=3_600_000)
+    ms: int = Field(ge=0)
     detalle: dict | None = None
+
+    @field_validator("ms")
+    @classmethod
+    def _recortar_ms(cls, ms: int) -> int:
+        return min(ms, MS_MAX)
+
+    @field_validator("detalle")
+    @classmethod
+    def _detalle_con_tope(cls, detalle: dict | None) -> dict | None:
+        tam = len(json.dumps(detalle, ensure_ascii=False).encode()) if detalle else 0
+        if tam > DETALLE_MAX_BYTES:
+            raise ValueError(f"detalle de más de {DETALLE_MAX_BYTES} bytes")
+        return detalle
 
 
 class ActividadOut(BaseModel):

@@ -12,6 +12,7 @@ from klara.catalogo.facetas import (
     tipo_de,
 )
 from klara.catalogo.nota import nota
+from klara.catalogo.plantillas import PLANTILLAS
 from klara.models.enums import ReviewRating
 
 
@@ -83,6 +84,18 @@ def test_cada_repaso_usa_una_dinamica_que_lo_comprueba():
         d = DINAMICAS[nombre]
         assert "comprobar" in d.modos
         assert ejercita(d, tipo, faceta)
+
+
+def test_lo_que_una_plantilla_comprueba_tiene_dinamica_de_repaso():
+    # Lo inverso del de arriba: una faceta que se comprueba sin dinámica de repaso
+    # nunca vencería en Hoy. Los planes 2 y 3 suman plantillas: cada una, su muestra.
+    muestras = {"kana": ("ja:kana:あ", "ja:kana:い")}
+    assert set(muestras) == set(PLANTILLAS)
+    for nombre, plantilla in PLANTILLAS.items():
+        for a in plantilla(muestras[nombre]):
+            if a.modo == "comprobar":
+                for i in a.items:
+                    assert (tipo_de(i), a.faceta) in DINAMICA_DE_REPASO, (nombre, i, a.faceta)
 
 
 def test_emparejar_solo_practica():

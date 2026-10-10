@@ -47,10 +47,6 @@ def illustration_hash(scene: str) -> str:
     return hashlib.sha256(f"{STYLE_VERSION}|{normalize_scene(scene)}".encode()).hexdigest()
 
 
-def illustration_path(hash_: str) -> str:
-    return f"/illustrations/{hash_}"
-
-
 def build_prompt(scene: str) -> str:
     return f"{STYLE_PROMPT}\nScene: {normalize_scene(scene)}"
 

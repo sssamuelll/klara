@@ -128,6 +128,7 @@ class FacetReview(Base):
     nota: Mapped[ReviewRating | None] = mapped_column(
         pg_enum(ReviewRating, name="review_rating"), nullable=True
     )
-    # El resumen propio de la dinámica, nunca los datos crudos.
-    detalle: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # El resumen propio de la dinámica, nunca los datos crudos. Sin detalle, NULL de
+    # SQL y no el `null` de JSON (solo cambia cómo se escribe, no la columna).
+    detalle: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
     created_at: Mapped[created_ts]

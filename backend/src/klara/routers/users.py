@@ -84,6 +84,10 @@ async def update_me(
                 status_code=422,
                 detail=t("errors.languages_must_differ", locale),
             )
+    # Todo lo que puede dar 422 va antes de la primera asignación: nada queda a medias.
+    nuevos = data.get("study_languages")
+    if nuevos is not None and any(i not in get_catalogo().mapas for i in nuevos):
+        raise HTTPException(status_code=422, detail="study_languages.sin_mapa")
 
     if data.get("display_name"):
         user.display_name = data["display_name"]
@@ -97,9 +101,6 @@ async def update_me(
         ctx = data["learning_context"]
         user.learning_context = ctx.strip() if isinstance(ctx, str) and ctx.strip() else None
     if "study_languages" in data:
-        nuevos = data["study_languages"]
-        if nuevos is not None and any(i not in get_catalogo().mapas for i in nuevos):
-            raise HTTPException(status_code=422, detail="study_languages.sin_mapa")
         user.study_languages = nuevos
 
     await db.commit()

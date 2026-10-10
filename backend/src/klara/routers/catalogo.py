@@ -125,7 +125,8 @@ async def cerrar_corrida(run_id: UUID, db: DBSession, user: CurrentUser) -> FinO
     if run.finished_at is None:
         run.finished_at = ahora
         await db.commit()
-    return FinOut(manana=await contar_vencidas(db, user.id, idioma, ahora + timedelta(days=1)))
+    manana = await contar_vencidas(db, get_catalogo(), user.id, idioma, ahora + timedelta(days=1))
+    return FinOut(manana=manana)
 
 
 @router.post("/evidencias", response_model=EvidenciasOut)
@@ -174,7 +175,7 @@ async def get_mapas(db: DBSession, user: CurrentUser) -> list[MapaResumen]:
                 estudias=idioma in estudia,
                 nivel=nivel,
                 progreso=round(sum(1 for lec in lecciones if lec.id in hechas) / len(lecciones), 3),
-                vencen=await contar_vencidas(db, user.id, idioma, ahora),
+                vencen=await contar_vencidas(db, cat, user.id, idioma, ahora),
             )
         )
     return out

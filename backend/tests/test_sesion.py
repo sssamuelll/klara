@@ -192,7 +192,7 @@ async def test_sin_repasos_cuando_se_pide(db_session, catalogo_mini):
     assert plan.leccion.id == "ja/hiragana/a"
 
 
-async def test_contar_vencidas(db_session):
+async def test_contar_vencidas(db_session, catalogo_mini):
     u = await crear_usuario(db_session)
     otro = await crear_usuario(db_session)
     db_session.add_all(
@@ -201,11 +201,15 @@ async def test_contar_vencidas(db_session):
             _faceta(u.id, "ja:kana:あ", "escribir", AHORA),
             _faceta(u.id, "ja:kana:い", "escribir", AHORA + timedelta(hours=1)),
             _faceta(otro.id, "ja:kana:う", "escribir", AHORA - timedelta(hours=1)),
+            # Cuenta lo mismo que repasaría la sesión: ni la huérfana (か no está en el
+            # catálogo) ni una faceta sin dinámica de repaso.
+            _faceta(u.id, "ja:kana:か", "escribir", AHORA),
+            _faceta(u.id, "ja:kana:う", "pronunciar", AHORA),
         ]
     )
     await db_session.commit()
-    assert await contar_vencidas(db_session, u.id, "ja", AHORA) == 2
-    assert await contar_vencidas(db_session, u.id, "de", AHORA) == 0
+    assert await contar_vencidas(db_session, catalogo_mini, u.id, "ja", AHORA) == 2
+    assert await contar_vencidas(db_session, catalogo_mini, u.id, "de", AHORA) == 0
 
 
 def test_minutos(catalogo_mini):
