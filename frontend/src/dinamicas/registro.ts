@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import Eleccion from "./Eleccion";
+import Trazo from "./Trazo";
 import type { PropsDinamica } from "./tipos";
 
 /** Nombre de la dinámica (el mismo del backend) → componente. Cada dinámica trae
@@ -7,4 +8,5 @@ import type { PropsDinamica } from "./tipos";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DINAMICAS: Record<string, ComponentType<PropsDinamica<any>>> = {
   eleccion: Eleccion,
+  trazo: Trazo,
 };

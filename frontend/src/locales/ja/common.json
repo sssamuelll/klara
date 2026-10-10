@@ -1181,6 +1181,15 @@
       "cualOyes": "どれが聞こえた？",
       "correcta": "正解",
       "tuRespuesta": "あなたの答え"
+    },
+    "trazo": {
+      "verOtraVez": "もう一度見る",
+      "trazoN": "{{total}}画中{{n}}画目。",
+      "empieza": "点から書き始めよう。",
+      "eseNo": "違います。点から始めて、お手本をなぞろう。",
+      "asiVa": "{{n}}画目はこう書きます。なぞってみよう。",
+      "escribe": "聞こえた文字を書こう",
+      "listo": "できた。"
     }
   },
   "sesion": {

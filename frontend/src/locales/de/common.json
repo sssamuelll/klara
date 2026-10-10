@@ -1181,6 +1181,15 @@
       "cualOyes": "Welches hast du gehört?",
       "correcta": "richtig",
       "tuRespuesta": "deine Antwort"
+    },
+    "trazo": {
+      "verOtraVez": "Nochmal ansehen",
+      "trazoN": "Strich {{n}} von {{total}}.",
+      "empieza": "Beginne am Punkt.",
+      "eseNo": "Nicht so. Beginne am Punkt und folge der Vorlage.",
+      "asiVa": "Strich {{n}} geht so. Fahr ihn nach.",
+      "escribe": "Schreib, was du hörst",
+      "listo": "Fertig."
     }
   },
   "sesion": {

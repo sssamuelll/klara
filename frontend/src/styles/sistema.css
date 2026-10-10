@@ -3115,8 +3115,8 @@ ul.k-error { list-style: none; }
 /* ============================================================
    20 · GLIFO — .k-glifo
    Pieza nueva (spec 2026-10-09, dinámicas): un carácter solo, a tamaño
-   de cartel, para la pregunta de `eleccion`. El japonés sale de la pila
-   de --font-serif (Noto Serif JP va antes de los genéricos).
+   de cartel, para la pregunta de `eleccion`. El japonés lo pone
+   `:lang(ja)` (tokens.css): con `lang="ja"` el carácter recoge Noto Serif JP.
    ============================================================ */
 .k-glifo {
   flex: 0 0 auto;
@@ -3126,6 +3126,91 @@ ul.k-error { list-style: none; }
   line-height: 1;
   text-align: center;
   color: var(--ink);
+}
+
+/* ---------- 21-trazo ---------- */
+/* ============================================================
+   21 · TRAZO — .k-trazo
+   Pieza nueva (spec 2026-10-09 §5.5): el lienzo de escribir con el
+   dedo, en la caja de 109 de KanjiVG. `touch-action: none` es lo que
+   deja dibujar sin que la página se mueva. Con movimiento reducido,
+   --dur-* valen 0 y los trazos aparecen enteros.
+   ============================================================ */
+.k-trazo {
+  flex: 0 0 auto;
+  align-self: center;
+  width: min(100%, 272px);
+  /* Y si la pantalla es baja, cede: a partir de 660px de alto cabe entero con su nota y el dock; por
+     debajo, 1px menos por cada px que falte, hasta 180px. 388px es lo que ocupa todo lo demás
+     (medido con la mnemotecnia más larga, a 320px de ancho). Sin esto, a 600px de alto el botón de
+     debajo quedaba a medias detrás del borde de `.k-fill`. */
+  width: min(100%, clamp(180px, calc(100dvh - 388px), 272px));
+  aspect-ratio: 1;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.k-trazo svg { display: block; width: 100%; height: 100%; }
+.k-trazo__guia line { stroke: var(--ink-4); stroke-width: 0.45; stroke-dasharray: 2 2.2; opacity: 0.55; }
+.k-trazo path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.k-trazo__ref path { stroke: var(--paper-3); stroke-width: 7.5; visibility: hidden; }
+.k-trazo[data-modo="practicar"] .k-trazo__ref path { visibility: visible; }
+.k-trazo__tinta path,
+.k-trazo__orden path { stroke: var(--ink); stroke-width: 5.6; }
+/* Los trazos que se dibujan (`pathLength="1"`) se ocultan con `stroke-dashoffset: 1`. El patrón es
+   `1 2` y no `1`: con `1`, el siguiente tramo de tinta empieza justo donde acaba el trazo y, con tapa
+   redonda, Chromium lo pinta como un punto al final de cada trazo que aún no se ha dibujado. */
+.k-trazo__orden path {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  animation: k-trazo-dibuja calc(var(--dur-slow) * 2) var(--ease-out) calc(var(--i, 0) * var(--dur-slow) * 2.2) forwards;
+}
+.k-trazo__mano {
+  stroke: var(--ink-2);
+  stroke-width: 5;
+}
+/* El intento que no valió se apaga solo, y la transición vive aquí y no en la
+   base: así empezar el trazo siguiente (quitar `data-mal`) lo vuelve a pintar
+   al instante, en vez de dejar al dedo sin tinta lo que dura el retardo. */
+.k-trazo__mano[data-mal] {
+  stroke: var(--accent);
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out) var(--dur-med);
+}
+.k-trazo__pista {
+  stroke: var(--accent-ink);
+  stroke-width: 5.6;
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  animation: k-trazo-dibuja calc(var(--dur-slow) * 2) var(--ease-out) var(--dur-med) forwards;
+}
+.k-trazo__inicio { fill: var(--accent); }
+@keyframes k-trazo-dibuja { to { stroke-dashoffset: 0; } }
+/* El nombre del sonido, debajo del lienzo al presentar y encima en la prueba. */
+.k-trazo__son {
+  flex: 0 0 auto;
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--t-h3);
+  line-height: 1;
+  text-align: center;
+}
+/* Las juntas de la pila, que ningún átomo trae: el nombre del sonido pega con el lienzo cuando va
+   encima (prueba), y los botones pegan con la nota que los precede (presentar y prueba). */
+.k-trazo__son + .k-trazo { margin-top: var(--space-3); }
+.k-trazo ~ .k-wrap { margin-top: var(--space-3); }
+/* Junta con la nota al margen (átomo 13): la mnemotecnia es español con algún
+   kana dentro («Es さ en el espejo»), y cada kana va en su <span lang="ja">. Un
+   span suelto hereda la familia ya resuelta de su padre y se queda sin Noto
+   Serif JP; declarar la suya hace que `:lang(ja)` (tokens.css) la resuelva.
+   Recto: la nota es cursiva, y un kana oblicuo es otro dibujo. */
+.k-note [lang="ja"] {
+  font-family: var(--font-serif);
+  font-style: normal;
 }
 
 /* ---------- 99-compresion ---------- */

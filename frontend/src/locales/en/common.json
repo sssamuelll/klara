@@ -1181,6 +1181,15 @@
       "cualOyes": "Which one did you hear?",
       "correcta": "correct",
       "tuRespuesta": "your answer"
+    },
+    "trazo": {
+      "verOtraVez": "Watch again",
+      "trazoN": "Stroke {{n}} of {{total}}.",
+      "empieza": "Start at the dot.",
+      "eseNo": "Not that one. Start at the dot and follow the guide.",
+      "asiVa": "Stroke {{n}} goes like this. Trace it.",
+      "escribe": "Write the one you hear",
+      "listo": "Done."
     }
   },
   "sesion": {

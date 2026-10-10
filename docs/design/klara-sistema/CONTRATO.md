@@ -1,6 +1,6 @@
 ﻿# Contrato del vocabulario — `k-*`
 
-Este documento fija los nombres, los estados y las medidas de los 20 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
+Este documento fija los nombres, los estados y las medidas de los 21 átomos con los que se escriben todas las pantallas de Klara; después de esto ninguna hoja de pantalla define un botón, una tarjeta, una fila ni una barra propios.
 Va dirigido a quien implemente la hoja de estilo y a quien migre cada pantalla: lo que no está aquí no existe, y lo que aquí se llama de una manera se llama así en el `.tsx`.
 Lo implementa `frontend/src/styles/sistema.css`, una hoja nueva que se importa en `frontend/src/main.tsx` justo después de `./styles/global.css` (main.tsx:6) y antes que `native.css` (main.tsx:7).
 Lo muestra `docs/design/klara-sistema/hoja.html`, que carga solo `global.css` + `sistema.css` (hoja.html:17-18): si un átomo necesita `mobile3.css` para verse bien, la hoja lo delata.
@@ -1361,6 +1361,64 @@ Literales justificados: ninguno; el `1` del `line-height` es el de un solo cará
 
 ---
 
+### 21. Lienzo de trazo — `.k-trazo`
+
+**Reemplaza:** nada, es pieza nueva del spec `2026-10-09-klara-tres-idiomas` (§5.5, las dinámicas). Es el lienzo de `trazo` (`frontend/src/dinamicas/Trazo.tsx`): escribir un kana con el dedo, un trazo detrás de otro, en la caja de 109 × 109 de KanjiVG. El slug de la hoja y de `hoja.check.mjs` es `lienzo-trazo`.
+
+**Elementos:** `.k-trazo` es un `<div>` cuadrado que lleva dentro un solo `<svg viewBox="0 0 109 109">`; lo demás son grupos y trazos de ese svg, de abajo arriba:
+- `.k-trazo__guia` — la cruz punteada (田): dos `<line>`.
+- `.k-trazo__ref` — los trazos de referencia. Están **siempre** en el DOM, porque la dinámica los muestrea con `getTotalLength()` y `getPointAtLength()`; solo se ven en práctica, como plantilla gris.
+- `.k-trazo__orden` — al presentar, los mismos trazos en tinta, que se dibujan uno tras otro. El índice de cada uno (`--i`) lo pone el `.tsx` en línea.
+- `.k-trazo__tinta` — los trazos ya aceptados, ya limpios.
+- `.k-trazo__pista` — el trazo que toca, que se dibuja encima después de fallar.
+- `.k-trazo__mano` — lo que va trazando el dedo.
+- `.k-trazo__inicio` — un `<circle>` en el punto donde empieza el trazo que toca (solo en práctica).
+
+Fuera del lienzo, y hermano suyo, va `.k-trazo__son`: el nombre del sonido (`<p>`), debajo al presentar y encima en la prueba.
+
+**Variantes:** ninguna de clase. El modo es un atributo del bloque: `data-modo="presentar | practicar | comprobar"`.
+
+**Estados:**
+- `data-modo="presentar"` — `.k-trazo__orden` dibuja cada trazo en `calc(var(--dur-slow) * 2)`, y el siguiente empieza `calc(var(--dur-slow) * 2.2)` después del anterior. «Ver otra vez» vuelve a montar el grupo y lo repite.
+- `data-modo="practicar"` — la plantilla (`.k-trazo__ref path`) pasa a `visibility: visible` y el punto de inicio marca dónde empieza el trazo que toca.
+- `data-modo="comprobar"` — el lienzo vacío: sin plantilla y sin punto.
+- `.k-trazo__mano[data-mal="true"]` — el intento que no valió: tinta de acento que se apaga sola (`opacity: 0` en `--dur-slow`, tras `--dur-med`).
+- **corregido** — `.k-trazo__pista` en `--accent-ink` sobre lo ya hecho en tinta. Entra al segundo fallo seguido en el mismo trazo en práctica y al primero en la prueba, y se dibuja `--dur-med` después de entrar.
+
+**Medidas:** `flex: 0 0 auto`, `align-self: center`, `aspect-ratio: 1`, borde 1px `--rule`, radio `--r-md`, fondo `--paper-2`, `touch-action: none` y `user-select: none`. Ancho: `min(100%, clamp(180px, calc(100dvh - 388px), 272px))`, con `min(100%, 272px)` escrito antes para un navegador sin `dvh`. Dentro del svg las medidas son unidades de la caja de 109, no píxeles (el svg escala): guía 0.45 —discontinua `2 2.2`, a opacidad 0.55—, plantilla 7.5, tinta, orden y pista 5.6, mano 5; el punto de inicio, de radio 2.4, lo pone el `.tsx`. `.k-trazo__son` es serif cursiva a `var(--t-h3)`, `line-height: 1`, centrada, con `var(--space-3)` de margen arriba.
+Literales justificados: **272px** es el lado más grande con el que el lienzo, su nota y el dock caben a 660px de alto; **180px**, el suelo (por debajo no cabe un dedo); **388px**, lo que ocupa todo lo demás —barra, rótulos, nota, botones y dock—, medido con la mnemotecnia más larga (を, 78 caracteres) a 320px de ancho. Sin el `clamp`, a 600px de alto el contenido de `.k-fill` sobraba 19px (26 a 320 de ancho) y el botón de debajo quedaba a medias detrás del borde; con él, no sobra nada desde 580px. El resto son medidas del dibujo en la caja de 109 (0.45, `2 2.2`, 0.55, 7.5, 5.6, 5, 2.4) y ningún token las cubre; el `2` y el `2.2` multiplican `--dur-slow`, y el segundo deja el hueco entre un trazo y el siguiente.
+
+**Tokens:** `--paper-2`, `--paper-3`, `--rule`, `--r-md`, `--ink`, `--ink-2`, `--ink-4`, `--accent`, `--accent-ink`, `--dur-med`, `--dur-slow`, `--ease-out`, `--space-3`, `--t-h3`, `--font-serif`.
+
+**Markup canónico:**
+```html
+<div class="k-trazo" data-modo="practicar">
+  <svg viewBox="0 0 109 109" role="img" aria-label="あ" lang="ja">
+    <g class="k-trazo__guia" aria-hidden="true"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
+    <g class="k-trazo__ref" aria-hidden="true"><path d="M27,34 …"/><path d="M50,17 …"/></g>
+    <g class="k-trazo__tinta"><path d="M27,34 …"/></g>
+    <path class="k-trazo__mano" d="M50,18 L48,40 L49,62"/>
+    <circle class="k-trazo__inicio" cx="50" cy="17" r="2.4"/>
+  </svg>
+</div>
+<p class="k-note" aria-live="polite">Trazo 2 de 3.</p>
+```
+
+**Mapa viejo → nuevo:** nada, pieza nueva.
+
+**Trampas:**
+- **`touch-action: none` va en el `<div>` y le llega al `<svg>` de dentro.** El valor calculado del svg es `auto` (la propiedad no se hereda), pero el navegador intersecta la de todos los ancestros hasta el contenedor con scroll. Medido en Chromium: un arrastre de 144px sobre el lienzo no movió un contenedor con scroll (de 0 a 0), y el mismo gesto sobre el fondo lo movió 135px.
+- **`stroke-dasharray: 1 2`, no `1`.** Con `1` y `stroke-dashoffset: 1` el siguiente tramo de tinta empieza justo donde acaba el trazo y, con tapa redonda, Chromium lo pinta como un punto: cada trazo que aún no se había dibujado enseñaba uno en su final (tres en を) mientras esperaba su turno, y la pista otro durante su retardo. Con un hueco más largo que el trazo, ningún borde del patrón cae dentro del camino. Se vio en una captura de pantalla, no en ningún valor calculado.
+- **La transición del intento fallido vive en `[data-mal]`, no en la base.** Una transición de `opacity` en `.k-trazo__mano` también corre al quitar `data-mal` —al empezar el trazo siguiente—, con su retardo de `--dur-med`: el trazo nuevo nacía con `opacity` 0,00 a los 30ms y 0,06 a los 180ms, y el dedo se quedaba sin tinta un cuarto de segundo. La transición se toma del estado al que se llega: en `[data-mal]` solo apaga.
+- **Un solo puntero por trazo, y `pointercancel` no es un fallo** (`Trazo.tsx`). El primer puntero que baja es el dueño del trazo (`pointerId`): un segundo dedo, o una palma, dentro del lienzo no lo reinicia ni lo mezcla; `pointercancel` y `lostpointercapture` descartan lo trazado sin juzgarlo ni contar un fallo. Medido en Chromium con un segundo dedo dentro del lienzo: el trazo del primero valía; con un manejo que no distingue punteros (y que juzga el cancelado), no.
+- **El kana de la mnemotecnia.** La mnemotecnia es español con algún kana dentro (5 de 46: «Es さ en el espejo…»). Cada tramo de kana va en su `<span lang="ja">` (`partirKana`, en `lib/dinamicas/trazo.ts`) y `.k-note [lang="ja"]` declara su `font-family`, para que `:lang(ja)` (átomo 20) la resuelva con Noto Serif JP; recto, porque la nota es cursiva y un kana oblicuo es otro dibujo. Es la única regla del átomo que cuelga de otro, una junta como `.k-hero + .k-wrap`.
+- **Las juntas de la pila.** Ningún átomo las trae y sin ellas todo se pegaba: `.k-trazo__son + .k-trazo` (el nombre del sonido encima del lienzo, en la prueba) y `.k-trazo ~ .k-wrap` (los botones de debajo de la nota), de `var(--space-3)` cada una.
+- **La plantilla es tenue a propósito:** `--paper-3` sobre `--paper-2` da 1,09:1 en claro y 1,12:1 en oscuro. Es una guía, no información: lo que dice dónde empezar y qué toca es el punto de inicio y la pista, en acento.
+
+**Notas:** reduced motion: `--dur-*` valen 0, así que los trazos de presentar aparecen enteros, el intento fallido desaparece de golpe y la pista aparece ya dibujada; la nota conserva la información. El veredicto no es solo color: la nota (`aria-live="polite"`) dice «Ese no…», «El trazo n va así…» o «Listo.», el trazo bueno se sustituye por el limpio (cambia la forma, no solo el tono) y el punto de inicio es un punto (forma y sitio), no solo acento. El lector de pantalla lee el svg con voz japonesa (`lang="ja"` y el kana en `aria-label`); dibujar no tiene alternativa de teclado, y para eso está «Ahora no puedo escribir» del dock, que salta la actividad.
+
+---
+
 ## Orden de borrado seguro
 
 ### Se puede borrar ya, sin migrar nada
@@ -1478,7 +1536,7 @@ Cada entrada dice qué es, dónde vive hoy y qué migración de pantalla la deci
 
 4. **className fantasma: el `.tsx` pinta clases que ninguna hoja declara.** Verificados con grep: ~~`.k-tool`~~ y ~~`.kac-tool`~~ (0 declaraciones base; el de Hablar murió con la migración 5 y el de SentenceView con la 6, igual que `.kp-stat__of`), `.mono` (Taller.tsx:142 escribe `className="tally mono"` y la clase real es `.k-mono`), ~~`.fin-difficulty`~~ (StoryFinish.tsx:985), ~~`.k-wave__time`~~, ~~`.k-stepnav__btn--prev`~~ (SentenceView.tsx:621), ~~`.ob-isel__opt-label`~~ (ObInlineSelect.tsx:72), `.wpop__freq` (WordPopover.tsx:110), ~~`.story--audio` y `.story__pron-error`~~ (Practice.tsx:458 y 501). La migración 6 se llevó cinco de los diez de un tirón, y no por buscarlos: al borrar el componente y su hoja, sus fantasmas se fueron con ellos. La 7 se llevó el sexto (`.fin-difficulty`: la pregunta de dificultad es una `.k-cap` con tres `.k-btn` en un `.k-wrap`, y el `aria-pressed` que ya tenía) y la 8 el séptimo (`.ob-isel__opt-label` → `.k-row__title`). Quedan dos: `.mono` de Taller y `.wpop__freq`. La auditoría dice «108/108 clases usadas» porque cuenta CSS sin consumidor, no TSX sin CSS. Al migrar cada pantalla, cada uno de esos ganchos se borra del markup o se convierte en el nombre real del átomo; el mapa de arriba dice cuál.
 
-5. **`hoja.check.mjs` conoce los 20 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
+5. **`hoja.check.mjs` conoce los 21 átomos y exige también las variantes.** Su tabla `ESTADOS` lista, por slug de átomo, cada `data-estado` que la hoja debe mostrar: los del §5 del brief más las variantes del contrato (`texto`, `tinta`, `plana`, `seleccionada`, `con-caja`, `con-regla`, `sin-caja`, `estatico`, `quieto`, `area`, `manuscrito`…). El slug del átomo 17 es `campo-texto`; el del 21, `lienzo-trazo`. La barra repite `segmentos`/`continua`/`hitos` como estados porque el chequeo los pide así.
 
 6. **`hoja.check.mjs` mide ancho y alto, salvo en elementos `display: inline`.** La comprobación exige `width ≥ 44` y `height ≥ 44` en todo control; para los de `display` computado `inline` —solo `.k-word`— mide únicamente el alto, porque ensanchar la palabra rompe la línea que §6.2 declara «la pantalla». `.k-btn--text` **no** necesita excepción: lleva `min-height: 44px` y `min-width: 44px` con márgenes compensados.
 

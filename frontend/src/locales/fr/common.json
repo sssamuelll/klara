@@ -1181,6 +1181,15 @@
       "cualOyes": "Lequel as-tu entendu ?",
       "correcta": "bonne réponse",
       "tuRespuesta": "ta réponse"
+    },
+    "trazo": {
+      "verOtraVez": "Revoir",
+      "trazoN": "Trait {{n}} sur {{total}}.",
+      "empieza": "Commence au point.",
+      "eseNo": "Pas celui-là. Commence au point et suis le modèle.",
+      "asiVa": "Le trait {{n}} se fait ainsi. Repasse-le.",
+      "escribe": "Écris celui que tu entends",
+      "listo": "Terminé."
     }
   },
   "sesion": {

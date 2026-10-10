@@ -52,6 +52,7 @@ const ESTADOS = {
   "recorrido": ["pendiente", "ahora", "hecha", "fin", "compuesto-largo"],
   "estanteria": ["tema", "vencidas", "nuevo", "compuesto-largo"],
   "glifo": ["latino", "japones", "nube-centrada"],
+  "lienzo-trazo": ["presentar", "practicar", "comprobar", "corregido"],
 };
 
 // document.fonts.ready resuelve antes de que el layout pida las caras; hay que

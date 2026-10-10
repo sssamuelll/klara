@@ -1181,6 +1181,15 @@
       "cualOyes": "¿Cuál oíste?",
       "correcta": "correcta",
       "tuRespuesta": "tu respuesta"
+    },
+    "trazo": {
+      "verOtraVez": "Ver otra vez",
+      "trazoN": "Trazo {{n}} de {{total}}.",
+      "empieza": "Empieza en el punto.",
+      "eseNo": "Ese no. Empieza en el punto y sigue la guía.",
+      "asiVa": "El trazo {{n}} va así. Síguelo.",
+      "escribe": "Escribe la que suena",
+      "listo": "Listo."
     }
   },
   "sesion": {
