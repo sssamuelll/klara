@@ -30,6 +30,14 @@ import { speak, stop, unlockAudio } from "../lib/tts";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Una presentación no responde a «listo» hasta pasados estos ms de haber entrado. Un doble toque
+ * (o un doble Enter) son dos eventos aparte: React ya repintó entre uno y otro, y el segundo cae
+ * sobre el «Ahora tú →» de la presentación que viene y la saltaría. Cubre el toque, el Enter y el
+ * «Seguir →» que desemboca en una presentación.
+ */
+const PRESENTAR_MIN_MS = 350;
+
 type Carga = { s: SesionOut; run: string | null };
 
 /**
@@ -75,6 +83,8 @@ export default function Sesion(): JSX.Element {
   const [sesion, setSesion] = useState<SesionOut | null>(null);
   const [manana, setManana] = useState<number | null>(null);
   const [intento, setIntento] = useState(0);
+  // El id de la actividad para la que ya pasó AUTO_AVANCE_MS (ver el efecto de más abajo).
+  const [apagarListoPara, setApagarListoPara] = useState<string | null>(null);
   const runId = useRef<string | null>(null);
   // La guarda del doble toque: una sola respuesta por actividad (Review Focus 1).
   const respondida = useRef<string | null>(null);
@@ -82,6 +92,11 @@ export default function Sesion(): JSX.Element {
   // el efecto dos veces seguidas; si cada pasada pidiera por su cuenta, abriría
   // dos corridas y la primera se quedaría abierta para siempre.
   const carga = useRef<{ clave: string; promesa: Promise<Carga> } | null>(null);
+  // Cuándo entró la actividad que está a la vista (ver PRESENTAR_MIN_MS).
+  const entroEn = useRef<{ id: string; t: number } | null>(null);
+  // El cierre de la corrida que acaba de terminar: «Otra lección» lo espera.
+  const cierre = useRef<Promise<unknown> | null>(null);
+  const montada = useRef(true);
 
   // Pedir la sesión y abrir su corrida. Se repite con «Reintentar» y con «Otra lección».
   useEffect(() => {
@@ -90,6 +105,10 @@ export default function Sesion(): JSX.Element {
     setManana(null);
     respondida.current = null;
     runId.current = null;
+    // Los ids de actividad son posicionales (`a0`…): lo de la sesión anterior no vale para la nueva.
+    setApagarListoPara(null);
+    entroEn.current = null;
+    cierre.current = null;
     const clave = [idioma, unidad, leccion, conRepasos, intento].join("|");
     if (carga.current?.clave !== clave) {
       carga.current = { clave, promesa: cargar(idioma, unidad, leccion, conRepasos) };
@@ -118,13 +137,12 @@ export default function Sesion(): JSX.Element {
     const id = runId.current;
     runId.current = null;
     let vivo = true;
-    api
-      .cerrarRun(id)
-      .catch(() => api.cerrarRun(id))
-      .then(
-        (r) => vivo && setManana(r.manana),
-        () => vivo && setManana(null),
-      );
+    const cerrada = api.cerrarRun(id).catch(() => api.cerrarRun(id));
+    cierre.current = cerrada;
+    cerrada.then(
+      (r) => vivo && setManana(r.manana),
+      () => vivo && setManana(null),
+    );
     return () => {
       vivo = false;
     };
@@ -137,20 +155,27 @@ export default function Sesion(): JSX.Element {
     return () => window.clearTimeout(id);
   }, [estado.fase, estado.todoBien, estado.idx]);
 
-  // Al salir de la pantalla, que no siga sonando nada.
-  useEffect(() => () => stop(), []);
+  // Al salir de la pantalla, que no siga sonando nada ni se pida nada después.
+  useEffect(() => {
+    montada.current = true;
+    return () => {
+      montada.current = false;
+      stop();
+    };
+  }, []);
 
   const actividad =
     estado.fase === "actividad" || estado.fase === "resultado" ? estado.cola[estado.idx] : undefined;
 
-  // «Ahora no puedo …» apaga una capacidad para el resto de la sesión y no tiene vuelta. Cae en el
-  // mismo sitio que «Ahora tú →», así que no aparece hasta que la actividad lleva AUTO_AVANCE_MS a la
-  // vista: un doble toque no la alcanza. Se guarda el id y no un booleano, para que al cambiar de
-  // actividad no haya ni un cuadro con el botón de la anterior.
-  const [apagarListoPara, setApagarListoPara] = useState<string | null>(null);
+  // Por cada actividad que entra: se apunta la hora (para PRESENTAR_MIN_MS) y corre el plazo de
+  // «Ahora no puedo …», que apaga una capacidad para el resto de la sesión y no tiene vuelta: no
+  // aparece hasta que la actividad lleva AUTO_AVANCE_MS a la vista, así un doble toque no la alcanza.
+  // Del plazo se guarda el id y no un booleano, para que al cambiar de actividad no haya ni un
+  // cuadro con el botón de la anterior.
   const actividadId = actividad?.id;
   useEffect(() => {
     if (actividadId === undefined) return;
+    entroEn.current = { id: actividadId, t: performance.now() };
     const id = window.setTimeout(() => setApagarListoPara(actividadId), AUTO_AVANCE_MS);
     return () => window.clearTimeout(id);
   }, [actividadId]);
@@ -184,8 +209,12 @@ export default function Sesion(): JSX.Element {
   );
 
   const presentarListo = useCallback(() => {
-    // Un doble toque, o un Enter repetido, saltaría también la actividad que viene.
+    // Un segundo evento antes de que React repinte (la misma pasada) se ignora…
     if (!actividad || respondida.current === actividad.id) return;
+    // …y uno que llega recién entrada la presentación es el segundo de un doble toque sobre la
+    // anterior, no una lectura. Sin hora apuntada de ESTA actividad tampoco vale.
+    const entro = entroEn.current;
+    if (entro === null || entro.id !== actividad.id || performance.now() - entro.t < PRESENTAR_MIN_MS) return;
     unlockAudio();
     respondida.current = actividad.id;
     dispatch({ tipo: "resultado", evidencias: [] });
@@ -209,11 +238,15 @@ export default function Sesion(): JSX.Element {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Enter" && e.code !== "Space") return;
-      // Una tecla sostenida no puede pasar una actividad tras otra, y Ctrl/Alt/Cmd son del
-      // navegador. Escribiendo en un campo, o con «Salir» enfocado, la tecla es de ellos.
+      // Una tecla sostenida no puede pasar una actividad tras otra, y Ctrl/Alt/Cmd son del navegador.
       if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+      // La tecla es del campo de texto, o del botón que tenga el foco fuera del dock («Salir»,
+      // «Oír otra vez»…). Los del dock son de esta pantalla; y una opción ya respondida (`data-tone`)
+      // ya no hace nada, así que ahí Enter y Espacio siguen.
       const en = e.target instanceof Element ? e.target : null;
-      if (en?.closest("input, textarea, select, [contenteditable], .k-topline")) return;
+      if (en?.closest("input, textarea, select, [contenteditable]")) return;
+      const boton = en?.closest("button:not(:disabled)");
+      if (boton && !boton.closest(".k-dock") && !boton.hasAttribute("data-tone")) return;
       if (estado.fase === "resultado") {
         e.preventDefault();
         dispatch({ tipo: "seguir" });
@@ -227,8 +260,16 @@ export default function Sesion(): JSX.Element {
   }, [estado.fase, actividad, presentarListo]);
 
   const otraLeccion = () => {
-    navigate(`/sesion/${idioma}?repasos=0`, { replace: true, state: { from: salirA } });
-    setIntento((n) => n + 1);
+    // El servidor elige la lección entre las que no tienen una corrida de Hoy terminada: si el
+    // cierre de esta sigue en vuelo, devolvería la misma. Se espera ese cierre (acabe bien o mal) y
+    // mientras tanto sale la pantalla de carga, para que el botón responda al instante.
+    dispatch({ tipo: "cargando" });
+    const pedir = () => {
+      if (!montada.current) return;
+      navigate(`/sesion/${idioma}?repasos=0`, { replace: true, state: { from: salirA } });
+      setIntento((n) => n + 1);
+    };
+    Promise.resolve(cierre.current).then(pedir, pedir);
   };
 
   const nombre = languageLabel(idioma);
@@ -392,24 +433,27 @@ export default function Sesion(): JSX.Element {
             <button type="button" className="k-btn k-btn--lg k-btn--block" onClick={() => dispatch({ tipo: "seguir" })}>
               {t("sesion.seguir")} <span className="k-btn__arrow" aria-hidden="true">→</span>
             </button>
-          ) : cap !== null && estado.fase === "actividad" ? (
-            apagarListoPara === actividad.id ? (
-              <button
-                type="button"
-                className="k-btn k-btn--text"
-                onClick={() => {
-                  stop();
-                  dispatch({ tipo: "apagar", capacidad: cap });
-                }}
-              >
-                {t(`sesion.noPuedo.${cap}`)}
-              </button>
-            ) : (
-              // El mismo alto y nada que tocar: si el botón entrara de golpe, lo de arriba (a veces un
-              // lienzo) daría un salto de 10px a los 700 ms.
-              <span className="k-btn k-btn--text" aria-hidden="true" />
-            )
-          ) : null}
+          ) : (
+            <>
+              {cap !== null && estado.fase === "actividad" && apagarListoPara === actividad.id && (
+                <button
+                  type="button"
+                  className="k-btn k-btn--text"
+                  onClick={() => {
+                    stop();
+                    dispatch({ tipo: "apagar", capacidad: cap });
+                  }}
+                >
+                  {t(`sesion.noPuedo.${cap}`)}
+                </button>
+              )}
+              {/* El alto de «Seguir →», siempre reservado: el dock no cambia de alto entre fases, así lo
+                  de arriba (a veces un lienzo) no da saltos al responder ni cuando entra «Ahora no
+                  puedo …». Invisible con `visibility` (conserva su caja; no hay átomo para un hueco) y
+                  sin `k-btn--block`, para que quepa al lado de ese botón también en alemán. */}
+              <span className="k-btn k-btn--lg" aria-hidden="true" style={{ visibility: "hidden" }} />
+            </>
+          )}
         </div>
       </div>
     </div>
