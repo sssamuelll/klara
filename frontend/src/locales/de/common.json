@@ -1183,13 +1183,14 @@
       "tuRespuesta": "deine Antwort"
     },
     "trazo": {
-      "verOtraVez": "Nochmal ansehen",
+      "verElOrden": "Strichfolge",
       "trazoN": "Strich {{n}} von {{total}}.",
       "empieza": "Beginne am Punkt.",
       "eseNo": "Nicht so. Beginne am Punkt und folge der Vorlage.",
       "asiVa": "Strich {{n}} geht so. Fahr ihn nach.",
       "escribe": "Schreib, was du hörst",
-      "listo": "Fertig."
+      "listo": "Fertig.",
+      "lienzo": "Schreibfläche"
     }
   },
   "sesion": {

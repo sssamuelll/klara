@@ -1183,13 +1183,14 @@
       "tuRespuesta": "tu respuesta"
     },
     "trazo": {
-      "verOtraVez": "Ver otra vez",
+      "verElOrden": "Ver el orden",
       "trazoN": "Trazo {{n}} de {{total}}.",
       "empieza": "Empieza en el punto.",
       "eseNo": "Ese no. Empieza en el punto y sigue la guía.",
       "asiVa": "El trazo {{n}} va así. Síguelo.",
       "escribe": "Escribe la que suena",
-      "listo": "Listo."
+      "listo": "Listo.",
+      "lienzo": "Lienzo para escribir"
     }
   },
   "sesion": {

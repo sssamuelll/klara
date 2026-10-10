@@ -3156,7 +3156,15 @@ ul.k-error { list-style: none; }
 .k-trazo svg { display: block; width: 100%; height: 100%; }
 .k-trazo__guia line { stroke: var(--ink-4); stroke-width: 0.45; stroke-dasharray: 2 2.2; opacity: 0.55; }
 .k-trazo path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.k-trazo__ref path { stroke: var(--paper-3); stroke-width: 7.5; visibility: hidden; }
+/* La plantilla es lo que el dedo sigue, así que tiene que distinguirse del lienzo: `--ink-4` al 50 % da
+   1,53:1 en claro y 1,46:1 en oscuro, y la tinta (9,6:1 y 9,1:1) sigue mandando encima. `--paper-3`, que era
+   lo que había, da 1,09:1 y 1,12:1: no se veía. El `--rule` de delante es el respaldo sin `color-mix`. */
+.k-trazo__ref path {
+  stroke: var(--rule);
+  stroke: color-mix(in srgb, var(--ink-4) 50%, var(--paper-2));
+  stroke-width: 7.5;
+  visibility: hidden;
+}
 .k-trazo[data-modo="practicar"] .k-trazo__ref path { visibility: visible; }
 .k-trazo__tinta path,
 .k-trazo__orden path { stroke: var(--ink); stroke-width: 5.6; }
@@ -3189,6 +3197,33 @@ ul.k-error { list-style: none; }
 }
 .k-trazo__inicio { fill: var(--accent); }
 @keyframes k-trazo-dibuja { to { stroke-dashoffset: 0; } }
+/* El aro que late alrededor del punto de inicio: dice dónde empezar sin depender del color del punto. Quieto
+   con movimiento reducido (un aro fijo alrededor del punto), porque aquí el movimiento es el aviso. */
+.k-trazo__aro {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 0.8;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: k-trazo-late var(--dur-breath) var(--ease-out) infinite;
+}
+@keyframes k-trazo-late {
+  from { transform: scale(0.6); opacity: 0.9; }
+  to { transform: scale(2.2); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .k-trazo__aro { animation: none; transform: scale(1.6); opacity: 0.6; }
+}
+/* Al presentar, el número de cada trazo aparece cuando el trazo empieza a dibujarse (`--i`, como `__orden`).
+   Va en la tinta de la nota, `--ink-2` (8,8:1 y 7,8:1 sobre el lienzo): son dígitos pequeños, no una marca. */
+.k-trazo__num {
+  font-family: var(--font-mono);
+  font-size: 5.6px;
+  fill: var(--ink-2);
+  opacity: 0;
+  animation: k-trazo-aparece var(--dur-med) var(--ease-out) calc(var(--i, 0) * var(--dur-slow) * 2.2) forwards;
+}
+@keyframes k-trazo-aparece { to { opacity: 1; } }
 /* El nombre del sonido, debajo del lienzo al presentar y encima en la prueba. */
 .k-trazo__son {
   flex: 0 0 auto;

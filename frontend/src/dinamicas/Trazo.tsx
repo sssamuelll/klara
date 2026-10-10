@@ -4,13 +4,14 @@
  * vale, se reemplaza por el limpio. Pointer Events: el mismo código sirve para
  * dedo, lápiz y mouse; `.k-trazo` lleva `touch-action: none`.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   alSoltar,
   evaluarTrazo,
   evidenciaTrazo,
   inicialTrazo,
+  lugaresNumeros,
   N,
   partirKana,
   type Esperado,
@@ -57,6 +58,8 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
   const [mal, setMal] = useState(false);
   const [vuelta, setVuelta] = useState(0);
   const total = contenido.trazos.length;
+  // Dónde va el número de cada trazo al presentar.
+  const lugares = useMemo(() => (esperados ? lugaresNumeros(esperados) : null), [esperados]);
 
   // Los trazos de referencia se muestrean del propio SVG: getTotalLength necesita el DOM.
   useEffect(() => {
@@ -78,8 +81,8 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
   useEffect(() => {
     if (modo === "presentar" || !estado.terminado || reportado.current) return;
     reportado.current = true;
-    onResultado([evidenciaTrazo(contenido.item, estado, Math.round(performance.now() - inicio.current))]);
-  }, [estado, modo, contenido.item, onResultado]);
+    onResultado([evidenciaTrazo(contenido.item, estado, Math.round(performance.now() - inicio.current), total)]);
+  }, [estado, modo, contenido.item, total, onResultado]);
 
   // De píxeles de pantalla a la caja de 109: el SVG escala, y la matriz también.
   const punto = (e: PointerEvent<SVGSVGElement>): Punto => {
@@ -151,8 +154,9 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
         <svg
           viewBox="0 0 109 109"
           role="img"
-          aria-label={contenido.kana}
-          lang="ja"
+          // En la prueba el kana es la respuesta: el lector oye qué es el lienzo, no qué hay que escribir.
+          aria-label={modo === "comprobar" ? t("dinamica.trazo.lienzo") : contenido.kana}
+          lang={modo === "comprobar" ? undefined : "ja"}
           onPointerDown={bajar}
           onPointerMove={mover}
           onPointerUp={soltar}
@@ -180,6 +184,14 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
               {contenido.trazos.map((p, i) => (
                 <path key={i} d={p} pathLength={1} style={{ "--i": i } as CSSProperties} />
               ))}
+              {lugares?.map(
+                (l, i) =>
+                  l && (
+                    <text key={`n${i}`} className="k-trazo__num" x={l[0]} y={l[1]} dy=".35em" textAnchor="middle" style={{ "--i": i } as CSSProperties}>
+                      {i + 1}
+                    </text>
+                  ),
+              )}
             </g>
           ) : (
             <>
@@ -198,7 +210,10 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
               )}
               {mano && <path className="k-trazo__mano" data-mal={mal || undefined} d={camino(mano)} />}
               {modo === "practicar" && inicioTrazo && !estado.terminado && (
-                <circle className="k-trazo__inicio" cx={inicioTrazo[0]} cy={inicioTrazo[1]} r={2.4} />
+                <>
+                  <circle className="k-trazo__aro" cx={inicioTrazo[0]} cy={inicioTrazo[1]} r={3} />
+                  <circle className="k-trazo__inicio" cx={inicioTrazo[0]} cy={inicioTrazo[1]} r={2.4} />
+                </>
               )}
             </>
           )}
@@ -223,7 +238,7 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
               {t("dinamica.oirOtraVez")}
             </button>
             <button type="button" className="k-btn k-btn--text" onClick={() => setVuelta((v) => v + 1)}>
-              {t("dinamica.trazo.verOtraVez")}
+              {t("dinamica.trazo.verElOrden")}
             </button>
           </div>
         </>

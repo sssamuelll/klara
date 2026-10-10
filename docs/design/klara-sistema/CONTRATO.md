@@ -1367,28 +1367,30 @@ Literales justificados: ninguno; el `1` del `line-height` es el de un solo cará
 
 **Elementos:** `.k-trazo` es un `<div>` cuadrado que lleva dentro un solo `<svg viewBox="0 0 109 109">`; lo demás son grupos y trazos de ese svg, de abajo arriba:
 - `.k-trazo__guia` — la cruz punteada (田): dos `<line>`.
-- `.k-trazo__ref` — los trazos de referencia. Están **siempre** en el DOM, porque la dinámica los muestrea con `getTotalLength()` y `getPointAtLength()`; solo se ven en práctica, como plantilla gris.
+- `.k-trazo__ref` — los trazos de referencia. Están **siempre** en el DOM, porque la dinámica los muestrea con `getTotalLength()` y `getPointAtLength()`; solo se ven en práctica, como plantilla gris (`--ink-4` al 50 %).
 - `.k-trazo__orden` — al presentar, los mismos trazos en tinta, que se dibujan uno tras otro. El índice de cada uno (`--i`) lo pone el `.tsx` en línea.
 - `.k-trazo__tinta` — los trazos ya aceptados, ya limpios.
 - `.k-trazo__pista` — el trazo que toca, que se dibuja encima después de fallar.
 - `.k-trazo__mano` — lo que va trazando el dedo.
+- `.k-trazo__aro` — un `<circle>` que late alrededor del punto de inicio (solo en práctica).
 - `.k-trazo__inicio` — un `<circle>` en el punto donde empieza el trazo que toca (solo en práctica).
+- `.k-trazo__num` — al presentar, el número de cada trazo, junto a su inicio (`<text>`, con el `--i` del trazo). KanjiVG no trae el sitio: lo calcula `lugaresNumeros` (`lib/dinamicas/trazo.ts`), detrás del inicio si ahí hay sitio y, si no, hacia un lado, sin tocar la tinta de ningún trazo ni otro número.
 
 Fuera del lienzo, y hermano suyo, va `.k-trazo__son`: el nombre del sonido (`<p>`), debajo al presentar y encima en la prueba.
 
 **Variantes:** ninguna de clase. El modo es un atributo del bloque: `data-modo="presentar | practicar | comprobar"`.
 
 **Estados:**
-- `data-modo="presentar"` — `.k-trazo__orden` dibuja cada trazo en `calc(var(--dur-slow) * 2)`, y el siguiente empieza `calc(var(--dur-slow) * 2.2)` después del anterior. «Ver otra vez» vuelve a montar el grupo y lo repite.
-- `data-modo="practicar"` — la plantilla (`.k-trazo__ref path`) pasa a `visibility: visible` y el punto de inicio marca dónde empieza el trazo que toca.
+- `data-modo="presentar"` — `.k-trazo__orden` dibuja cada trazo en `calc(var(--dur-slow) * 2)`, y el siguiente empieza `calc(var(--dur-slow) * 2.2)` después del anterior. Cada número (`.k-trazo__num`) aparece cuando empieza su trazo. «Ver el orden» (el rótulo del spec, §5.5) vuelve a montar el grupo y lo repite.
+- `data-modo="practicar"` — la plantilla (`.k-trazo__ref path`) pasa a `visibility: visible` y el punto de inicio marca dónde empieza el trazo que toca, con un aro que late alrededor: de 0,6 a 2,2 veces su tamaño y de opacidad 0,9 a 0 en `--dur-breath`. Con movimiento reducido, el aro se queda quieto, a 1,6 veces y opacidad 0,6.
 - `data-modo="comprobar"` — el lienzo vacío: sin plantilla y sin punto.
 - `.k-trazo__mano[data-mal="true"]` — el intento que no valió: tinta de acento que se apaga sola (`opacity: 0` en `--dur-slow`, tras `--dur-med`).
 - **corregido** — `.k-trazo__pista` en `--accent-ink` sobre lo ya hecho en tinta. Entra al segundo fallo seguido en el mismo trazo en práctica y al primero en la prueba, y se dibuja `--dur-med` después de entrar.
 
-**Medidas:** `flex: 0 0 auto`, `align-self: center`, `aspect-ratio: 1`, borde 1px `--rule`, radio `--r-md`, fondo `--paper-2`, `touch-action: none` y `user-select: none`. Ancho: `min(100%, clamp(180px, calc(100dvh - 388px), 272px))`, con `min(100%, 272px)` escrito antes para un navegador sin `dvh`. Dentro del svg las medidas son unidades de la caja de 109, no píxeles (el svg escala): guía 0.45 —discontinua `2 2.2`, a opacidad 0.55—, plantilla 7.5, tinta, orden y pista 5.6, mano 5; el punto de inicio, de radio 2.4, lo pone el `.tsx`. `.k-trazo__son` es serif cursiva a `var(--t-h3)`, `line-height: 1`, centrada, con `var(--space-3)` de margen arriba.
-Literales justificados: **272px** es el lado más grande con el que el lienzo, su nota y el dock caben a 660px de alto; **180px**, el suelo (por debajo no cabe un dedo); **388px**, lo que ocupa todo lo demás —barra, rótulos, nota, botones y dock—, medido con la mnemotecnia más larga (を, 78 caracteres) a 320px de ancho. Sin el `clamp`, a 600px de alto el contenido de `.k-fill` sobraba 19px (26 a 320 de ancho) y el botón de debajo quedaba a medias detrás del borde; con él, no sobra nada desde 580px. El resto son medidas del dibujo en la caja de 109 (0.45, `2 2.2`, 0.55, 7.5, 5.6, 5, 2.4) y ningún token las cubre; el `2` y el `2.2` multiplican `--dur-slow`, y el segundo deja el hueco entre un trazo y el siguiente.
+**Medidas:** `flex: 0 0 auto`, `align-self: center`, `aspect-ratio: 1`, borde 1px `--rule`, radio `--r-md`, fondo `--paper-2`, `touch-action: none` y `user-select: none`. Ancho: `min(100%, clamp(180px, calc(100dvh - 388px), 272px))`, con `min(100%, 272px)` escrito antes para un navegador sin `dvh`. Dentro del svg las medidas son unidades de la caja de 109, no píxeles (el svg escala): guía 0.45 —discontinua `2 2.2`, a opacidad 0.55—, plantilla 7.5, tinta, orden y pista 5.6, mano 5; el punto de inicio, de radio 2.4, lo pone el `.tsx`, y el aro, de radio 3 y 0.8 de trazo. Los números son mono a 5.6 (a 272px, 14px de pantalla) en `--ink-2`. `.k-trazo__son` es serif cursiva a `var(--t-h3)`, `line-height: 1`, centrada, con `var(--space-3)` de margen arriba.
+Literales justificados: **272px** es el lado más grande con el que el lienzo, su nota y el dock caben a 660px de alto; **180px**, el suelo (por debajo no cabe un dedo); **388px**, lo que ocupa todo lo demás —barra, rótulos, nota, botones y dock—, medido con la mnemotecnia más larga (を, 78 caracteres) a 320px de ancho. Sin el `clamp`, a 600px de alto el contenido de `.k-fill` sobraba 19px (26 a 320 de ancho) y el botón de debajo quedaba a medias detrás del borde; con él, no sobra nada desde 580px. El resto son medidas del dibujo en la caja de 109 (0.45, `2 2.2`, 0.55, 7.5, 5.6, 5, 2.4, y del aro 3, 0.8, 0.6, 2.2, 0.9, 1.6) y ningún token las cubre; el `2` y el `2.2` multiplican `--dur-slow`, y el segundo deja el hueco entre un trazo y el siguiente.
 
-**Tokens:** `--paper-2`, `--paper-3`, `--rule`, `--r-md`, `--ink`, `--ink-2`, `--ink-4`, `--accent`, `--accent-ink`, `--dur-med`, `--dur-slow`, `--ease-out`, `--space-3`, `--t-h3`, `--font-serif`.
+**Tokens:** `--paper-2`, `--rule`, `--r-md`, `--ink`, `--ink-2`, `--ink-4`, `--accent`, `--accent-ink`, `--dur-med`, `--dur-slow`, `--dur-breath`, `--ease-out`, `--space-3`, `--t-h3`, `--font-serif`, `--font-mono`.
 
 **Markup canónico:**
 ```html
@@ -1398,6 +1400,7 @@ Literales justificados: **272px** es el lado más grande con el que el lienzo, s
     <g class="k-trazo__ref" aria-hidden="true"><path d="M27,34 …"/><path d="M50,17 …"/></g>
     <g class="k-trazo__tinta"><path d="M27,34 …"/></g>
     <path class="k-trazo__mano" d="M50,18 L48,40 L49,62"/>
+    <circle class="k-trazo__aro" cx="50" cy="17" r="3"/>
     <circle class="k-trazo__inicio" cx="50" cy="17" r="2.4"/>
   </svg>
 </div>
@@ -1413,9 +1416,9 @@ Literales justificados: **272px** es el lado más grande con el que el lienzo, s
 - **Un solo puntero por trazo, y `pointercancel` no es un fallo** (`Trazo.tsx`). El primer puntero que baja es el dueño del trazo (`pointerId`): un segundo dedo, o una palma, dentro del lienzo no lo reinicia ni lo mezcla; `pointercancel` y `lostpointercapture` descartan lo trazado sin juzgarlo ni contar un fallo. Medido en Chromium con un segundo dedo dentro del lienzo: el trazo del primero valía; con un manejo que no distingue punteros (y que juzga el cancelado), no.
 - **El kana de la mnemotecnia.** La mnemotecnia es español con algún kana dentro (5 de 46: «Es さ en el espejo…»). Cada tramo de kana va en su `<span lang="ja">` (`partirKana`, en `lib/dinamicas/trazo.ts`) y `.k-note [lang="ja"]` declara su `font-family`, para que `:lang(ja)` (átomo 20) la resuelva con Noto Serif JP; recto, porque la nota es cursiva y un kana oblicuo es otro dibujo. Es la única regla del átomo que cuelga de otro, una junta como `.k-hero + .k-wrap`.
 - **Las juntas de la pila.** Ningún átomo las trae y sin ellas todo se pegaba: `.k-trazo__son + .k-trazo` (el nombre del sonido encima del lienzo, en la prueba) y `.k-trazo ~ .k-wrap` (los botones de debajo de la nota), de `var(--space-3)` cada una.
-- **La plantilla es tenue a propósito:** `--paper-3` sobre `--paper-2` da 1,09:1 en claro y 1,12:1 en oscuro. Es una guía, no información: lo que dice dónde empezar y qué toca es el punto de inicio y la pista, en acento.
+- **La plantilla se ve, y se mide.** Es lo que el aprendiz sigue con el dedo, y con `--paper-3` (1,09:1 sobre el lienzo en claro, 1,12:1 en oscuro) era la marca más tenue del lienzo —la cruz 田, que es decoración, da 1,60:1 y 1,53:1—: el mismo fallo que el ítem activo del menú (átomo 10), donde 1,06–1,11:1 «no se distinguía». Se probaron `--rule` (1,25:1 y 1,21:1) y `--ink-4` al 50 % (1,53:1 y 1,46:1); entra `--ink-4` al 50 %, que se lee como plantilla sin competir con la tinta (9,6:1 y 9,1:1 encima). Va en `color-mix(in srgb, var(--ink-4) 50%, var(--paper-2))` y no en `opacity`, para que dos trazos que se cruzan (を) no se oscurezcan donde se cruzan; `--rule` va delante, de respaldo.
 
-**Notas:** reduced motion: `--dur-*` valen 0, así que los trazos de presentar aparecen enteros, el intento fallido desaparece de golpe y la pista aparece ya dibujada; la nota conserva la información. El veredicto no es solo color: la nota (`aria-live="polite"`) dice «Ese no…», «El trazo n va así…» o «Listo.», el trazo bueno se sustituye por el limpio (cambia la forma, no solo el tono) y el punto de inicio es un punto (forma y sitio), no solo acento. El lector de pantalla lee el svg con voz japonesa (`lang="ja"` y el kana en `aria-label`); dibujar no tiene alternativa de teclado, y para eso está «Ahora no puedo escribir» del dock, que salta la actividad.
+**Notas:** reduced motion: `--dur-*` valen 0, así que los trazos de presentar aparecen enteros y con su número, el intento fallido desaparece de golpe y la pista aparece ya dibujada; el aro del punto de inicio se queda quieto; la nota conserva la información. El veredicto no es solo color: la nota (`aria-live="polite"`) dice «Ese no…», «El trazo n va así…» o «Listo.», el trazo bueno se sustituye por el limpio (cambia la forma, no solo el tono) y el punto de inicio es un punto (forma y sitio), no solo acento. Los números de presentar son texto, no color. El lector de pantalla lee el svg con voz japonesa (`lang="ja"` y el kana en `aria-label`), salvo en la prueba: ahí el kana es la respuesta, así que el svg se llama «Lienzo para escribir» (`dinamica.trazo.lienzo`) y no lleva `lang`. Dibujar no tiene alternativa de teclado, y para eso está «Ahora no puedo escribir» del dock, que salta la actividad.
 
 ---
 

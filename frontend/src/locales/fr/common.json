@@ -1183,13 +1183,14 @@
       "tuRespuesta": "ta réponse"
     },
     "trazo": {
-      "verOtraVez": "Revoir",
+      "verElOrden": "Voir l'ordre",
       "trazoN": "Trait {{n}} sur {{total}}.",
       "empieza": "Commence au point.",
       "eseNo": "Pas celui-là. Commence au point et suis le modèle.",
       "asiVa": "Le trait {{n}} se fait ainsi. Repasse-le.",
       "escribe": "Écris celui que tu entends",
-      "listo": "Terminé."
+      "listo": "Terminé.",
+      "lienzo": "Zone d'écriture"
     }
   },
   "sesion": {

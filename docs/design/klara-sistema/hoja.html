@@ -1440,7 +1440,7 @@
   <p class="hoja-card__reemplaza"><b>nuevo</b> — la dinámica <code>trazo</code> (spec 2026-10-09 §5.5). Trazos de muestra aproximados.</p>
   <div class="hoja-card__estados">
     <figure class="hoja-estado" data-estado="presentar">
-      <figcaption>Presentar: los trazos se dibujan en orden</figcaption>
+      <figcaption>Presentar: los trazos se dibujan en orden, cada uno con su número</figcaption>
       <div class="hoja-estado__muestra">
         <div class="k-trazo" data-modo="presentar"><svg viewBox="0 0 109 109" role="img" aria-label="あ" lang="ja">
           <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
@@ -1448,18 +1448,22 @@
             <path d="M27,34 C40,35 61,31 80,28" pathLength="1" style="--i:0"/>
             <path d="M50,17 C46,40 47,64 57,88" pathLength="1" style="--i:1"/>
             <path d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92" pathLength="1" style="--i:2"/>
+            <text class="k-trazo__num" x="20" y="33.6" dy=".35em" text-anchor="middle" style="--i:0">1</text>
+            <text class="k-trazo__num" x="51.1" y="10.1" dy=".35em" text-anchor="middle" style="--i:1">2</text>
+            <text class="k-trazo__num" x="70.4" y="38.4" dy=".35em" text-anchor="middle" style="--i:2">3</text>
           </g>
         </svg></div>
         <p class="k-trazo__son">a</p>
       </div>
     </figure>
     <figure class="hoja-estado" data-estado="practicar">
-      <figcaption>Práctica: plantilla gris y el punto donde empieza</figcaption>
+      <figcaption>Práctica: plantilla gris y el punto donde empieza, con su aro que late</figcaption>
       <div class="hoja-estado__muestra">
         <div class="k-trazo" data-modo="practicar"><svg viewBox="0 0 109 109" role="img" aria-label="あ" lang="ja">
           <g class="k-trazo__guia"><line x1="54.5" y1="4" x2="54.5" y2="105"/><line x1="4" y1="54.5" x2="105" y2="54.5"/></g>
           <g class="k-trazo__ref"><path d="M27,34 C40,35 61,31 80,28"/><path d="M50,17 C46,40 47,64 57,88"/><path d="M68,45 C62,64 48,82 36,83 C24,84 26,66 42,60 C58,54 80,57 84,70 C88,83 76,90 64,92"/></g>
           <g class="k-trazo__tinta"><path d="M27,34 C40,35 61,31 80,28"/><path d="M50,17 C46,40 47,64 57,88"/></g>
+          <circle class="k-trazo__aro" cx="68" cy="45" r="3"/>
           <circle class="k-trazo__inicio" cx="68" cy="45" r="2.4"/>
         </svg></div>
       </div>
