@@ -1197,7 +1197,9 @@
       "cuenta": "{{n}} of {{total}}",
       "hecha": "matched",
       "mal": "not a match",
-      "tiempo": "Time left"
+      "tiempo": "Time left",
+      "sinTiempo": "Time's up.",
+      "noEs": "<1>{{izq}}</1> isn't {{der}}"
     }
   },
   "sesion": {

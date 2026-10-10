@@ -3249,16 +3249,19 @@ ul.k-error { list-style: none; }
 
 /* ---------- 22-tablero ---------- */
 /* ============================================================
-   22 · TABLERO — .k-tablero + .k-tablero__ficha
+   22 · TABLERO — .k-tablero + .k-tablero__ficha + .k-tablero__estado
    Pieza nueva (spec 2026-10-09 §3.2): el tablero de parejas de
    `emparejar`. Dos columnas; la ficha elegida se marca, la hecha se
-   apaga y la que falló se sacude una vez.
+   apaga y la que falló se sacude una vez. Debajo, una zona de estado:
+   la cuenta mientras se juega y, al acabar con fallos, la corrección.
    ============================================================ */
 .k-tablero {
   flex: 0 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3) var(--space-4);
+  /* 8px entre filas, como en la nube de chips (`.k-wrap`): con la zona de estado de abajo reservada, 12px dejaban
+     a 320×568 la zona de sesión 2px corta (cinco filas de ficha son 308px con 12px, 292px con 8px). */
+  gap: var(--space-2) var(--space-4);
   margin-top: var(--space-4);
 }
 .k-tablero__ficha {
@@ -3282,6 +3285,8 @@ ul.k-error { list-style: none; }
   cursor: pointer;
   /* Gramática 8: una palabra larga parte en vez de desbordar la columna. */
   overflow-wrap: anywhere;
+  /* Es un juego de toques seguidos: sin esto, dos toques rápidos pueden leerse como el zoom de doble toque. */
+  touch-action: manipulation;
   transition: opacity var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 /* La ficha que ya no se toca (cerrada, o con el tiempo agotado) pierde el cursor de mano. */
@@ -3293,9 +3298,9 @@ ul.k-error { list-style: none; }
   font-family: var(--font-serif);
   font-size: var(--t-read-lg);
 }
-.k-tablero__ficha[data-estado="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
-.k-tablero__ficha[data-estado="hecha"] { opacity: 0.45; border-style: dashed; }
-.k-tablero__ficha[data-estado="mal"] {
+.k-tablero__ficha[data-state="elegida"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.k-tablero__ficha[data-state="hecha"] { opacity: 0.45; border-style: dashed; }
+.k-tablero__ficha[data-state="mal"] {
   border-color: var(--accent);
   color: var(--accent-ink);
   animation: k-tablero-sacude var(--dur-slow) var(--ease-out);
@@ -3310,13 +3315,42 @@ ul.k-error { list-style: none; }
   25% { transform: translateX(-4px); }
   75% { transform: translateX(4px); }
 }
-/* La cuenta de debajo es una `.k-cap--center`, que solo centra la caja: a 320px parte en dos líneas (es, de, fr,
-   pt) y la segunda se quedaba a la izquierda. */
-.k-tablero + .k-cap { text-align: center; }
+
+/* La zona de estado: una sola región viva (`role="status"`) para todo lo que el tablero dice. Mientras se juega
+   lleva la cuenta (`.k-cap`) y, tras un fallo, «き no es ku» en lugar de la instrucción; al acabar con fallos, la
+   corrección (`.k-note` en su estado `fix`, átomo 13). Cada una tiene su alto, y el tablero, centrado en la zona
+   de sesión, saltaría al cambiar de una a otra: la zona reserva el de dos renglones de nota (15px a 1,45) y pone
+   ella el aire de arriba, así que los márgenes propios de la cinta y de la nota (que difieren y cambian con el
+   alto del viewport, en `99-compresion`) no cuentan. */
+.k-tablero__estado {
+  padding-top: var(--space-3);
+  min-height: calc(var(--space-3) + 2 * 1.45 * 15px);
+}
+.k-tablero__estado > .k-cap,
+.k-tablero__estado > .k-note { margin: 0; }
+/* La nota en `--ink-2` y no en `--ink-3`: sobre el papel oscuro `--ink-3` da 4,22:1, por debajo del mínimo, y es la
+   misma razón por la que `.k-band > .k-note` ya la sube. */
+.k-tablero__estado > .k-note { color: var(--ink-2); }
+/* `.k-cap--center` solo centra la caja: a 320px la cuenta parte en dos líneas (es, de, fr, pt) y la segunda se
+   quedaba a la izquierda. */
+.k-tablero__estado > .k-cap { text-align: center; }
+/* Lo que se estudia dentro de «き no es ku» (el kana; mañana, la palabra alemana): en serif, a cuerpo de lectura y
+   con su caja —no a los 11px en versalitas de la cinta, donde «Tisch» saldría «TISCH»—. El de la corrección ya
+   lo resuelve `.k-note [lang="ja"]` (átomo 21). */
+.k-tablero__estado > .k-cap [lang] {
+  font-family: var(--font-serif);
+  font-size: var(--t-mark);
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+/* En la corrección una pareja no se parte: se parte entre una y otra. */
+.k-tablero__par { white-space: nowrap; }
+
 /* Gramática 4: sin movimiento la ficha fallada conserva su ✗, su borde y su tinta. */
 @media (prefers-reduced-motion: reduce) {
   .k-tablero__ficha { transition: none; }
-  .k-tablero__ficha[data-estado="mal"] { animation: none; }
+  .k-tablero__ficha[data-state="mal"] { animation: none; }
 }
 
 /* ---------- 99-compresion ---------- */

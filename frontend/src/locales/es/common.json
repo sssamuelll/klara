@@ -1197,7 +1197,9 @@
       "cuenta": "{{n}} de {{total}}",
       "hecha": "emparejada",
       "mal": "no es su pareja",
-      "tiempo": "Tiempo que queda"
+      "tiempo": "Tiempo que queda",
+      "sinTiempo": "Se acabó el tiempo.",
+      "noEs": "<1>{{izq}}</1> no es {{der}}"
     }
   },
   "sesion": {

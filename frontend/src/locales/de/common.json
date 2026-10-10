@@ -1197,7 +1197,9 @@
       "cuenta": "{{n}} von {{total}}",
       "hecha": "zugeordnet",
       "mal": "passt nicht",
-      "tiempo": "Verbleibende Zeit"
+      "tiempo": "Verbleibende Zeit",
+      "sinTiempo": "Die Zeit ist um.",
+      "noEs": "<1>{{izq}}</1> ist nicht {{der}}"
     }
   },
   "sesion": {

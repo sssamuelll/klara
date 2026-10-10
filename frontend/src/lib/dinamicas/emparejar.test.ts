@@ -3,8 +3,11 @@ import {
   estadoFicha,
   evidenciasTablero,
   inicialTablero,
+  paresFallados,
   seAcaboElTiempo,
+  sinTiempo,
   tocar,
+  ultimoFallo,
   type ContenidoEmparejar,
 } from "./emparejar";
 
@@ -188,5 +191,90 @@ describe("fallar", () => {
     const copia = JSON.parse(JSON.stringify(antes));
     tocar(tocar(antes, "izq", "ja:kana:か"), "der", "ja:kana:き");
     expect(antes).toEqual(copia);
+  });
+});
+
+// Lo que el tablero enseña al acabar con fallos y mientras se juega (la corrección y el «き no es ku»).
+describe("ultimoFallo", () => {
+  it("antes de fallar no hay nada que decir", () => {
+    expect(ultimoFallo(nuevo())).toBeNull();
+    expect(ultimoFallo(tocar(nuevo(), "izq", "ja:kana:か"))).toBeNull();
+  });
+
+  it("dice qué dos fichas se tocaron, la de la izquierda primero, empiece por donde empiece", () => {
+    const izqPrimero = tocar(tocar(nuevo(), "izq", "ja:kana:か"), "der", "ja:kana:き");
+    const derPrimero = tocar(tocar(nuevo(), "der", "ja:kana:き"), "izq", "ja:kana:か");
+    expect(ultimoFallo(izqPrimero)).toEqual({ izq: "ja:kana:か", der: "ja:kana:き" });
+    expect(ultimoFallo(derPrimero)).toEqual({ izq: "ja:kana:か", der: "ja:kana:き" });
+  });
+
+  it("es el último: el siguiente fallo reemplaza al anterior", () => {
+    let e = tocar(tocar(nuevo(), "izq", "ja:kana:か"), "der", "ja:kana:き");
+    e = tocar(tocar(e, "izq", "ja:kana:く"), "der", "ja:kana:か");
+    expect(ultimoFallo(e)).toEqual({ izq: "ja:kana:く", der: "ja:kana:か" });
+  });
+
+  it("se va con el siguiente toque y con el tiempo agotado", () => {
+    const fallada = tocar(tocar(nuevo(), "izq", "ja:kana:か"), "der", "ja:kana:き");
+    expect(ultimoFallo(tocar(fallada, "izq", "ja:kana:く"))).toBeNull();
+    expect(ultimoFallo(seAcaboElTiempo(fallada))).toBeNull();
+  });
+});
+
+describe("sinTiempo", () => {
+  it("el tiempo agotado con parejas sin cerrar", () => {
+    expect(sinTiempo(nuevo())).toBe(false);
+    expect(sinTiempo(seAcaboElTiempo(nuevo()))).toBe(true);
+    expect(sinTiempo(seAcaboElTiempo(tocar(tocar(nuevo(), "izq", "ja:kana:か"), "der", "ja:kana:か")))).toBe(true);
+  });
+
+  it("cerrar todas no es quedarse sin tiempo, ni aunque el reloj llegue a cero después", () => {
+    let e = nuevo();
+    for (const i of items) e = tocar(tocar(e, "izq", i), "der", i);
+    expect(sinTiempo(e)).toBe(false);
+    expect(sinTiempo(seAcaboElTiempo(e))).toBe(false);
+  });
+});
+
+describe("paresFallados", () => {
+  const ids = (e: ReturnType<typeof nuevo>) => paresFallados(c, e).map((p) => p.item);
+
+  it("un tablero cerrado sin fallos no tiene nada que corregir", () => {
+    let e = nuevo();
+    for (const i of items) e = tocar(tocar(e, "izq", i), "der", i);
+    expect(ids(e)).toEqual([]);
+  });
+
+  it("sin tiempo y sin cerrar nada: todas", () => {
+    expect(ids(seAcaboElTiempo(nuevo()))).toEqual(items);
+  });
+
+  it("cerrado con un fallo en medio: las dos fichas del fallo", () => {
+    let e = tocar(tocar(nuevo(), "izq", "ja:kana:か"), "der", "ja:kana:き");
+    for (const i of items) e = tocar(tocar(e, "izq", i), "der", i);
+    expect(e.terminado).toBe(true);
+    expect(ids(e)).toEqual(["ja:kana:か", "ja:kana:き"]);
+  });
+
+  it("sin tiempo: las que faltan y las que se cerraron tras fallar, y no las limpias", () => {
+    let e = nuevo();
+    e = tocar(tocar(e, "izq", "ja:kana:か"), "der", "ja:kana:か"); // limpia
+    e = tocar(tocar(e, "izq", "ja:kana:き"), "der", "ja:kana:く"); // falla き y く
+    e = tocar(tocar(e, "izq", "ja:kana:き"), "der", "ja:kana:き"); // cierra き, ya fallada
+    expect(ids(seAcaboElTiempo(e))).toEqual(["ja:kana:き", "ja:kana:く"]);
+  });
+
+  it("van en el orden de la columna izquierda, que es el que se ve en pantalla", () => {
+    const e = seAcaboElTiempo(inicialTablero([items[2], items[0], items[1]], items));
+    expect(ids(e)).toEqual([items[2], items[0], items[1]]);
+  });
+
+  it("son exactamente las que evidenciasTablero marca como fallo", () => {
+    let e = nuevo();
+    e = tocar(tocar(e, "izq", "ja:kana:か"), "der", "ja:kana:き");
+    e = tocar(tocar(e, "izq", "ja:kana:く"), "der", "ja:kana:く");
+    e = seAcaboElTiempo(e);
+    const falladas = evidenciasTablero(c, e, 0).filter((x) => !x.acierto).map((x) => x.item);
+    expect(ids(e).sort()).toEqual(falladas.sort());
   });
 });

@@ -28,8 +28,8 @@ export interface EstadoTablero {
   hechas: string[];
   /** Ítems con algún intento fallido: su pareja ya no cuenta como acierto. */
   falladas: string[];
-  /** La última ficha que falló, para sacudirla. */
-  ultimoMal: { lado: Lado; item: string } | null;
+  /** La última ficha que falló, para sacudirla; `con` es la primera del intento, la del otro lado. */
+  ultimoMal: { lado: Lado; item: string; con: string } | null;
   terminado: boolean;
 }
 
@@ -48,7 +48,7 @@ export function tocar(e: EstadoTablero, lado: Lado, item: string): EstadoTablero
     return { ...e, elegida: null, ultimoMal: null, hechas, terminado: hechas.length === e.izquierda.length };
   }
   const falladas = [...new Set([...e.falladas, e.elegida.item, item])];
-  return { ...e, elegida: null, falladas, ultimoMal: { lado, item } };
+  return { ...e, elegida: null, falladas, ultimoMal: { lado, item, con: e.elegida.item } };
 }
 
 /** Termina el tablero: ni la elegida ni la última fallada se quedan marcadas en uno que ya acabó. */
@@ -63,13 +63,37 @@ export function estadoFicha(e: EstadoTablero, lado: Lado, item: string): EstadoF
   return undefined;
 }
 
+/** Acierta la pareja que se cerró sin ningún intento fallido con sus fichas. */
+const acertada = (e: EstadoTablero, item: string) => e.hechas.includes(item) && !e.falladas.includes(item);
+
 /** Una por pareja: acierto si la cerró sin ningún intento fallido con sus fichas. */
 export function evidenciasTablero(c: ContenidoEmparejar, e: EstadoTablero, ms: number): Evidencia[] {
   return c.pares.map((p) => ({
     item: p.item,
     faceta: c.faceta,
-    acierto: e.hechas.includes(p.item) && !e.falladas.includes(p.item),
+    acierto: acertada(e, p.item),
     pistas: 0,
     ms,
   }));
+}
+
+/** Las que no acertaron —las mismas que `evidenciasTablero` deja en fallo—, en el orden de la columna izquierda. */
+export function paresFallados(c: ContenidoEmparejar, e: EstadoTablero): Par[] {
+  const porItem = new Map(c.pares.map((p) => [p.item, p]));
+  return e.izquierda.flatMap((item) => {
+    const p = porItem.get(item);
+    return p && !acertada(e, item) ? [p] : [];
+  });
+}
+
+/** El tablero acabó porque se acabó el tiempo, no porque se cerraron todas. */
+export function sinTiempo(e: EstadoTablero): boolean {
+  return e.terminado && e.hechas.length < e.izquierda.length;
+}
+
+/** Qué dos fichas se tocaron en el último intento fallido: el ítem de la izquierda y el de la derecha. */
+export function ultimoFallo(e: EstadoTablero): { izq: string; der: string } | null {
+  const m = e.ultimoMal;
+  if (m === null) return null;
+  return m.lado === "der" ? { izq: m.con, der: m.item } : { izq: m.item, der: m.con };
 }

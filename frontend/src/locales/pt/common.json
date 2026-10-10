@@ -1197,7 +1197,9 @@
       "cuenta": "{{n}} de {{total}}",
       "hecha": "combinada",
       "mal": "não é o par",
-      "tiempo": "Tempo restante"
+      "tiempo": "Tempo restante",
+      "sinTiempo": "O tempo acabou.",
+      "noEs": "<1>{{izq}}</1> não é {{der}}"
     }
   },
   "sesion": {

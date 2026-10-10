@@ -1197,7 +1197,9 @@
       "cuenta": "{{total}}組中{{n}}組",
       "hecha": "ペア成立",
       "mal": "ペアではない",
-      "tiempo": "残り時間"
+      "tiempo": "残り時間",
+      "sinTiempo": "時間切れ。",
+      "noEs": "<1>{{izq}}</1>は {{der}} ではない"
     }
   },
   "sesion": {

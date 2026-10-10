@@ -4,13 +4,16 @@
  * (lib/dinamicas/emparejar.ts).
  */
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import {
   estadoFicha,
   evidenciasTablero,
   inicialTablero,
+  paresFallados,
   seAcaboElTiempo,
+  sinTiempo,
   tocar,
+  ultimoFallo,
   type ContenidoEmparejar,
   type Lado,
 } from "../lib/dinamicas/emparejar";
@@ -67,7 +70,7 @@ export default function Emparejar({ contenido, onResultado }: PropsDinamica<Cont
       <button
         type="button"
         className="k-tablero__ficha"
-        data-estado={e}
+        data-state={e}
         aria-pressed={e === "elegida"}
         disabled={estado.terminado || e === "hecha"}
         onClick={() => setEstado((s) => tocar(s, lado, item))}
@@ -90,6 +93,13 @@ export default function Emparejar({ contenido, onResultado }: PropsDinamica<Cont
   };
 
   const restante = Math.max(quedan, 0);
+  const lang = contenido.lang_izquierda ?? undefined;
+  // Al acabar con algún fallo la cuenta cede su sitio a la corrección: las parejas que no acertaron, con su respuesta.
+  const corregir = estado.terminado ? paresFallados(contenido, estado) : [];
+  // Mientras se juega: «2 de 5 · Toca una ficha y su pareja.», y tras un fallo, el fallo en lugar de la instrucción.
+  const fallo = ultimoFallo(estado);
+  const izq = fallo && pares.get(fallo.izq)?.izquierda;
+  const der = fallo && pares.get(fallo.der)?.derecha;
   return (
     <>
       <div className="k-bar k-bar--fill">
@@ -112,10 +122,40 @@ export default function Emparejar({ contenido, onResultado }: PropsDinamica<Cont
           </Fragment>
         ))}
       </div>
-      <p className="k-cap k-cap--center">
-        {t("dinamica.emparejar.cuenta", { n: estado.hechas.length, total: contenido.pares.length })} ·{" "}
-        {t("dinamica.emparejar.instruccion")}
-      </p>
+      {/* Una sola región viva para todo lo que el tablero dice: la cuenta, el último fallo y la corrección. */}
+      <div className="k-tablero__estado" role="status">
+        {corregir.length > 0 ? (
+          <p className="k-note" data-state="fix">
+            {sinTiempo(estado) && <>{t("dinamica.emparejar.sinTiempo")} </>}
+            <span className="k-note__right">
+              {corregir.map((p, i) => (
+                <Fragment key={p.item}>
+                  {i > 0 && (
+                    <>
+                      <span aria-hidden="true"> · </span>
+                      <span className="k-sr">, </span>
+                    </>
+                  )}
+                  <span className="k-tablero__par">
+                    <span lang={lang}>{p.izquierda}</span> {p.derecha}
+                  </span>
+                </Fragment>
+              ))}
+            </span>
+          </p>
+        ) : (
+          <p className="k-cap k-cap--center">
+            <span>
+              {t("dinamica.emparejar.cuenta", { n: estado.hechas.length, total: contenido.pares.length })} ·{" "}
+              {izq && der ? (
+                <Trans i18nKey="dinamica.emparejar.noEs" values={{ izq, der }} components={{ 1: <span lang={lang} /> }} />
+              ) : (
+                t("dinamica.emparejar.instruccion")
+              )}
+            </span>
+          </p>
+        )}
+      </div>
     </>
   );
 }
