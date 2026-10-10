@@ -178,7 +178,7 @@ Tres, de la instancia de Samuel en `klara.sdar.dev`, tomadas con Chrome y su ses
 | Hablar | `/chat` (la ruta de `Speak.tsx` en `main`; `/pronunciar` como alternativa si muestra mejor el sonido marcado) | una frase dicha, con el sonido marcado y la pista fonética | `site/public/shots/speak.webp` |
 | Repasar | `/repaso` | una ficha de género en pantalla | `site/public/shots/review.webp` |
 
-Viewport 390×844 a 2×, recortadas a 390×760 (sin la barra de estado del teléfono, que no existe en el navegador), WebP calidad 82, menos de 120 KB cada una [VERIFICAR peso]. Ajustes no se captura. Si una pantalla muestra el nombre o el correo de Samuel, se toma otra vista; nada se retoca.
+Viewport 390×844 a 2×, recortadas a 390×760 (sin la barra de estado del teléfono, que no existe en el navegador), WebP calidad 82, menos de 120 KB cada una [VERIFICAR peso]. Ajustes no se captura. Si una pantalla muestra el apellido o el correo de Samuel, se toma otra vista; nada se retoca. El nombre de pila («Buenas tardes, Samuel.» en Hoy) sí puede salir: ya es público en sdar.dev, en la licencia y en el correo de contacto (decisión de Samuel en la revisión visual del 2026-10-10).
 
 Mientras no existan, el build usa tres imágenes de relleno del mismo tamaño en color `--nbc-surface` para que la página se pueda construir y revisar.
 

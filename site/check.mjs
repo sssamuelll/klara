@@ -95,10 +95,14 @@ for (const { file } of pages) {
   }
 }
 const limits = { 'hero.webp': 300 * 1024, 'shots/today.webp': 120 * 1024, 'shots/read.webp': 120 * 1024, 'shots/speak.webp': 120 * 1024, 'shots/review.webp': 120 * 1024, 'og.jpg': 200 * 1024 };
+// Las capturas reales pesan entre 14 y 35 KB; un relleno plano pesa 2 KB. El piso
+// impide publicar teléfonos vacíos (spec § 10).
+const SHOT_MIN = 8 * 1024;
 for (const [f, max] of Object.entries(limits)) {
   const s = await stat(path.join(dist, f)).catch(() => null);
   if (!s) fail(`${f}: no existe`);
   else if (s.size > max) fail(`${f}: pesa ${Math.round(s.size / 1024)} KB, máximo ${Math.round(max / 1024)} KB`);
+  else if (f.startsWith('shots/') && s.size < SHOT_MIN) fail(`${f}: pesa ${Math.round(s.size / 1024)} KB, parece un relleno (mínimo ${SHOT_MIN / 1024} KB)`);
 }
 for (const url of external) {
   const res = await fetch(url, { method: 'HEAD', redirect: 'follow' }).catch(() => null);

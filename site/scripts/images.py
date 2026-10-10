@@ -46,6 +46,9 @@ def shots() -> None:
             im = im.resize((SHOT_W * 2, SHOT_H * 2), Image.LANCZOS)
             im.save(out, "WEBP", quality=82, method=6)
             print(name, "real", out.stat().st_size // 1024, "KB")
+        elif out.exists():
+            # Sin PNG crudo (estan ignorados por git) se conserva la captura ya publicada.
+            print(name, "sin PNG; se conserva", out.stat().st_size // 1024, "KB")
         else:
             Image.new("RGB", (SHOT_W * 2, SHOT_H * 2), FILL).save(out, "WEBP", quality=60, method=6)
             print(name, "RELLENO", out.stat().st_size // 1024, "KB")

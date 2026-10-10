@@ -65,9 +65,9 @@ export const copy: Record<Lang, PageCopy> = {
     screens: {
       cap: 'What it does',
       items: [
-        { key: 'today', title: 'Today', body: "Your route for the day, with the story's own illustration at the stop you're at.", alt: "Klara on a phone: today's route with an illustrated stop and the story to read." },
-        { key: 'read', title: 'Read', body: "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context.", alt: 'Klara on a phone: a short German story with one word opened, showing its meaning and gender.' },
-        { key: 'speak', title: 'Speak', body: 'You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today.', alt: 'Klara on a phone: a spoken sentence with the missed sound marked and a hint on how to make it.' },
+        { key: 'today', title: 'Today', body: "Your route for the day, with the story's own illustration at the stop you're at.", alt: "Klara on a phone: today's plan as a route with its stops: read, pronounce, speak, review." },
+        { key: 'read', title: 'Read', body: "Short stories in the language you're studying. Tap any word to open it: meaning, gender, context.", alt: 'Klara on a phone: a short German story with one word opened, showing its meaning and its part of speech.' },
+        { key: 'speak', title: 'Speak', body: 'You talk and Klara corrects the exact sound that missed. What you said yesterday, it remembers today.', alt: "Klara on a phone: the day's conversation, with Klara's opening line in German, its Spanish gloss and the microphone ready." },
         { key: 'review', title: 'Review', body: "Flashcards that come back right before you'd forget. No streaks, no hearts, no guilt.", alt: 'Klara on a phone: a review card asking for the gender of a German noun.' },
       ],
     },
@@ -122,9 +122,9 @@ export const copy: Record<Lang, PageCopy> = {
     screens: {
       cap: 'Qué hace',
       items: [
-        { key: 'today', title: 'Hoy', body: 'Tu recorrido del día, con la ilustración de la historia en la parada en la que estás.', alt: 'Klara en un teléfono: el recorrido del día con una parada ilustrada y la historia por leer.' },
-        { key: 'read', title: 'Leer', body: 'Historias cortas en el idioma que estudias. Cada palabra se abre con un toque: significado, género, contexto.', alt: 'Klara en un teléfono: una historia corta en alemán con una palabra abierta, con su significado y su género.' },
-        { key: 'speak', title: 'Hablar', body: 'Conversas y Klara te corrige el sonido exacto que falló. Lo que dijiste ayer lo recuerda hoy.', alt: 'Klara en un teléfono: una frase dicha con el sonido que falló marcado y una pista de cómo hacerlo.' },
+        { key: 'today', title: 'Hoy', body: 'Tu recorrido del día, con la ilustración de la historia en la parada en la que estás.', alt: 'Klara en un teléfono: el plan de hoy como un recorrido con sus paradas: leer, pronunciar, hablar, repasar.' },
+        { key: 'read', title: 'Leer', body: 'Historias cortas en el idioma que estudias. Cada palabra se abre con un toque: significado, género, contexto.', alt: 'Klara en un teléfono: una historia corta en alemán con una palabra abierta, con su significado y su categoría gramatical.' },
+        { key: 'speak', title: 'Hablar', body: 'Conversas y Klara te corrige el sonido exacto que falló. Lo que dijiste ayer lo recuerda hoy.', alt: 'Klara en un teléfono: la conversación del día, con la frase de apertura de Klara en alemán, su glosa en español y el micrófono listo.' },
         { key: 'review', title: 'Repasar', body: 'Fichas que vuelven justo antes del olvido. Sin rachas, sin corazones, sin culpa.', alt: 'Klara en un teléfono: una ficha de repaso que pregunta el género de un sustantivo alemán.' },
       ],
     },

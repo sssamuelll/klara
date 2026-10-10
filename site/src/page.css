@@ -59,8 +59,9 @@ body { margin: 0; }
 .kl-screen .nbc-card__content { flex: 0 0 auto; padding-bottom: 0; }
 /* Marco propio (spec D13): bisel fino, isla dinámica y botón lateral en CSS;
    el teléfono asoma por el borde inferior y se recorta. */
-.kl-phone { width: 232px; height: 380px; margin: 4px auto 0; overflow: hidden; position: relative; }
-.kl-phone__shell { width: 232px; height: 470px; border-radius: 38px; background: #0b0b0c; padding: 8px; box-shadow: inset 0 0 0 1.5px #3a3a3e, 0 24px 40px -24px rgba(0, 0, 0, .9); position: relative; }
+/* El recorte deja asomar 4 px a la derecha para el botón lateral y corta por abajo. */
+.kl-phone { width: 232px; height: 380px; margin: 4px auto 0; clip-path: inset(0 -4px 0 0); position: relative; }
+.kl-phone__shell { box-sizing: border-box; width: 232px; height: 470px; border-radius: 38px; background: #0b0b0c; padding: 8px; box-shadow: inset 0 0 0 1.5px #3a3a3e, 0 24px 40px -24px rgba(0, 0, 0, .9); position: relative; }
 .kl-phone__shell::before { content: ""; position: absolute; left: 50%; top: 18px; width: 72px; height: 22px; margin-left: -36px; background: #0b0b0c; border-radius: 12px; z-index: 2; }
 .kl-phone__shell::after { content: ""; position: absolute; right: -3px; top: 110px; width: 3px; height: 56px; background: #3a3a3e; border-radius: 2px; }
 .kl-phone img { display: block; width: 100%; height: auto; aspect-ratio: 390 / 760; border-radius: 30px; background: var(--nbc-surface); }
