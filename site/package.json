@@ -1,0 +1,29 @@
+{
+  "name": "klara-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && vite build --ssr src/entry-server.tsx --outDir dist-ssr && node prerender.mjs",
+    "check": "node check.mjs",
+    "preview": "vite preview",
+    "overflow": "node scripts/overflow.mjs",
+    "shots": "node scripts/shots.mjs && python scripts/images.py --shots"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter-tight": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/source-serif-4": "^5.3.0",
+    "neobrutalistcomponents": "^1.2.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "playwright": "^1.64.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.4"
+  }
+}
