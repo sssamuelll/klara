@@ -579,7 +579,8 @@
       "nativeLang": "母語(あなたが話す言語)",
       "targetLang": "学びたい言語",
       "context": "コンテキスト(任意)",
-      "contextPlaceholder": "例:仕事で使う、よく旅行する、料理が好き…"
+      "contextPlaceholder": "例:仕事で使う、よく旅行する、料理が好き…",
+      "studyLangs": "学んでいる言語"
     },
     "sameLangWarn": "母語とは違う言語を選んでください。",
     "saved": "保存しました ✓",
@@ -632,7 +633,8 @@
       "hint": "Google だけでログインしています。メールでもログインできるよう、パスワードを追加できます。",
       "gateHint": "あなたはオーナーです。Googleだけに頼らないよう、予備のパスワードを設定してください。",
       "savedToast": "パスワードを保存しました"
-    }
+    },
+    "studyLangsHint": "それぞれが「今日」の1ラインになります。"
   },
   "auth": {
     "login": {

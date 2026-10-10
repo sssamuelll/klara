@@ -579,7 +579,8 @@
       "nativeLang": "Muttersprache (was du sprichst)",
       "targetLang": "Sprache, die du lernen willst",
       "context": "Kontext (optional)",
-      "contextPlaceholder": "z. B. für die Arbeit, ich reise oft, ich koche gern…"
+      "contextPlaceholder": "z. B. für die Arbeit, ich reise oft, ich koche gern…",
+      "studyLangs": "Sprachen, die du lernst"
     },
     "sameLangWarn": "Wähle eine andere Sprache als deine Muttersprache.",
     "saved": "Gespeichert ✓",
@@ -632,7 +633,8 @@
       "hint": "Du hast dich nur mit Google angemeldet. Wenn du willst, füge ein Passwort hinzu, damit du dich auch per E-Mail einloggen kannst.",
       "gateHint": "Du bist der Eigentümer. Lege ein Backup-Passwort an, damit du nicht nur von Google abhängst.",
       "savedToast": "Passwort gespeichert"
-    }
+    },
+    "studyLangsHint": "Jede ist eine Linie in Heute."
   },
   "auth": {
     "login": {

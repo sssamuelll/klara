@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import type { CEFRLevel, LanguageCode } from "../api/types";
+import { ApiError, api } from "../api/client";
+import type { CEFRLevel, LanguageCode, MapaResumen } from "../api/types";
+import { alternarIdioma } from "../lib/idiomasEstudio";
 import { LANGUAGE_CODES, languageLabel } from "../lib/languages";
 import { useAuth } from "../lib/auth";
 import { patchUser, useUser } from "../lib/user";
@@ -20,6 +22,8 @@ export default function Settings() {
   const [nativeLang, setNativeLang] = useState<LanguageCode>("es");
   const [targetLang, setTargetLang] = useState<LanguageCode>("de");
   const [context, setContext] = useState("");
+  const [mapas, setMapas] = useState<MapaResumen[] | null>(null);
+  const [estudio, setEstudio] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -32,7 +36,13 @@ export default function Settings() {
     setNativeLang(user.native_language);
     setTargetLang(user.target_language);
     setContext(user.learning_context ?? "");
+    setEstudio(user.study_languages);
   }, [user]);
+
+  // Los idiomas que se pueden estudiar son los que tienen mapa (spec 2026-10-09 §5.6).
+  useEffect(() => {
+    api.mapas().then(setMapas, () => setMapas([]));
+  }, []);
 
   useEffect(() => {
     if (!recentlySetPw) return;
@@ -41,6 +51,9 @@ export default function Settings() {
   }, [recentlySetPw]);
 
   const sameLang = nativeLang === targetLang;
+  // `study_languages` solo viaja si el aprendiz tocó el selector. La copia local sale de `user`: mandarla
+  // siempre pisaría lo del servidor con una lista vieja, y fijaría como elegida la que solo salía de `target_language`.
+  const cambioEstudio = estudio.join() !== (user?.study_languages ?? []).join();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,10 +71,13 @@ export default function Settings() {
         native_language: nativeLang,
         target_language: targetLang,
         learning_context: context.trim() ? context.trim() : null,
+        ...(cambioEstudio && mapas && mapas.length > 0 ? { study_languages: estudio } : {}),
       });
       setSaved(true);
     } catch (e2) {
-      setError(e2 instanceof Error ? e2.message : t("common.unknownError"));
+      // 422 `study_languages.sin_mapa`: el `detail` es un código, no un mensaje para el aprendiz.
+      const sinMapa = e2 instanceof ApiError && e2.message.includes("study_languages.sin_mapa");
+      setError(e2 instanceof Error && !sinMapa ? e2.message : t("common.unknownError"));
     } finally {
       setSaving(false);
     }
@@ -163,6 +179,31 @@ export default function Settings() {
           </select>
           {sameLang && <span className="k-field__hint">{t("settings.sameLangWarn")}</span>}
         </label>
+
+        {mapas && mapas.length > 0 && (
+          <div className="k-field">
+            <span className="k-field__label" id="ajustes-estudio">
+              {t("settings.field.studyLangs")}
+            </span>
+            <div className="k-wrap" role="group" aria-labelledby="ajustes-estudio">
+              {mapas.map((m) => (
+                <button
+                  key={m.idioma}
+                  type="button"
+                  className="k-chip"
+                  aria-pressed={estudio.includes(m.idioma)}
+                  data-selected={estudio.includes(m.idioma)}
+                  lang={m.idioma}
+                  disabled={saving}
+                  onClick={() => setEstudio((a) => alternarIdioma(a, m.idioma, mapas.map((x) => x.idioma)))}
+                >
+                  {languageLabel(m.idioma)}
+                </button>
+              ))}
+            </div>
+            <span className="k-field__hint">{t("settings.studyLangsHint")}</span>
+          </div>
+        )}
 
         <label className="k-field k-field--area">
           <span className="k-field__label">{t("settings.field.context")}</span>
