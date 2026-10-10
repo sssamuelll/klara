@@ -1182,5 +1182,53 @@
       "correcta": "正解",
       "tuRespuesta": "あなたの答え"
     }
+  },
+  "sesion": {
+    "cargando": "セッションを準備中…",
+    "fallo": "セッションを準備できませんでした。",
+    "reintentar": "再試行",
+    "vacia": "今日はこの言語の復習も新しいレッスンもありません。",
+    "aHoy": "今日へ",
+    "repaso": "復習",
+    "desconocida": "このアクティビティはまだ表示できません。",
+    "modo": {
+      "presentar": "新規",
+      "practicar": "練習",
+      "comprobar": "テスト",
+      "repaso": "復習"
+    },
+    "ahoraTu": "やってみよう",
+    "seguir": "次へ",
+    "bien": "正解",
+    "mira": "訂正を見てください",
+    "noPuedo": {
+      "escuchar": "今は聞けない",
+      "hablar": "今は話せない",
+      "escribir": "今は書けない"
+    },
+    "faceta": {
+      "reconocer": "認識",
+      "oir": "聞き取り",
+      "escribir": "書き",
+      "genero": "性",
+      "aplicar": "適用",
+      "pronunciar": "発音"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "ヒントあり",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "完了",
+      "resumen_one": "{{count}}件のアクティビティ",
+      "resumen_other": "{{count}}件のアクティビティ",
+      "reforzar": "要復習：{{items}}。",
+      "manana_one": "明日の復習：{{count}}件。",
+      "manana_other": "明日の復習：{{count}}件。",
+      "noGuardadas_one": "{{count}}件の回答が保存されませんでした。",
+      "noGuardadas_other": "{{count}}件の回答が保存されませんでした。",
+      "otra": "もう1レッスン"
+    }
   }
 }

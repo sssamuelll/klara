@@ -1182,5 +1182,53 @@
       "correcta": "bonne réponse",
       "tuRespuesta": "ta réponse"
     }
+  },
+  "sesion": {
+    "cargando": "Préparation de la séance…",
+    "fallo": "Impossible de préparer la séance.",
+    "reintentar": "Réessayer",
+    "vacia": "Aucune révision ni nouvelle leçon dans cette langue aujourd’hui.",
+    "aHoy": "Retour à Aujourd’hui",
+    "repaso": "Révision",
+    "desconocida": "Cette activité ne peut pas encore s’afficher.",
+    "modo": {
+      "presentar": "Nouveau",
+      "practicar": "Entraînement",
+      "comprobar": "Test",
+      "repaso": "Révision"
+    },
+    "ahoraTu": "À toi",
+    "seguir": "Continuer",
+    "bien": "Bien",
+    "mira": "Regarde la correction",
+    "noPuedo": {
+      "escuchar": "Je ne peux pas écouter maintenant",
+      "hablar": "Je ne peux pas parler maintenant",
+      "escribir": "Je ne peux pas écrire maintenant"
+    },
+    "faceta": {
+      "reconocer": "reconnaître",
+      "oir": "entendre",
+      "escribir": "écrire",
+      "genero": "genre",
+      "aplicar": "appliquer",
+      "pronunciar": "prononcer"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "avec un indice",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "Terminé",
+      "resumen_one": "{{count}} activité",
+      "resumen_other": "{{count}} activités",
+      "reforzar": "À renforcer : {{items}}.",
+      "manana_one": "Demain : {{count}} révision.",
+      "manana_other": "Demain : {{count}} révisions.",
+      "noGuardadas_one": "{{count}} réponse n’a pas été enregistrée.",
+      "noGuardadas_other": "{{count}} réponses n’ont pas été enregistrées.",
+      "otra": "Une autre leçon"
+    }
   }
 }

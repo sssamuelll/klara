@@ -1182,5 +1182,53 @@
       "correcta": "correcta",
       "tuRespuesta": "tu respuesta"
     }
+  },
+  "sesion": {
+    "cargando": "Preparando la sesión…",
+    "fallo": "No se pudo preparar la sesión.",
+    "reintentar": "Reintentar",
+    "vacia": "Hoy no hay repasos ni lecciones nuevas en este idioma.",
+    "aHoy": "A Hoy",
+    "repaso": "Repaso",
+    "desconocida": "Esta actividad todavía no se puede mostrar.",
+    "modo": {
+      "presentar": "Nuevo",
+      "practicar": "Práctica",
+      "comprobar": "Prueba",
+      "repaso": "Repaso"
+    },
+    "ahoraTu": "Ahora tú",
+    "seguir": "Seguir",
+    "bien": "Bien",
+    "mira": "Mira la corrección",
+    "noPuedo": {
+      "escuchar": "Ahora no puedo escuchar",
+      "hablar": "Ahora no puedo hablar",
+      "escribir": "Ahora no puedo escribir"
+    },
+    "faceta": {
+      "reconocer": "reconocer",
+      "oir": "oír",
+      "escribir": "escribir",
+      "genero": "género",
+      "aplicar": "aplicar",
+      "pronunciar": "pronunciar"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "con pista",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "Hecho",
+      "resumen_one": "{{count}} actividad",
+      "resumen_other": "{{count}} actividades",
+      "reforzar": "Por reforzar: {{items}}.",
+      "manana_one": "Mañana te toca {{count}} repaso.",
+      "manana_other": "Mañana te tocan {{count}} repasos.",
+      "noGuardadas_one": "{{count}} respuesta no se guardó.",
+      "noGuardadas_other": "{{count}} respuestas no se guardaron.",
+      "otra": "Otra lección"
+    }
   }
 }

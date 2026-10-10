@@ -1182,5 +1182,53 @@
       "correcta": "richtig",
       "tuRespuesta": "deine Antwort"
     }
+  },
+  "sesion": {
+    "cargando": "Sitzung wird vorbereitet…",
+    "fallo": "Die Sitzung konnte nicht vorbereitet werden.",
+    "reintentar": "Erneut versuchen",
+    "vacia": "Heute keine Wiederholungen und keine neuen Lektionen in dieser Sprache.",
+    "aHoy": "Zu Heute",
+    "repaso": "Wiederholung",
+    "desconocida": "Diese Übung kann noch nicht angezeigt werden.",
+    "modo": {
+      "presentar": "Neu",
+      "practicar": "Übung",
+      "comprobar": "Test",
+      "repaso": "Wiederholung"
+    },
+    "ahoraTu": "Jetzt du",
+    "seguir": "Weiter",
+    "bien": "Gut",
+    "mira": "Sieh dir die Korrektur an",
+    "noPuedo": {
+      "escuchar": "Ich kann gerade nicht hören",
+      "hablar": "Ich kann gerade nicht sprechen",
+      "escribir": "Ich kann gerade nicht schreiben"
+    },
+    "faceta": {
+      "reconocer": "erkennen",
+      "oir": "hören",
+      "escribir": "schreiben",
+      "genero": "Genus",
+      "aplicar": "anwenden",
+      "pronunciar": "aussprechen"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "mit Hinweis",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "Fertig",
+      "resumen_one": "{{count}} Übung",
+      "resumen_other": "{{count}} Übungen",
+      "reforzar": "Noch üben: {{items}}.",
+      "manana_one": "Morgen: {{count}} Wiederholung.",
+      "manana_other": "Morgen: {{count}} Wiederholungen.",
+      "noGuardadas_one": "{{count}} Antwort wurde nicht gespeichert.",
+      "noGuardadas_other": "{{count}} Antworten wurden nicht gespeichert.",
+      "otra": "Noch eine Lektion"
+    }
   }
 }

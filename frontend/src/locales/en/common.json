@@ -1182,5 +1182,53 @@
       "correcta": "correct",
       "tuRespuesta": "your answer"
     }
+  },
+  "sesion": {
+    "cargando": "Getting the session ready…",
+    "fallo": "Couldn't prepare the session.",
+    "reintentar": "Try again",
+    "vacia": "No reviews or new lessons in this language today.",
+    "aHoy": "Back to Today",
+    "repaso": "Review",
+    "desconocida": "This activity can't be shown yet.",
+    "modo": {
+      "presentar": "New",
+      "practicar": "Practice",
+      "comprobar": "Test",
+      "repaso": "Review"
+    },
+    "ahoraTu": "Your turn",
+    "seguir": "Continue",
+    "bien": "Good",
+    "mira": "Check the correction",
+    "noPuedo": {
+      "escuchar": "I can't listen right now",
+      "hablar": "I can't speak right now",
+      "escribir": "I can't write right now"
+    },
+    "faceta": {
+      "reconocer": "recognize",
+      "oir": "hear",
+      "escribir": "write",
+      "genero": "gender",
+      "aplicar": "apply",
+      "pronunciar": "pronounce"
+    },
+    "marca": {
+      "bien": "✓",
+      "pista": "with a hint",
+      "mal": "✗"
+    },
+    "fin": {
+      "hecho": "Done",
+      "resumen_one": "{{count}} activity",
+      "resumen_other": "{{count}} activities",
+      "reforzar": "Needs work: {{items}}.",
+      "manana_one": "Tomorrow: {{count}} review.",
+      "manana_other": "Tomorrow: {{count}} reviews.",
+      "noGuardadas_one": "{{count}} answer wasn't saved.",
+      "noGuardadas_other": "{{count}} answers weren't saved.",
+      "otra": "Another lesson"
+    }
   }
 }
