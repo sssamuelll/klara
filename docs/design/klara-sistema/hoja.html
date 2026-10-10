@@ -1346,6 +1346,17 @@
         </ol>
       </div>
     </figure>
+    <figure class="hoja-estado" data-estado="quieta">
+      <figcaption>Quieta <code>.k-route__row--quiet</code>: la línea al día, un <code>&lt;div&gt;</code> sin mano ni contacto</figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <div class="k-route__row k-route__row--quiet"><span class="k-route__title" lang="ja">日本語</span><span class="k-route__meta">Al día</span><span class="k-route__sub">Terminaste el mapa y no hay repasos por ahora.</span></div>
+          </li>
+        </ol>
+      </div>
+    </figure>
     <figure class="hoja-estado" data-estado="fin">
       <figcaption>Todo hecho, con el cierre <code>.k-route__end</code></figcaption>
       <div class="hoja-estado__muestra">
@@ -1361,6 +1372,29 @@
       <div class="hoja-estado__muestra">
         <ol class="k-route" role="list">
           <li class="k-route__stop" data-state="done"><span class="k-route__dot" aria-hidden="true"></span><button type="button" class="k-route__row"><span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span><span class="k-route__sub" lang="de">Die Bundesausbildungsförderungsgesetzberatungsstelle</span></button></li>
+        </ol>
+      </div>
+    </figure>
+    <figure class="hoja-estado" data-estado="japones">
+      <figcaption>Japonés dentro del héroe y de la fila: el nombre del idioma en la tira y el kana de la bajada, cada uno en su <code>&lt;span lang&gt;</code></figcaption>
+      <div class="hoja-estado__muestra">
+        <ol class="k-route" role="list">
+          <li class="k-route__stop" data-state="done">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <button type="button" class="k-route__row"><span class="k-route__title" lang="ja">日本語</span><span class="k-route__meta">Hecho</span><span class="k-route__sub">6 repasos · <span lang="ja">か</span> <span lang="ja">き</span> <span lang="ja">く</span> <span lang="ja">け</span> <span lang="ja">こ</span></span></button>
+          </li>
+          <li class="k-route__stop" data-state="now" aria-current="step">
+            <span class="k-route__dot" aria-hidden="true"></span>
+            <div class="k-route__body">
+              <span class="k-route__label">Estás aquí</span>
+              <button type="button" class="k-hero">
+                <span class="k-hero__tag"><span><span lang="ja">日本語</span> · 18 min</span><span>Empezar</span></span>
+                <span class="k-hero__title" lang="ja">か き く け こ</span>
+                <span class="k-hero__arrow" aria-hidden="true">→</span>
+                <span class="k-hero__dek">6 repasos y luego la fila de <span lang="ja">か</span>: leerla, oírla y escribirla.</span>
+              </button>
+            </div>
+          </li>
         </ol>
       </div>
     </figure>

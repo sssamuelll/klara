@@ -945,7 +945,7 @@ Literales justificados: **18px 20px**, **25px/22px**, **24px** de la flecha y **
 | `.home__feature` y familia (pages.css:36-92, muertas) | `.k-hero`; es la implementación de escritorio del mismo bloque, se lee y se borra |
 | `.story-end*` (pages.css:310-386, muertas) | `.k-hero k-hero--quiet` + `.k-hero__meta`; se leen y se borran |
 
-**Notas:** el héroe tocable es `<button>` y ocupa 44px de sobra; el `--quiet` es `<header>` con `<h1>` dentro y no es tocable. `--quiet` apaga la superficie explícitamente (`background: none; color: var(--ink)`), porque el bloque base es tinta sólida. Las coreografías de entrada escalonada de onboarding (200/400/500/600/800ms) no son del átomo: son de la pantalla, y hoy incumplen §7.6 porque van en ms literales. Con alemán largo el título parte palabra; la flecha no se encoge. Un título en el idioma de estudio lleva `lang` y con él parte con guion (`.k-hero__title[lang]`, `hyphens: auto` como `.k-field__input`); sin `lang` no hifena, y `overflow-wrap` queda de respaldo.
+**Notas:** el héroe tocable es `<button>` y ocupa 44px de sobra; el `--quiet` es `<header>` con `<h1>` dentro y no es tocable. `--quiet` apaga la superficie explícitamente (`background: none; color: var(--ink)`), porque el bloque base es tinta sólida. Las coreografías de entrada escalonada de onboarding (200/400/500/600/800ms) no son del átomo: son de la pantalla, y hoy incumplen §7.6 porque van en ms literales. Con alemán largo el título parte palabra; la flecha no se encoge. Un título en el idioma de estudio lleva `lang` y con él parte con guion (`.k-hero__title[lang]`, `hyphens: auto` como `.k-field__input`); sin `lang` no hifena, y `overflow-wrap` queda de respaldo. El nombre del idioma de la tira y el kana de la bajada llevan su `<span lang>`; sus reglas (`.k-hero__tag [lang]`, `.k-hero__dek [lang]`) viven con el átomo 18, que es donde las usa Hoy; la tira también la usa el final del reproductor.
 
 ---
 
@@ -1232,10 +1232,10 @@ Literales justificados: **16px** de cuerpo es deliberado y viene con su comentar
 
 **Elementos:** `__stop` (cada parada, un `<li>`), `__dot` (el punto sobre la línea), `__body` (la columna de la parada actual: rótulo y héroe), `__label` («Estás aquí»), `__row` (la parada cerrada, un `<button>`), `__title`, `__meta`, `__sub` y `__end` (la línea de cierre, hermana de la lista).
 
-**Variantes:** ninguna.
+**Variantes:** `__row--quiet`, la parada sin nada que abrir (una línea al día, spec 2026-10-09 §5.1): la misma fila, pero un `<div>` y no un `<button>`, sin mano (`cursor: default`) y sin el fondo de contacto, como `.k-row--quiet` (átomo 4). Va en `data-state="done"`: ahí no queda nada que hacer.
 
 **Estados:** `data-state` en `__stop`. **`pending`**: punto hueco. **`now`**: punto de acento con anillo; la parada lleva `__label` y un `.k-hero` dentro de `__body`. **`done`**: punto lleno; el título baja a `--ink-2` y la meta dice «Hecho». La línea y el tope los dibuja el bloque con `::before` y `::after`.
-**Contacto** (`:hover` y `:active` sobre `__row`): fondo `--paper-2`, el fondo de contacto único del sistema (el de `.k-row`, átomo 4), con radio `var(--r-sm)`; el anillo global de `:focus-visible` no se anula. La parada actual no lleva fila: su contacto es el del héroe (`:active` lo hunde).
+**Contacto** (`:hover` y `:active` sobre `__row`, salvo `--quiet`): fondo `--paper-2`, el fondo de contacto único del sistema (el de `.k-row`, átomo 4), con radio `var(--r-sm)`; el anillo global de `:focus-visible` no se anula. La parada actual no lleva fila: su contacto es el del héroe (`:active` lo hunde).
 
 **Medidas:** carril de 28px (`--k-route-rail`, local al bloque). El punto mide 14px con borde de 3px; la línea mide 3px, como el borde, para que el punto se lea enhebrado. El tope mide 18×3px. Las filas llevan `min-height: 44px` (§7.2). Título en `--t-h3` serif, meta en `--t-mono` mono y subtítulo en `--t-mark` serif cursiva. Entre paradas, `--space-4`.
 Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px del tope, los 6px de `margin-top` del punto (lo bajan a la línea de base del título), los 12px del arranque de la línea (el centro del primer punto) y el `outline-offset` de 3px del punto actual, que es el de la gramática de foco. El relleno de contacto no trae literales: sube y baja `var(--space-2)` como dos `box-shadow` sin desenfoque (`0 ±var(--space-2) 0 0`), que no ocupan sitio, no suman al scroll de `.k-live` y dejan el texto donde estaba, contra el rótulo y el héroe; a los lados queda a ras de la columna, alineado con el héroe. Ni un margen negativo (trampa 13) ni un `spread` uniforme valían: el primero desborda `.k-live`, y el segundo sobresale 8px por la izquierda y `.k-live` lo corta a ras por la derecha.
@@ -1251,6 +1251,13 @@ Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px 
       <span class="k-route__title">Leer</span><span class="k-route__meta">Hecho</span>
       <span class="k-route__sub">Die Bäckerei am Samstag</span>
     </button>
+  </li>
+  <li class="k-route__stop" data-state="done">
+    <span class="k-route__dot" aria-hidden="true"></span>
+    <div class="k-route__row k-route__row--quiet">
+      <span class="k-route__title" lang="ja">日本語</span><span class="k-route__meta">Al día</span>
+      <span class="k-route__sub">Terminaste el mapa y no hay repasos por ahora.</span>
+    </div>
   </li>
   <li class="k-route__stop" data-state="now" aria-current="step">
     <span class="k-route__dot" aria-hidden="true"></span>
@@ -1269,7 +1276,7 @@ Literales justificados: los 28px del carril, los 14px y 3px del punto, los 18px 
 |---|---|
 | la lista del plan de `Portada.tsx` (`.k-row` con `__n` 01–04) | `.k-route` en `Hoy.tsx`; la portada se queda con el mapa y Género |
 
-**Notas:** la parada actual no es una fila grande: es el héroe (átomo 12) colgado de la línea. Las filas no son `.k-row` porque `.k-row` dibuja su filete, y aquí la estructura la pone la línea: dos filetes en ángulo recto se leían como una tabla. Todas las paradas se tocan en cualquier orden; el orden sugiere, no obliga. Reduced motion: el átomo no anima (la línea, los puntos y el anillo del punto actual son estáticos), así que no trae bloque de `prefers-reduced-motion`; el héroe colgado lleva el suyo (átomo 12). El `<ol>` lleva `role="list"`: con `list-style: none` Safari y VoiceOver le quitan la semántica de lista. Lo que esté en el idioma de estudio (el título de la historia en `__sub`) lleva `lang` y parte con guion (`[lang]` con `hyphens: auto`, como `.k-hero__title[lang]`); el `overflow-wrap` queda de respaldo.
+**Notas:** la parada actual no es una fila grande: es el héroe (átomo 12) colgado de la línea. Las filas no son `.k-row` porque `.k-row` dibuja su filete, y aquí la estructura la pone la línea: dos filetes en ángulo recto se leían como una tabla. Todas las paradas se tocan en cualquier orden (menos la que está al día, que no tiene nada que abrir); el orden sugiere, no obliga. Reduced motion: el átomo no anima (la línea, los puntos y el anillo del punto actual son estáticos), así que no trae bloque de `prefers-reduced-motion`; el héroe colgado lleva el suyo (átomo 12). El `<ol>` lleva `role="list"`: con `list-style: none` Safari y VoiceOver le quitan la semántica de lista. Lo que esté en el idioma de estudio (el título de la historia en `__sub`) lleva `lang` y parte con guion (`[lang]` con `hyphens: auto`, como `.k-hero__title[lang]`); el `overflow-wrap` queda de respaldo. Hoy lleva japonés dentro de dos piezas que no son suyas, y esa es la junta con el héroe (átomo 12): el nombre del idioma en la tira mono (`日本語`, `.k-hero__tag [lang]`) y el kana de la bajada del héroe o del subtítulo de la fila (`.k-hero__dek [lang]`, `.k-route__sub [lang]`), cada uno en su `<span lang>` (`partirKana`, átomo 21). Esas reglas declaran su propia `font-family` —mono en la tira; serif y recta en la bajada y el subtítulo, que son cursivas—: un span suelto hereda la familia que su padre ya resolvió y se queda sin Noto Serif JP (átomo 20), y un kana oblicuo es otro dibujo (como `.k-note [lang="ja"]`, átomo 21). Sin esa regla Chromium dibuja el kana con la fuente del sistema (Yu Gothic, MS Gothic), medido con `CSS.getPlatformFontsForNode`.
 
 ---
 

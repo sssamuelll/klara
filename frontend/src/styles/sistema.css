@@ -2937,12 +2937,16 @@ ul.k-error { list-style: none; }
    las corta a ras por la derecha y sobresaldrían 8px por la izquierda: así el
    relleno queda alineado con el héroe. El anillo global de `:focus-visible`
    (global.css:48) no se anula. */
-.k-route__row:hover,
-.k-route__row:active {
+.k-route__row:not(.k-route__row--quiet):hover,
+.k-route__row:not(.k-route__row--quiet):active {
   background: var(--paper-2);
   box-shadow: 0 calc(-1 * var(--space-2)) 0 0 var(--paper-2),
               0 var(--space-2) 0 0 var(--paper-2);
 }
+
+/* La parada sin nada que abrir (una línea al día: ni lección ni repasos): la misma fila, un
+   `<div>`, sin mano ni contacto. Como `.k-row--quiet` (átomo 4). */
+.k-route__row--quiet { cursor: default; }
 
 .k-route__title {
   font-family: var(--font-serif);
@@ -2986,6 +2990,19 @@ ul.k-error { list-style: none; }
   font-style: italic;
   font-size: var(--t-mark);
   color: var(--ink-2);
+}
+
+/* Junta con el héroe (átomo 12): lo que está en japonés dentro de una pieza que no es suya. El nombre
+   del idioma en la tira mono del héroe (日本語, en Hoy y en el final del reproductor) y el kana de la
+   bajada («la fila de か») o del título de la lección hecha, cada uno en su `<span lang>`. Un span suelto
+   hereda la familia que su padre ya resolvió y se queda sin Noto Serif JP; declarar la suya hace que
+   `:lang(ja)` (tokens.css) la resuelva. La bajada y el subtítulo son cursivas, y un kana oblicuo es otro
+   dibujo: ahí, recto (como `.k-note [lang="ja"]`, átomo 21). */
+.k-hero__tag [lang] { font-family: var(--font-mono); }
+.k-hero__dek [lang],
+.k-route__sub [lang] {
+  font-family: var(--font-serif);
+  font-style: normal;
 }
 
 /* ---------- 19-estanteria ---------- */

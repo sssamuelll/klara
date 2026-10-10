@@ -1,38 +1,51 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import { ApiError, api } from "../api/client";
-import type { TodayOut } from "../api/types";
+import { api } from "../api/client";
+import type { Linea, TodayOut } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
-import { useGreeting } from "../lib/dateLabel";
-import { buildHoyVM, medianocheLocal, type Accion, type Panel, type Parada } from "../lib/hoyView";
+import { useGreeting, useMastheadDate } from "../lib/dateLabel";
+import { partirKana } from "../lib/dinamicas/trazo";
+import { alDia, buildHoyVM, dekPanel, estadoParada, frase, medianocheLocal, subFila, type TextoLinea } from "../lib/hoyView";
 import { languageLabel } from "../lib/languages";
+import { unlockAudio } from "../lib/tts";
 import { useUser } from "../lib/user";
 
+/**
+ * Hoy (spec 2026-10-09 §5.1): una línea por idioma de estudio. Cada línea son
+ * los repasos de ese idioma y la lección que sigue en su mapa, en una sola
+ * sesión. El orden lo pone el servidor; la primera con algo por hacer es
+ * «estás aquí». Una línea al día (mapa terminado, ningún repaso) es una fila
+ * sin botón: abrirla daría una sesión vacía.
+ */
 export default function Hoy() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
   const hola = useGreeting();
+  const fecha = useMastheadDate();
   const [today, setToday] = useState<TodayOut | null>(null);
   const [fallo, setFallo] = useState(false);
   const [intento, setIntento] = useState(0);
-  const [reclamando, setReclamando] = useState(false);
-  const [falloReclamo, setFalloReclamo] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
     setFallo(false);
     api.today(medianocheLocal()).then(
-      (d) => { if (!cancelado) setToday(d); },
-      () => { if (!cancelado) setFallo(true); },
+      (d) => {
+        if (!cancelado) setToday(d);
+      },
+      () => {
+        if (!cancelado) setFallo(true);
+      },
     );
-    return () => { cancelado = true; };
+    return () => {
+      cancelado = true;
+    };
   }, [intento]);
 
-  // La pantalla sigue montada mientras la app está en segundo plano: al volver se pide el día otra
-  // vez. `medianocheLocal()` se evalúa entonces, así que pasada la medianoche llega el día nuevo, y
-  // `today` se queda a la vista mientras tanto (sin parpadeo de carga).
+  // La pantalla sigue montada con la app en segundo plano: al volver se pide el día otra vez,
+  // y pasada la medianoche llega el día nuevo.
   useEffect(() => {
     const alVolver = () => {
       if (document.visibilityState === "visible") setIntento((n) => n + 1);
@@ -42,50 +55,55 @@ export default function Hoy() {
   }, []);
 
   const vm = buildHoyVM(today);
-  const tema = user ? languageLabel(user.target_language) : "…";
-  // El idioma de estudio: el texto que está en él (el título de la historia, la frase, el tema) lo
-  // declara con `lang`, para el lector de pantalla y para que el compuesto largo parta con guion.
-  const idioma = user?.target_language;
 
-  async function actuar(accion: Accion) {
-    setFalloReclamo(false);
-    if (accion.tipo === "ir") {
-      navigate(accion.to, { state: { from: "/" } });
-      return;
-    }
-    if (reclamando) return; // doble toque: un solo reclamo
-    setReclamando(true);
-    try {
-      const story = await api.claimModuleStory(accion.moduleId);
-      navigate(`/estudiar/${story.id}`, { state: { from: "/" } });
-    } catch (e) {
-      // El código "library.empty" viaja en el mensaje del ApiError (ver Module.tsx).
-      if (e instanceof ApiError && e.status === 404 && e.message.includes("library.empty")) {
-        navigate("/story/new", { state: { from: "/" } });
-        return;
+  // La bajada y el título de la lección vienen del catálogo, con algún kana dentro: ahí va `ConKana`
+  // (en «luego», la frase entera: la bajada ya viene interpolada).
+  const texto = (x: TextoLinea): ReactNode => {
+    switch (x.tipo) {
+      case "alDia":
+        return t("hoy.alDiaSub");
+      case "soloRepasos":
+        return t("hoy.soloRepasos");
+      case "bajada":
+        return <ConKana texto={frase(x.bajada)} />;
+      case "luego":
+        return <ConKana texto={t("hoy.luego", { repasos: t("hoy.repasos", { count: x.repasos }), bajada: x.bajada })} />;
+      case "repasos": {
+        const r = t("hoy.repasos", { count: x.repasos });
+        return x.detalle ? (
+          <>
+            {r} · <ConKana texto={x.detalle} />
+          </>
+        ) : (
+          r
+        );
       }
-      setReclamando(false);
-      setFalloReclamo(true);
     }
-  }
+  };
+
+  // El toque que abre la sesión desbloquea el audio: lo primero que suena es un kana.
+  const abrir = (l: Linea) => {
+    unlockAudio();
+    navigate(`/sesion/${l.idioma}`, { state: { from: "/" } });
+  };
+
+  const rotulo = vm.todoHecho
+    ? t("hoy.planHecho")
+    : vm.algunaHecha
+      ? t("hoy.quedan", { min: vm.minutos })
+      : t("hoy.plan", { min: vm.minutos });
+
+  const meta = (l: Linea) =>
+    l.estado === "hecha" ? t("hoy.hecho") : alDia(l) ? t("hoy.alDia") : t("hoy.minutos", { min: l.minutos });
 
   return (
     <main className="k-page">
       <header className="k-topline">
         <span className="k-topline__mark">
-          {/* El nombre accesible mezcla idiomas («Deutsch, Tu biblioteca»): el `lang` va solo en el tema, no en el botón. */}
-          <button
-            type="button"
-            className="k-btn k-btn--text"
-            aria-label={`${tema}, ${t("biblioteca.titulo")}`}
-            onClick={() => navigate("/biblioteca")}
-          >
-            <span lang={idioma}>{tema}</span>
-            <Chevron />
-          </button>
-          <span className="k-topline__meta">{t("biblioteca.cursoSub", { level: user?.level ?? "" })}</span>
+          <KlaraMark size={14} />
+          <span className="wordmark">Klara</span>
         </span>
-        <KlaraMark size={14} />
+        <span className="k-topline__meta">{fecha}</span>
       </header>
       <div className="k-live">
         <header className="k-hero k-hero--quiet">
@@ -97,142 +115,105 @@ export default function Hoy() {
             />
           </h1>
         </header>
-        <h2 className="k-cap k-cap--rule">
-          {vm.todoHecho ? t("hoy.planHecho") : t("hoy.plan", { min: vm.minutos })}
-        </h2>
-        {/* El error es solo para cuando no hay plan que enseñar: si falla el pedido de al volver a la
-            app con uno a la vista, ese plan se queda tal cual, sin banner. */}
-        {fallo && today === null && (
-          <p className="k-error" role="alert">
-            {t("hoy.error")}{" "}
-            <button type="button" className="k-btn k-btn--text" onClick={() => setIntento((n) => n + 1)}>
-              {t("hoy.reintentar")}
-            </button>
-          </p>
+        {today === null ? (
+          // Sin día que enseñar: cargando, o el error. Si falla el pedido de al volver a la app con un
+          // día a la vista, ese día se queda tal cual, sin banner.
+          fallo ? (
+            <p className="k-error" role="alert">
+              {t("hoy.error")}{" "}
+              <button type="button" className="k-btn k-btn--text" onClick={() => setIntento((n) => n + 1)}>
+                {t("hoy.reintentar")}
+              </button>
+            </p>
+          ) : (
+            <span className="k-spinner" role="status" aria-label={t("common.loading")} />
+          )
+        ) : vm.sinIdiomas ? (
+          <div className="k-note">
+            <p className="k-note__body">{t("hoy.sinIdiomas")}</p>
+            <div className="k-note__actions">
+              <button type="button" className="k-btn k-btn--ghost" onClick={() => navigate("/settings")}>
+                {t("hoy.irAjustes")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h2 className="k-cap k-cap--rule">{rotulo}</h2>
+            <ol className="k-route" role="list">
+              {vm.lineas.map((l) => {
+                const estado = estadoParada(l, vm.ahora);
+                return (
+                  <li
+                    key={l.idioma}
+                    className="k-route__stop"
+                    data-state={estado}
+                    aria-current={estado === "now" ? "step" : undefined}
+                  >
+                    <span className="k-route__dot" aria-hidden="true" />
+                    {estado === "now" ? (
+                      <div className="k-route__body">
+                        <span className="k-route__label">{t("hoy.estasAqui")}</span>
+                        <button type="button" className="k-hero" onClick={() => abrir(l)}>
+                          <span className="k-hero__tag">
+                            <span>
+                              <span lang={l.idioma}>{languageLabel(l.idioma)}</span> · {t("hoy.minutos", { min: l.minutos })}
+                            </span>
+                            <span>{t("hoy.empezar")}</span>
+                          </span>
+                          <span className="k-hero__title" lang={l.leccion ? l.idioma : undefined}>
+                            {l.leccion?.titulo ?? t("hoy.repasos", { count: l.repasos })}
+                          </span>
+                          <span className="k-hero__arrow" aria-hidden="true">→</span>
+                          <span className="k-hero__dek">{texto(dekPanel(l))}</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <Fila linea={l} meta={meta(l)} sub={texto(subFila(l))} onAbrir={alDia(l) ? null : () => abrir(l)} />
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+            <p className="k-route__end">{vm.todoHecho ? t("hoy.finHecho") : t("hoy.fin")}</p>
+          </>
         )}
-        {falloReclamo && <p className="k-error" role="alert">{t("module.claimError")}</p>}
-        <ol className="k-route" role="list">
-          {vm.paradas.map((p) => (
-            <li
-              key={p.id}
-              className="k-route__stop"
-              data-state={p.estado}
-              aria-current={p.estado === "now" ? "step" : undefined}
-            >
-              <span className="k-route__dot" aria-hidden="true" />
-              {p.estado === "now" && vm.panel ? (
-                <div className="k-route__body">
-                  <span className="k-route__label">{t("hoy.estasAqui")}</span>
-                  <PanelActual panel={vm.panel} ocupado={reclamando} idioma={idioma} onAccion={actuar} />
-                </div>
-              ) : (
-                <FilaParada parada={p} idioma={idioma} onAccion={actuar} />
-              )}
-            </li>
-          ))}
-        </ol>
-        <p className="k-route__end">{vm.todoHecho ? t("hoy.finHecho") : t("hoy.fin")}</p>
       </div>
     </main>
   );
 }
 
-function FilaParada({
-  parada,
-  idioma,
-  onAccion,
-}: {
-  parada: Parada;
-  idioma: string | undefined;
-  onAccion: (a: Accion) => void;
-}) {
-  const { t } = useTranslation();
-  // El título de la historia está en el idioma de estudio; lo demás del subtítulo, en el tuyo.
-  const historia = parada.id === "leer" && parada.historia ? parada.historia : null;
-  const sub =
-    historia ??
-    (parada.id === "repasar" && parada.vencen
-      ? t("hoy.fichas", { count: parada.vencen })
-      : t(`curso.paso.${parada.id}.dek`));
-  return (
-    <button type="button" className="k-route__row" onClick={() => onAccion(parada.accion)}>
-      <span className="k-route__title">{t(`curso.paso.${parada.id}.titulo`)}</span>
-      <span className="k-route__meta">
-        {parada.estado === "done" ? t("hoy.hecho") : t(`curso.paso.${parada.id}.meta`)}
-      </span>
-      <span className="k-route__sub" lang={historia ? idioma : undefined}>{sub}</span>
+/** Una parada que no es el «estás aquí». Con `onAbrir` es un botón; sin él (la línea al día) es una fila quieta. */
+function Fila({ linea, meta, sub, onAbrir }: { linea: Linea; meta: string; sub: ReactNode; onAbrir: (() => void) | null }) {
+  const dentro = (
+    <>
+      <span className="k-route__title" lang={linea.idioma}>{languageLabel(linea.idioma)}</span>
+      <span className="k-route__meta">{meta}</span>
+      <span className="k-route__sub">{sub}</span>
+    </>
+  );
+  return onAbrir ? (
+    <button type="button" className="k-route__row" onClick={onAbrir}>
+      {dentro}
     </button>
+  ) : (
+    <div className="k-route__row k-route__row--quiet">{dentro}</div>
   );
 }
 
-function PanelActual({
-  panel,
-  ocupado,
-  idioma,
-  onAccion,
-}: {
-  panel: Panel;
-  ocupado: boolean;
-  idioma: string | undefined;
-  onAccion: (a: Accion) => void;
-}) {
-  const { t } = useTranslation();
-  const arte = panel.tipo === "leer" ? panel.arte : null;
-  // El src que falló y no un booleano: si el día se refresca con otra historia, su ilustración
-  // trae otro src y se intenta de nuevo; la de una imagen rota no suprime la siguiente.
-  const [arteRota, setArteRota] = useState<string | null>(null);
-  const tag = `${t(`curso.paso.${panel.tipo}.titulo`)} · ${t(`curso.paso.${panel.tipo}.meta`)}`;
-
-  let titulo = "";
-  let enIdioma = false; // el titular es texto en el idioma de estudio, no de la interfaz
-  let dek: string | null = null;
-  let cta: string | null = t("hoy.empezar");
-  switch (panel.tipo) {
-    case "leer":
-      titulo = panel.estado === "request" ? t("hoy.pedir") : (panel.titulo ?? t("curso.paso.leer.dek"));
-      enIdioma = panel.estado !== "request" && panel.titulo !== null;
-      dek = panel.estado === "request" ? null : panel.subtitulo;
-      cta = panel.estado === "continue" ? t("hoy.seguir") : panel.estado === "new" ? t("hoy.empezar") : null;
-      break;
-    case "pronunciar":
-      titulo = panel.frase ? `„${panel.frase.target}“` : t("curso.paso.pronunciar.titulo");
-      enIdioma = panel.frase !== null;
-      dek = panel.frase ? panel.frase.native : t("curso.paso.pronunciar.dek");
-      break;
-    case "hablar":
-      titulo = t("curso.paso.hablar.dek");
-      dek = null;
-      break;
-    case "repasar":
-      titulo = t("hoy.fichas", { count: panel.vencen });
-      dek = t("curso.paso.repasar.dek");
-      break;
-  }
-
+/** La bajada es español con algún kana dentro («la fila de か»): cada tramo de kana lleva su `lang="ja"`. */
+function ConKana({ texto }: { texto: string }) {
   return (
-    <button type="button" className="k-hero" disabled={ocupado} onClick={() => onAccion(panel.accion)}>
-      {arte && arteRota !== arte && (
-        <img className="k-hero__art" src={arte} alt="" onError={() => setArteRota(arte)} />
+    <>
+      {partirKana(texto).map((p, i) =>
+        p.ja ? (
+          <span key={i} lang="ja">
+            {p.texto}
+          </span>
+        ) : (
+          p.texto
+        ),
       )}
-      <span className="k-hero__tag">
-        <span>{tag}</span>
-        {cta && <span>{cta}</span>}
-      </span>
-      <span className="k-hero__title" lang={enIdioma ? idioma : undefined}>{titulo}</span>
-      <span className="k-hero__arrow" aria-hidden="true">→</span>
-      {dek && <span className="k-hero__dek">{dek}</span>}
-    </button>
-  );
-}
-
-/** El ⌄ del tema. JetBrains Mono no trae U+2304 y caía a una «v» en la línea de base, así que se
-    dibuja: caja de 16px (la de `.k-btn svg`), trazo de 1.5 y currentColor como los iconos de la
-    barra de pestañas, y el dibujo a la altura de las versalitas mono (11px), arrimado a la
-    izquierda de su caja para quedar junto a la palabra. */
-function Chevron() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M2 7.8l4.4 4.4 4.4-4.4" />
-    </svg>
+    </>
   );
 }

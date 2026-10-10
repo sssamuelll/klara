@@ -49,7 +49,7 @@ const ESTADOS = {
   "error": ["en-linea"],
   "marca": ["quieta", "hablando"],
   "campo-texto": ["reposo", "foco", "error", "deshabilitado", "area", "manuscrito"],
-  "recorrido": ["pendiente", "ahora", "hecha", "fin", "compuesto-largo"],
+  "recorrido": ["pendiente", "ahora", "hecha", "quieta", "fin", "compuesto-largo", "japones"],
   "estanteria": ["tema", "vencidas", "nuevo", "compuesto-largo"],
   "glifo": ["latino", "japones", "nube-centrada"],
   "lienzo-trazo": ["presentar", "practicar", "comprobar", "corregido"],
