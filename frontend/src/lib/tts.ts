@@ -165,7 +165,10 @@ export function speak(
   opts?: {
     rate?: number;
     mode?: TTSMode;
-    /** Un archivo del catálogo: suena en vez del TTS en vivo (spec 2026-10-09 §3.1). */
+    /**
+     * Un archivo del catálogo: suena en vez del TTS en vivo (spec 2026-10-09 §3.1). Va tal cual al
+     * `<audio>`, sin fetch: en el cascarón nativo tiene que llegar absoluto (`${apiBase()}/audio/…`).
+     */
     src?: string;
     onDone?: (reason: TTSDoneReason) => void;
   },
@@ -198,6 +201,8 @@ export function speak(
   // pitching it up/down like a chipmunk/walrus. Supported in modern browsers;
   // older WebKit ignores it but still applies the rate.
   a.preservesPitch = true;
+  // Las dos: load() devuelve playbackRate a defaultPlaybackRate, y el src se asigna (y se carga) después.
+  a.defaultPlaybackRate = rate;
   a.playbackRate = rate;
   a.addEventListener(
     "loadedmetadata",

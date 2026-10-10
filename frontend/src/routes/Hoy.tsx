@@ -6,7 +6,17 @@ import type { Linea, TodayOut } from "../api/types";
 import KlaraMark from "../components/KlaraMark";
 import { useGreeting, useMastheadDate } from "../lib/dateLabel";
 import { partirKana } from "../lib/dinamicas/trazo";
-import { alDia, buildHoyVM, dekPanel, estadoParada, frase, medianocheLocal, subFila, type TextoLinea } from "../lib/hoyView";
+import {
+  alDia,
+  buildHoyVM,
+  clavesDelPlan,
+  dekPanel,
+  estadoParada,
+  frase,
+  medianocheLocal,
+  subFila,
+  type TextoLinea,
+} from "../lib/hoyView";
 import { languageLabel } from "../lib/languages";
 import { unlockAudio } from "../lib/tts";
 import { useUser } from "../lib/user";
@@ -56,9 +66,9 @@ export default function Hoy() {
 
   const vm = buildHoyVM(today);
 
-  // La bajada y el título de la lección vienen del catálogo, con algún kana dentro: ahí va `ConKana`
-  // (en «luego», la frase entera: la bajada ya viene interpolada).
-  const texto = (x: TextoLinea): ReactNode => {
+  // La bajada viene del catálogo, en español con algún kana dentro: ahí va `ConKana` (en «luego», la frase
+  // entera: la bajada ya viene interpolada). El título de una lección hecha está entero en el idioma de estudio.
+  const texto = (x: TextoLinea, idioma: string): ReactNode => {
     switch (x.tipo) {
       case "alDia":
         return t("hoy.alDiaSub");
@@ -78,6 +88,18 @@ export default function Hoy() {
           r
         );
       }
+      case "hecha": {
+        const titulo = x.leccion && <span lang={idioma}>{x.leccion}</span>;
+        if (x.repasos === null) return titulo;
+        const r = t("hoy.repasos", { count: x.repasos });
+        return titulo ? (
+          <>
+            {r} · {titulo}
+          </>
+        ) : (
+          r
+        );
+      }
     }
   };
 
@@ -87,11 +109,7 @@ export default function Hoy() {
     navigate(`/sesion/${l.idioma}`, { state: { from: "/" } });
   };
 
-  const rotulo = vm.todoHecho
-    ? t("hoy.planHecho")
-    : vm.algunaHecha
-      ? t("hoy.quedan", { min: vm.minutos })
-      : t("hoy.plan", { min: vm.minutos });
+  const claves = clavesDelPlan(vm);
 
   const meta = (l: Linea) =>
     l.estado === "hecha" ? t("hoy.hecho") : alDia(l) ? t("hoy.alDia") : t("hoy.minutos", { min: l.minutos });
@@ -139,7 +157,7 @@ export default function Hoy() {
           </div>
         ) : (
           <>
-            <h2 className="k-cap k-cap--rule">{rotulo}</h2>
+            <h2 className="k-cap k-cap--rule">{t(claves.rotulo, { min: vm.minutos })}</h2>
             <ol className="k-route" role="list">
               {vm.lineas.map((l) => {
                 const estado = estadoParada(l, vm.ahora);
@@ -165,17 +183,17 @@ export default function Hoy() {
                             {l.leccion?.titulo ?? t("hoy.repasos", { count: l.repasos })}
                           </span>
                           <span className="k-hero__arrow" aria-hidden="true">→</span>
-                          <span className="k-hero__dek">{texto(dekPanel(l))}</span>
+                          <span className="k-hero__dek">{texto(dekPanel(l), l.idioma)}</span>
                         </button>
                       </div>
                     ) : (
-                      <Fila linea={l} meta={meta(l)} sub={texto(subFila(l))} onAbrir={alDia(l) ? null : () => abrir(l)} />
+                      <Fila linea={l} meta={meta(l)} sub={texto(subFila(l), l.idioma)} onAbrir={alDia(l) ? null : () => abrir(l)} />
                     )}
                   </li>
                 );
               })}
             </ol>
-            <p className="k-route__end">{vm.todoHecho ? t("hoy.finHecho") : t("hoy.fin")}</p>
+            <p className="k-route__end">{t(claves.fin)}</p>
           </>
         )}
       </div>

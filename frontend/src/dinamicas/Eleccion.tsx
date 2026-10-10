@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  aceptaRespuesta,
   evaluarEleccion,
   textoCorrecto,
   tonoOpcion,
@@ -45,7 +46,8 @@ export default function Eleccion({ contenido, capacidades, onResultado }: PropsD
     (item: string) => {
       // Una vez por actividad. El ref y no `elegida`: dos toques seguidos llegan
       // antes de que React repinte, y el estado todavía diría «sin responder».
-      if (respondida.current) return;
+      // Y no recién montada: el toque (o la tecla) sería el segundo de los de la anterior.
+      if (respondida.current || !aceptaRespuesta(inicio.current, performance.now())) return;
       respondida.current = true;
       setElegida(item);
       onResultado([evaluarEleccion(contenido, item, Math.round(performance.now() - inicio.current))]);

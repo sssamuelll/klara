@@ -717,8 +717,10 @@
     "hecho": "Fait",
     "plan": "Le plan du jour · {{min}} min",
     "planHecho": "Le plan du jour · fait",
+    "planAlDia": "Ton plan du jour · à jour",
     "fin": "C’est tout pour aujourd’hui.",
     "finHecho": "Fini pour aujourd’hui.",
+    "finAlDia": "Rien en attente pour aujourd’hui.",
     "empezar": "Commencer",
     "error": "Impossible de charger le plan du jour.",
     "reintentar": "Réessayer",
@@ -755,29 +757,7 @@
     "mapaFila": "La carte du cours",
     "mapaFilaEstado": "Où tu en es",
     "generoFila": "Genre",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "Lire",
-        "dek": "L'histoire du jour",
-        "meta": "3 min"
-      },
-      "pronunciar": {
-        "titulo": "Prononcer",
-        "dek": "Des phrases de tes histoires, à voix haute",
-        "meta": "4 min"
-      },
-      "hablar": {
-        "titulo": "Parler",
-        "dek": "Une conversation avec Klara",
-        "meta": "3 min"
-      },
-      "repasar": {
-        "titulo": "Réviser",
-        "dek": "Tes fiches du jour",
-        "meta": "5 min"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "La carte",
@@ -1198,6 +1178,7 @@
       "empieza": "Commence au point.",
       "eseNo": "Pas celui-là. Commence au point et suis le modèle.",
       "asiVa": "Le trait {{n}} se fait ainsi. Repasse-le.",
+      "pasar": "Passer à la suivante",
       "escribe": "Écris celui que tu entends",
       "listo": "Terminé.",
       "lienzo": "Zone d'écriture"
@@ -1257,6 +1238,7 @@
       "manana_other": "Demain : {{count}} révisions.",
       "noGuardadas_one": "{{count}} réponse n’a pas été enregistrée.",
       "noGuardadas_other": "{{count}} réponses n’ont pas été enregistrées.",
+      "noCerrada": "Impossible d’enregistrer la fin de la leçon.",
       "otra": "Une autre leçon"
     }
   }

@@ -14,6 +14,8 @@ import {
   lugaresNumeros,
   N,
   partirKana,
+  pasar,
+  puedePasar,
   type Esperado,
   type Punto,
 } from "../lib/dinamicas/trazo";
@@ -141,6 +143,7 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
 
   const inicioTrazo = esperados?.[estado.actual]?.pts[0];
   const sinVoz = !capacidades.puede("escuchar");
+  const salida = modo !== "presentar" && puedePasar(estado, modo);
 
   return (
     <>
@@ -195,8 +198,9 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
             </g>
           ) : (
             <>
+              {/* Dejado con «Pasar a la siguiente», el kana entero es la corrección que anuncia el reproductor. */}
               <g className="k-trazo__tinta">
-                {contenido.trazos.slice(0, estado.actual).map((p, i) => (
+                {contenido.trazos.slice(0, estado.pasado ? total : estado.actual).map((p, i) => (
                   <path key={i} d={p} />
                 ))}
               </g>
@@ -245,13 +249,21 @@ export default function Trazo({ contenido, modo, capacidades, onResultado }: Pro
       ) : (
         <>
           <p className="k-note" aria-live="polite">{nota}</p>
-          {modo === "comprobar" && (
-            <div className="k-wrap k-wrap--centro">
+          {/* Siempre está, y reserva su alto (átomo 21): en la práctica va vacía hasta que hay salida, y que
+              aparezca no mueve el lienzo entre un intento y el siguiente. */}
+          <div className="k-wrap k-wrap--centro">
+            {modo === "comprobar" && (
               <button type="button" className="k-btn k-btn--text" onClick={oir} disabled={sinVoz}>
                 {t("dinamica.oirOtraVez")}
               </button>
-            </div>
-          )}
+            )}
+            {/* Ni con la pista sale este trazo: el kana se deja (una evidencia sin acierto) y se sigue. */}
+            {salida && (
+              <button type="button" className="k-btn k-btn--text" onClick={() => setEstado((s) => pasar(s, modo))}>
+                {t("dinamica.trazo.pasar")}
+              </button>
+            )}
+          </div>
         </>
       )}
     </>

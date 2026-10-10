@@ -141,6 +141,8 @@ export interface EstadoTrazo {
   mostrando: boolean;
   detalle: DetalleTrazo[];
   terminado: boolean;
+  /** Lo dejó con «Pasar a la siguiente»: el kana termina sin acierto. */
+  pasado: boolean;
 }
 
 export const inicialTrazo: EstadoTrazo = {
@@ -151,11 +153,25 @@ export const inicialTrazo: EstadoTrazo = {
   mostrando: false,
   detalle: [],
   terminado: false,
+  pasado: false,
 };
 
 /** Fallos en un mismo trazo antes de enseñarlo: dos en práctica, uno en prueba. */
 export function fallosParaPista(modo: Modo): number {
   return modo === "comprobar" ? 1 : 2;
+}
+
+/** Con la pista ya a la vista, los fallos más en ese mismo trazo que abren la salida. */
+const FALLOS_TRAS_PISTA = 2;
+
+/** Ni con la pista sale ese trazo: el kana se puede dejar, para no quedarse atascado en él. */
+export function puedePasar(e: EstadoTrazo, modo: Modo): boolean {
+  return !e.terminado && e.mostrando && e.fallos >= fallosParaPista(modo) + FALLOS_TRAS_PISTA;
+}
+
+/** «Pasar a la siguiente»: el kana termina, sin acierto y con las pistas que llevaba. */
+export function pasar(e: EstadoTrazo, modo: Modo): EstadoTrazo {
+  return puedePasar(e, modo) ? { ...e, terminado: true, pasado: true } : e;
 }
 
 const redondo = (x: number, decimales = 2) => Math.round(x * 10 ** decimales) / 10 ** decimales;
@@ -192,16 +208,19 @@ export function alSoltar(e: EstadoTrazo, j: Juicio, modo: Modo, total: number): 
 /**
  * Una evidencia por kana: hasta dos pistas sigue siendo acierto (`hard`). Pero la pista llega una sola vez
  * por trazo, así que en un kana de uno o dos trazos `pistas <= 2` se cumpliría siempre y nunca habría
- * `again`: además, tiene que haber algún trazo que se hiciera sin pista.
+ * `again`: además, tiene que haber algún trazo que se hiciera sin pista. Un kana dejado con «Pasar a la
+ * siguiente» no es acierto, y su detalle guarda el trazo que no salió, con lo que midieron sus intentos.
  */
 export function evidenciaTrazo(item: string, e: EstadoTrazo, ms: number, total: number): Evidencia {
   return {
     item,
     faceta: "escribir",
-    acierto: e.pistas <= 2 && e.pistas < total,
+    acierto: !e.pasado && e.pistas <= 2 && e.pistas < total,
     pistas: e.pistas,
     ms,
-    detalle: { trazos: e.detalle },
+    detalle: e.pasado
+      ? { trazos: e.detalle, pasado: { n: e.actual + 1, fallos: e.fallos, rechazos: e.intentos } }
+      : { trazos: e.detalle },
   };
 }
 

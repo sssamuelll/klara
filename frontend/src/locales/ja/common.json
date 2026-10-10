@@ -717,8 +717,10 @@
     "hecho": "完了",
     "plan": "今日のプラン · {{min}} 分",
     "planHecho": "今日のプラン · 完了",
+    "planAlDia": "今日のプラン · 予定なし",
     "fin": "今日はここまで。",
     "finHecho": "今日は完了。",
+    "finAlDia": "今日の予定はありません。",
     "empezar": "はじめる",
     "error": "今日のプランを読み込めませんでした。",
     "reintentar": "もう一度",
@@ -755,29 +757,7 @@
     "mapaFila": "コースの地図",
     "mapaFilaEstado": "現在地",
     "generoFila": "性",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "読む",
-        "dek": "今日の物語",
-        "meta": "3 分"
-      },
-      "pronunciar": {
-        "titulo": "発音する",
-        "dek": "あなたの物語の文を、声に出して",
-        "meta": "4 分"
-      },
-      "hablar": {
-        "titulo": "話す",
-        "dek": "Klaraとの会話",
-        "meta": "3 分"
-      },
-      "repasar": {
-        "titulo": "復習する",
-        "dek": "今日のカード",
-        "meta": "5 分"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "地図",
@@ -1198,6 +1178,7 @@
       "empieza": "点から書き始めよう。",
       "eseNo": "違います。点から始めて、お手本をなぞろう。",
       "asiVa": "{{n}}画目はこう書きます。なぞってみよう。",
+      "pasar": "次へ進む",
       "escribe": "聞こえた文字を書こう",
       "listo": "できた。",
       "lienzo": "書く場所"
@@ -1257,6 +1238,7 @@
       "manana_other": "明日の復習：{{count}}件。",
       "noGuardadas_one": "{{count}}件の回答が保存されませんでした。",
       "noGuardadas_other": "{{count}}件の回答が保存されませんでした。",
+      "noCerrada": "レッスンの完了を保存できませんでした。",
       "otra": "もう1レッスン"
     }
   }

@@ -122,39 +122,45 @@ export default function Emparejar({ contenido, onResultado }: PropsDinamica<Cont
           </Fragment>
         ))}
       </div>
-      {/* Una sola región viva para todo lo que el tablero dice: la cuenta, el último fallo y la corrección. */}
-      <div className="k-tablero__estado" role="status">
-        {corregir.length > 0 ? (
-          <p className="k-note" data-state="fix">
-            {sinTiempo(estado) && <>{t("dinamica.emparejar.sinTiempo")} </>}
-            <span className="k-note__right">
-              {corregir.map((p, i) => (
-                <Fragment key={p.item}>
-                  {i > 0 && (
-                    <>
-                      <span aria-hidden="true"> · </span>
-                      <span className="k-sr">, </span>
-                    </>
-                  )}
-                  <span className="k-tablero__par">
-                    <span lang={lang}>{p.izquierda}</span> {p.derecha}
-                  </span>
-                </Fragment>
-              ))}
-            </span>
-          </p>
-        ) : (
-          <p className="k-cap k-cap--center">
-            <span>
-              {t("dinamica.emparejar.cuenta", { n: estado.hechas.length, total: contenido.pares.length })} ·{" "}
-              {izq && der ? (
-                <Trans i18nKey="dinamica.emparejar.noEs" values={{ izq, der }} components={{ 1: <span lang={lang} /> }} />
-              ) : (
-                t("dinamica.emparejar.instruccion")
-              )}
-            </span>
-          </p>
-        )}
+      {/* Una sola región viva, que no se desmonta, para lo que cambia: la cuenta, el último fallo y la corrección.
+          El párrafo cambia de átomo (cinta al jugar, nota al corregir) pero es el mismo nodo, y el `<span>` vivo
+          también. La instrucción, que no cambia, va fuera: dentro se repetía con cada toque. */}
+      <div className="k-tablero__estado">
+        <p className={corregir.length > 0 ? "k-note" : "k-cap k-cap--center"} data-state={corregir.length > 0 ? "fix" : undefined}>
+          <span role="status">
+            {corregir.length > 0 ? (
+              <>
+                {sinTiempo(estado) && <>{t("dinamica.emparejar.sinTiempo")} </>}
+                <span className="k-note__right">
+                  {corregir.map((p, i) => (
+                    <Fragment key={p.item}>
+                      {i > 0 && (
+                        <>
+                          <span aria-hidden="true"> · </span>
+                          <span className="k-sr">, </span>
+                        </>
+                      )}
+                      <span className="k-tablero__par">
+                        <span lang={lang}>{p.izquierda}</span> {p.derecha}
+                      </span>
+                    </Fragment>
+                  ))}
+                </span>
+              </>
+            ) : (
+              <>
+                {t("dinamica.emparejar.cuenta", { n: estado.hechas.length, total: contenido.pares.length })}
+                {izq && der && (
+                  <>
+                    {" · "}
+                    <Trans i18nKey="dinamica.emparejar.noEs" values={{ izq, der }} components={{ 1: <span lang={lang} /> }} />
+                  </>
+                )}
+              </>
+            )}
+          </span>
+          {corregir.length === 0 && !(izq && der) && <> · {t("dinamica.emparejar.instruccion")}</>}
+        </p>
       </div>
     </>
   );

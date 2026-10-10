@@ -717,8 +717,10 @@
     "hecho": "Erledigt",
     "plan": "Der Plan für heute · {{min}} Min.",
     "planHecho": "Der Plan für heute · erledigt",
+    "planAlDia": "Dein Plan für heute · nichts offen",
     "fin": "Das ist alles für heute.",
     "finHecho": "Fertig für heute.",
+    "finAlDia": "Heute steht nichts an.",
     "empezar": "Anfangen",
     "error": "Der Plan für heute konnte nicht geladen werden.",
     "reintentar": "Erneut versuchen",
@@ -755,29 +757,7 @@
     "mapaFila": "Die Kursübersicht",
     "mapaFilaEstado": "Wo du stehst",
     "generoFila": "Genus",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "Lesen",
-        "dek": "Die Geschichte von heute",
-        "meta": "3 Min."
-      },
-      "pronunciar": {
-        "titulo": "Aussprechen",
-        "dek": "Sätze aus deinen Geschichten, laut gesprochen",
-        "meta": "4 Min."
-      },
-      "hablar": {
-        "titulo": "Sprechen",
-        "dek": "Ein Gespräch mit Klara",
-        "meta": "3 Min."
-      },
-      "repasar": {
-        "titulo": "Wiederholen",
-        "dek": "Deine Karten für heute",
-        "meta": "5 Min."
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "Die Übersicht",
@@ -1198,6 +1178,7 @@
       "empieza": "Beginne am Punkt.",
       "eseNo": "Nicht so. Beginne am Punkt und folge der Vorlage.",
       "asiVa": "Strich {{n}} geht so. Fahr ihn nach.",
+      "pasar": "Weiter zur nächsten",
       "escribe": "Schreib, was du hörst",
       "listo": "Fertig.",
       "lienzo": "Schreibfläche"
@@ -1257,6 +1238,7 @@
       "manana_other": "Morgen: {{count}} Wiederholungen.",
       "noGuardadas_one": "{{count}} Antwort wurde nicht gespeichert.",
       "noGuardadas_other": "{{count}} Antworten wurden nicht gespeichert.",
+      "noCerrada": "Das Ende der Lektion konnte nicht gespeichert werden.",
       "otra": "Noch eine Lektion"
     }
   }

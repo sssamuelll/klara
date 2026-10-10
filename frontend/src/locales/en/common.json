@@ -717,8 +717,10 @@
     "hecho": "Done",
     "plan": "Today's plan · {{min}} min",
     "planHecho": "Today's plan · done",
+    "planAlDia": "Your plan for today · all caught up",
     "fin": "That's all for today.",
     "finHecho": "Done for today.",
+    "finAlDia": "Nothing pending today.",
     "empezar": "Start",
     "error": "Couldn't load today's plan.",
     "reintentar": "Try again",
@@ -755,29 +757,7 @@
     "mapaFila": "The course map",
     "mapaFilaEstado": "Where you are",
     "generoFila": "Gender",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "Read",
-        "dek": "Today's story",
-        "meta": "3 min"
-      },
-      "pronunciar": {
-        "titulo": "Pronounce",
-        "dek": "Lines from your stories, out loud",
-        "meta": "4 min"
-      },
-      "hablar": {
-        "titulo": "Speak",
-        "dek": "A conversation with Klara",
-        "meta": "3 min"
-      },
-      "repasar": {
-        "titulo": "Review",
-        "dek": "Your cards for today",
-        "meta": "5 min"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "The map",
@@ -1198,6 +1178,7 @@
       "empieza": "Start at the dot.",
       "eseNo": "Not that one. Start at the dot and follow the guide.",
       "asiVa": "Stroke {{n}} goes like this. Trace it.",
+      "pasar": "Move on to the next",
       "escribe": "Write the one you hear",
       "listo": "Done.",
       "lienzo": "Writing canvas"
@@ -1257,6 +1238,7 @@
       "manana_other": "Tomorrow: {{count}} reviews.",
       "noGuardadas_one": "{{count}} answer wasn't saved.",
       "noGuardadas_other": "{{count}} answers weren't saved.",
+      "noCerrada": "Couldn't save the end of the lesson.",
       "otra": "Another lesson"
     }
   }

@@ -41,13 +41,23 @@ export function estadoParada(l: Linea, ahora: Linea | null): "now" | "done" | "p
   return l.estado === "hecha" || alDia(l) ? "done" : "pending";
 }
 
+/** Las claves del rótulo del plan y de la línea que lo cierra. Sin nada hecho ni nada que hacer, el día está al día, no «hecho». */
+export function clavesDelPlan(vm: HoyVM): { rotulo: string; fin: string } {
+  if (vm.todoHecho) {
+    return vm.algunaHecha ? { rotulo: "hoy.planHecho", fin: "hoy.finHecho" } : { rotulo: "hoy.planAlDia", fin: "hoy.finAlDia" };
+  }
+  return { rotulo: vm.algunaHecha ? "hoy.quedan" : "hoy.plan", fin: "hoy.fin" };
+}
+
 /** Lo que dicen el panel y las filas, sin i18n: Hoy.tsx lo traduce. */
 export type TextoLinea =
   | { tipo: "alDia" }
   | { tipo: "soloRepasos" }
   | { tipo: "bajada"; bajada: string }
   | { tipo: "luego"; repasos: number; bajada: string }
-  | { tipo: "repasos"; repasos: number; detalle: string | null };
+  | { tipo: "repasos"; repasos: number; detalle: string | null }
+  /** Lo que se hizo hoy. `leccion` es el título, en el idioma de estudio; `repasos` null no se dice. */
+  | { tipo: "hecha"; repasos: number | null; leccion: string | null };
 
 export function dekPanel(l: Linea): TextoLinea {
   if (alDia(l)) return { tipo: "alDia" };
@@ -57,7 +67,11 @@ export function dekPanel(l: Linea): TextoLinea {
 }
 
 export function subFila(l: Linea): TextoLinea {
-  if (l.estado === "hecha" && l.hecho) return { tipo: "repasos", repasos: l.hecho.repasos, detalle: l.hecho.leccion };
+  if (l.estado === "hecha" && l.hecho) {
+    // El primer día no hay repasos: «0 repasos · あ い う» sobra, queda la lección.
+    const { repasos, leccion } = l.hecho;
+    return { tipo: "hecha", repasos: repasos === 0 && leccion ? null : repasos, leccion };
+  }
   if (alDia(l)) return { tipo: "alDia" };
   if (!l.leccion) return { tipo: "repasos", repasos: l.repasos, detalle: null };
   if (l.repasos === 0) return { tipo: "bajada", bajada: l.leccion.bajada };

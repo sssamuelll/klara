@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { evaluarEleccion, textoCorrecto, tonoOpcion, type ContenidoEleccion } from "./eleccion";
+import { ENTRADA_MIN_MS } from "../sesion";
+import { aceptaRespuesta, evaluarEleccion, textoCorrecto, tonoOpcion, type ContenidoEleccion } from "./eleccion";
 
 const c: ContenidoEleccion = {
   item: "ja:kana:か",
@@ -41,6 +42,18 @@ describe("tonoOpcion", () => {
     expect(tonoOpcion(c, "ja:kana:か", "ja:kana:や")).toBe("good");
     expect(tonoOpcion(c, "ja:kana:や", "ja:kana:や")).toBe("bad");
     expect(tonoOpcion(c, "ja:kana:け", "ja:kana:や")).toBeUndefined();
+  });
+});
+
+describe("aceptaRespuesta", () => {
+  // El avance automático pone las opciones nuevas bajo un pulgar que sigue tocando: en `comprobar`, ese
+  // toque movería FSRS. Es la misma espera que la presentación del reproductor.
+  it("recién montada no acepta ni toque ni tecla; pasada la espera del reproductor, sí", () => {
+    expect(ENTRADA_MIN_MS).toBe(350);
+    expect(aceptaRespuesta(1000, 1000)).toBe(false);
+    expect(aceptaRespuesta(1000, 1000 + ENTRADA_MIN_MS - 1)).toBe(false);
+    expect(aceptaRespuesta(1000, 1000 + ENTRADA_MIN_MS)).toBe(true);
+    expect(aceptaRespuesta(1000, 60_000)).toBe(true);
   });
 });
 

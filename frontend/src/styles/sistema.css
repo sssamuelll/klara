@@ -228,6 +228,17 @@
 .k-dock__status .k-cap,
 .k-wrap > .k-cap { margin: 0; }
 
+/* La fila de acciones bajo la línea de estado (el reproductor de lecciones, el repaso). Reserva el
+   alto de un `.k-btn--lg` —56px, la altura de control grande de la gramática 6, que no tiene token—:
+   el dock no cambia de alto entre fases, ni cuando aparece «Seguir →» tras una respuesta ni cuando la
+   fila solo lleva «Ahora no puedo …» o nada, así lo de arriba (a veces un lienzo) no salta bajo el
+   dedo. Centrada: un control en mono que va solo se queda en sus 44px en vez de estirarse a la fila.
+   reemplaza el hueco invisible con `style` en línea de routes/Sesion.tsx */
+.k-dock__status + .k-wrap {
+  min-height: 56px;
+  align-items: center;
+}
+
 /* La barra de progreso de la sesión cuelga del cascarón, no de `.k-page`, así
    que nadie le pone el aire lateral: se lo ponemos aquí para que sus segmentos
    arranquen a plomo con «Salir» y con la cuenta de la línea superior. Acotado a
@@ -2588,6 +2599,10 @@ input.k-chip { cursor: text; }
    esto es todo lo que hacía falta (era el pendiente de `taller.css:307`). */
 ul.k-error { list-style: none; }
 
+/* El control que el error trae dentro («Reintentar», «Seguir») va en la tinta del error: el `--ink-3`
+   del control en mono, sobre el lavado de acento, daba 3,57:1 en oscuro. */
+.k-error .k-btn--text { color: inherit; }
+
 /* ---------- 16-marca ---------- */
 /* ============================================================
    16. LA MARCA — .klara-mark
@@ -2997,13 +3012,13 @@ ul.k-error { list-style: none; }
    bajada («la fila de か») o del título de la lección hecha, cada uno en su `<span lang>`. Un span suelto
    hereda la familia que su padre ya resolvió y se queda sin Noto Serif JP; declarar la suya hace que
    `:lang(ja)` (tokens.css) la resuelva. La bajada y el subtítulo son cursivas, y un kana oblicuo es otro
-   dibujo: ahí, recto (como `.k-note [lang="ja"]`, átomo 21). */
+   dibujo: ahí, recto (como `.k-note [lang="ja"]`, átomo 21). Solo el japonés: el título alemán o inglés de
+   una lección hecha sigue en la cursiva de la fila. */
 .k-hero__tag [lang] { font-family: var(--font-mono); }
 .k-hero__dek [lang],
-.k-route__sub [lang] {
-  font-family: var(--font-serif);
-  font-style: normal;
-}
+.k-route__sub [lang] { font-family: var(--font-serif); }
+.k-hero__dek [lang="ja"],
+.k-route__sub [lang="ja"] { font-style: normal; }
 
 /* ---------- 19-estanteria ---------- */
 /* ============================================================
@@ -3251,9 +3266,15 @@ ul.k-error { list-style: none; }
   text-align: center;
 }
 /* Las juntas de la pila, que ningún átomo trae: el nombre del sonido pega con el lienzo cuando va
-   encima (prueba), y los botones pegan con la nota que los precede (presentar y prueba). */
+   encima (prueba), y los botones pegan con la nota que los precede. En la práctica la fila va vacía hasta
+   que aparece «Pasar a la siguiente», y reserva el alto de un control en mono —sus 44px menos el voladizo
+   de 12px arriba y abajo—: el lienzo está centrado en la zona de sesión, y la fila que aparecía lo subía
+   16px entre un intento y el siguiente. */
 .k-trazo__son + .k-trazo { margin-top: var(--space-3); }
-.k-trazo ~ .k-wrap { margin-top: var(--space-3); }
+.k-trazo ~ .k-wrap {
+  margin-top: var(--space-3);
+  min-height: calc(44px - 2 * var(--space-3));
+}
 /* Junta con la nota al margen (átomo 13): la mnemotecnia es español con algún
    kana dentro («Es さ en el espejo»), y cada kana va en su <span lang="ja">. Un
    span suelto hereda la familia ya resuelta de su padre y se queda sin Noto
@@ -3333,9 +3354,10 @@ ul.k-error { list-style: none; }
   75% { transform: translateX(4px); }
 }
 
-/* La zona de estado: una sola región viva (`role="status"`) para todo lo que el tablero dice. Mientras se juega
-   lleva la cuenta (`.k-cap`) y, tras un fallo, «き no es ku» en lugar de la instrucción; al acabar con fallos, la
-   corrección (`.k-note` en su estado `fix`, átomo 13). Cada una tiene su alto, y el tablero, centrado en la zona
+/* La zona de estado: un párrafo con una sola región viva dentro (`<span role="status">`) para lo que el tablero
+   dice; la instrucción, que no cambia, va fuera de ella. Mientras se juega es la cuenta (`.k-cap`) y, tras un
+   fallo, «き no es ku» en lugar de la instrucción; al acabar con fallos, el mismo párrafo pasa a la corrección
+   (`.k-note` en su estado `fix`, átomo 13). Cada una tiene su alto, y el tablero, centrado en la zona
    de sesión, saltaría al cambiar de una a otra: la zona reserva el de dos renglones de nota (15px a 1,45) y pone
    ella el aire de arriba, así que los márgenes propios de la cinta y de la nota (que difieren y cambian con el
    alto del viewport, en `99-compresion`) no cuentan. */

@@ -31,10 +31,18 @@ export type AccionSesion =
   | { tipo: "resultado"; evidencias: Evidencia[] }
   | { tipo: "seguir" }
   | { tipo: "apagar"; capacidad: Capacidad }
+  /** Una dinámica que este frontend no conoce (uno viejo en caché con un catálogo nuevo): se salta. */
+  | { tipo: "saltar"; id: string }
   | { tipo: "envioFallido" };
 
 /** Si acertó todo, el reproductor sigue solo después de esto. */
 export const AUTO_AVANCE_MS = 700;
+/**
+ * Lo que una actividad recién entrada no responde a toques ni teclas. Un doble toque (o un doble Enter)
+ * son dos eventos aparte: React ya repintó entre uno y otro, y el segundo cae sobre lo que la actividad
+ * nueva puso bajo el dedo («Ahora tú →» de una presentación, las opciones de una elección).
+ */
+export const ENTRADA_MIN_MS = 350;
 /** Una actividad de práctica fallada vuelve una vez, después de estas otras. */
 export const REINTENTO_TRAS = 3;
 
@@ -136,6 +144,10 @@ export function sesionReducer(e: EstadoSesion, a: AccionSesion): EstadoSesion {
       const s = { ...e, apagadas: [...e.apagadas, a.capacidad] };
       return s.fase === "actividad" ? avanzar(s, s.idx) : s;
     }
+    case "saltar":
+      // Por id: un segundo «Seguir» de la misma actividad no salta también la siguiente.
+      if (e.fase !== "actividad" || e.cola[e.idx].id !== a.id) return e;
+      return avanzar({ ...e, saltadas: [...e.saltadas, a.id] }, e.idx + 1);
     case "envioFallido":
       return { ...e, enviosFallidos: e.enviosFallidos + 1 };
   }

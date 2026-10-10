@@ -9,9 +9,12 @@ import {
   lugaresNumeros,
   N,
   partirKana,
+  pasar,
+  puedePasar,
   remuestrear,
   TOQUE_MIN,
   type Esperado,
+  type EstadoTrazo,
   type Juicio,
   type Punto,
 } from "./trazo";
@@ -207,6 +210,52 @@ describe("evidenciaTrazo", () => {
     // un kana de dos trazos: una pista vale; las dos, no.
     expect(evidenciaTrazo("ja:kana:い", con(1), 1000, 2).acierto).toBe(true);
     expect(evidenciaTrazo("ja:kana:い", con(2), 1000, 2).acierto).toBe(false);
+  });
+});
+
+describe("pasar a la siguiente", () => {
+  const fallar = (e: EstadoTrazo, modo: "practicar" | "comprobar", veces: number) => {
+    for (let i = 0; i < veces; i++) e = alSoltar(e, mal, modo, 3);
+    return e;
+  };
+
+  it("en práctica: con la pista a la vista y dos fallos más en el mismo trazo (el 4.º)", () => {
+    expect(puedePasar(fallar(inicialTrazo, "practicar", 2), "practicar")).toBe(false); // llega la pista
+    expect(puedePasar(fallar(inicialTrazo, "practicar", 3), "practicar")).toBe(false);
+    expect(puedePasar(fallar(inicialTrazo, "practicar", 4), "practicar")).toBe(true);
+  });
+
+  it("en prueba la pista llega antes, así que también la salida (el 3.er fallo)", () => {
+    expect(puedePasar(fallar(inicialTrazo, "comprobar", 2), "comprobar")).toBe(false);
+    expect(puedePasar(fallar(inicialTrazo, "comprobar", 3), "comprobar")).toBe(true);
+  });
+
+  it("cuenta por trazo: al valer uno, el siguiente empieza sin salida", () => {
+    const e = alSoltar(fallar(inicialTrazo, "practicar", 4), bien, "practicar", 3);
+    expect([e.actual, puedePasar(e, "practicar")]).toEqual([1, false]);
+  });
+
+  it("termina el kana una sola vez: una evidencia sin acierto, con las pistas que llevaba", () => {
+    const antes = alSoltar(inicialTrazo, bien, "comprobar", 3);
+    const e = pasar(fallar(antes, "comprobar", 3), "comprobar");
+    expect([e.terminado, e.pasado]).toEqual([true, true]);
+    expect(evidenciaTrazo("ja:kana:あ", e, 5000, 3)).toMatchObject({ acierto: false, pistas: 1, ms: 5000 });
+    // Ya terminado: ni otro trazo ni otro «pasar» lo cambian.
+    expect(alSoltar(e, bien, "comprobar", 3)).toBe(e);
+    expect(pasar(e, "comprobar")).toBe(e);
+  });
+
+  it("el detalle guarda el trazo que dejó, con sus intentos", () => {
+    const e = pasar(fallar(inicialTrazo, "comprobar", 3), "comprobar");
+    expect(evidenciaTrazo("ja:kana:あ", e, 5000, 3).detalle).toEqual({
+      trazos: [],
+      pasado: { n: 1, fallos: 3, rechazos: [{ media: 30, largo: 1 }, { media: 30, largo: 1 }, { media: 30, largo: 1 }] },
+    });
+  });
+
+  it("sin salida no pasa nada", () => {
+    const e = fallar(inicialTrazo, "practicar", 3);
+    expect(pasar(e, "practicar")).toBe(e);
   });
 });
 

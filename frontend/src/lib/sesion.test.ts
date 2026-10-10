@@ -247,6 +247,25 @@ describe("sesionReducer", () => {
     expect(sesionReducer(e, { tipo: "cargando" })).toEqual(inicialSesion);
   });
 
+  it("saltar: la actividad que no se puede mostrar queda saltada, sin evidencia, y sigue la próxima", () => {
+    const antes = congelar(correr([cargar([act("a0", { dinamica: "nueva" }), act("a1")])]));
+    const e = sesionReducer(antes, congelar({ tipo: "saltar", id: "a0" }));
+    expect([e.fase, e.idx, e.saltadas, e.resumen, e.cola.length]).toEqual(["actividad", 1, ["a0"], {}, 2]);
+  });
+
+  it("saltar es idempotente: el mismo id dos veces salta una sola actividad", () => {
+    const una = correr([cargar([act("a0", { dinamica: "nueva" }), act("a1"), act("a2")]), { tipo: "saltar", id: "a0" }]);
+    expect(sesionReducer(una, { tipo: "saltar", id: "a0" })).toBe(una);
+  });
+
+  it("saltar solo vale en actividad: ni en resultado ni al final", () => {
+    const resultado = correr([cargar([act("a0"), act("a1")]), responde({ acierto: false })]);
+    expect(sesionReducer(resultado, { tipo: "saltar", id: "a0" })).toBe(resultado);
+    const fin = correr([cargar([act("a0", { dinamica: "nueva" })]), { tipo: "saltar", id: "a0" }]);
+    expect([fin.fase, fin.saltadas]).toEqual(["fin", ["a0"]]);
+    expect(sesionReducer(fin, { tipo: "saltar", id: "a0" })).toBe(fin);
+  });
+
   it("si falla todo, termina y cada original vuelve una sola vez", () => {
     for (const n of [1, 2, 5, 8]) {
       let e = correr([cargar(Array.from({ length: n }, (_, i) => act(`a${i}`)))]);

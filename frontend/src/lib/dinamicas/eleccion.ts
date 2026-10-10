@@ -1,4 +1,5 @@
 import type { Evidencia, Faceta } from "../../api/types";
+import { ENTRADA_MIN_MS } from "../sesion";
 
 /** El contenido que arma el backend para `eleccion` (catalogo/generar.py). */
 export interface OpcionEleccion {
@@ -19,6 +20,14 @@ export type Tono = "good" | "bad";
 
 export function evaluarEleccion(c: ContenidoEleccion, elegida: string, ms: number): Evidencia {
   return { item: c.item, faceta: c.faceta, acierto: elegida === c.correcta, pistas: 0, ms, detalle: { elegida } };
+}
+
+/**
+ * Recién montada, la pregunta no acepta respuesta: el avance automático pone las opciones nuevas bajo un
+ * pulgar que sigue tocando, y en `comprobar` ese toque movería FSRS. La misma espera que la presentación.
+ */
+export function aceptaRespuesta(montadaEn: number, ahora: number): boolean {
+  return ahora - montadaEn >= ENTRADA_MIN_MS;
 }
 
 /** Ya respondida: la correcta en bien y la elegida, si falló, en mal. */

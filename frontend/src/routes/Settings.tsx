@@ -200,8 +200,9 @@ export default function Settings() {
             </span>
             {mapas === "fallo" ? (
               // Un `div` y no un `p`: el párrafo trae 1em (11px) de margen arriba y abajo, que en la columna del
-              // campo no se funden y empujan lo de debajo 22px de más.
-              <div className="k-error" role="alert">
+              // campo no se funden y empujan lo de debajo 22px de más. Con su `key`, un nodo nuevo y no el `div`
+              // del hueco de carga con otro rol: así el lector lo anuncia.
+              <div key="fallo" className="k-error" role="alert">
                 {t("settings.studyLangsError")}{" "}
                 <button type="button" className="k-btn k-btn--text" onClick={() => setIntento((n) => n + 1)}>
                   {t("settings.studyLangsRetry")}

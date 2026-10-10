@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Linea } from "../api/types";
-import { alDia, buildHoyVM, dekPanel, estadoParada, frase, medianocheLocal, subFila } from "./hoyView";
+import { alDia, buildHoyVM, clavesDelPlan, dekPanel, estadoParada, frase, medianocheLocal, subFila } from "./hoyView";
 
 const BAJADA = "la fila de か: leerla, oírla y escribirla";
 const linea = (over: Partial<Linea> = {}): Linea => ({
@@ -102,7 +102,28 @@ describe("una línea al día (sin lección y sin repasos)", () => {
 
   it("hecha y sin nada más: la fila sigue diciendo lo que hiciste", () => {
     const l = lineaAlDia({ estado: "hecha", hecho: { repasos: 6, leccion: "わ を ん" } });
-    expect(subFila(l)).toEqual({ tipo: "repasos", repasos: 6, detalle: "わ を ん" });
+    expect(subFila(l)).toEqual({ tipo: "hecha", repasos: 6, leccion: "わ を ん" });
+  });
+});
+
+describe("clavesDelPlan", () => {
+  const vm = (lineas: Linea[]) => buildHoyVM({ lineas });
+  const hecha = linea({ estado: "hecha", hecho: { repasos: 6, leccion: "か き く け こ" } });
+
+  it("con algo por hacer: el plan, o lo que queda si ya hiciste algo", () => {
+    expect(clavesDelPlan(vm([linea()]))).toEqual({ rotulo: "hoy.plan", fin: "hoy.fin" });
+    expect(clavesDelPlan(vm([hecha, linea({ idioma: "de" })]))).toEqual({ rotulo: "hoy.quedan", fin: "hoy.fin" });
+  });
+
+  it("todo hecho porque lo hiciste: «hecho»", () => {
+    expect(clavesDelPlan(vm([hecha, lineaAlDia({ idioma: "de" })]))).toEqual({ rotulo: "hoy.planHecho", fin: "hoy.finHecho" });
+  });
+
+  it("nada que hacer y nada hecho: al día, no «hecho»", () => {
+    expect(clavesDelPlan(vm([lineaAlDia(), lineaAlDia({ idioma: "de", estado: "pendiente" })]))).toEqual({
+      rotulo: "hoy.planAlDia",
+      fin: "hoy.finAlDia",
+    });
   });
 });
 
@@ -143,7 +164,17 @@ describe("dekPanel", () => {
 describe("subFila", () => {
   it("hecha: lo que hiciste", () => {
     const l = linea({ estado: "hecha", hecho: { repasos: 6, leccion: "か き く け こ" } });
-    expect(subFila(l)).toEqual({ tipo: "repasos", repasos: 6, detalle: "か き く け こ" });
+    expect(subFila(l)).toEqual({ tipo: "hecha", repasos: 6, leccion: "か き く け こ" });
+  });
+
+  it("hecha el primer día, sin repasos: solo la lección, sin «0 repasos»", () => {
+    const l = linea({ estado: "hecha", hecho: { repasos: 0, leccion: "あ い う え お" } });
+    expect(subFila(l)).toEqual({ tipo: "hecha", repasos: null, leccion: "あ い う え お" });
+  });
+
+  it("hecha solo de repasos: los repasos", () => {
+    const l = linea({ estado: "hecha", hecho: { repasos: 4, leccion: null } });
+    expect(subFila(l)).toEqual({ tipo: "hecha", repasos: 4, leccion: null });
   });
 
   it("pendiente con repasos: los repasos y la bajada", () => {

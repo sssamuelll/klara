@@ -717,8 +717,10 @@
     "hecho": "Hecho",
     "plan": "El plan de hoy · {{min}} min",
     "planHecho": "El plan de hoy · hecho",
+    "planAlDia": "Tu plan de hoy · al día",
     "fin": "Eso es todo por hoy.",
     "finHecho": "Listo por hoy.",
+    "finAlDia": "Nada pendiente por hoy.",
     "empezar": "Empezar",
     "error": "No se pudo cargar el plan de hoy.",
     "reintentar": "Reintentar",
@@ -755,29 +757,7 @@
     "mapaFila": "El mapa del curso",
     "mapaFilaEstado": "Dónde vas",
     "generoFila": "Género",
-    "generoFilaEstado": "der · die · das",
-    "paso": {
-      "leer": {
-        "titulo": "Leer",
-        "dek": "La historia de hoy",
-        "meta": "3 min"
-      },
-      "pronunciar": {
-        "titulo": "Pronunciar",
-        "dek": "Frases de tus historias, en voz alta",
-        "meta": "4 min"
-      },
-      "hablar": {
-        "titulo": "Hablar",
-        "dek": "Una conversación con Klara",
-        "meta": "3 min"
-      },
-      "repasar": {
-        "titulo": "Repasar",
-        "dek": "Tus fichas de hoy",
-        "meta": "5 min"
-      }
-    }
+    "generoFilaEstado": "der · die · das"
   },
   "mapa": {
     "kicker": "El mapa",
@@ -1198,6 +1178,7 @@
       "empieza": "Empieza en el punto.",
       "eseNo": "Ese no. Empieza en el punto y sigue la guía.",
       "asiVa": "El trazo {{n}} va así. Síguelo.",
+      "pasar": "Pasar a la siguiente",
       "escribe": "Escribe la que suena",
       "listo": "Listo.",
       "lienzo": "Lienzo para escribir"
@@ -1257,6 +1238,7 @@
       "manana_other": "Mañana te tocan {{count}} repasos.",
       "noGuardadas_one": "{{count}} respuesta no se guardó.",
       "noGuardadas_other": "{{count}} respuestas no se guardaron.",
+      "noCerrada": "No se pudo guardar el final de la lección.",
       "otra": "Otra lección"
     }
   }
